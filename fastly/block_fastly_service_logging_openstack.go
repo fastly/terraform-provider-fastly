@@ -225,7 +225,7 @@ func (h *OpenstackServiceAttributeHandler) Update(ctx context.Context, d *schema
 	}
 	if v, ok := modified["gzip_level"]; ok {
 		// This condition prevents users on old provider versions from having
-		// compatability issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
 		if gl := v.(int); gl != -1 {
 			opts.GzipLevel = gofastly.ToPointer(gl)
 		}

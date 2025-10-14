@@ -8,6 +8,7 @@
 - fix(logging/https): corrected a bug where users that had a HTTPS logging block would encounter 'gzip_level' API errors after upgrading to the v8.1.0 provider or later ([#1118](https://github.com/fastly/terraform-provider-fastly/pull/1118))
 
 ### DEPENDENCIES:
+- build(deps): `stefanzweifel/git-auto-commit-action` from 6 to 7 ([#1120](https://github.com/fastly/terraform-provider-fastly/pull/1120))
 
 ### DOCUMENTATION:
 

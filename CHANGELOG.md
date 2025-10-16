@@ -8,6 +8,13 @@
 
 ### DEPENDENCIES:
 
+### DOCUMENTATION:
+
+## 8.3.2 (October 16, 2025)
+
+### DOCUMENTATION:
+- fix: correct release with non main tag
+
 ## 8.3.1 (October 15, 2025)
 
 ### BUG FIXES:
@@ -16,8 +23,6 @@
 ### DEPENDENCIES:
 - build(deps): `stefanzweifel/git-auto-commit-action` from 6 to 7 ([#1120](https://github.com/fastly/terraform-provider-fastly/pull/1120))
 - build(deps): `golang.org/x/net` from 0.44.0 to 0.46.0 ([#1119](https://github.com/fastly/terraform-provider-fastly/pull/1119))
-
-### DOCUMENTATION:
 
 ## 8.3.0 (September 30, 2025)
 

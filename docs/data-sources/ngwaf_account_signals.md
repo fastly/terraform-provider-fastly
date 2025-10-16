@@ -26,7 +26,7 @@ output "fastly_ngwaf_account_signals_all" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `signals` (List of Object) The list of signals. (see [below for nested schema](#nestedatt--signals))
+- `signals` (List of Object) The list of custom signals. (see [below for nested schema](#nestedatt--signals))
 
 <a id="nestedatt--signals"></a>
 ### Nested Schema for `signals`

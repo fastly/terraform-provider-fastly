@@ -22,7 +22,7 @@ func dataSourceFastlyNGWAFWorkspaceSignals() *schema.Resource {
 			"signals": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The list of signals.",
+				Description: "The list of custom signals.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"description": {

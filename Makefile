@@ -31,6 +31,11 @@ GOHOSTARCH ?= $(shell $(GO_BIN) env GOHOSTARCH || echo unknown)
 # of processors available, doesn't make the most sense.
 TEST_PARALLELISM?=4
 
+# Tooling versions
+GOLANGCI_LINT_VERSION = v2.4.0
+BIN_DIR := $(CURDIR)/bin
+GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
+
 default: build
 
 build: clean
@@ -115,7 +120,27 @@ clean:
 validate-interface:
 	@./tests/interface/script.sh
 
-lint:
-	golangci-lint run --verbose
+lint: install-linter check-linter-version
+	@echo "==> Running golangci-lint"
+	@$(GOLANGCI_LINT) run --verbose
 
-.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin lint sweep test test-compile testacc validate-docs validate-interface vet
+install-linter: ## Installs golangci-lint via go install
+	@echo "==> Installing golangci-lint $(GOLANGCI_LINT_VERSION)"
+	@mkdir -p $(BIN_DIR)
+	@GOBIN=$(BIN_DIR) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+
+check-linter-version: ## Verifies installed golangci-lint version matches expected
+	@echo "==> Checking golangci-lint version"
+	@EXPECTED="$(GOLANGCI_LINT_VERSION)"; \
+	EXPECTED=$${EXPECTED#v}; \
+	INSTALLED=$$($(GOLANGCI_LINT) version --short); \
+	if [ "$$INSTALLED" != "$$EXPECTED" ]; then \
+		echo "Expected golangci-lint v$$EXPECTED but found $$INSTALLED"; \
+		exit 1; \
+	fi
+
+clean-bin: ## Removes locally installed binaries
+	@echo "==> Cleaning ./bin directory"
+	@rm -rf $(BIN_DIR)
+
+.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin lint install-linter check-linter-version clean-bin sweep test test-compile testacc validate-docs validate-interface vet

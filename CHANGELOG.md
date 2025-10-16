@@ -5,12 +5,24 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 8.3.2 (October 16, 2025)
+
+### DOCUMENTATION:
+- fix: correct release with non main tag
+
+## 8.3.1 (October 15, 2025)
+
+### BUG FIXES:
 - fix(logging/https): corrected a bug where users that had a HTTPS logging block would encounter 'gzip_level' API errors after upgrading to the v8.1.0 provider or later ([#1118](https://github.com/fastly/terraform-provider-fastly/pull/1118))
 
 ### DEPENDENCIES:
 - build(deps): `stefanzweifel/git-auto-commit-action` from 6 to 7 ([#1120](https://github.com/fastly/terraform-provider-fastly/pull/1120))
-
-### DOCUMENTATION:
+- build(deps): `golang.org/x/net` from 0.44.0 to 0.46.0 ([#1119](https://github.com/fastly/terraform-provider-fastly/pull/1119))
 
 ## 8.3.0 (September 30, 2025)
 

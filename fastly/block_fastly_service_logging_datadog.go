@@ -50,7 +50,7 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "US",
-			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined",
+			Description: "The region that log data will be sent to. Defaults to `US` if undefined",
 		},
 		"token": {
 			Type:        schema.TypeString,

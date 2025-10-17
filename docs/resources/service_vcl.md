@@ -605,7 +605,7 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
-- `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
+- `region` (String) The region that log data will be sent to. Defaults to `US` if undefined
 - `response_condition` (String) The name of the condition to apply.
 
 

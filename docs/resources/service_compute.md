@@ -339,7 +339,7 @@ Required:
 Optional:
 
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
-- `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
+- `region` (String) The region that log data will be sent to. Defaults to `US` if undefined
 
 
 <a id="nestedblock--logging_digitalocean"></a>

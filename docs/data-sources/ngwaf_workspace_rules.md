@@ -2,7 +2,7 @@
 page_title: "Fastly: fastly_ngwaf_workspace_rules"
 sidebar_current: "docs-fastly-datasource-fastly_ngwaf_workspace_rules"
 description: |-
-  Get information about a Fastly Next-Gen WAF Rules for a workspace.
+  Get information about a Fastly Next-Gen WAF Rule for a workspace.
 ---
 
 # fastly_ngwaf_workspace_rules

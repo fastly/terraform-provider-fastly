@@ -2,7 +2,7 @@
 page_title: "Fastly: fastly_ngwaf_workspace_lists"
 sidebar_current: "docs-fastly-datasource-fastly_ngwaf_workspace_lists"
 description: |-
-  Get information about a Fastly Next-Gen WAF Lists for a workspace.
+  Get information about a Fastly Next-Gen WAF List for a workspace.
 ---
 
 # fastly_ngwaf_workspace_lists

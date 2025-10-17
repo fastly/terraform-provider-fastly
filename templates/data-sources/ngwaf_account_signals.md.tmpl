@@ -2,7 +2,7 @@
 page_title: "Fastly: fastly_ngwaf_account_signals"
 sidebar_current: "docs-fastly-datasource-fastly_ngwaf_account_signals"
 description: |-
-  Get information about a Fastly Next-Gen WAF Signals for your account.
+  Get information about a Fastly Next-Gen WAF Signal for your account.
 ---
 
 # fastly_ngwaf_account_signals

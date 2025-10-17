@@ -7,7 +7,7 @@ description: |-
 
 # fastly_ngwaf_account_rules
 
-Use this data source to get a Fastly Next-Gen WAF Account Rules.
+Use this data source to get a Fastly Next-Gen WAF Account Rule.
 
 ## Example Usage
 

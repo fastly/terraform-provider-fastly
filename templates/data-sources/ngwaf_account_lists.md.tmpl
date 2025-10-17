@@ -2,7 +2,7 @@
 page_title: "Fastly: fastly_ngwaf_account_lists"
 sidebar_current: "docs-fastly-datasource-fastly_ngwaf_account_lists"
 description: |-
-  Get information about a Fastly Next-Gen WAF Lists for your account.
+  Get information about a Fastly Next-Gen WAF List for your account.
 ---
 
 # fastly_ngwaf_account_lists

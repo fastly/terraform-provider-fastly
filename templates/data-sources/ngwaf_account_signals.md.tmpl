@@ -7,7 +7,7 @@ description: |-
 
 # fastly_ngwaf_account_signals
 
-Use this data source to get a Fastly Next-Gen WAF Account Signals.
+Use this data source to get a Fastly Next-Gen WAF Account Signal.
 
 ## Example Usage
 

@@ -1,3 +1,5 @@
+name: Pull request
+
 on:
   pull_request:
     types:
@@ -10,7 +12,6 @@ on:
       - main
   repository_dispatch:
     types: [ok-to-test-command] # corresponds to ./ok-to-test.yml `commands:` field
-name: Pull request
 permissions:
   contents: read
 jobs:
@@ -18,23 +19,23 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-    - uses: dangoslen/changelog-enforcer@v3
+      - uses: dangoslen/changelog-enforcer@v3
   lint:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-    - name: Install Go
-      uses: actions/setup-go@v6
-      with:
-        go-version: 1.24.x
-    - name: tfproviderlintx
-      run: make tfproviderlintx
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v8
-      with:
-        version: v2.1
-        only-new-issues: true
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.24.x
+      - name: tfproviderlintx
+        run: make tfproviderlintx
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4
+          only-new-issues: true
   test:
     strategy:
       matrix:
@@ -42,53 +43,53 @@ jobs:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-    - name: Install Go
-      uses: actions/setup-go@v6
-      with:
-        go-version: ${{ matrix.go-version }}
-    - name: Test
-      run: make test
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Test
+        run: make test
   docs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.pull_request.labels.*.name, 'Skip-Docs')"
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-    - name: Install Go
-      uses: actions/setup-go@v6
-      with:
-        go-version: 1.24.x
-    - name: Generate Docs
-      run: |
-        make generate-docs
-    - name: Check diff
-      run: |
-        git diff --exit-code --ignore-all-space ./docs/
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.24.x
+      - name: Generate Docs
+        run: |
+          make generate-docs
+      - name: Check diff
+        run: |
+          git diff --exit-code --ignore-all-space ./docs/
   # NOTE: The following two `validate-` jobs (and the top-of-file config) are inspired by: https://github.com/imjohnbo/ok-to-test
   # Branch-based pull request from owner or trusted developer who has WRITE access.
   validate-interface-trusted:
     if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository"
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-    - name: Install Go
-      uses: actions/setup-go@v6
-      with:
-        go-version: 1.24.x
-    - name: Install Terraform CLI
-      uses: hashicorp/setup-terraform@v3
-    - name: Validate Interface
-      run: make validate-interface
-      env:
-        FASTLY_API_KEY: ${{ secrets.FASTLY_API_TOKEN }}
-        # IMPORTANT: Workflows from forks do not have access to sensitive data such as secrets
-        # https://bit.ly/gh-actions-fork-secret-access
-        # We work around this using ./ok-to-test.yml
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.24.x
+      - name: Install Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+      - name: Validate Interface
+        run: make validate-interface
+        env:
+          FASTLY_API_KEY: ${{ secrets.FASTLY_API_TOKEN }}
+          # IMPORTANT: Workflows from forks do not have access to sensitive data such as secrets
+          # https://bit.ly/gh-actions-fork-secret-access
+          # We work around this using ./ok-to-test.yml
   check-inputs:
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +117,7 @@ jobs:
       - name: Fork based /ok-to-test checkout
         uses: actions/checkout@v5
         with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+          ref: "refs/pull/${{ github.event.client_payload.pull_request.number }}/merge"
       - name: Install Go
         uses: actions/setup-go@v6
         with:
@@ -179,3 +180,28 @@ jobs:
           install-only: true
       - name: Validate Goreleaser
         run: make goreleaser GORELEASER_ARGS="--skip=validate --clean --snapshot" # snapshot is needed as local git has no tags
+  golangci-latest:
+    name: lint-latest (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.24.x
+      - name: Run golangci-lint@latest
+        id: lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          only-new-issues: true
+        continue-on-error: true
+      - name: Report lint summary
+        run: |
+          if [ "${{ steps.lint.outcome }}" == "success" ]; then
+            echo "✅ golangci-lint@latest passed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ golangci-lint@latest failed (informational only)." >> $GITHUB_STEP_SUMMARY
+          fi

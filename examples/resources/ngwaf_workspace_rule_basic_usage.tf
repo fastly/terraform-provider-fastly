@@ -77,3 +77,27 @@ resource "fastly_ngwaf_workspace_rule" "example" {
     }
   }
 }
+
+resource "fastly_ngwaf_workspace_rule" "LOGINATTEMPT" {
+  workspace_id   = fastly_ngwaf_workspace.waf.id
+  type           = "templated_signal"
+  enabled        = true
+  group_operator = "all"
+  description    = ""
+
+  condition {
+    field    = "method"
+    operator = "equals"
+    value    = "POST"
+  }
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "/login"
+  }
+
+  action {
+    type   = "templated_signal"
+    signal = "LOGINATTEMPT"
+  }
+}

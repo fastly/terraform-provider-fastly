@@ -3,7 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
-- feat(ngwaf/workspace): add `templated_signal` example
+- feat(ngwaf/rules): add `templated_signal` example
 - feat(ngwaf/lists): added support for NGWAF Lists to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/rules): added support for NGWAF Rules to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/signals): added support for NGWAF Signals to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))

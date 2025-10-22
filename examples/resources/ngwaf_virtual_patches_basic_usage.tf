@@ -1,4 +1,4 @@
-resource "fastly_ngwaf_virtual_patch" "demo" {
+resource "fastly_ngwaf_virtual_patches" "demo" {
   action            = "block"
   enabled           = true
   virtual_patch_id    = "CVE-2017-5638"

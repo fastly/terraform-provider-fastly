@@ -3,11 +3,14 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+
 - feat(ngwaf/lists): added support for NGWAF Lists to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/rules): added support for NGWAF Rules to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/signals): added support for NGWAF Signals to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 
 ### BUG FIXES:
+
+- fix(logging_https): ensure `response_condition` is applied during updates and add acceptance test coverage ([#1130](https://github.com/fastly/terraform-provider-fastly/pull/1130))
 
 ### DEPENDENCIES:
 
@@ -16,20 +19,24 @@
 ## 8.3.2 (October 16, 2025)
 
 ### DOCUMENTATION:
+
 - fix: correct release with non main tag
 
 ## 8.3.1 (October 15, 2025)
 
 ### BUG FIXES:
+
 - fix(logging/https): corrected a bug where users that had a HTTPS logging block would encounter 'gzip_level' API errors after upgrading to the v8.1.0 provider or later ([#1118](https://github.com/fastly/terraform-provider-fastly/pull/1118))
 
 ### DEPENDENCIES:
+
 - build(deps): `stefanzweifel/git-auto-commit-action` from 6 to 7 ([#1120](https://github.com/fastly/terraform-provider-fastly/pull/1120))
 - build(deps): `golang.org/x/net` from 0.44.0 to 0.46.0 ([#1119](https://github.com/fastly/terraform-provider-fastly/pull/1119))
 
 ## 8.3.0 (September 30, 2025)
 
 ### ENHANCEMENTS:
+
 - feat(logging/https): add support for Period HTTPS logging endpoint ([#1097](https://github.com/fastly/terraform-provider-fastly/pull/1097))
 - feat(product_enablement): Add enable/disable support for API Discovery ([#1111](https://github.com/fastly/terraform-provider-fastly/pull/1111))
 - feat(domainsv1/data source): add support for the v1 domains data source ([#1112](https://github.com/fastly/terraform-provider-fastly/pull/1112))
@@ -49,6 +56,7 @@
 - fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.37.0 to 2.38.1 ([#1108](https://github.com/fastly/terraform-provider-fastly/pull/1108))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))

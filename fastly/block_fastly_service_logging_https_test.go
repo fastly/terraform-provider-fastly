@@ -63,6 +63,28 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	log1WithCondition := gofastly.HTTPS{
+		CompressionCodec:  gofastly.ToPointer("snappy"),
+		ContentType:       gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("POST"),
+		Name:              gofastly.ToPointer("httpslogger"),
+		Period:            gofastly.ToPointer(30),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/1"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
+	}
+
 	log2 := gofastly.HTTPS{
 		ContentType:       gofastly.ToPointer(""),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
@@ -112,6 +134,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
+			// Step 1: Basic config
 			{
 				Config: testAccServiceVCLHTTPSConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -122,6 +145,17 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				),
 			},
 
+			// Step 2: Update with response_condition
+			{
+				Config: testAccServiceVCLHTTPSWithCondition(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1WithCondition}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "1"),
+				),
+			},
+
+			// Step 3: Update with two loggers
 			{
 				Config: testAccServiceVCLHTTPSConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -132,6 +166,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				),
 			},
 
+			// Step 4: Compression not specified
 			{
 				Config: testAccServiceVCLHTTPSConfigCompressionNotSpecified(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -394,6 +429,45 @@ resource "fastly_service_vcl" "foo" {
 	}
 	force_destroy = true
 }`, name, domain, format, format)
+}
+
+func testAccServiceVCLHTTPSWithCondition(name, domain string) string {
+	format := LoggingFormatUpdate
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-https-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_https {
+    name               = "httpslogger"
+    format             = %q
+    method             = "POST"
+    period             = 30
+    url                = "https://example.com/logs/1"
+    compression_codec  = "snappy"
+    response_condition = "response_condition_test"
+    processing_region  = "none"
+  }
+
+  condition {
+    name      = "response_condition_test"
+    type      = "RESPONSE"
+    statement = "resp.status == 418"
+    priority  = 10
+  }
+
+  force_destroy = true
+}
+`, name, domain, format)
 }
 
 func TestResourceFastlyFlattenHTTPS(t *testing.T) {

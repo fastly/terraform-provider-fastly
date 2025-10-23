@@ -12,24 +12,24 @@ resource "fastly_ngwaf_workspace" "example" {
 resource "fastly_ngwaf_workspace_rule" "example" {
   workspace_id    = fastly_ngwaf_workspace.example.id
   type            = "request"
-  description     = "Block requests from specific IP to login path"
+  description     = ""
   enabled         = true
-  request_logging = "sampled"
   group_operator  = "all"
 
-  action {
-    type = "block"
-  }
-
   condition {
-    field    = "ip"
+    field    = "method"
     operator = "equals"
-    value    = "192.0.2.1"
+    value    = "POST"
   }
 
   condition {
     field    = "path"
     operator = "equals"
     value    = "/login"
+  }
+
+  action {
+    type   = "templated_signal"
+    signal = "LOGINATTEMPT"
   }
 }

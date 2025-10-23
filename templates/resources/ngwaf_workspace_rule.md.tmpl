@@ -17,6 +17,22 @@ Basic usage:
 
 {{ tffile "examples/resources/ngwaf_workspace_rule_basic_usage.tf" }}
 
+Using templated signals:
+
+{{ tffile "examples/resources/ngwaf_workspace_rule_templated_signal.tf" }}
+
+Using group conditions:
+
+{{ tffile "examples/resources/ngwaf_workspace_rule_group_conditions.tf" }}
+
+Using multival conditions:
+
+{{ tffile "examples/resources/ngwaf_workspace_rule_multival_conditions.tf" }}
+
+Using rate limits:
+
+{{ tffile "examples/resources/ngwaf_workspace_rule_rate_limit.tf" }}
+
 ## Import
 
 Fastly Next-Gen WAF workspace rules can be imported using the format `<workspaceID>/<ruleID>`, e.g.:

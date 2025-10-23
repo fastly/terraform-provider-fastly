@@ -12,7 +12,7 @@ resource "fastly_ngwaf_workspace" "example" {
 resource "fastly_ngwaf_workspace_rule" "example" {
   workspace_id    = fastly_ngwaf_workspace.example.id
   type            = "request"
-  description     = "Block requests from specific IP to login path"
+  description     = "Block requests with specific header patterns"
   enabled         = true
   request_logging = "sampled"
   group_operator  = "all"
@@ -21,15 +21,27 @@ resource "fastly_ngwaf_workspace_rule" "example" {
     type = "block"
   }
 
-  condition {
-    field    = "ip"
-    operator = "equals"
-    value    = "192.0.2.1"
-  }
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
 
-  condition {
-    field    = "path"
-    operator = "equals"
-    value    = "/login"
+    condition {
+      field    = "name"
+      operator = "does_not_equal"
+      value    = "Header-Sample"
+    }
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "X-API-Key"
+    }
+    
+    condition {
+      field    = "value_string"
+      operator = "equals"
+      value    = "application/json"
+    }
   }
 }

@@ -28,12 +28,12 @@ resource "fastly_ngwaf_workspace" "example" {
 }
 
 resource "fastly_ngwaf_workspace_rule" "example" {
-  workspace_id     = fastly_ngwaf_workspace.example.id
-  type             = "request"
-  description      = "example"
-  enabled          = true
-  request_logging  = "sampled"
-  group_operator   = "all"
+  workspace_id    = fastly_ngwaf_workspace.example.id
+  type            = "request"
+  description     = "Block requests from specific IP to login path"
+  enabled         = true
+  request_logging = "sampled"
+  group_operator  = "all"
 
   action {
     type = "block"
@@ -42,7 +42,42 @@ resource "fastly_ngwaf_workspace_rule" "example" {
   condition {
     field    = "ip"
     operator = "equals"
-    value    = "127.0.0.1"
+    value    = "192.0.2.1"
+  }
+
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "/login"
+  }
+}
+```
+
+Using templated signals:
+
+```terraform
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "example"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {}
+}
+
+resource "fastly_ngwaf_workspace_rule" "example" {
+  workspace_id    = fastly_ngwaf_workspace.example.id
+  type            = "request"
+  description     = ""
+  enabled         = true
+  group_operator  = "all"
+
+  condition {
+    field    = "method"
+    operator = "equals"
+    value    = "POST"
   }
 
   condition {
@@ -51,28 +86,40 @@ resource "fastly_ngwaf_workspace_rule" "example" {
     value    = "/login"
   }
 
-  condition {
-    field    = "agent_name"
-    operator = "equals"
-    value    = "host-001"
+  action {
+    type   = "templated_signal"
+    signal = "LOGINATTEMPT"
+  }
+}
+```
+
+Using group conditions:
+
+```terraform
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "example"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {}
+}
+
+resource "fastly_ngwaf_workspace_rule" "example" {
+  workspace_id    = fastly_ngwaf_workspace.example.id
+  type            = "request"
+  description     = "Block requests with grouped conditions"
+  enabled         = true
+  request_logging = "sampled"
+  group_operator  = "all"
+
+  action {
+    type = "block"
   }
 
-  group_condition {
-    group_operator = "all"
-
-    condition {
-      field    = "country"
-      operator = "equals"
-      value    = "AD"
-    }
-
-    condition {
-      field    = "method"
-      operator = "equals"
-      value    = "POST"
-    }
-  }
-
+  # This group uses "any" - matches if 'any' condition is true
   group_condition {
     group_operator = "any"
 
@@ -93,6 +140,126 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       operator = "equals"
       value    = "example.com"
     }
+  }
+
+  # This group uses "all" - matches only if 'all' conditions are true
+  group_condition {
+    group_operator = "all"
+
+    condition {
+      field    = "country"
+      operator = "equals"
+      value    = "AD"
+    }
+
+    condition {
+      field    = "method"
+      operator = "equals"
+      value    = "POST"
+    }
+  }
+}
+```
+
+Using multival conditions:
+
+```terraform
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "example"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {}
+}
+
+resource "fastly_ngwaf_workspace_rule" "example" {
+  workspace_id    = fastly_ngwaf_workspace.example.id
+  type            = "request"
+  description     = "Block requests with specific header patterns"
+  enabled         = true
+  request_logging = "sampled"
+  group_operator  = "all"
+
+  action {
+    type = "block"
+  }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "does_not_equal"
+      value    = "Header-Sample"
+    }
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "X-API-Key"
+    }
+    
+    condition {
+      field    = "value_string"
+      operator = "equals"
+      value    = "application/json"
+    }
+  }
+}
+```
+
+Using rate limits:
+
+```terraform
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "example"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {}
+}
+
+
+resource "fastly_ngwaf_workspace_signal" "demo_signal" {
+  workspace_id = fastly_ngwaf_workspace.example.id
+  name         = "demo"
+  description  = "A description of my signal."
+}
+
+resource "fastly_ngwaf_workspace_rule" "ip_limit" {
+  workspace_id    = fastly_ngwaf_workspace.example.id
+  type            = "rate_limit"
+  description     = "Rate limit demo rule-updated"
+  enabled         = true
+
+  condition {
+    field = "ip"
+    operator = "equals"
+    value = "1.2.3.4"
+  }
+
+  rate_limit {
+    signal    = "site.demo"
+    threshold = 100
+    interval  = 60
+    duration  = 300
+
+    client_identifiers {
+      type = "ip"
+    }
+  }
+
+  action {
+    signal = "SUSPECTED-BOT"
+    type = "block_signal"
   }
 }
 ```

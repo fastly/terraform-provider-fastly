@@ -15,6 +15,7 @@
 ### DEPENDENCIES:
 
 ### DOCUMENTATION:
+- docs(ngwaf/rules): imroved usage examples of various NGWAF Rule patterns ([#1128](https://github.com/fastly/terraform-provider-fastly/pull/1128))
 
 ## 8.3.2 (October 16, 2025)
 

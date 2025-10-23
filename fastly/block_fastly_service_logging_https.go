@@ -302,6 +302,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	if v, ok := modified["processing_region"]; ok {
 		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["response_condition"]; ok {
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
 	_, err := conn.UpdateHTTPS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)

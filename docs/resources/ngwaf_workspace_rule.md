@@ -203,6 +203,12 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       operator = "contains"
       value    = "X-API-Key"
     }
+    
+    condition {
+      field    = "value_string"
+      operator = "equals"
+      value    = "application/json"
+    }
   }
 }
 ```

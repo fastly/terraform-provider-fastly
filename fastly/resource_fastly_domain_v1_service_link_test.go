@@ -71,7 +71,7 @@ func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
 
 // TestAccFastlyDomainV1ServiceLink_Create tests resource creation from scratch (without import).
 // This ensures the Create → Read flow works correctly, as import can mask certain behaviors where
-// setting d.Id() before Read is called. [CDTOOL-1198]
+// setting d.Id() before Read is called [CDTOOL-1198].
 func TestAccFastlyDomainV1ServiceLink_Create(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {

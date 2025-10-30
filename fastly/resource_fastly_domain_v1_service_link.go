@@ -41,7 +41,7 @@ func resourceFastlyDomainV1ServiceLinkRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*APIClient).conn
 
 	input := &domains.GetInput{
-		DomainID: gofastly.ToPointer(d.Id()),
+		DomainID: gofastly.ToPointer(d.Get("domain_id").(string)),
 	}
 
 	data, err := domains.Get(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)

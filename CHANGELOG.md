@@ -12,6 +12,7 @@
 
 - fix(logging_https): ensure `response_condition` is applied during updates and add acceptance test coverage ([#1130](https://github.com/fastly/terraform-provider-fastly/pull/1130))
 - fix(backend): preserve optional bool fields (`use_ssl`, `ssl_check_cert`, `prefer_ipv6`, `auto_loadbalance`) during updates and add acceptance test coverage ([#1133](https://github.com/fastly/terraform-provider-fastly/pull/1133))
+- fix(domains_v1/service_link): corrected a behavior where new service links created were not referring to 'domain_id' values correctly ([#1132](https://github.com/fastly/terraform-provider-fastly/pull/1132))
 
 ### DEPENDENCIES:
 

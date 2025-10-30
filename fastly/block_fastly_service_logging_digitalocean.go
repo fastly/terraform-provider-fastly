@@ -279,6 +279,18 @@ func (h *DigitalOceanServiceAttributeHandler) Delete(ctx context.Context, d *sch
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For DigitalOcean logging, period is not VCL-only, so we preserve it.
+func (h *DigitalOceanServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for DigitalOcean logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenDigitalOcean models data into format suitable for saving to Terraform state.
 func flattenDigitalOcean(remoteState []*gofastly.DigitalOcean, localState []any) []map[string]any {
 	var result []map[string]any

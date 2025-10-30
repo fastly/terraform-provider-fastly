@@ -319,6 +319,18 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(ctx context.Context, 
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For Blob Storage logging, period is not VCL-only, so we preserve it.
+func (h *BlobStorageLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for Blob Storage logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenBlobStorages models data into format suitable for saving to Terraform state.
 func flattenBlobStorages(remoteState []*gofastly.BlobStorage, localState []any) []map[string]any {
 	var result []map[string]any

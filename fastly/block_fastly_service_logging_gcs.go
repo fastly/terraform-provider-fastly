@@ -322,6 +322,18 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schem
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For GCS logging, period is not VCL-only, so we preserve it.
+func (h *GCSLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for GCS logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenGCS models data into format suitable for saving to Terraform state.
 func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 	var result []map[string]any

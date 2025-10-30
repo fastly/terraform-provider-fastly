@@ -282,6 +282,18 @@ func (h *FTPServiceAttributeHandler) Delete(ctx context.Context, d *schema.Resou
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For FTP logging, period is not VCL-only, so we preserve it.
+func (h *FTPServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for FTP logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenFTP models data into format suitable for saving to Terraform state.
 func flattenFTP(remoteState []*gofastly.FTP, localState []any) []map[string]any {
 	var result []map[string]any

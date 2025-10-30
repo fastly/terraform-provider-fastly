@@ -226,8 +226,8 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", secretKey, secretkeyResult)
 	}
 
-	formatSchema := loggingResourceSchema["format"]
-	if formatSchema == nil {
+	formatSchema, ok := loggingResourceSchema["format"]
+	if !ok {
 		t.Fatalf("Expected format field to exist in schema")
 	}
 	if formatSchema.Default != LoggingBigQueryDefaultFormat {

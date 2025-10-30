@@ -223,8 +223,8 @@ func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
 		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, sasTokenResult)
 	}
 
-	formatSchema := loggingResourceSchema["format"]
-	if formatSchema == nil {
+	formatSchema, ok := loggingResourceSchema["format"]
+	if !ok {
 		t.Fatalf("Expected format field to exist in schema")
 	}
 	if formatSchema.Default != LoggingBlobStorageDefaultFormat {

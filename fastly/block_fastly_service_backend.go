@@ -372,9 +372,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["port"]; ok {
 		opts.Port = gofastly.ToPointer(v.(int))
 	}
-	if v, ok := modified["prefer_ipv6"]; ok {
-		opts.PreferIPv6 = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
 	if v, ok := modified["override_host"]; ok {
 		opts.OverrideHost = gofastly.ToPointer(v.(string))
 	}
@@ -396,11 +393,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["between_bytes_timeout"]; ok {
 		opts.BetweenBytesTimeout = gofastly.ToPointer(v.(int))
 	}
-	if v, ok := modified["auto_loadbalance"]; ok {
-		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-		}
-	}
 	if v, ok := modified["weight"]; ok {
 		opts.Weight = gofastly.ToPointer(v.(int))
 	}
@@ -419,12 +411,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["shield"]; ok {
 		opts.Shield = gofastly.ToPointer(v.(string))
-	}
-	if v, ok := modified["use_ssl"]; ok {
-		opts.UseSSL = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
-	if v, ok := modified["ssl_check_cert"]; ok {
-		opts.SSLCheckCert = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["ssl_ca_cert"]; ok {
 		opts.SSLCACert = gofastly.ToPointer(v.(string))
@@ -449,6 +435,13 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
 		opts.SSLCiphers = gofastly.ToPointer(v.(string))
+	}
+	// Always set optional boolean values to preserve state
+	opts.UseSSL = gofastly.ToPointer(gofastly.Compatibool(resource["use_ssl"].(bool)))
+	opts.SSLCheckCert = gofastly.ToPointer(gofastly.Compatibool(resource["ssl_check_cert"].(bool)))
+	opts.PreferIPv6 = gofastly.ToPointer(gofastly.Compatibool(resource["prefer_ipv6"].(bool)))
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
 	}
 
 	return opts

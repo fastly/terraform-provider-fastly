@@ -370,14 +370,22 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 		// field on the input struct if there was a change because we otherwise
 		// can't guarantee the order.
 		var domains []*gofastly.TLSDomain
+		var domainStrings []string
 		for _, domain := range d.Get("domains").(*schema.Set).List() {
 			domains = append(domains, &gofastly.TLSDomain{ID: domain.(string)})
+			domainStrings = append(domainStrings, domain.(string))
+		}
+
+		// Validate that common_name is in domains
+		commonNameStr := d.Get("common_name").(string)
+		if commonNameStr != "" && !contains(domainStrings, commonNameStr) {
+			return diag.Errorf("domain specified as common_name (%s) must also be in domains (%v)", commonNameStr, domainStrings)
 		}
 
 		updates := &gofastly.UpdateTLSSubscriptionInput{
 			ID:         d.Id(),
 			Force:      d.Get("force_update").(bool),
-			CommonName: &gofastly.TLSDomain{ID: d.Get("common_name").(string)},
+			CommonName: &gofastly.TLSDomain{ID: commonNameStr},
 			Domains:    domains,
 
 			// IMPORTANT: We should always pass the configuration_id to the API.

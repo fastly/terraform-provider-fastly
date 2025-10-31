@@ -377,6 +377,18 @@ func (h *S3LoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For S3 logging, period is not VCL-only, so we preserve it.
+func (h *S3LoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for S3 logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenS3s models data into format suitable for saving to Terraform state.
 func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 	var result []map[string]any

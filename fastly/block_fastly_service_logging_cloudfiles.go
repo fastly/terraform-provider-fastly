@@ -280,6 +280,18 @@ func (h *CloudfilesServiceAttributeHandler) Delete(ctx context.Context, d *schem
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For Cloud Files logging, period is not VCL-only, so we preserve it.
+func (h *CloudfilesServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for Cloud Files logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenCloudfiles models data into format suitable for saving to Terraform state.
 func flattenCloudfiles(remoteState []*gofastly.Cloudfiles, localState []any) []map[string]any {
 	var result []map[string]any

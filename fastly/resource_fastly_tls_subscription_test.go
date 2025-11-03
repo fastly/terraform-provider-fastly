@@ -67,7 +67,7 @@ func TestAccResourceFastlyTLSSubscription_Config(t *testing.T) {
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfigInvalidCommonName(),
-				ExpectError: regexp.MustCompile(`Please add \S+ to an active service to begin TLS enablement`),
+				ExpectError: regexp.MustCompile(`domain specified as common_name .* must also be in domains`),
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2Bad, commonName2),

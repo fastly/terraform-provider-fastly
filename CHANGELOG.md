@@ -7,6 +7,7 @@
 - feat(ngwaf/lists): added support for NGWAF Lists to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/rules): added support for NGWAF Rules to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/signals): added support for NGWAF Signals to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
+- feat(compute_acl_entries): add CIDR validation ([#1136](https://github.com/fastly/terraform-provider-fastly/pull/1136))
 
 ### BUG FIXES:
 

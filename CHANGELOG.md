@@ -1,5 +1,15 @@
 ## [UNRELEASED]
 
+### BREAKING:
+
+### ENHANCEMENTS:
+
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
 ## 8.4.0 (November 4, 2025)
 
 ### ENHANCEMENTS:

@@ -4,6 +4,16 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 8.4.0 (November 4, 2025)
+
+### ENHANCEMENTS:
+
 - feat(ngwaf/lists): added support for NGWAF Lists to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/rules): added support for NGWAF Rules to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
 - feat(ngwaf/signals): added support for NGWAF Signals to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
@@ -16,8 +26,6 @@
 - fix(domains_v1/service_link): corrected a behavior where new service links created were not referring to 'domain_id' values correctly ([#1132](https://github.com/fastly/terraform-provider-fastly/pull/1132))
 - fix(logging/compute): corrected drift behavior for some compute logging endpoints where the value of 'period' was not being retained correctly ([#1134](https://github.com/fastly/terraform-provider-fastly/pull/1134))
 - fix(tls/subscriptions): corrects 'common_name' validation for update operations ([#1135](https://github.com/fastly/terraform-provider-fastly/pull/1135))
-
-### DEPENDENCIES:
 
 ### DOCUMENTATION:
 

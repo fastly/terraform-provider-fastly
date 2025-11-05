@@ -18,61 +18,10 @@ const (
 	serviceID2 = "iWBciPXoEl8PfUOW2hvIm4"
 )
 
-func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckDomainV1ServiceLinkDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(`
-				import {
-					to = fastly_domain_v1_service_link.example
-					id = "%s"
-				}
-
-				resource "fastly_domain_v1_service_link" "example" {
-				    domain_id = "%s"
-					service_id = "%s"
-				}
-				`, domainID, domainID, serviceID),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "domain_id", domainID),
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "service_id", serviceID),
-				),
-			},
-			{
-				Config: fmt.Sprintf(`
-			import {
-				to = fastly_domain_v1_service_link.example
-				id = "%s"
-			}
-
-				resource "fastly_domain_v1_service_link" "example" {
-				    domain_id = "%s"
-					service_id = "%s"
-				}
-				`, domainID, domainID, serviceID2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "domain_id", domainID),
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "service_id", serviceID2),
-				),
-			},
-			{
-				ResourceName:      "fastly_domain_v1_service_link.example",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-// TestAccFastlyDomainV1ServiceLink_Create tests resource creation from scratch (without import).
+// TestAccFastlyDomainV1ServiceLink_Basic tests resource creation from scratch (without import).
 // This ensures the Create → Read flow works correctly, as import can mask certain behaviors where
 // setting d.Id() before Read is called [CDTOOL-1198].
-func TestAccFastlyDomainV1ServiceLink_Create(t *testing.T) {
+func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

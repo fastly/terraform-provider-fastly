@@ -8,6 +8,8 @@
 
 ### BUG FIXES:
 
+- fix(header): preserve optional bool field `ignore_if_set` during updates and add acceptance test coverage ([#1142](https://github.com/fastly/terraform-provider-fastly/pull/1142))
+
 ### DEPENDENCIES:
 
 ### DOCUMENTATION:

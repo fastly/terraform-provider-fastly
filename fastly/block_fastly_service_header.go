@@ -165,9 +165,6 @@ func (h *HeaderServiceAttributeHandler) Update(ctx context.Context, d *schema.Re
 	if v, ok := modified["action"]; ok {
 		opts.Action = gofastly.ToPointer(gofastly.HeaderAction(v.(string)))
 	}
-	if v, ok := modified["ignore_if_set"]; ok {
-		opts.IgnoreIfSet = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
 	if v, ok := modified["type"]; ok {
 		opts.Type = gofastly.ToPointer(gofastly.HeaderType(v.(string)))
 	}
@@ -195,6 +192,9 @@ func (h *HeaderServiceAttributeHandler) Update(ctx context.Context, d *schema.Re
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
+
+	// Always set optional boolean fields to preserve state
+	opts.IgnoreIfSet = gofastly.ToPointer(gofastly.Compatibool(resource["ignore_if_set"].(bool)))
 
 	log.Printf("[DEBUG] Update Header Opts: %#v", opts)
 	_, err := conn.UpdateHeader(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)

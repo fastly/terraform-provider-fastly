@@ -11,6 +11,7 @@
 - fix(header): preserve optional bool field `ignore_if_set` during updates and add acceptance test coverage ([#1142](https://github.com/fastly/terraform-provider-fastly/pull/1142))
 
 ### DEPENDENCIES:
+- build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
 
 ### DOCUMENTATION:
 

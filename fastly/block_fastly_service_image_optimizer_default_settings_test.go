@@ -18,7 +18,6 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
-	backendAddress := "httpbin.org"
 
 	block1 := `
 		resize_filter = "lanczos2"
@@ -68,7 +67,7 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, block1),
+				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendName, block1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
@@ -78,12 +77,85 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, block2),
+				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendName, block2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "image_optimizer_default_settings.#", "1"),
 					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &defSettings2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceImageOptimizerDefaultSettings_PreserveBooleansDuringUnrelatedChange(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+
+	// Step 1: All bools explicitly set
+	block1 := `
+		resize_filter = "lanczos3"
+		webp = true
+		webp_quality = 85
+		jpeg_type = "auto"
+		jpeg_quality = 90
+		upscale = true
+		allow_video = true
+	`
+
+	expected := &gofastly.ImageOptimizerDefaultSettings{
+		ResizeFilter: "lanczos3",
+		Webp:         true,
+		WebpQuality:  85,
+		JpegType:     "auto",
+		JpegQuality:  90,
+		Upscale:      true,
+		AllowVideo:   true,
+	}
+
+	// Step 2: Change only jpeg_quality (simulate unrelated update)
+	block2 := `
+		resize_filter = "lanczos3"
+		webp = true
+		webp_quality = 85
+		jpeg_type = "auto"
+		jpeg_quality = 60
+		upscale = true
+		allow_video = true
+	`
+
+	updated := &gofastly.ImageOptimizerDefaultSettings{
+		ResizeFilter: "lanczos3",
+		Webp:         true,
+		WebpQuality:  85,
+		JpegType:     "auto",
+		JpegQuality:  60, // changed
+		Upscale:      true,
+		AllowVideo:   true,
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendName, block1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, expected),
+				),
+			},
+			{
+				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendName, block2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, updated),
 				),
 			},
 		},
@@ -109,31 +181,31 @@ func testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(service *g
 	}
 }
 
-func testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, imageOptimizerSettings string) string {
+func testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendName, imageOptimizerSettings string) string {
 	return fmt.Sprintf(`
-	resource "fastly_service_vcl" "foo" {
-	  name = "%s"
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
 
-	  domain {
-		name	= "%s"
-		comment = "demo"
-	  }
+  domain {
+	name    = "%s"
+	comment = "demo"
+  }
 
-	  backend {
-		address = "%s"
-		name	= "%s"
-		port	= 443
-		shield  = "amsterdam-nl"
-	  }
+  backend {
+	address = "httpbin.org"
+	name    = "%s"
+	port    = 443
+	shield  = "amsterdam-nl"
+  }
 
-	  image_optimizer_default_settings {
-		%s
-	  }
+  image_optimizer_default_settings {
+	%s
+  }
 
-	  product_enablement {
-		image_optimizer = true
-	  }
+  product_enablement {
+	image_optimizer = true
+  }
 
-	  force_destroy = true
-	}`, serviceName, domainName, backendAddress, backendName, imageOptimizerSettings)
+  force_destroy = true
+}`, serviceName, domainName, backendName, imageOptimizerSettings)
 }

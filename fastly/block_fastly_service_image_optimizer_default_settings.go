@@ -178,71 +178,79 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(ctx context.
 }
 
 // Update updates the resource.
-func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(
+	ctx context.Context,
+	d *schema.ResourceData,
+	resource, modified map[string]any,
+	serviceVersion int,
+	conn *gofastly.Client,
+) error {
 	serviceID := d.Id()
 	log.Println("[DEBUG] Update Image Optimizer default settings")
-
-	if len(modified) == 0 {
-		return nil
-	}
 
 	apiInput := gofastly.UpdateImageOptimizerDefaultSettingsInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
 	}
 
-	for key, value := range modified {
-		switch key {
-		case "resize_filter":
-			var resizeFilter gofastly.ImageOptimizerResizeFilter
-			switch value.(string) {
+	// Always preserve optional boolean fields
+	apiInput.AllowVideo = gofastly.ToPointer(resource["allow_video"].(bool))
+	apiInput.Webp = gofastly.ToPointer(resource["webp"].(bool))
+	apiInput.Upscale = gofastly.ToPointer(resource["upscale"].(bool))
+
+	// Conditionally include int fields
+	if v, ok := modified["jpeg_quality"]; ok {
+		apiInput.JpegQuality = gofastly.ToPointer(v.(int))
+	}
+	if v, ok := modified["webp_quality"]; ok {
+		apiInput.WebpQuality = gofastly.ToPointer(v.(int))
+	}
+
+	// Conditionally include resize_filter enum
+	if vRaw, ok := modified["resize_filter"]; ok {
+		if v, ok := vRaw.(string); ok {
+			var rf gofastly.ImageOptimizerResizeFilter
+			switch v {
 			case "lanczos3":
-				resizeFilter = gofastly.ImageOptimizerLanczos3
+				rf = gofastly.ImageOptimizerLanczos3
 			case "lanczos2":
-				resizeFilter = gofastly.ImageOptimizerLanczos2
+				rf = gofastly.ImageOptimizerLanczos2
 			case "bicubic":
-				resizeFilter = gofastly.ImageOptimizerBicubic
+				rf = gofastly.ImageOptimizerBicubic
 			case "bilinear":
-				resizeFilter = gofastly.ImageOptimizerBilinear
+				rf = gofastly.ImageOptimizerBilinear
 			case "nearest":
-				resizeFilter = gofastly.ImageOptimizerNearest
+				rf = gofastly.ImageOptimizerNearest
 			default:
-				return fmt.Errorf("got unexpected resize_filter: %v", value)
+				return fmt.Errorf("invalid resize_filter: %q", v)
 			}
-			apiInput.ResizeFilter = &resizeFilter
-		case "webp":
-			apiInput.Webp = gofastly.ToPointer(value.(bool))
-		case "webp_quality":
-			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
-		case "jpeg_type":
-			var jpegType gofastly.ImageOptimizerJpegType
-			switch value.(string) {
+			apiInput.ResizeFilter = &rf
+		}
+	}
+
+	// Conditionally include jpeg_type enum
+	if vRaw, ok := modified["jpeg_type"]; ok {
+		if v, ok := vRaw.(string); ok {
+			var jt gofastly.ImageOptimizerJpegType
+			switch v {
 			case "auto":
-				jpegType = gofastly.ImageOptimizerAuto
+				jt = gofastly.ImageOptimizerAuto
 			case "baseline":
-				jpegType = gofastly.ImageOptimizerBaseline
+				jt = gofastly.ImageOptimizerBaseline
 			case "progressive":
-				jpegType = gofastly.ImageOptimizerProgressive
+				jt = gofastly.ImageOptimizerProgressive
 			default:
-				return fmt.Errorf("got unexpected jpeg_type: %v", value)
+				return fmt.Errorf("invalid jpeg_type: %q", v)
 			}
-			apiInput.JpegType = &jpegType
-		case "jpeg_quality":
-			apiInput.JpegQuality = gofastly.ToPointer(value.(int))
-		case "upscale":
-			apiInput.Upscale = gofastly.ToPointer(value.(bool))
-		case "allow_video":
-			apiInput.AllowVideo = gofastly.ToPointer(value.(bool))
-		case "name":
-			continue
-		default:
-			return fmt.Errorf("got unexpected image_optimizer_default_settings key: %v", key)
+			apiInput.JpegType = &jt
 		}
 	}
 
 	log.Printf("[DEBUG] Calling Image Optimizer default settings update API with parameters: %+v", apiInput)
 
-	if _, err := conn.UpdateImageOptimizerDefaultSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &apiInput); err != nil {
+	if _, err := conn.UpdateImageOptimizerDefaultSettings(
+		gofastly.NewContextForResourceID(ctx, d.Id()), &apiInput,
+	); err != nil {
 		return err
 	}
 

@@ -38,7 +38,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 		Port:              gofastly.ToPointer(10000),
 		UseTLS:            gofastly.ToPointer(false),
 		Token:             gofastly.ToPointer("newtoken"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		Format:            gofastly.ToPointer(`%h %u %t %r %>s`),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ProcessingRegion:  gofastly.ToPointer("none"),
@@ -153,8 +153,26 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 						ls.Placement = s.Placement
 					}
 
-					if !reflect.DeepEqual(s, ls) {
-						return fmt.Errorf("bad match Logentries logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
+					if *s.Format != *ls.Format {
+						return fmt.Errorf("bad Logentries Format match for service %s,\nexpected:\n(%s),\ngot:\n(%s)", *s.Name, *s.Format, *ls.Format)
+					}
+					if *s.FormatVersion != *ls.FormatVersion {
+						return fmt.Errorf("bad Logentries FormatVersion match for service %s,\nexpected:\n(%d),\ngot:\n(%d)", *s.Name, *s.FormatVersion, *ls.FormatVersion)
+					}
+					if *s.Port != *ls.Port {
+						return fmt.Errorf("bad Logentries Port match for service %s,\nexpected:\n(%d),\ngot:\n(%d)", *s.Name, *s.Port, *ls.Port)
+					}
+					if *s.UseTLS != *ls.UseTLS {
+						return fmt.Errorf("bad Logentries UseTLS match for service %s,\nexpected:\n(%t),\ngot:\n(%t)", *s.Name, *s.UseTLS, *ls.UseTLS)
+					}
+					if *s.Token != *ls.Token {
+						return fmt.Errorf("bad Logentries Token match for service %s,\nexpected:\n(%s),\ngot:\n(%s)", *s.Name, *s.Token, *ls.Token)
+					}
+					if *s.ResponseCondition != *ls.ResponseCondition {
+						return fmt.Errorf("bad Logentries ResponseCondition match for service %s,\nexpected:\n(%s),\ngot:\n(%s)", *s.Name, *s.ResponseCondition, *ls.ResponseCondition)
+					}
+					if *s.ProcessingRegion != *ls.ProcessingRegion {
+						return fmt.Errorf("bad Logentries ProcessingRegion match for service %s,\nexpected:\n(%s),\ngot:\n(%s)", *s.Name, *s.ProcessingRegion, *ls.ProcessingRegion)
 					}
 					found++
 				}
@@ -183,6 +201,7 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -227,7 +246,7 @@ resource "fastly_service_compute" "foo" {
   logging_logentries {
     name               = "somelogentriesname"
     token              = "token"
-    processing_region = "us"
+    processing_region  = "us"
   }
 
   package {
@@ -261,7 +280,7 @@ resource "fastly_service_vcl" "foo" {
     name               = "somelogentriesname"
     token              = "token"
     response_condition = "response_condition_test"
-    processing_region = "us"
+    processing_region  = "us"
   }
   force_destroy = true
 }`, name, domain)
@@ -289,6 +308,7 @@ resource "fastly_service_vcl" "foo" {
     name               = "somelogentriesname"
     token              = "token"
     response_condition = "response_condition_test"
+	processing_region  = "us"
   }
   logging_logentries {
     name               = "somelogentriesanothername"
@@ -297,6 +317,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "newtoken"
     format             = "%%h %%u %%t %%r %%>s"
     response_condition = "response_condition_test"
+	processing_region  = "none"
   }
   force_destroy = true
 }`, name, domain)
@@ -325,6 +346,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "token"
     response_condition = "response_condition_test"
     format_version     = 2
+	processing_region  = "us"
   }
   force_destroy = true
 }`, name, domain)

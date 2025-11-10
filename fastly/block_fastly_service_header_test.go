@@ -234,6 +234,41 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceVCL_headers_PreserveIgnoreIfSetDuringNameChange(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := acctest.RandomWithPrefix("tf-header")
+	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
+
+	initialHeaderName := "header-initial"
+	updatedHeaderName := "header-renamed"
+	ignoreIfSet := true
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLHeaderWithIgnoreIfSet(serviceName, domainName, initialHeaderName, ignoreIfSet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.ignore_if_set", fmt.Sprintf("%t", ignoreIfSet)),
+				),
+			},
+			{
+				// Change only the name
+				Config: testAccServiceVCLHeaderWithIgnoreIfSet(serviceName, domainName, updatedHeaderName, ignoreIfSet),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.ignore_if_set", fmt.Sprintf("%t", ignoreIfSet)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetail, headers []*gofastly.Header) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -373,4 +408,30 @@ resource "fastly_service_vcl" "foo" {
 
   force_destroy = true
 }`, name, domain)
+}
+
+func testAccServiceVCLHeaderWithIgnoreIfSet(serviceName, domainName, headerName string, ignoreIfSet bool) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    address = "example.com"
+    name    = "example-backend"
+  }
+
+  header {
+    destination    = "http.x-example-header"
+    type           = "cache"
+    action         = "delete"
+    name           = "%s"
+    ignore_if_set  = %t
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, headerName, ignoreIfSet)
 }

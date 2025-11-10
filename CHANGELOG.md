@@ -9,6 +9,7 @@
 ### BUG FIXES:
 
 - fix(header): preserve optional bool field `ignore_if_set` during updates and add acceptance test coverage ([#1142](https://github.com/fastly/terraform-provider-fastly/pull/1142))
+- fix(block_fastly_service_logging_logentries_test): fix tests for logentries to account for API behavior ([#1143](https://github.com/fastly/terraform-provider-fastly/pull/1143))
 
 ### DEPENDENCIES:
 

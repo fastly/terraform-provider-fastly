@@ -14,6 +14,7 @@
 - build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
 
 ### DOCUMENTATION:
+- docs(ngwaf/rules): added signal exclusion rule type documentation ([#1140](https://github.com/fastly/terraform-provider-fastly/pull/1140))
 
 ## 8.4.0 (November 4, 2025)
 

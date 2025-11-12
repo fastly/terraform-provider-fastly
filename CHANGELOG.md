@@ -9,6 +9,7 @@
 ### BUG FIXES:
 
 - fix(header): preserve optional bool field `ignore_if_set` during updates and add acceptance test coverage ([#1142](https://github.com/fastly/terraform-provider-fastly/pull/1142))
+- fix(image_optimizer_default_settings): preserve optional bool fields (`allow_video`, `webp`, `upscale`) during updates and add acceptance test coverage ([#1145](https://github.com/fastly/terraform-provider-fastly/pull/1145))
 
 ### DEPENDENCIES:
 

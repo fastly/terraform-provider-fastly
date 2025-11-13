@@ -181,7 +181,8 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(ctx context.
 func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(
 	ctx context.Context,
 	d *schema.ResourceData,
-	resource, modified map[string]any,
+	resource,
+	modified map[string]any,
 	serviceVersion int,
 	conn *gofastly.Client,
 ) error {

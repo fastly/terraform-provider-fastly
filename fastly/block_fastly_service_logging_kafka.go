@@ -207,6 +207,10 @@ func (h *KafkaServiceAttributeHandler) Update(ctx context.Context, d *schema.Res
 		Name:           resource["name"].(string),
 	}
 
+	// Always preserve optional bool values to prevent drift
+	opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool)))
+	opts.ParseLogKeyvals = gofastly.ToPointer(gofastly.Compatibool(resource["parse_log_keyvals"].(bool)))
+
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["brokers"]; ok {
@@ -217,9 +221,6 @@ func (h *KafkaServiceAttributeHandler) Update(ctx context.Context, d *schema.Res
 	}
 	if v, ok := modified["required_acks"]; ok {
 		opts.RequiredACKs = gofastly.ToPointer(v.(string))
-	}
-	if v, ok := modified["use_tls"]; ok {
-		opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
@@ -248,9 +249,6 @@ func (h *KafkaServiceAttributeHandler) Update(ctx context.Context, d *schema.Res
 	if v, ok := modified["tls_client_key"]; ok {
 		opts.TLSClientKey = gofastly.ToPointer(v.(string))
 	}
-	if v, ok := modified["parse_log_keyvals"]; ok {
-		opts.ParseLogKeyvals = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
 	if v, ok := modified["request_max_bytes"]; ok {
 		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
 	}
@@ -268,11 +266,9 @@ func (h *KafkaServiceAttributeHandler) Update(ctx context.Context, d *schema.Res
 	}
 
 	log.Printf("[DEBUG] Update Kafka Opts: %#v", opts)
+
 	_, err := conn.UpdateKafka(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Delete deletes the resource.

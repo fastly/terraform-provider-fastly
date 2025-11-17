@@ -105,3 +105,87 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccFastlyServiceVCLProductEnablement_ddosProtectionModeChange(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	initialConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    ddos_protection {
+      enabled = true
+      mode    = "block"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	updatedConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    ddos_protection {
+      enabled = true
+      mode    = "log"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ddos_protection.0.mode", "block"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ddos_protection.0.mode", "log"),
+				),
+			},
+		},
+	})
+}

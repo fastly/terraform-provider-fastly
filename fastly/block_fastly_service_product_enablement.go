@@ -607,16 +607,14 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 					return fmt.Errorf("failed to enable ddos_protection: %w", err)
 				}
 
-				// The operation mode is set by default to "log"
 				mode := ddp[0].(map[string]any)["mode"].(string)
-				if mode != "log" {
-					log.Println("[DEBUG] ddos_protection mode will be updated")
-					_, err := ddosprotection.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.ConfigureInput{
-						Mode: mode,
-					})
-					if err != nil {
-						return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
-					}
+				log.Printf("[DEBUG] ddos_protection mode will be set to %s", mode)
+				_, err = ddosprotection.UpdateConfiguration(
+					gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID,
+					ddosprotection.ConfigureInput{Mode: mode},
+				)
+				if err != nil {
+					return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] ddos_protection will be disabled")

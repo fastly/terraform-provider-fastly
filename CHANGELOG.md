@@ -14,7 +14,8 @@
 - fix(product_enablement): ensure `ddos_protection` mode updates are applied ([#1149](https://github.com/fastly/terraform-provider-fastly/pull/1149))
 
 ### DEPENDENCIES:
-
+- build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
+- build(deps): `golang.org/x/net` from 0.46.0 to 0.47.0 ([#1150](https://github.com/fastly/terraform-provider-fastly/pull/1150))
 - build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
 
 ### DOCUMENTATION:

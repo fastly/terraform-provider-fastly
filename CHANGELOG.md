@@ -10,10 +10,18 @@
 
 - fix(header): preserve optional bool field `ignore_if_set` during updates and add acceptance test coverage ([#1142](https://github.com/fastly/terraform-provider-fastly/pull/1142))
 - fix(block_fastly_service_logging_logentries_test): fix tests for logentries to account for API behavior ([#1143](https://github.com/fastly/terraform-provider-fastly/pull/1143))
+- fix(image_optimizer_default_settings): preserve optional bool fields (`allow_video`, `webp`, `upscale`) during updates and add acceptance test coverage ([#1145](https://github.com/fastly/terraform-provider-fastly/pull/1145))
+- fix(logging_kafka): preserve optional bool fields (`use_tls`, `parse_log_keyvals`) during updates and add acceptance test coverage ([#1147](https://github.com/fastly/terraform-provider-fastly/pull/1147))
+- fix(product_enablement): ensure `ddos_protection` mode updates are applied ([#1149](https://github.com/fastly/terraform-provider-fastly/pull/1149))
 
 ### DEPENDENCIES:
+- build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
+- build(deps): `golang.org/x/net` from 0.46.0 to 0.47.0 ([#1150](https://github.com/fastly/terraform-provider-fastly/pull/1150))
+- build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
 
 ### DOCUMENTATION:
+
+- docs(ngwaf/rules): added signal exclusion rule type documentation ([#1140](https://github.com/fastly/terraform-provider-fastly/pull/1140))
 
 ## 8.4.0 (November 4, 2025)
 

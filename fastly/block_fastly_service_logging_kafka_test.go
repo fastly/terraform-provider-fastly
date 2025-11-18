@@ -14,6 +14,72 @@ import (
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
 )
 
+func TestResourceFastlyFlattenKafka(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Kafka
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Kafka{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("kafka-endpoint"),
+					Topic:             gofastly.ToPointer("topic"),
+					Brokers:           gofastly.ToPointer("127.0.0.1,127.0.0.2"),
+					CompressionCodec:  gofastly.ToPointer("snappy"),
+					RequiredACKs:      gofastly.ToPointer("-1"),
+					UseTLS:            gofastly.ToPointer(true),
+					TLSCACert:         gofastly.ToPointer(caCert(t)),
+					TLSClientCert:     gofastly.ToPointer(certificate(t)),
+					TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+					TLSHostname:       gofastly.ToPointer("example.com"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Format:            gofastly.ToPointer(LoggingKafkaDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					Placement:         gofastly.ToPointer("none"),
+					ParseLogKeyvals:   gofastly.ToPointer(true),
+					RequestMaxBytes:   gofastly.ToPointer(12345),
+					AuthMethod:        gofastly.ToPointer("scram-sha-512"),
+					User:              gofastly.ToPointer("user"),
+					Password:          gofastly.ToPointer("password"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "kafka-endpoint",
+					"topic":              "topic",
+					"brokers":            "127.0.0.1,127.0.0.2",
+					"compression_codec":  "snappy",
+					"required_acks":      "-1",
+					"use_tls":            true,
+					"tls_ca_cert":        caCert(t),
+					"tls_client_cert":    certificate(t),
+					"tls_client_key":     privateKey(t),
+					"tls_hostname":       "example.com",
+					"response_condition": "response_condition",
+					"format":             LoggingKafkaDefaultFormat,
+					"placement":          "none",
+					"format_version":     2,
+					"parse_log_keyvals":  true,
+					"request_max_bytes":  12345,
+					"auth_method":        "scram-sha-512",
+					"user":               "user",
+					"password":           "password",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenKafka(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
+}
+
 func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -164,6 +230,46 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 					testAccCheckFastlyServiceVCLKafkaAttributes(&service, []*gofastly.Kafka{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_kafka.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceVCL_kafkalogging_PreserveBooleansDuringNameChange(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := acctest.RandomWithPrefix("tf-kafka")
+	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
+
+	initialKafkaName := "kafka-preserve"
+	updatedKafkaName := "kafka-preserve-renamed"
+
+	// Values we want to preserve
+	useTLS := true
+	parseLogKeyvals := true
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLKafkaLoggingPreserveBooleans(serviceName, domainName, initialKafkaName, useTLS, parseLogKeyvals),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.use_tls", fmt.Sprintf("%t", useTLS)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.parse_log_keyvals", fmt.Sprintf("%t", parseLogKeyvals)),
+				),
+			},
+			{
+				// Only change the Kafka logging name (unrelated field), verify booleans are preserved
+				Config: testAccServiceVCLKafkaLoggingPreserveBooleans(serviceName, domainName, updatedKafkaName, useTLS, parseLogKeyvals),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.use_tls", fmt.Sprintf("%t", useTLS)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.parse_log_keyvals", fmt.Sprintf("%t", parseLogKeyvals)),
 				),
 			},
 		},
@@ -386,68 +492,31 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, format, format)
 }
 
-func TestResourceFastlyFlattenKafka(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Kafka
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Kafka{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("kafka-endpoint"),
-					Topic:             gofastly.ToPointer("topic"),
-					Brokers:           gofastly.ToPointer("127.0.0.1,127.0.0.2"),
-					CompressionCodec:  gofastly.ToPointer("snappy"),
-					RequiredACKs:      gofastly.ToPointer("-1"),
-					UseTLS:            gofastly.ToPointer(true),
-					TLSCACert:         gofastly.ToPointer(caCert(t)),
-					TLSClientCert:     gofastly.ToPointer(certificate(t)),
-					TLSClientKey:      gofastly.ToPointer(privateKey(t)),
-					TLSHostname:       gofastly.ToPointer("example.com"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					Format:            gofastly.ToPointer(LoggingKafkaDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					Placement:         gofastly.ToPointer("none"),
-					ParseLogKeyvals:   gofastly.ToPointer(true),
-					RequestMaxBytes:   gofastly.ToPointer(12345),
-					AuthMethod:        gofastly.ToPointer("scram-sha-512"),
-					User:              gofastly.ToPointer("user"),
-					Password:          gofastly.ToPointer("password"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "kafka-endpoint",
-					"topic":              "topic",
-					"brokers":            "127.0.0.1,127.0.0.2",
-					"compression_codec":  "snappy",
-					"required_acks":      "-1",
-					"use_tls":            true,
-					"tls_ca_cert":        caCert(t),
-					"tls_client_cert":    certificate(t),
-					"tls_client_key":     privateKey(t),
-					"tls_hostname":       "example.com",
-					"response_condition": "response_condition",
-					"format":             LoggingKafkaDefaultFormat,
-					"placement":          "none",
-					"format_version":     2,
-					"parse_log_keyvals":  true,
-					"request_max_bytes":  12345,
-					"auth_method":        "scram-sha-512",
-					"user":               "user",
-					"password":           "password",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
+func testAccServiceVCLKafkaLoggingPreserveBooleans(serviceName, domainName, kafkaName string, useTLS, parseLogKeyvals bool) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
 
-	for _, c := range cases {
-		out := flattenKafka(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
+  domain {
+    name    = "%s"
+    comment = "test"
+  }
+
+  backend {
+    address = "httpbin.org"
+    name    = "httpbin"
+  }
+
+  logging_kafka {
+    name              = "%s"
+    topic             = "test-topic"
+    brokers           = "127.0.0.1:9092"
+    required_acks     = "1"
+    use_tls           = %t
+    parse_log_keyvals = %t
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, kafkaName, useTLS, parseLogKeyvals)
 }

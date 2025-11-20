@@ -71,6 +71,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		"keepalive_time": {
 			Type:        schema.TypeInt,
 			Optional:    true,
+			Computed:    true,
 			Description: "How long in seconds to keep a persistent connection to the backend between requests.",
 		},
 		"max_conn": {

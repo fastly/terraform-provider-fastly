@@ -4,6 +4,16 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 8.5.0 (November 20, 2025)
+
+### ENHANCEMENTS:
+
 - feat(compute_acl_entries): add CIDR validation ([#1136](https://github.com/fastly/terraform-provider-fastly/pull/1136))
 
 ### BUG FIXES:

@@ -113,7 +113,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_gcslogging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceCompute_gcslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	secretKey, err := generateKey()

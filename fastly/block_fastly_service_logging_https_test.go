@@ -180,7 +180,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceCompute_httpslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

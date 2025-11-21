@@ -5,6 +5,7 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+- fix(service/backend): corrected a drift issue caused by the `keepalive_time` attribute ([#1156](https://github.com/fastly/terraform-provider-fastly/pull/1156))
 
 ### DEPENDENCIES:
 

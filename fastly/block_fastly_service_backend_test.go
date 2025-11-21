@@ -464,6 +464,78 @@ func TestAccFastlyServiceVCLBackend_PreserveBooleansDuringNameChange(t *testing.
 	})
 }
 
+func TestAccFastlyServiceVCLBackend_Minimal(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	// Expected backend with minimal configuration and API defaults
+	backend := gofastly.Backend{
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName),
+		Port:    gofastly.ToPointer(443),
+
+		// NOTE: The following are defaults applied by the API
+		AutoLoadbalance:     gofastly.ToPointer(false),
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		KeepAliveTime:       nil, // API returns null when not configured
+		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLBackendMinimal(serviceName, domainName, backendAddress, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&backend}),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceVCLBackendMinimal(serviceName, domainName, backendAddress, backendName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, backendAddress, backendName)
+}
+
 func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDetail, want []*gofastly.Backend) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn

@@ -23,7 +23,7 @@ const (
 
 const testS3IAMRole = "arn:aws:iam::123456789012:role/S3Access"
 
-func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingS3_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -132,7 +132,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingS3_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -179,7 +179,7 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
+func TestAccFastlyServiceLoggingS3_vcl_domain_default(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

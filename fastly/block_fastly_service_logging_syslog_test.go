@@ -15,7 +15,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
 )
 
-func TestAccFastlyServiceVCL_logging_syslog_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingSyslog_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -106,7 +106,7 @@ func TestAccFastlyServiceVCL_logging_syslog_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_logging_syslog_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingSyslog_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -148,7 +148,7 @@ func TestAccFastlyServiceVCL_logging_syslog_basic_compute(t *testing.T) {
 
 // This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
 // which conflicts with other running tests.
-func TestAccFastlyServiceVCL_logging_syslog_useTLS(t *testing.T) {
+func TestAccFastlyServiceLoggingSyslog_vcl_useTLS(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("failed to generate key and cert: %s", err)

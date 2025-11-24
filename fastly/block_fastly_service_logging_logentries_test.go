@@ -14,7 +14,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
 )
 
-func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingLogentries_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -77,7 +77,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingLogentries_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -187,7 +187,7 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 	}
 }
 
-func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
+func TestAccFastlyServiceLoggingLogentries_vcl_formatVersion(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

@@ -16,7 +16,7 @@ import (
 
 const testKinesisIAMRole = "arn:aws:iam::123456789012:role/KinesisAccess"
 
-func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingKinesis_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -93,7 +93,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingKinesis_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

@@ -80,7 +80,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingKafka_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -191,7 +191,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingKafka_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -236,7 +236,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_kafkalogging_PreserveBooleansDuringNameChange(t *testing.T) {
+func TestAccFastlyServiceLoggingKafka_vcl_PreserveBooleansDuringNameChange(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := acctest.RandomWithPrefix("tf-kafka")
 	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))

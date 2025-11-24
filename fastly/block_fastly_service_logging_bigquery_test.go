@@ -15,7 +15,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
 )
 
-func TestAccFastlyServiceVCL_bigquerylogging_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingBigQuery_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	email := "email@example.com"
@@ -98,7 +98,7 @@ func TestAccFastlyServiceVCL_bigquerylogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_bigquerylogging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingBigQuery_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	email := "email@example.com"
@@ -139,7 +139,7 @@ func TestAccFastlyServiceVCL_bigquerylogging_basic_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_bigquerylogging_default(t *testing.T) {
+func TestAccFastlyServiceLoggingBigQuery_vcl_default(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	email := "email@example.com"

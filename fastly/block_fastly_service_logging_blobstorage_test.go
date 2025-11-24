@@ -15,7 +15,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
 )
 
-func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingBlobstorage_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -108,7 +108,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingBlobstorage_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -148,7 +148,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
+func TestAccFastlyServiceLoggingBlobstorage_vcl_default(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

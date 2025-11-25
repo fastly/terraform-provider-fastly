@@ -8,6 +8,7 @@
 - fix(service/backend): corrected a drift issue caused by the `keepalive_time` attribute ([#1156](https://github.com/fastly/terraform-provider-fastly/pull/1156))
 
 ### DEPENDENCIES:
+- build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
 
 ### DOCUMENTATION:
 

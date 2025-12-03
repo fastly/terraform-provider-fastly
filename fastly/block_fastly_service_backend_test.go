@@ -394,7 +394,69 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName)
 }
 
-func testAccServiceVCLBackendWithBooleans(serviceName, domainName, backendAddress, backendName string, useSSL, sslCheckCert, preferIPv6, autoLoadbalance bool) string {
+func TestAccFastlyServiceVCLBackend_BooleanFieldsPreservedOnTimeoutUpdate(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := acctest.RandomWithPrefix("tf-backend")
+	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+	backendName := "test-backend"
+
+	// Values we want to preserve
+	useSSL := true
+	sslCheckCert := false
+	preferIPv6 := true
+	autoLoadbalance := true
+
+	initialConnectTimeout := 1000
+	updatedConnectTimeout := 2000
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+
+		Steps: []resource.TestStep{
+			// Step 1: Create
+			{
+				Config: testAccServiceVCLBackendWithBooleansAndConnectTimeout(
+					serviceName, domainName, backendAddress, backendName,
+					useSSL, sslCheckCert, preferIPv6, autoLoadbalance, initialConnectTimeout,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.use_ssl", fmt.Sprintf("%t", useSSL)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.ssl_check_cert", fmt.Sprintf("%t", sslCheckCert)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.prefer_ipv6", fmt.Sprintf("%t", preferIPv6)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.auto_loadbalance", fmt.Sprintf("%t", autoLoadbalance)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.connect_timeout", fmt.Sprintf("%d", initialConnectTimeout)),
+				),
+			},
+			// Step 2: Update connect_timeout only
+			{
+				Config: testAccServiceVCLBackendWithBooleansAndConnectTimeout(
+					serviceName, domainName, backendAddress, backendName,
+					useSSL, sslCheckCert, preferIPv6, autoLoadbalance, updatedConnectTimeout,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.use_ssl", fmt.Sprintf("%t", useSSL)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.ssl_check_cert", fmt.Sprintf("%t", sslCheckCert)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.prefer_ipv6", fmt.Sprintf("%t", preferIPv6)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.auto_loadbalance", fmt.Sprintf("%t", autoLoadbalance)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.connect_timeout", fmt.Sprintf("%d", updatedConnectTimeout)),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceVCLBackendWithBooleansAndConnectTimeout(
+	serviceName, domainName, backendAddress, backendName string,
+	useSSL, sslCheckCert, preferIPv6, autoLoadbalance bool,
+	connectTimeout int,
+) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -404,64 +466,18 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address           = "%s"
-    name              = "%s"
-    use_ssl           = %t
-    ssl_check_cert    = %t
-    prefer_ipv6       = %t
-    auto_loadbalance  = %t
-    port              = 443
+    address            = "%s"
+    name               = "%s"
+    use_ssl            = %t
+    ssl_check_cert     = %t
+    prefer_ipv6        = %t
+    auto_loadbalance   = %t
+    connect_timeout    = %d
   }
 
   force_destroy = true
-}`, serviceName, domainName, backendAddress, backendName, useSSL, sslCheckCert, preferIPv6, autoLoadbalance)
-}
-
-func TestAccFastlyServiceVCLBackend_PreserveBooleansDuringNameChange(t *testing.T) {
-	var service gofastly.ServiceDetail
-	serviceName := acctest.RandomWithPrefix("tf-backend")
-	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
-	backendAddress := "httpbin.org"
-
-	initialBackendName := "test-backend"
-	updatedBackendName := "test-backend-renamed"
-
-	// Values we want to preserve
-	useSSL := true
-	sslCheckCert := false
-	preferIPv6 := true
-	autoLoadbalance := true
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceVCLDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceVCLBackendWithBooleans(serviceName, domainName, backendAddress, initialBackendName, useSSL, sslCheckCert, preferIPv6, autoLoadbalance),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.use_ssl", fmt.Sprintf("%t", useSSL)),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.ssl_check_cert", fmt.Sprintf("%t", sslCheckCert)),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.prefer_ipv6", fmt.Sprintf("%t", preferIPv6)),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.auto_loadbalance", fmt.Sprintf("%t", autoLoadbalance)),
-				),
-			},
-			{
-				// Change name only, rest stays the same
-				Config: testAccServiceVCLBackendWithBooleans(serviceName, domainName, backendAddress, updatedBackendName, useSSL, sslCheckCert, preferIPv6, autoLoadbalance),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.use_ssl", fmt.Sprintf("%t", useSSL)),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.ssl_check_cert", fmt.Sprintf("%t", sslCheckCert)),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.prefer_ipv6", fmt.Sprintf("%t", preferIPv6)),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.0.auto_loadbalance", fmt.Sprintf("%t", autoLoadbalance)),
-				),
-			},
-		},
-	})
+}`, serviceName, domainName, backendAddress, backendName,
+		useSSL, sslCheckCert, preferIPv6, autoLoadbalance, connectTimeout)
 }
 
 func TestAccFastlyServiceVCLBackend_Minimal(t *testing.T) {

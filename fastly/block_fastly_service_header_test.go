@@ -234,14 +234,15 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_headers_PreserveIgnoreIfSetDuringNameChange(t *testing.T) {
+func TestAccFastlyServiceVCL_headers_PreserveIgnoreIfSetDuringPriorityUpdate(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := acctest.RandomWithPrefix("tf-header")
 	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
-
-	initialHeaderName := "header-initial"
-	updatedHeaderName := "header-renamed"
+	headerName := "header-priority-update"
 	ignoreIfSet := true
+
+	initialPriority := 100
+	updatedPriority := 150
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -249,20 +250,21 @@ func TestAccFastlyServiceVCL_headers_PreserveIgnoreIfSetDuringNameChange(t *test
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLHeaderWithIgnoreIfSet(serviceName, domainName, initialHeaderName, ignoreIfSet),
+				Config: testAccServiceVCLHeaderWithIgnoreIfSetAndPriority(serviceName, domainName, headerName, ignoreIfSet, initialPriority),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.ignore_if_set", fmt.Sprintf("%t", ignoreIfSet)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.priority", fmt.Sprintf("%d", initialPriority)),
 				),
 			},
 			{
-				// Change only the name
-				Config: testAccServiceVCLHeaderWithIgnoreIfSet(serviceName, domainName, updatedHeaderName, ignoreIfSet),
+				Config: testAccServiceVCLHeaderWithIgnoreIfSetAndPriority(serviceName, domainName, headerName, ignoreIfSet, updatedPriority),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.ignore_if_set", fmt.Sprintf("%t", ignoreIfSet)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.priority", fmt.Sprintf("%d", updatedPriority)),
 				),
 			},
 		},
@@ -410,7 +412,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLHeaderWithIgnoreIfSet(serviceName, domainName, headerName string, ignoreIfSet bool) string {
+func testAccServiceVCLHeaderWithIgnoreIfSetAndPriority(serviceName, domainName, headerName string, ignoreIfSet bool, priority int) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -430,8 +432,10 @@ resource "fastly_service_vcl" "foo" {
     action         = "delete"
     name           = "%s"
     ignore_if_set  = %t
+    priority       = %d
   }
 
   force_destroy = true
-}`, serviceName, domainName, headerName, ignoreIfSet)
+}
+`, serviceName, domainName, headerName, ignoreIfSet, priority)
 }

@@ -236,17 +236,18 @@ func TestAccFastlyServiceLoggingKafka_compute_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceLoggingKafka_vcl_PreserveBooleansDuringNameChange(t *testing.T) {
+func TestAccFastlyServiceLoggingKafka_BooleanFieldsPreservedOnUpdate(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := acctest.RandomWithPrefix("tf-kafka")
 	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
 
-	initialKafkaName := "kafka-preserve"
-	updatedKafkaName := "kafka-preserve-renamed"
+	kafkaName := "kafka-logging-preserve"
 
-	// Values we want to preserve
 	useTLS := true
 	parseLogKeyvals := true
+
+	initialMaxBytes := 10000
+	updatedMaxBytes := 20000
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -254,22 +255,26 @@ func TestAccFastlyServiceLoggingKafka_vcl_PreserveBooleansDuringNameChange(t *te
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLKafkaLoggingPreserveBooleans(serviceName, domainName, initialKafkaName, useTLS, parseLogKeyvals),
+				Config: testAccServiceVCLKafkaLoggingPreserveBooleansWithMaxBytes(
+					serviceName, domainName, kafkaName, useTLS, parseLogKeyvals, initialMaxBytes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.use_tls", fmt.Sprintf("%t", useTLS)),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.parse_log_keyvals", fmt.Sprintf("%t", parseLogKeyvals)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.request_max_bytes", fmt.Sprintf("%d", initialMaxBytes)),
 				),
 			},
 			{
-				// Only change the Kafka logging name (unrelated field), verify booleans are preserved
-				Config: testAccServiceVCLKafkaLoggingPreserveBooleans(serviceName, domainName, updatedKafkaName, useTLS, parseLogKeyvals),
+				// Only update non-ForceNew field: request_max_bytes
+				Config: testAccServiceVCLKafkaLoggingPreserveBooleansWithMaxBytes(
+					serviceName, domainName, kafkaName, useTLS, parseLogKeyvals, updatedMaxBytes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.use_tls", fmt.Sprintf("%t", useTLS)),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.parse_log_keyvals", fmt.Sprintf("%t", parseLogKeyvals)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kafka.0.request_max_bytes", fmt.Sprintf("%d", updatedMaxBytes)),
 				),
 			},
 		},
@@ -492,7 +497,11 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, format, format)
 }
 
-func testAccServiceVCLKafkaLoggingPreserveBooleans(serviceName, domainName, kafkaName string, useTLS, parseLogKeyvals bool) string {
+func testAccServiceVCLKafkaLoggingPreserveBooleansWithMaxBytes(
+	serviceName, domainName, kafkaName string,
+	useTLS, parseLogKeyvals bool,
+	requestMaxBytes int,
+) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -514,9 +523,10 @@ resource "fastly_service_vcl" "foo" {
     required_acks     = "1"
     use_tls           = %t
     parse_log_keyvals = %t
+    request_max_bytes = %d
   }
 
   force_destroy = true
 }
-`, serviceName, domainName, kafkaName, useTLS, parseLogKeyvals)
+`, serviceName, domainName, kafkaName, useTLS, parseLogKeyvals, requestMaxBytes)
 }

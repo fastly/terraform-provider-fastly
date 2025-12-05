@@ -5,9 +5,12 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+
 - fix(service/backend): corrected a drift issue caused by the `keepalive_time` attribute ([#1156](https://github.com/fastly/terraform-provider-fastly/pull/1156))
+- fix(request_setting): preserve optional bool fields (`force_miss`, `force_ssl`, `bypass_busy_wait`, `timer_support`) during updates and add acceptance test coverage ([#1165](https://github.com/fastly/terraform-provider-fastly/pull/1165))
 
 ### DEPENDENCIES:
+
 - build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
 
 ### DOCUMENTATION:
@@ -27,6 +30,7 @@
 - fix(product_enablement): ensure `ddos_protection` mode updates are applied ([#1149](https://github.com/fastly/terraform-provider-fastly/pull/1149))
 
 ### DEPENDENCIES:
+
 - build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
 - build(deps): `golang.org/x/net` from 0.46.0 to 0.47.0 ([#1150](https://github.com/fastly/terraform-provider-fastly/pull/1150))
 - build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))

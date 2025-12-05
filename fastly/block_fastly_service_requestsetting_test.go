@@ -176,6 +176,61 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceVCLRequestSetting_PreserveBooleansDuringUpdate(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := acctest.RandomWithPrefix("tf-rs")
+	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
+
+	rsName := "rs-update"
+
+	// Optional boolean values we want to preserve
+	forceMiss := true
+	forceSSL := false
+	bypassBusyWait := true
+	timerSupport := true
+
+	initialDefaultHost := "initial.example.com"
+	updatedDefaultHost := "updated.example.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLRequestSettingWithBooleansAndHost(serviceName, domainName, rsName, initialDefaultHost, forceMiss, forceSSL, bypassBusyWait, timerSupport),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "request_setting.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "request_setting.*", map[string]string{
+						"name":             rsName,
+						"default_host":     initialDefaultHost,
+						"force_miss":       fmt.Sprintf("%t", forceMiss),
+						"force_ssl":        fmt.Sprintf("%t", forceSSL),
+						"bypass_busy_wait": fmt.Sprintf("%t", bypassBusyWait),
+						"timer_support":    fmt.Sprintf("%t", timerSupport),
+					}),
+				),
+			},
+			{
+				Config: testAccServiceVCLRequestSettingWithBooleansAndHost(serviceName, domainName, rsName, updatedDefaultHost, forceMiss, forceSSL, bypassBusyWait, timerSupport),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "request_setting.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "request_setting.*", map[string]string{
+						"name":             rsName,
+						"default_host":     updatedDefaultHost,
+						"force_miss":       fmt.Sprintf("%t", forceMiss),
+						"force_ssl":        fmt.Sprintf("%t", forceSSL),
+						"bypass_busy_wait": fmt.Sprintf("%t", bypassBusyWait),
+						"timer_support":    fmt.Sprintf("%t", timerSupport),
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.ServiceDetail, rqs []*gofastly.RequestSetting) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -260,4 +315,33 @@ resource "fastly_service_vcl" "foo" {
 
   force_destroy = true
 }`, name, domain, action, maxStaleAge)
+}
+
+func testAccServiceVCLRequestSettingWithBooleansAndHost(serviceName, domainName, rsName, defaultHost string, forceMiss, forceSSL, bypassBusyWait, timerSupport bool) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "test domain"
+  }
+
+  backend {
+    address = "http-me.fastly.dev"
+    name    = "main-backend"
+    port    = 80
+  }
+
+  request_setting {
+    name              = "%s"
+    default_host      = "%s"
+    force_miss        = %t
+    force_ssl         = %t
+    bypass_busy_wait  = %t
+    timer_support     = %t
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, rsName, defaultHost, forceMiss, forceSSL, bypassBusyWait, timerSupport)
 }

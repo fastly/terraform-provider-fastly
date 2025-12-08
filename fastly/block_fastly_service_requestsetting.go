@@ -46,6 +46,7 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 				"bypass_busy_wait": {
 					Type:        schema.TypeBool,
 					Optional:    true,
+					Default:     false,
 					Description: "Disable collapsed forwarding, so you don't wait for other objects to origin",
 				},
 				"default_host": {
@@ -56,11 +57,13 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 				"force_miss": {
 					Type:        schema.TypeBool,
 					Optional:    true,
+					Default:     false,
 					Description: "Force a cache miss for the request. If specified, can be `true` or `false`",
 				},
 				"force_ssl": {
 					Type:        schema.TypeBool,
 					Optional:    true,
+					Default:     false,
 					Description: "Forces the request to use SSL (Redirects a non-SSL request to SSL)",
 				},
 				"hash_keys": {
@@ -87,6 +90,7 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 				"timer_support": {
 					Type:        schema.TypeBool,
 					Optional:    true,
+					Default:     false,
 					Description: "Injects the X-Timer info into the request for viewing origin fetch durations",
 				},
 				"xff": {
@@ -145,12 +149,12 @@ func (h *RequestSettingServiceAttributeHandler) Update(ctx context.Context, d *s
 		Name:           resource["name"].(string),
 	}
 
-	if v, ok := modified["force_miss"]; ok {
-		opts.ForceMiss = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
-	if v, ok := modified["force_ssl"]; ok {
-		opts.ForceSSL = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
+	// Always preserve optional boolean fields
+	opts.ForceMiss = gofastly.ToPointer(gofastly.Compatibool(resource["force_miss"].(bool)))
+	opts.ForceSSL = gofastly.ToPointer(gofastly.Compatibool(resource["force_ssl"].(bool)))
+	opts.BypassBusyWait = gofastly.ToPointer(gofastly.Compatibool(resource["bypass_busy_wait"].(bool)))
+	opts.TimerSupport = gofastly.ToPointer(gofastly.Compatibool(resource["timer_support"].(bool)))
+
 	if v, ok := modified["action"]; ok {
 		switch strings.ToLower(v.(string)) {
 		case "lookup":
@@ -160,9 +164,6 @@ func (h *RequestSettingServiceAttributeHandler) Update(ctx context.Context, d *s
 		default:
 			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionUnset)
 		}
-	}
-	if v, ok := modified["bypass_busy_wait"]; ok {
-		opts.BypassBusyWait = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["max_stale_age"]; ok {
 		opts.MaxStaleAge = gofastly.ToPointer(v.(int))
@@ -183,9 +184,6 @@ func (h *RequestSettingServiceAttributeHandler) Update(ctx context.Context, d *s
 		case "overwrite":
 			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFOverwrite)
 		}
-	}
-	if v, ok := modified["timer_support"]; ok {
-		opts.TimerSupport = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["default_host"]; ok {
 		opts.DefaultHost = gofastly.ToPointer(v.(string))

@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(provider): redact `Fastly-Key` from `TF_LOG=DEBUG` output ([#1167](https://github.com/fastly/terraform-provider-fastly/pull/1167))
+
 ### BUG FIXES:
 
 - fix(service/backend): corrected a drift issue caused by the `keepalive_time` attribute ([#1156](https://github.com/fastly/terraform-provider-fastly/pull/1156))

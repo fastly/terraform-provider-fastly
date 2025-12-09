@@ -12,7 +12,8 @@
 - fix(request_setting): preserve optional bool fields (`force_miss`, `force_ssl`, `bypass_busy_wait`, `timer_support`) during updates and add acceptance test coverage ([#1165](https://github.com/fastly/terraform-provider-fastly/pull/1165))
 
 ### DEPENDENCIES:
-
+- build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
+- build(deps): `golang.org/x/net` from 0.47.0 to 0.48.0 ([#1166](https://github.com/fastly/terraform-provider-fastly/pull/1166))
 - build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
 
 ### DOCUMENTATION:

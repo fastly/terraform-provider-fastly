@@ -1,13 +1,13 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"golang.org/x/net/http2"
 
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
@@ -22,6 +22,7 @@ type Config struct {
 	ForceHTTP2 bool
 	NoAuth     bool
 	UserAgent  string
+	Context    context.Context
 }
 
 // APIClient is a HTTP API Client.
@@ -74,11 +75,26 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	// so leave it to default values for now.
 	http2DefaultTransport := &http2.Transport{}
 
+	redactedHeaders := []string{"Fastly-Key"}
+
+	var transport http.RoundTripper
 	if c.ForceHTTP2 {
-		fastlyClient.HTTPClient.Transport = logging.NewSubsystemLoggingHTTPTransport("Fastly", http2DefaultTransport)
+		transport = &redactingTransport{
+			ctx:        c.Context,
+			name:       "Fastly",
+			underlying: http2DefaultTransport,
+			redactKeys: redactedHeaders,
+		}
 	} else {
-		fastlyClient.HTTPClient.Transport = logging.NewSubsystemLoggingHTTPTransport("Fastly", httpDefaultTransport)
+		transport = &redactingTransport{
+			ctx:        c.Context,
+			name:       "Fastly",
+			underlying: httpDefaultTransport,
+			redactKeys: redactedHeaders,
+		}
 	}
+
+	fastlyClient.HTTPClient.Transport = transport
 
 	client.conn = fastlyClient
 	return &client, nil

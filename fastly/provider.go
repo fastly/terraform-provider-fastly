@@ -142,13 +142,14 @@ func Provider() *schema.Provider {
 		},
 	}
 
-	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		config := Config{
 			APIKey:     d.Get("api_key").(string),
 			BaseURL:    d.Get("base_url").(string),
 			ForceHTTP2: d.Get("force_http2").(bool),
 			NoAuth:     d.Get("no_auth").(bool),
 			UserAgent:  provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
+			Context:    ctx,
 		}
 		return config.Client()
 	}

@@ -17,6 +17,7 @@
 - build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
 
 ### DOCUMENTATION:
+- docs(ngwaf/rules): provided examples of client_identifiers types for rate limit rules ([#1169](https://github.com/fastly/terraform-provider-fastly/pull/1169))
 
 ## 8.5.0 (November 20, 2025)
 

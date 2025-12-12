@@ -71,7 +71,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 							"type": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "Type of the Client Identifier.",
+								Description: "Type of the Client Identifier. Accepted values are `ip`, `post_parameter`, `request_cookie`, `request_header`, and `signal_payload`.",
 							},
 						},
 					},

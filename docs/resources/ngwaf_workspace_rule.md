@@ -411,7 +411,7 @@ Required:
 
 Required:
 
-- `type` (String) Type of the Client Identifier.
+- `type` (String) Type of the Client Identifier. Accepted values are `ip`, `post_parameter`, `request_cookie`, `request_header`, and `signal_payload`.
 
 Optional:
 

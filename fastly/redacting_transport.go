@@ -15,23 +15,34 @@ type redactingTransport struct {
 	name       string
 	underlying http.RoundTripper
 	redactKeys []string
+
+	// Optional: allows overriding logging behavior (e.g., in tests)
+	logf func(ctx context.Context, msg string)
+}
+
+func (rt *redactingTransport) log(ctx context.Context, msg string) {
+	if rt.logf != nil {
+		rt.logf(ctx, msg)
+	} else {
+		tflog.Debug(ctx, msg)
+	}
 }
 
 func (rt *redactingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	tflog.Debug(rt.ctx, rt.name+" --> "+req.Method+" "+req.URL.String())
+	rt.log(rt.ctx, rt.name+" --> "+req.Method+" "+req.URL.String())
 
 	for key, values := range req.Header {
 		value := strings.Join(values, ", ")
 		if rt.shouldRedact(key) {
 			value = "[REDACTED]"
 		}
-		tflog.Debug(rt.ctx, rt.name+" Header: "+key+": "+value)
+		rt.log(rt.ctx, rt.name+" Header: "+key+": "+value)
 	}
 
 	if req.Body != nil && req.ContentLength > 0 {
 		body, _ := io.ReadAll(req.Body)
 		req.Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body
-		tflog.Debug(rt.ctx, rt.name+" Body: "+string(body))
+		rt.log(rt.ctx, rt.name+" Body: "+string(body))
 	}
 
 	resp, err := rt.underlying.RoundTrip(req)
@@ -39,10 +50,22 @@ func (rt *redactingTransport) RoundTrip(req *http.Request) (*http.Response, erro
 		return nil, err
 	}
 
-	tflog.Debug(rt.ctx, rt.name+" <-- "+resp.Status)
+	rt.log(rt.ctx, rt.name+" <-- "+resp.Status)
 
 	for key, values := range resp.Header {
-		tflog.Debug(rt.ctx, rt.name+" Response Header: "+key+": "+strings.Join(values, ", "))
+		rt.log(rt.ctx, rt.name+" Response Header: "+key+": "+strings.Join(values, ", "))
+	}
+
+	if resp.Body != nil && resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body
+
+		preview := string(body)
+		if len(preview) > 300 {
+			preview = preview[:300] + "...[truncated]"
+		}
+
+		rt.log(rt.ctx, rt.name+" Response Body: "+preview)
 	}
 
 	return resp, nil

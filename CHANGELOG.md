@@ -5,6 +5,7 @@
 ### ENHANCEMENTS:
 
 - feat(provider): redact `Fastly-Key` from `TF_LOG=DEBUG` output ([#1167](https://github.com/fastly/terraform-provider-fastly/pull/1167))
+- feat(provider): log response body for HTTP error responses (≥400) in `TF_LOG=DEBUG` output ([#1170](https://github.com/fastly/terraform-provider-fastly/pull/1170))
 
 ### BUG FIXES:
 
@@ -12,11 +13,13 @@
 - fix(request_setting): preserve optional bool fields (`force_miss`, `force_ssl`, `bypass_busy_wait`, `timer_support`) during updates and add acceptance test coverage ([#1165](https://github.com/fastly/terraform-provider-fastly/pull/1165))
 
 ### DEPENDENCIES:
+
 - build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
 - build(deps): `golang.org/x/net` from 0.47.0 to 0.48.0 ([#1166](https://github.com/fastly/terraform-provider-fastly/pull/1166))
 - build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
 
 ### DOCUMENTATION:
+
 - docs(ngwaf/rules): provided examples of client_identifiers types for rate limit rules ([#1169](https://github.com/fastly/terraform-provider-fastly/pull/1169))
 
 ## 8.5.0 (November 20, 2025)

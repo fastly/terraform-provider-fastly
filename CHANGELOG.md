@@ -21,6 +21,7 @@
 ### DOCUMENTATION:
 
 - docs(ngwaf/rules): provided examples of client_identifiers types for rate limit rules ([#1169](https://github.com/fastly/terraform-provider-fastly/pull/1169))
+- docs(logging/bigquery): updates the details of the `account_name` field to match API requirements ([#1171](https://github.com/fastly/terraform-provider-fastly/pull/1171))
 
 ## 8.5.0 (November 20, 2025)
 

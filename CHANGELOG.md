@@ -4,6 +4,16 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 8.6.0 (December 17, 2025)
+
+### ENHANCEMENTS:
+
 - feat(provider): redact `Fastly-Key` from `TF_LOG=DEBUG` output ([#1167](https://github.com/fastly/terraform-provider-fastly/pull/1167))
 - feat(provider): log response body for HTTP error responses (≥400) in `TF_LOG=DEBUG` output ([#1170](https://github.com/fastly/terraform-provider-fastly/pull/1170))
 

@@ -77,11 +77,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Description: "Enable Brotli Compression support",
 		}
-		blockAttributes["domain_inspector"] = &schema.Schema{
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "Enable Domain Inspector support",
-		}
 		blockAttributes["image_optimizer"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -95,6 +90,11 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 
 	// These products are supported for both Compute (WASM) and Delivery (VCL) services.
+	blockAttributes["domain_inspector"] = &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Enable Domain Inspector support",
+	}
 	blockAttributes["websockets"] = &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -207,14 +207,6 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 			}
 		}
 
-		if resource["domain_inspector"].(bool) {
-			log.Println("[DEBUG] domain_inspector set")
-			_, err := domaininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-			if err != nil {
-				return fmt.Errorf("failed to enable domain_inspector: %w", err)
-			}
-		}
-
 		if resource["image_optimizer"].(bool) {
 			log.Println("[DEBUG] image_optimizer set")
 			_, err := imageoptimizer.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
@@ -229,6 +221,14 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 			if err != nil {
 				return fmt.Errorf("failed to enable origin_inspector: %w", err)
 			}
+		}
+	}
+
+	if resource["domain_inspector"].(bool) {
+		log.Println("[DEBUG] domain_inspector set")
+		_, err := domaininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+		if err != nil {
+			return fmt.Errorf("failed to enable domain_inspector: %w", err)
 		}
 	}
 
@@ -353,10 +353,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 				result["brotli_compression"] = true
 			}
 
-			if _, err := domaininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
-				result["domain_inspector"] = true
-			}
-
 			if _, err := imageoptimizer.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["image_optimizer"] = true
 			}
@@ -364,6 +360,9 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 			if _, err := origininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["origin_inspector"] = true
 			}
+		}
+		if _, err := domaininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
+			result["domain_inspector"] = true
 		}
 
 		if _, err := websockets.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -506,24 +505,6 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 			}
 		}
 
-		if v, ok := modified["domain_inspector"]; ok {
-			if v.(bool) {
-				log.Println("[DEBUG] domain_inspector will be enabled")
-				_, err := domaininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-				if err != nil {
-					return fmt.Errorf("failed to enable domain_inspector: %w", err)
-				}
-			} else {
-				log.Println("[DEBUG] domain_inspector will be disabled")
-				err := domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-				if err != nil {
-					if e := h.checkAPIError(err); e != nil {
-						return e
-					}
-				}
-			}
-		}
-
 		if v, ok := modified["image_optimizer"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] image_optimizer will be enabled")
@@ -556,6 +537,23 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 					if e := h.checkAPIError(err); e != nil {
 						return e
 					}
+				}
+			}
+		}
+	}
+	if v, ok := modified["domain_inspector"]; ok {
+		if v.(bool) {
+			log.Println("[DEBUG] domain_inspector will be enabled")
+			_, err := domaininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("failed to enable domain_inspector: %w", err)
+			}
+		} else {
+			log.Println("[DEBUG] domain_inspector will be disabled")
+			err := domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			if err != nil {
+				if e := h.checkAPIError(err); e != nil {
+					return e
 				}
 			}
 		}
@@ -744,14 +742,6 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(ctx context.Context, d
 			}
 		}
 
-		log.Println("[DEBUG] disable domain_inspector")
-		err = domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-		if err != nil {
-			if e := h.checkAPIError(err); e != nil {
-				return e
-			}
-		}
-
 		log.Println("[DEBUG] disable image_optimizer")
 		err = imageoptimizer.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
@@ -769,8 +759,16 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(ctx context.Context, d
 		}
 	}
 
+	log.Println("[DEBUG] disable domain_inspector")
+	err := domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+	if err != nil {
+		if e := h.checkAPIError(err); e != nil {
+			return e
+		}
+	}
+
 	log.Println("[DEBUG] disable websockets")
-	err := websockets.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+	err = websockets.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e

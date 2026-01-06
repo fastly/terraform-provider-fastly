@@ -818,6 +818,7 @@ Optional:
 
 - `api_discovery` (Boolean) Enable API Discovery support
 - `ddos_protection` (Block List, Max: 1) DDoS Protection product (see [below for nested schema](#nestedblock--product_enablement--ddos_protection))
+- `domain_inspector` (Boolean) Enable Domain Inspector support
 - `fanout` (Boolean) Enable Fanout support
 - `log_explorer_insights` (Boolean) Enable Log Explorer & Insights
 - `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)

@@ -3,6 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+- feat(product_enablement): Adding support for the `domain_inspector` feature to Compute services ([#1175](https://github.com/fastly/terraform-provider-fastly/pull/1175))
 
 ### BUG FIXES:
 

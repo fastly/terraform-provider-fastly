@@ -344,10 +344,6 @@ resource "fastly_service_compute" "foo" {
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "product_enablement.0.domain_inspector", "true"),
 				),
-				// Added this flag temporarily until upstream changes
-				// are corrected that are causing hash drifts.
-				// ref: https://fastly.atlassian.net/browse/CDTOOL-1226
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

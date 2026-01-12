@@ -13,7 +13,7 @@ import (
 	"github.com/fastly/go-fastly/v12/fastly/domainmanagement/v1/domains"
 )
 
-func TestAccFastlyDomainV1_Basic(t *testing.T) {
+func TestAccFastlyDomain_Basic(t *testing.T) {
 	description := "example"
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,7 +21,7 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckDomainV1Destroy,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
@@ -66,7 +66,7 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainV1Destroy(s *terraform.State) error {
+func testAccCheckDomainDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "fastly_domain" {
 			continue

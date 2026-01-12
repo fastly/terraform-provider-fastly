@@ -31,26 +31,26 @@ func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-				resource "fastly_domain_v1_service_link" "example" {
+				resource "fastly_domain_service_link" "example" {
 				    domain_id = "%s"
 					service_id = "%s"
 				}
 				`, domainID, serviceID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "domain_id", domainID),
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "service_id", serviceID),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "domain_id", domainID),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "service_id", serviceID),
 				),
 			},
 			{
 				Config: fmt.Sprintf(`
-				resource "fastly_domain_v1_service_link" "example" {
+				resource "fastly_domain_service_link" "example" {
 				    domain_id = "%s"
 					service_id = "%s"
 				}
 				`, domainID, serviceID2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "domain_id", domainID),
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "service_id", serviceID2),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "domain_id", domainID),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "service_id", serviceID2),
 				),
 			},
 		},
@@ -59,7 +59,7 @@ func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
 
 func testAccCheckDomainV1ServiceLinkDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_domain_v1_service_link" {
+		if rs.Type != "fastly_domain_service_link" {
 			continue
 		}
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -68,7 +68,7 @@ func testAccCheckDomainV1ServiceLinkDestroy(s *terraform.State) error {
 		}
 		cl, err := domains.List(context.TODO(), conn, input)
 		if err != nil {
-			return fmt.Errorf("failed to list domains for fastly_domain_v1 resource: %w", err)
+			return fmt.Errorf("failed to list domains for fastly_domain resource: %w", err)
 		}
 		if cl != nil && len(cl.Data) > 0 {
 			for _, d := range cl.Data {

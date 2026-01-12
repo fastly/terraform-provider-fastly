@@ -1,12 +1,12 @@
 ---
 layout: "fastly"
-page_title: "Fastly: fastly_domain_v1"
+page_title: "Fastly: fastly_domain"
 sidebar_current: "docs-fastly-resource-domain"
 description: |-
   Manage your domains on Fastly.
 ---
 
-# fastly_domain_v1
+# fastly_domain
 
 Domain management allows you to manage your domains on Fastly and the services that they interact with.
 
@@ -15,7 +15,7 @@ Domain management allows you to manage your domains on Fastly and the services t
 Basic usage:
 
 ```terraform
-resource "fastly_domain_v1" "example" {
+resource "fastly_domain" "example" {
     fqdn = "example.com"
     service_id = "12345abcde"
     description = "This is a test domain."

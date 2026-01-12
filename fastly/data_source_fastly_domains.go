@@ -14,9 +14,9 @@ import (
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
-func dataSourceFastlyDomainsV1() *schema.Resource {
+func dataSourceFastlyDomains() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFastlyDomainsV1sRead,
+		ReadContext: dataSourceFastlyDomainsRead,
 		Schema: map[string]*schema.Schema{
 			"domains": {
 				Type:        schema.TypeSet,
@@ -52,10 +52,10 @@ func dataSourceFastlyDomainsV1() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyDomainsV1sRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyDomainsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	log.Printf("[DEBUG] Reading all v1 domains")
+	log.Printf("[DEBUG] Reading all domains")
 
 	var allDomains []domains.Data
 	var cursor *string
@@ -95,7 +95,7 @@ func dataSourceFastlyDomainsV1sRead(ctx context.Context, d *schema.ResourceData,
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
 
-	if err := d.Set("domains", flattenDomainsV1(allResults)); err != nil {
+	if err := d.Set("domains", flattenDomainsVersionles(allResults)); err != nil {
 		return diag.Errorf("error setting domains: %s", err)
 	}
 
@@ -107,8 +107,8 @@ func dataSourceFastlyDomainsV1sRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-// flattenDomainsV1 models data into format suitable for saving to Terraform state.
-func flattenDomainsV1(remoteState *domains.Collection) []map[string]any {
+// flattenDomainsVersionles models data into format suitable for saving to Terraform state.
+func flattenDomainsVersionles(remoteState *domains.Collection) []map[string]any {
 	if remoteState == nil || len(remoteState.Data) == 0 {
 		return []map[string]any{}
 	}

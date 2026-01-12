@@ -11,12 +11,12 @@ import (
 	"github.com/fastly/go-fastly/v12/fastly/domainmanagement/v1/domains"
 )
 
-func resourceFastlyDomainV1ServiceLink() *schema.Resource {
+func resourceFastlyDomainServiceLink() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFastlyDomainV1ServiceLinkUpdate,
-		ReadContext:   resourceFastlyDomainV1ServiceLinkRead,
-		UpdateContext: resourceFastlyDomainV1ServiceLinkUpdate,
-		DeleteContext: resourceFastlyDomainV1ServiceLinkDelete,
+		CreateContext: resourceFastlyDomainServiceLinkUpdate,
+		ReadContext:   resourceFastlyDomainServiceLinkRead,
+		UpdateContext: resourceFastlyDomainServiceLinkUpdate,
+		DeleteContext: resourceFastlyDomainServiceLinkDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -36,8 +36,8 @@ func resourceFastlyDomainV1ServiceLink() *schema.Resource {
 	}
 }
 
-func resourceFastlyDomainV1ServiceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	log.Printf("[DEBUG] Refreshing Domain V1 Service Link Configuration for (%s)", d.Id())
+func resourceFastlyDomainServiceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing Domain Service Link Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
 	input := &domains.GetInput{
@@ -59,7 +59,7 @@ func resourceFastlyDomainV1ServiceLinkRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceFastlyDomainV1ServiceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyDomainServiceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &domains.UpdateInput{
@@ -71,10 +71,10 @@ func resourceFastlyDomainV1ServiceLinkUpdate(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	return resourceFastlyDomainV1ServiceLinkRead(ctx, d, meta)
+	return resourceFastlyDomainServiceLinkRead(ctx, d, meta)
 }
 
-func resourceFastlyDomainV1ServiceLinkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyDomainServiceLinkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &domains.UpdateInput{
@@ -86,5 +86,5 @@ func resourceFastlyDomainV1ServiceLinkDelete(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	return resourceFastlyDomainV1ServiceLinkRead(ctx, d, meta)
+	return resourceFastlyDomainServiceLinkRead(ctx, d, meta)
 }

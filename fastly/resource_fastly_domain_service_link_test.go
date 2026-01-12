@@ -18,16 +18,16 @@ const (
 	serviceID2 = "iWBciPXoEl8PfUOW2hvIm4"
 )
 
-// TestAccFastlyDomainV1ServiceLink_Basic tests resource creation from scratch (without import).
+// TestAccFastlyDomainServiceLink_Basic tests resource creation from scratch (without import).
 // This ensures the Create → Read flow works correctly, as import can mask certain behaviors where
 // setting d.Id() before Read is called [CDTOOL-1198].
-func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
+func TestAccFastlyDomainServiceLink_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckDomainV1ServiceLinkDestroy,
+		CheckDestroy:      testAccCheckDomainServiceLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
@@ -57,7 +57,7 @@ func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainV1ServiceLinkDestroy(s *terraform.State) error {
+func testAccCheckDomainServiceLinkDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "fastly_domain_service_link" {
 			continue

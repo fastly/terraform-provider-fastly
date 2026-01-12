@@ -1,6 +1,7 @@
 ## [UNRELEASED]
 
 ### BREAKING:
+- breaking(domains): the `_v1` suffix has been removed from the `fastly_domain_v1` and `fastly_domain_v1_service_link` resources and data sources [#1176](https://github.com/fastly/terraform-provider-fastly/pull/1176)
 
 ### ENHANCEMENTS:
 - feat(product_enablement): Adding support for the `domain_inspector` feature to Compute services ([#1175](https://github.com/fastly/terraform-provider-fastly/pull/1175))

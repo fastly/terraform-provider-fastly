@@ -8,6 +8,8 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `github.com/fastly/go-fastly/v12` from 12.1.0 to 12.1.1 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
+- build(deps): `golang.org/x/net` from 0.48.0 to 0.49.0 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
 
 ### DOCUMENTATION:
 

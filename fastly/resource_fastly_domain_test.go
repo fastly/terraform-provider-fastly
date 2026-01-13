@@ -13,7 +13,7 @@ import (
 	"github.com/fastly/go-fastly/v12/fastly/domainmanagement/v1/domains"
 )
 
-func TestAccFastlyDomainV1_Basic(t *testing.T) {
+func TestAccFastlyDomain_Basic(t *testing.T) {
 	description := "example"
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,19 +21,19 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckDomainV1Destroy,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-				resource "fastly_domain_v1" "example" {
+				resource "fastly_domain" "example" {
 				    description = "%s"
 				    fqdn = "%s"
 				}
 				`, description, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1.example", "fqdn", domainName),
-					resource.TestCheckResourceAttr("fastly_domain_v1.example", "description", description),
-					resource.TestCheckNoResourceAttr("fastly_domain_v1.example", "service_id"),
+					resource.TestCheckResourceAttr("fastly_domain.example", "fqdn", domainName),
+					resource.TestCheckResourceAttr("fastly_domain.example", "description", description),
+					resource.TestCheckNoResourceAttr("fastly_domain.example", "service_id"),
 				),
 			},
 			{
@@ -45,20 +45,20 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 					}
 					force_destroy = true
 				}
-				resource "fastly_domain_v1" "example" {
+				resource "fastly_domain" "example" {
 				    description = "%s"
 				    fqdn = "%s"
 					service_id = resource.fastly_service_vcl.example.id
 				}
 				`, domainName, domainName, description+"-updated", domainName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1.example", "fqdn", domainName),
-					resource.TestCheckResourceAttr("fastly_domain_v1.example", "description", description+"-updated"),
-					resource.TestCheckResourceAttrSet("fastly_domain_v1.example", "service_id"),
+					resource.TestCheckResourceAttr("fastly_domain.example", "fqdn", domainName),
+					resource.TestCheckResourceAttr("fastly_domain.example", "description", description+"-updated"),
+					resource.TestCheckResourceAttrSet("fastly_domain.example", "service_id"),
 				),
 			},
 			{
-				ResourceName:      "fastly_domain_v1.example",
+				ResourceName:      "fastly_domain.example",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -66,9 +66,9 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainV1Destroy(s *terraform.State) error {
+func testAccCheckDomainDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_domain_v1" {
+		if rs.Type != "fastly_domain" {
 			continue
 		}
 		a := rs.Primary.Attributes
@@ -79,7 +79,7 @@ func testAccCheckDomainV1Destroy(s *terraform.State) error {
 		}
 		cl, err := domains.List(context.TODO(), conn, input)
 		if err != nil {
-			return fmt.Errorf("failed to list domains for fastly_domain_v1 resource: %w", err)
+			return fmt.Errorf("failed to list domains for fastly_domain resource: %w", err)
 		}
 		if cl != nil && len(cl.Data) > 0 {
 			for _, d := range cl.Data {

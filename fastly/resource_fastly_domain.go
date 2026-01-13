@@ -11,12 +11,12 @@ import (
 	"github.com/fastly/go-fastly/v12/fastly/domainmanagement/v1/domains"
 )
 
-func resourceFastlyDomainV1() *schema.Resource {
+func resourceFastlyDomain() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFastlyDomainV1Create,
-		ReadContext:   resourceFastlyDomainV1Read,
-		UpdateContext: resourceFastlyDomainV1Update,
-		DeleteContext: resourceFastlyDomainV1Delete,
+		CreateContext: resourceFastlyDomainCreate,
+		ReadContext:   resourceFastlyDomainRead,
+		UpdateContext: resourceFastlyDomainUpdate,
+		DeleteContext: resourceFastlyDomainDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,7 +47,7 @@ func resourceFastlyDomainV1() *schema.Resource {
 	}
 }
 
-func resourceFastlyDomainV1Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var input domains.CreateInput
@@ -74,8 +74,8 @@ func resourceFastlyDomainV1Create(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceFastlyDomainV1Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	log.Printf("[DEBUG] Refreshing Domain V1 Configuration for (%s)", d.Id())
+func resourceFastlyDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing Domain Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
 	input := &domains.GetInput{
@@ -103,7 +103,7 @@ func resourceFastlyDomainV1Read(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func resourceFastlyDomainV1Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &domains.UpdateInput{
@@ -121,10 +121,10 @@ func resourceFastlyDomainV1Update(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	return resourceFastlyDomainV1Read(ctx, d, meta)
+	return resourceFastlyDomainRead(ctx, d, meta)
 }
 
-func resourceFastlyDomainV1Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	input := &domains.DeleteInput{
 		DomainID: gofastly.ToPointer(d.Id()),

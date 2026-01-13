@@ -18,48 +18,48 @@ const (
 	serviceID2 = "iWBciPXoEl8PfUOW2hvIm4"
 )
 
-// TestAccFastlyDomainV1ServiceLink_Basic tests resource creation from scratch (without import).
+// TestAccFastlyDomainServiceLink_Basic tests resource creation from scratch (without import).
 // This ensures the Create → Read flow works correctly, as import can mask certain behaviors where
 // setting d.Id() before Read is called [CDTOOL-1198].
-func TestAccFastlyDomainV1ServiceLink_Basic(t *testing.T) {
+func TestAccFastlyDomainServiceLink_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckDomainV1ServiceLinkDestroy,
+		CheckDestroy:      testAccCheckDomainServiceLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
-				resource "fastly_domain_v1_service_link" "example" {
+				resource "fastly_domain_service_link" "example" {
 				    domain_id = "%s"
 					service_id = "%s"
 				}
 				`, domainID, serviceID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "domain_id", domainID),
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "service_id", serviceID),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "domain_id", domainID),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "service_id", serviceID),
 				),
 			},
 			{
 				Config: fmt.Sprintf(`
-				resource "fastly_domain_v1_service_link" "example" {
+				resource "fastly_domain_service_link" "example" {
 				    domain_id = "%s"
 					service_id = "%s"
 				}
 				`, domainID, serviceID2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "domain_id", domainID),
-					resource.TestCheckResourceAttr("fastly_domain_v1_service_link.example", "service_id", serviceID2),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "domain_id", domainID),
+					resource.TestCheckResourceAttr("fastly_domain_service_link.example", "service_id", serviceID2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDomainV1ServiceLinkDestroy(s *terraform.State) error {
+func testAccCheckDomainServiceLinkDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_domain_v1_service_link" {
+		if rs.Type != "fastly_domain_service_link" {
 			continue
 		}
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -68,7 +68,7 @@ func testAccCheckDomainV1ServiceLinkDestroy(s *terraform.State) error {
 		}
 		cl, err := domains.List(context.TODO(), conn, input)
 		if err != nil {
-			return fmt.Errorf("failed to list domains for fastly_domain_v1 resource: %w", err)
+			return fmt.Errorf("failed to list domains for fastly_domain resource: %w", err)
 		}
 		if cl != nil && len(cl.Data) > 0 {
 			for _, d := range cl.Data {

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyDataSourceDomainsV1_Config(t *testing.T) {
+func TestAccFastlyDataSourceDomains_Config(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -17,28 +17,28 @@ func TestAccFastlyDataSourceDomainsV1_Config(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceDomainsV1Config(),
+				Config: testAccFastlyDataSourceDomainsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					// Basic structure validation
-					resource.TestCheckResourceAttrSet("data.fastly_domains_v1.example", "domains.#"),
-					resource.TestCheckResourceAttrSet("data.fastly_domains_v1.example", "total"),
+					resource.TestCheckResourceAttrSet("data.fastly_domains.example", "domains.#"),
+					resource.TestCheckResourceAttrSet("data.fastly_domains.example", "total"),
 
 					// Advanced validation function to check data quality
-					testAccDomainsV1DataSourceState("data.fastly_domains_v1.example"),
+					testAccDomainsDataSourceState("data.fastly_domains.example"),
 				),
 			},
 		},
 	})
 }
 
-func testAccFastlyDataSourceDomainsV1Config() string {
+func testAccFastlyDataSourceDomainsConfig() string {
 	return `
-data "fastly_domains_v1" "example" {
+data "fastly_domains" "example" {
 }
 `
 }
 
-func testAccDomainsV1DataSourceState(resourceName string) resource.TestCheckFunc {
+func testAccDomainsDataSourceState(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r := s.RootModule().Resources[resourceName]
 		a := r.Primary.Attributes

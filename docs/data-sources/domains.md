@@ -1,27 +1,27 @@
 ---
 layout: "fastly"
-page_title: "Fastly: fastly_domains_v1"
-sidebar_current: "docs-fastly-datasource-fastly_domains_v1"
+page_title: "Fastly: fastly_domains"
+sidebar_current: "docs-fastly-datasource-fastly_domains"
 description: |-
   Get information on versionless domains.
 ---
 
-# fastly_domains_v1
+# fastly_domains
 
 Use this data source to get information about versionless domains.
 
 ## Example Usage
 
 ```terraform
-data "fastly_domains_v1" "example" {
+data "fastly_domains" "example" {
 }
 
 output "all_domains" {
-  value = data.fastly_domains_v1.example.domains
+  value = data.fastly_domains.example.domains
 }
 
 output "total_domains" {
-  value = data.fastly_domains_v1.example.total
+  value = data.fastly_domains.example.total
 }
 ```
 

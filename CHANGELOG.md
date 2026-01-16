@@ -1,14 +1,18 @@
 ## [UNRELEASED]
 
 ### BREAKING:
+
 - breaking(domains): the `_v1` suffix has been removed from the `fastly_domain_v1` and `fastly_domain_v1_service_link` resources and data sources [#1176](https://github.com/fastly/terraform-provider-fastly/pull/1176)
 
 ### ENHANCEMENTS:
+
 - feat(product_enablement): Adding support for the `domain_inspector` feature to Compute services ([#1175](https://github.com/fastly/terraform-provider-fastly/pull/1175))
+- feat(domain_management): Added import support for the `fastly_domain_service_link` resource and improved test coverage ([#1178](https://github.com/fastly/terraform-provider-fastly/pull/1178))
 
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.0 to 12.1.1 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
 - build(deps): `golang.org/x/net` from 0.48.0 to 0.49.0 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
 

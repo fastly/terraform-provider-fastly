@@ -82,7 +82,7 @@ func resourceFastlyDomainRead(ctx context.Context, d *schema.ResourceData, meta 
 		DomainID: gofastly.ToPointer(d.Id()),
 	}
 
-	data, err := domains.Get(ctx, conn, input) // ← no need for context with service_id
+	data, err := domains.Get(ctx, conn, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}

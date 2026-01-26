@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,7 +19,7 @@ func resourceFastlyDomainServiceLink() *schema.Resource {
 		UpdateContext: resourceFastlyDomainServiceLinkUpdate,
 		DeleteContext: resourceFastlyDomainServiceLinkDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceFastlyDomainServiceLinkImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,4 +88,31 @@ func resourceFastlyDomainServiceLinkDelete(ctx context.Context, d *schema.Resour
 	}
 
 	return resourceFastlyDomainServiceLinkRead(ctx, d, meta)
+}
+
+func resourceFastlyDomainServiceLinkImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*APIClient).conn
+	domainID := d.Id()
+
+	// Fetch the domain to get service_id
+	input := &domains.GetInput{
+		DomainID: gofastly.ToPointer(domainID),
+	}
+	data, err := domains.Get(ctx, conn, input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get domain: %w", err)
+	}
+	if data.ServiceID == nil {
+		return nil, fmt.Errorf("domain %s has no service_id set and cannot be imported", domainID)
+	}
+
+	// Set both domain_id and service_id
+	if err := d.Set("domain_id", domainID); err != nil {
+		return nil, err
+	}
+	if err := d.Set("service_id", data.ServiceID); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

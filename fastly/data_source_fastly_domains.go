@@ -131,3 +131,10 @@ func flattenDomainsVersionles(remoteState *domains.Collection) []map[string]any 
 
 	return result
 }
+
+// Deprecated commands.
+func dataSourceFastlyDomainsV1Deprecated() *schema.Resource {
+	dataSource := dataSourceFastlyDomains()
+	dataSource.DeprecationMessage = "This data source is deprecated. Please use 'fastly_domains' instead."
+	return dataSource
+}

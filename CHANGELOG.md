@@ -12,9 +12,10 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
-
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.0 to 12.1.1 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
 - build(deps): `golang.org/x/net` from 0.48.0 to 0.49.0 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
+- build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.9.0 to 0.10.0 ([#1179](https://github.com/fastly/terraform-provider-fastly/pull/1179))
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.1 to 2.38.2 ([#1180](https://github.com/fastly/terraform-provider-fastly/pull/1180))
 - build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.9.0 to 0.10.0 ([#1179](https://github.com/fastly/terraform-provider-fastly/pull/1179))
 
 ### DOCUMENTATION:

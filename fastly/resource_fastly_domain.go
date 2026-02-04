@@ -135,3 +135,10 @@ func resourceFastlyDomainDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 	return nil
 }
+
+// Deprecated resources.
+func resourceFastlyDomainV1() *schema.Resource {
+	resource := resourceFastlyDomain()
+	resource.DeprecationMessage = "This resource is deprecated. Please use 'fastly_domain' instead."
+	return resource
+}

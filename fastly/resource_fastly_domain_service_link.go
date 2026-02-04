@@ -116,3 +116,10 @@ func resourceFastlyDomainServiceLinkImport(ctx context.Context, d *schema.Resour
 
 	return []*schema.ResourceData{d}, nil
 }
+
+// Deprecated resources.
+func resourceFastlyDomainServiceLinkV1() *schema.Resource {
+	resource := resourceFastlyDomainServiceLink()
+	resource.DeprecationMessage = "This resource is deprecated. Please use 'fastly_domain_service_link' instead."
+	return resource
+}

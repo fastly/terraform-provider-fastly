@@ -92,3 +92,16 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 	}
 	return nil
 }
+
+func TestResourceFastlyDomainV1_DeprecationRegistered(t *testing.T) {
+	p := Provider()
+
+	resource, ok := p.ResourcesMap["fastly_domain_v1"]
+	if !ok {
+		t.Fatal("expected resource fastly_domain_v1 to be registered")
+	}
+
+	if resource.DeprecationMessage == "" {
+		t.Fatal("expected fastly_domain_v1 to have a DeprecationMessage")
+	}
+}

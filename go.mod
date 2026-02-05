@@ -1,12 +1,10 @@
 module github.com/fastly/terraform-provider-fastly
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.0
 
 require (
 	github.com/deckarep/golang-set/v2 v2.8.0
-	github.com/fastly/go-fastly/v12 v12.1.1
+	github.com/fastly/go-fastly/v12 v12.1.2
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-hclog v1.6.3

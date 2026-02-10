@@ -11,13 +11,14 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
-
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.0 to 12.1.1 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
 - build(deps): `golang.org/x/net` from 0.48.0 to 0.49.0 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
 - build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.9.0 to 0.10.0 ([#1179](https://github.com/fastly/terraform-provider-fastly/pull/1179))
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.1 to 2.38.2 ([#1180](https://github.com/fastly/terraform-provider-fastly/pull/1180))
 - build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.9.0 to 0.10.0 ([#1179](https://github.com/fastly/terraform-provider-fastly/pull/1179))
 - build(go.mod): upgrade golang to 1.25.0 and make appropriate changes ([#1183](https://github.com/fastly/terraform-provider-fastly/pull/1183))
+- build(deps): `github.com/fastly/go-fastly/v12` from 12.1.1 to 12.1.2 ([#1185](https://github.com/fastly/terraform-provider-fastly/pull/1185))
+- build(deps): `golang.org/x/net` from 0.49.0 to 0.50.0 ([#1188](https://github.com/fastly/terraform-provider-fastly/pull/1188))
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.1 to 12.1.2 ([#1185](https://github.com/fastly/terraform-provider-fastly/pull/1185))
 
 ### DOCUMENTATION:

@@ -131,7 +131,7 @@ func resourceObjectStorageAccessKeyRead(ctx context.Context, resourceData *schem
 		}
 	}
 	if readAK.AccessKeyID != "" {
-		err = resourceData.Set("access_key_id", readAK.SecretKey)
+		err = resourceData.Set("access_key_id", readAK.AccessKeyID)
 		if err != nil {
 			return diag.FromErr(err)
 		}

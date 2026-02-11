@@ -62,10 +62,29 @@ resource "fastly_object_storage_access_keys" "storage_key1" {
 					resource.TestCheckTypeSetElemAttr(resourceName, "buckets.*", bucket2),
 					resource.TestCheckResourceAttrSet(resourceName, "secret_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_key_id"),
+					testAccCheckObjectStorageAccessKeyIDDistinctFromSecretKey(resourceName),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckObjectStorageAccessKeyIDDistinctFromSecretKey(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+		accessKeyID := rs.Primary.Attributes["access_key_id"]
+		secretKey := rs.Primary.Attributes["secret_key"]
+		if accessKeyID == secretKey {
+			return fmt.Errorf("access_key_id and secret_key should be distinct, but both are %q", accessKeyID)
+		}
+		if accessKeyID != rs.Primary.ID {
+			return fmt.Errorf("access_key_id (%s) should match the resource ID (%s)", accessKeyID, rs.Primary.ID)
+		}
+		return nil
+	}
 }
 
 func testAccCheckObjectStorageAccessKeyExists(n string, accessKey *accesskeys.AccessKey) resource.TestCheckFunc {

@@ -124,6 +124,12 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 								},
 							},
 						},
+						"group_operator": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Logical operator for the group. Accepted values are `any` and `all`.",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
+						},
 						"multival_condition": {
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -177,12 +183,6 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 									},
 								},
 							},
-						},
-						"group_operator": {
-							Type:             schema.TypeString,
-							Required:         true,
-							Description:      "Logical operator for the group. Accepted values are `any` and `all`.",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
 						},
 					},
 				},

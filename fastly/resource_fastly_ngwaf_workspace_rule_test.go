@@ -71,7 +71,7 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Fields: rules.GroupCondition{
 					GroupOperator: "all",
 					Conditions: []rules.GroupConditionItem{
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "ip", Operator: "in_list", Value: "site.bad"}},
+						{Type: "single", Fields: rules.Condition{Type: "single", Field: "ip", Operator: "in_list", Value: "site.mylist"}},
 						{
 							Type: "multival",
 							Fields: rules.MultivalCondition{
@@ -79,8 +79,8 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 								Operator:      "exists",
 								GroupOperator: "all",
 								Conditions: []rules.ConditionMul{
-									{Type: "single", Field: "name", Operator: "equals", Value: "x-something"},
-									{Type: "single", Field: "value_string", Operator: "equals", Value: "abc-123"},
+									{Type: "single", Field: "name", Operator: "equals", Value: "X-myHeader"},
+									{Type: "single", Field: "value_string", Operator: "equals", Value: "sampleString"},
 								},
 							},
 						},
@@ -133,7 +133,7 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 	require.Len(t, groupConds, 1)
 	require.Equal(t, "ip", groupConds[0].(map[string]any)["field"])
 	require.Equal(t, "in_list", groupConds[0].(map[string]any)["operator"])
-	require.Equal(t, "site.bad", groupConds[0].(map[string]any)["value"])
+	require.Equal(t, "site.mylist", groupConds[0].(map[string]any)["value"])
 
 	// Check nested multival condition within the group
 	groupMultivals := groupWithMultival["multival_condition"].([]any)
@@ -148,10 +148,10 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 	require.Len(t, nestedMultivalConds, 2)
 	require.Equal(t, "name", nestedMultivalConds[0].(map[string]any)["field"])
 	require.Equal(t, "equals", nestedMultivalConds[0].(map[string]any)["operator"])
-	require.Equal(t, "x-something", nestedMultivalConds[0].(map[string]any)["value"])
+	require.Equal(t, "X-myHeader", nestedMultivalConds[0].(map[string]any)["value"])
 	require.Equal(t, "value_string", nestedMultivalConds[1].(map[string]any)["field"])
 	require.Equal(t, "equals", nestedMultivalConds[1].(map[string]any)["operator"])
-	require.Equal(t, "abc-123", nestedMultivalConds[1].(map[string]any)["value"])
+	require.Equal(t, "sampleString", nestedMultivalConds[1].(map[string]any)["value"])
 
 	// Multival conditions
 	multivals := d.Get("multival_condition").([]any)
@@ -344,7 +344,7 @@ func TestAccFastlyNGWAFWorkspaceRule_nestedMultival(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.group_operator", "all"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.field", "ip"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.operator", "in_list"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.value", "site.bad"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.value", "site.mylist"),
 
 					// Nested multival condition within group
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.field", "request_header"),
@@ -352,23 +352,23 @@ func TestAccFastlyNGWAFWorkspaceRule_nestedMultival(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.group_operator", "all"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.field", "name"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.operator", "equals"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.value", "x-something"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.value", "X-myHeader"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.field", "value_string"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.operator", "equals"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.value", "abc-123"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.value", "sampleString"),
 
 					// Second group condition with different nested multival
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.group_operator", "all"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.field", "ip"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.operator", "in_list"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.value", "site.bad"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.value", "site.mylist"),
 
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.field", "request_header"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.operator", "exists"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.group_operator", "any"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.field", "name"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.operator", "equals"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.value", "x-somethingelse"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.value", "X-myHeaderelse"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.1.field", "value_string"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.1.operator", "in_list"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.1.value", "corp.test"),
@@ -624,7 +624,7 @@ resource "fastly_ngwaf_workspace_rule" "example" {
     condition {
       field    = "ip"
       operator = "in_list"
-      value    = "site.bad"
+      value    = "site.mylist"
     }
 
     multival_condition {
@@ -635,13 +635,13 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       condition {
         field    = "name"
         operator = "equals"
-        value    = "x-something"
+        value    = "X-myHeader"
       }
 
       condition {
         field    = "value_string"
         operator = "equals"
-        value    = "abc-123"
+        value    = "sampleString"
       }
     }
   }
@@ -652,7 +652,7 @@ resource "fastly_ngwaf_workspace_rule" "example" {
     condition {
       field    = "ip"
       operator = "in_list"
-      value    = "site.bad"
+      value    = "site.mylist"
     }
 
     multival_condition {
@@ -663,7 +663,7 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       condition {
         field    = "name"
         operator = "equals"
-        value    = "x-somethingelse"
+        value    = "X-myHeaderelse"
       }
 
       condition {

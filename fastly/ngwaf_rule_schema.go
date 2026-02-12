@@ -1,6 +1,10 @@
 package fastly
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -15,6 +19,9 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: customdiff.All(
+			validateGroupConditionNotEmpty,
+		),
 		Schema: map[string]*schema.Schema{
 			"action": {
 				Type:        schema.TypeList,
@@ -262,4 +269,45 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 			},
 		},
 	}
+}
+
+// validateGroupConditionNotEmpty ensures that each group_condition block
+// contains at least one of: condition or multival_condition.
+func validateGroupConditionNotEmpty(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	groupConditions, ok := diff.GetOk("group_condition")
+	if !ok {
+		return nil
+	}
+
+	groupConditionList := groupConditions.([]interface{})
+
+	for i, gc := range groupConditionList {
+		groupConditionMap := gc.(map[string]interface{})
+
+		// Check for both condition and multival_condition
+		conditions, condExists := groupConditionMap["condition"]
+		multivalConditions, multivalExists := groupConditionMap["multival_condition"]
+
+		// Count non-nil, non-empty lists
+		condLen := 0
+		if condExists && conditions != nil {
+			if condList, ok := conditions.([]interface{}); ok {
+				condLen = len(condList)
+			}
+		}
+
+		multivalLen := 0
+		if multivalExists && multivalConditions != nil {
+			if multivalList, ok := multivalConditions.([]interface{}); ok {
+				multivalLen = len(multivalList)
+			}
+		}
+
+		// Both must be zero (empty or missing) to be invalid
+		if condLen == 0 && multivalLen == 0 {
+			return fmt.Errorf("group_condition[%d]: must define at least one 'condition' or 'multival_condition' block", i)
+		}
+	}
+
+	return nil
 }

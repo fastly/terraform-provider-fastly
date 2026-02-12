@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -1070,4 +1071,54 @@ resource "fastly_ngwaf_workspace_rule" "templated_signal" {
   }
 }
 `, workspaceName, ruleName)
+}
+
+func TestAccFastlyNGWAFWorkspaceRule_emptyGroupCondition(t *testing.T) {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	ruleDescription := fmt.Sprintf("Terraform Rule %s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNGWAFWorkspaceRuleConfigEmptyGroupCondition(workspaceName, ruleDescription),
+				ExpectError: regexp.MustCompile(`group_condition\[0\]: must define at least one 'condition' or 'multival_condition' block`),
+			},
+		},
+	})
+}
+
+func testAccNGWAFWorkspaceRuleConfigEmptyGroupCondition(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+  resource "fastly_ngwaf_workspace" "example" {
+    name                            = "%s"
+    description                     = "Test NGWAF Workspace"
+    mode                            = "block"
+    ip_anonymization                = "hashed"
+    client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+    default_blocking_response_code = 429
+
+    attack_signal_thresholds {}
+  }
+
+  resource "fastly_ngwaf_workspace_rule" "example" {
+    workspace_id     = fastly_ngwaf_workspace.example.id
+    type             = "request"
+    description      = "%s"
+    enabled          = true
+    request_logging  = "sampled"
+    group_operator   = "all"
+
+    action {
+      type = "block"
+    }
+
+    group_condition {
+      group_operator = "all"
+      # Empty - no condition or multival_condition!
+    }
+  }
+  `, workspaceName, ruleName)
 }

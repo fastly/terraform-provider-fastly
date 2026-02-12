@@ -213,7 +213,10 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 			continue
 		}
 
-		groupOp := m["group_operator"].(string)
+		groupOp, ok := m["group_operator"].(string)
+		if !ok {
+			continue
+		}
 
 		// Extract single conditions
 		var conditions []*rules.CreateCondition
@@ -223,10 +226,22 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 				if !ok {
 					continue
 				}
+				field, ok := cm["field"].(string)
+				if !ok {
+					continue
+				}
+				operator, ok := cm["operator"].(string)
+				if !ok {
+					continue
+				}
+				value, ok := cm["value"].(string)
+				if !ok {
+					continue
+				}
 				conditions = append(conditions, &rules.CreateCondition{
-					Field:    gofastly.ToPointer(cm["field"].(string)),
-					Operator: gofastly.ToPointer(cm["operator"].(string)),
-					Value:    gofastly.ToPointer(cm["value"].(string)),
+					Field:    gofastly.ToPointer(field),
+					Operator: gofastly.ToPointer(operator),
+					Value:    gofastly.ToPointer(value),
 				})
 			}
 		}
@@ -240,9 +255,18 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 					continue
 				}
 
-				field := mvm["field"].(string)
-				operator := mvm["operator"].(string)
-				mvGroupOp := mvm["group_operator"].(string)
+				field, ok := mvm["field"].(string)
+				if !ok {
+					continue
+				}
+				operator, ok := mvm["operator"].(string)
+				if !ok {
+					continue
+				}
+				mvGroupOp, ok := mvm["group_operator"].(string)
+				if !ok {
+					continue
+				}
 
 				// Extract nested conditions within the multival
 				var mvConditions []*rules.CreateConditionMult
@@ -252,10 +276,22 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 						if !ok {
 							continue
 						}
+						mvField, ok := cm["field"].(string)
+						if !ok {
+							continue
+						}
+						mvOperator, ok := cm["operator"].(string)
+						if !ok {
+							continue
+						}
+						mvValue, ok := cm["value"].(string)
+						if !ok {
+							continue
+						}
 						mvConditions = append(mvConditions, &rules.CreateConditionMult{
-							Field:    gofastly.ToPointer(cm["field"].(string)),
-							Operator: gofastly.ToPointer(cm["operator"].(string)),
-							Value:    gofastly.ToPointer(cm["value"].(string)),
+							Field:    gofastly.ToPointer(mvField),
+							Operator: gofastly.ToPointer(mvOperator),
+							Value:    gofastly.ToPointer(mvValue),
 						})
 					}
 				}
@@ -291,7 +327,10 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 			continue
 		}
 
-		groupOp := m["group_operator"].(string)
+		groupOp, ok := m["group_operator"].(string)
+		if !ok {
+			continue
+		}
 
 		// Extract single conditions
 		var conditions []*rules.UpdateCondition
@@ -301,10 +340,22 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 				if !ok {
 					continue
 				}
+				field, ok := cm["field"].(string)
+				if !ok {
+					continue
+				}
+				operator, ok := cm["operator"].(string)
+				if !ok {
+					continue
+				}
+				value, ok := cm["value"].(string)
+				if !ok {
+					continue
+				}
 				conditions = append(conditions, &rules.UpdateCondition{
-					Field:    gofastly.ToPointer(cm["field"].(string)),
-					Operator: gofastly.ToPointer(cm["operator"].(string)),
-					Value:    gofastly.ToPointer(cm["value"].(string)),
+					Field:    gofastly.ToPointer(field),
+					Operator: gofastly.ToPointer(operator),
+					Value:    gofastly.ToPointer(value),
 				})
 			}
 		}
@@ -318,9 +369,18 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 					continue
 				}
 
-				field := mvm["field"].(string)
-				operator := mvm["operator"].(string)
-				mvGroupOp := mvm["group_operator"].(string)
+				field, ok := mvm["field"].(string)
+				if !ok {
+					continue
+				}
+				operator, ok := mvm["operator"].(string)
+				if !ok {
+					continue
+				}
+				mvGroupOp, ok := mvm["group_operator"].(string)
+				if !ok {
+					continue
+				}
 
 				// Extract nested conditions within the multival
 				var mvConditions []*rules.UpdateConditionMult
@@ -330,10 +390,22 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 						if !ok {
 							continue
 						}
+						mvField, ok := cm["field"].(string)
+						if !ok {
+							continue
+						}
+						mvOperator, ok := cm["operator"].(string)
+						if !ok {
+							continue
+						}
+						mvValue, ok := cm["value"].(string)
+						if !ok {
+							continue
+						}
 						mvConditions = append(mvConditions, &rules.UpdateConditionMult{
-							Field:    gofastly.ToPointer(cm["field"].(string)),
-							Operator: gofastly.ToPointer(cm["operator"].(string)),
-							Value:    gofastly.ToPointer(cm["value"].(string)),
+							Field:    gofastly.ToPointer(mvField),
+							Operator: gofastly.ToPointer(mvOperator),
+							Value:    gofastly.ToPointer(mvValue),
 						})
 					}
 				}

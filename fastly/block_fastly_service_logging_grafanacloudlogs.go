@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v13/fastly"
 )
 
 // GrafanaCloudLogsServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.

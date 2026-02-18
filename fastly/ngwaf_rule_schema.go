@@ -20,6 +20,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.All(
+			validateRuleHasConditions,
 			validateGroupConditionNotEmpty,
 		),
 		Schema: map[string]*schema.Schema{
@@ -307,6 +308,43 @@ func validateGroupConditionNotEmpty(_ context.Context, diff *schema.ResourceDiff
 		if condLen == 0 && multivalLen == 0 {
 			return fmt.Errorf("group_condition[%d]: must define at least one 'condition' or 'multival_condition' block", i)
 		}
+	}
+
+	return nil
+}
+
+// validateRuleHasConditions ensures that defined rules have at least one condition at the top level
+// (condition, group_condition, or multival_condition).
+func validateRuleHasConditions(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	hasCondition := false
+
+	// Check for top-level condition.
+	if conditions, ok := diff.GetOk("condition"); ok {
+		if condList, ok := conditions.([]interface{}); ok && len(condList) > 0 {
+			hasCondition = true
+		}
+	}
+
+	// Check for group_condition.
+	if !hasCondition {
+		if groupConditions, ok := diff.GetOk("group_condition"); ok {
+			if gcList, ok := groupConditions.([]interface{}); ok && len(gcList) > 0 {
+				hasCondition = true
+			}
+		}
+	}
+
+	// Check for top level multival_condition.
+	if !hasCondition {
+		if multivalConditions, ok := diff.GetOk("multival_condition"); ok {
+			if mvList, ok := multivalConditions.([]interface{}); ok && len(mvList) > 0 {
+				hasCondition = true
+			}
+		}
+	}
+
+	if !hasCondition {
+		return fmt.Errorf("rule must define at least one 'condition', 'group_condition', or 'multival_condition'")
 	}
 
 	return nil

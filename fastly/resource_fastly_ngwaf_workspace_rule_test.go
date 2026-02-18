@@ -1122,3 +1122,42 @@ func testAccNGWAFWorkspaceRuleConfigEmptyGroupCondition(workspaceName, ruleName 
   }
   `, workspaceName, ruleName)
 }
+
+func TestAccFastlyNGWAFRule_noConditions(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFastlyNGWAFRuleConfigNoConditions(),
+				ExpectError: regexp.MustCompile("rule must define at least one 'condition', 'group_condition', or 'multival_condition'"),
+			},
+		},
+	})
+}
+
+func testAccFastlyNGWAFRuleConfigNoConditions() string {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	return fmt.Sprintf(`
+  resource "fastly_ngwaf_workspace" "test" {
+    name                            = "%s"
+    description                     = "Test NGWAF Workspace"
+    mode                            = "block"
+    ip_anonymization                = "hashed"
+    client_ip_headers               = ["X-Forwarded-For"]
+    default_blocking_response_code = 429
+
+    attack_signal_thresholds {}
+  }
+
+  resource "fastly_ngwaf_workspace_rule" "test" {
+    workspace_id = fastly_ngwaf_workspace.test.id
+    action {
+      type = "block"
+    }
+    description = "Empty rule with no conditions"
+    enabled = true
+    type = "request"
+  }
+  `, workspaceName)
+}

@@ -1123,10 +1123,11 @@ func testAccNGWAFWorkspaceRuleConfigEmptyGroupCondition(workspaceName, ruleName 
   `, workspaceName, ruleName)
 }
 
-func TestAccFastlyNGWAFRule_noConditions(t *testing.T) {
+func TestAccFastlyNGWAFWorkspaceRule_noConditions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFastlyNGWAFRuleConfigNoConditions(),

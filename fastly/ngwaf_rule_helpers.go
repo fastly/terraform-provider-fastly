@@ -1,7 +1,7 @@
 package fastly
 
 import (
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/rules"
 )
 
 func expandNGWAFRuleConditionsGeneric(
@@ -86,12 +86,24 @@ func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[strin
 
 		case "group":
 			if gc, ok := item.Fields.(rules.GroupCondition); ok {
-				conds := make([]any, len(gc.Conditions))
-				for i, c := range gc.Conditions {
-					conds[i] = map[string]any{
-						"field":    c.Field,
-						"operator": c.Operator,
-						"value":    c.Value,
+				// go-fastly/v13 changed GroupCondition.Conditions from []Condition to []GroupConditionItem
+				// to support mixed single and multival conditions inside group operators.
+				//
+				// Our Terraform schema for group_condition currently models only "single" nested conditions
+				// (field/operator/value). We flatten only those and ignore other nested item types for now.
+				conds := make([]any, 0, len(gc.Conditions))
+				for _, gi := range gc.Conditions {
+					switch gi.Type {
+					case "single":
+						if sc, ok := gi.Fields.(rules.SingleCondition); ok {
+							conds = append(conds, map[string]any{
+								"field":    sc.Field,
+								"operator": sc.Operator,
+								"value":    sc.Value,
+							})
+						}
+					default:
+						// ignore unsupported nested group condition item types for now
 					}
 				}
 

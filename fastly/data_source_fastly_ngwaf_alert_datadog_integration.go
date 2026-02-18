@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	AlertDatadogIntegrations "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/datadog"
+	AlertDatadogIntegrations "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
 func dataSourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {

@@ -57,8 +57,8 @@ func dataSourceFastlyStagingIPsRead(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Reading staging IPs")
 
 	remoteState, err := conn.ListDomains(ctx, &gofastly.ListDomainsInput{
-		ServiceID:      d.Get("service_id").(string),
-		ServiceVersion: d.Get("service_version").(int),
+		ServiceID:         d.Get("service_id").(string),
+		ServiceVersion:    d.Get("service_version").(int),
 		IncludeStagingIPs: true,
 	})
 	if err != nil {

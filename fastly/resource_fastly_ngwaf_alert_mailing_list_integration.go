@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
-	mailingListAlerts "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/mailinglist"
+	gofastly "github.com/fastly/go-fastly/v13/fastly"
+	mailingListAlerts "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces/alerts/mailinglist"
 )
 
 func resourceFastlyNGWAFAlertMailingListIntegration() *schema.Resource {

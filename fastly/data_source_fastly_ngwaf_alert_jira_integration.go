@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	AlertJiraIntegrations "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/jira"
+	AlertJiraIntegrations "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces/alerts/jira"
 )
 
 func dataSourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {

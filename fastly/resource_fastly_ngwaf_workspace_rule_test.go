@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/rules"
 )
 
 func TestFlattenNGWAFRuleResponse(t *testing.T) {
@@ -49,9 +49,15 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Type: "group",
 				Fields: rules.GroupCondition{
 					GroupOperator: "all",
-					Conditions: []rules.Condition{
-						{Type: "single", Field: "country", Operator: "equals", Value: "AD"},
-						{Type: "single", Field: "method", Operator: "equals", Value: "POST"},
+					Conditions: []rules.GroupConditionItem{
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "country", Operator: "equals", Value: "AD"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "method", Operator: "equals", Value: "POST"},
+						},
 					},
 				},
 			},
@@ -59,10 +65,19 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Type: "group",
 				Fields: rules.GroupCondition{
 					GroupOperator: "any",
-					Conditions: []rules.Condition{
-						{Type: "single", Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
-						{Type: "single", Field: "method", Operator: "equals", Value: "HEAD"},
-						{Type: "single", Field: "domain", Operator: "equals", Value: "example.com"},
+					Conditions: []rules.GroupConditionItem{
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "method", Operator: "equals", Value: "HEAD"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "domain", Operator: "equals", Value: "example.com"},
+						},
 					},
 				},
 			},

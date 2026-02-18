@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	ws "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces"
+	ws "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces"
 )
 
 func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {

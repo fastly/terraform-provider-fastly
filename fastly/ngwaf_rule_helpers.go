@@ -1,7 +1,7 @@
 package fastly
 
 import (
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/rules"
 )
 
 func expandNGWAFRuleConditionsGeneric(
@@ -53,11 +53,11 @@ func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[strin
 				for _, gci := range gc.Conditions {
 					switch gci.Type {
 					case "single":
-						if c, ok := gci.Fields.(rules.Condition); ok {
+						if sc, ok := gci.Fields.(rules.SingleCondition); ok {
 							conds = append(conds, map[string]any{
-								"field":    c.Field,
-								"operator": c.Operator,
-								"value":    c.Value,
+								"field":    sc.Field,
+								"operator": sc.Operator,
+								"value":    sc.Value,
 							})
 						}
 

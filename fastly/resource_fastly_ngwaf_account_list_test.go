@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/lists"
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/lists"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/scope"
 )
 
 func TestAccFastlyNGWAFAccountList_basic(t *testing.T) {

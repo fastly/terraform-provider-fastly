@@ -6,7 +6,7 @@ toolchain go1.25.7
 
 require (
 	github.com/deckarep/golang-set/v2 v2.8.0
-	github.com/fastly/go-fastly/v12 v12.1.3-0.20260211144541-3a400219a0df
+	github.com/fastly/go-fastly/v13 v13.0.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-hclog v1.6.3

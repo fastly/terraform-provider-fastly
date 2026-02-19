@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/rules"
 )
 
 func TestFlattenNGWAFRuleResponse(t *testing.T) {
@@ -51,8 +51,14 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Fields: rules.GroupCondition{
 					GroupOperator: "all",
 					Conditions: []rules.GroupConditionItem{
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "country", Operator: "equals", Value: "AD"}},
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "method", Operator: "equals", Value: "POST"}},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "country", Operator: "equals", Value: "AD"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "method", Operator: "equals", Value: "POST"},
+						},
 					},
 				},
 			},
@@ -61,9 +67,18 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Fields: rules.GroupCondition{
 					GroupOperator: "any",
 					Conditions: []rules.GroupConditionItem{
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"}},
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "method", Operator: "equals", Value: "HEAD"}},
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "domain", Operator: "equals", Value: "example.com"}},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "method", Operator: "equals", Value: "HEAD"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "domain", Operator: "equals", Value: "example.com"},
+						},
 					},
 				},
 			},
@@ -72,7 +87,10 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Fields: rules.GroupCondition{
 					GroupOperator: "all",
 					Conditions: []rules.GroupConditionItem{
-						{Type: "single", Fields: rules.Condition{Type: "single", Field: "ip", Operator: "in_list", Value: "site.mylist"}},
+						{
+							Type:   "single",
+							Fields: rules.SingleCondition{Field: "ip", Operator: "in_list", Value: "site.mylist"},
+						},
 						{
 							Type: "multival",
 							Fields: rules.MultivalCondition{
@@ -80,8 +98,8 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 								Operator:      "exists",
 								GroupOperator: "all",
 								Conditions: []rules.ConditionMul{
-									{Type: "single", Field: "name", Operator: "equals", Value: "X-myHeader"},
-									{Type: "single", Field: "value_string", Operator: "equals", Value: "sampleString"},
+									{Field: "name", Operator: "equals", Value: "X-myHeader"},
+									{Field: "value_string", Operator: "equals", Value: "sampleString"},
 								},
 							},
 						},

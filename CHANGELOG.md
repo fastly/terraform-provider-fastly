@@ -7,7 +7,7 @@
 - feat(product_enablement): Adding support for the `domain_inspector` feature to Compute services ([#1175](https://github.com/fastly/terraform-provider-fastly/pull/1175))
 - feat(domain_management): Added import support for the `fastly_domain_service_link` resource and improved test coverage ([#1178](https://github.com/fastly/terraform-provider-fastly/pull/1178))
 - feat(domains): Removed `_v1` suffixes from domain-related resources and data sources, leaving deprecated aliases in place. ([#1181](https://github.com/fastly/terraform-provider-fastly/pull/1181))
-- feat(products/staging): Add a Data Source for Staging IP addresses ([#780](https://github.com/fastly/terraform-provider-fastly/pull/1186))
+- feat(products/staging): Add a Data Source for Staging IP addresses ([#1186](https://github.com/fastly/terraform-provider-fastly/pull/1186))
 
 ### BUG FIXES:
 

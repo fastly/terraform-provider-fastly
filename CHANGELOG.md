@@ -4,13 +4,23 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+
+## 8.7.0 (February 20, 2026)
+
+### ENHANCEMENTS:
+
 - feat(product_enablement): Adding support for the `domain_inspector` feature to Compute services ([#1175](https://github.com/fastly/terraform-provider-fastly/pull/1175))
 - feat(domain_management): Added import support for the `fastly_domain_service_link` resource and improved test coverage ([#1178](https://github.com/fastly/terraform-provider-fastly/pull/1178))
 - feat(domains): Removed `_v1` suffixes from domain-related resources and data sources, leaving deprecated aliases in place. ([#1181](https://github.com/fastly/terraform-provider-fastly/pull/1181))
 - feat(products/staging): Add a Data Source for Staging IP addresses ([#1186](https://github.com/fastly/terraform-provider-fastly/pull/1186))
 - feat(ngwaf/rules): Added support for `multival` type conditions nested in `group_operator` blocks. ([#1189](https://github.com/fastly/terraform-provider-fastly/pull/1189))
 
-### BUG FIXES:
 
 ### DEPENDENCIES:
 
@@ -24,7 +34,6 @@
 - build(deps): `golang.org/x/net` from 0.49.0 to 0.50.0 ([#1188](https://github.com/fastly/terraform-provider-fastly/pull/1188))
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.2 to 13.0.0 ([#1190](https://github.com/fastly/terraform-provider-fastly/pull/1190))
 
-### DOCUMENTATION:
 
 ## 8.6.0 (December 17, 2025)
 

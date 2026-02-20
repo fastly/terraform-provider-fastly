@@ -68,7 +68,7 @@ $ terraform import fastly_ngwaf_account_rule.demo <ruleID>
 ### Optional
 
 - `condition` (Block List) Flat list of individual conditions. Each must include `field`, `operator`, and `value`. (see [below for nested schema](#nestedblock--condition))
-- `group_condition` (Block List) List of grouped conditions with nested logic. Each group must define a `group_operator` and at least one condition. (see [below for nested schema](#nestedblock--group_condition))
+- `group_condition` (Block List) List of grouped conditions with nested logic. Each group must define a `group_operator` and at least one condition or multival_condition. (see [below for nested schema](#nestedblock--group_condition))
 - `group_operator` (String) Logical operator to apply to group conditions. Accepted values are `any` and `all`.
 - `multival_condition` (Block List) List of multival conditions with nested logic. Each multival list must define a `field, operator, group_operator` and at least one condition. (see [below for nested schema](#nestedblock--multival_condition))
 - `request_logging` (String) Logging behavior for matching requests. Accepted values are `sampled` and `none`.
@@ -104,8 +104,12 @@ Required:
 
 Required:
 
-- `condition` (Block List, Min: 1) A list of nested conditions in this group. (see [below for nested schema](#nestedblock--group_condition--condition))
 - `group_operator` (String) Logical operator for the group. Accepted values are `any` and `all`.
+
+Optional:
+
+- `condition` (Block List) A list of nested conditions in this group. (see [below for nested schema](#nestedblock--group_condition--condition))
+- `multival_condition` (Block List) List of nested multival conditions in this group. Each multival list must define a `field, operator, group_operator` and at least one condition. (see [below for nested schema](#nestedblock--group_condition--multival_condition))
 
 <a id="nestedblock--group_condition--condition"></a>
 ### Nested Schema for `group_condition.condition`
@@ -115,6 +119,27 @@ Required:
 - `field` (String) Field to inspect (e.g., `ip`, `path`).
 - `operator` (String) Operator to apply (e.g., `equals`, `contains`).
 - `value` (String) The value to test the field against.
+
+
+<a id="nestedblock--group_condition--multival_condition"></a>
+### Nested Schema for `group_condition.multival_condition`
+
+Required:
+
+- `condition` (Block List, Min: 1) A list of nested conditions in this multival. (see [below for nested schema](#nestedblock--group_condition--multival_condition--condition))
+- `field` (String) Enums for multival condition field. Accepted values are `post_parameter`, `query_parameter`, `request_cookie`, `request_header`, `response_header`, and `signal`.
+- `group_operator` (String) Logical operator for the multival condition. Accepted values are `any` and `all`.
+- `operator` (String) Indicates whether the supplied conditions will check for existence or non-existence of matching field values. Accepted values are `exists` and `does_not_exist`.
+
+<a id="nestedblock--group_condition--multival_condition--condition"></a>
+### Nested Schema for `group_condition.multival_condition.condition`
+
+Required:
+
+- `field` (String) Field to inspect (e.g., `name`, `value`, `signal_id`).
+- `operator` (String) Operator to apply (e.g., `equals`, `contains`).
+- `value` (String) The value to test the field against.
+
 
 
 

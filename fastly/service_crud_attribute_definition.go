@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v13/fastly"
 )
 
 // ServiceCRUDAttributeDefinition is an interface for most ServiceAttributeDefinition implementations which can be

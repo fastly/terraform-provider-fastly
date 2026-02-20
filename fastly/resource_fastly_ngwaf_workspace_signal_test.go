@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/signals"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/signals"
 )
 
 func TestFlattenNGWAFSignalResponse(t *testing.T) {

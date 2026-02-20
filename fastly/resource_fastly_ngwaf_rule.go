@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/scope"
 )
 
 func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
@@ -26,6 +26,8 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	// Force recreation for templated_signal rules to avoid "templateSignal rules expect no actions"
 	// API error
 	r.CustomizeDiff = customdiff.All(
+		// Preserve base validations (validateRuleHasConditions, validateGroupConditionNotEmpty)
+		r.CustomizeDiff,
 		// Validate description for templated_signal rules
 		func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 			if diff.Get("type").(string) == "templated_signal" {

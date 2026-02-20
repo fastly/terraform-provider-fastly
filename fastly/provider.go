@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v13/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/version"
 )
@@ -80,6 +80,7 @@ func Provider() *schema.Provider {
 			"fastly_package_hash":                            dataSourceFastlyPackageHash(),
 			"fastly_secretstores":                            dataSourceFastlySecretStores(),
 			"fastly_services":                                dataSourceFastlyServices(),
+			"fastly_staging_ips":                             dataSourceFastlyStagingIPs(),
 			"fastly_tls_activation":                          dataSourceFastlyTLSActivation(),
 			"fastly_tls_activation_ids":                      dataSourceFastlyTLSActivationIDs(),
 			"fastly_tls_certificate":                         dataSourceFastlyTLSCertificate(),

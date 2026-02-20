@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
-	ddalerts "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/datadog"
+	gofastly "github.com/fastly/go-fastly/v13/fastly"
+	ddalerts "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
 func resourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {

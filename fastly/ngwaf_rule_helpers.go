@@ -1,7 +1,7 @@
 package fastly
 
 import (
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/rules"
 )
 
 func expandNGWAFRuleConditionsGeneric(
@@ -28,46 +28,6 @@ func expandNGWAFRuleConditionsGeneric(
 	return conditions
 }
 
-func expandNGWAFRuleGroupConditionsGeneric(
-	raw []any,
-	newFn func(field, operator, value string) any,
-	groupFn func(operator string, conditions []any) any,
-) []any {
-	if raw == nil {
-		return nil
-	}
-
-	var groupConditions []any
-	for _, item := range raw {
-		m, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		rawConditions, ok := m["condition"].([]any)
-		if !ok || len(rawConditions) == 0 {
-			continue
-		}
-
-		var conditions []any
-		for _, c := range rawConditions {
-			cm, ok := c.(map[string]any)
-			if !ok {
-				continue
-			}
-			conditions = append(conditions, newFn(
-				cm["field"].(string),
-				cm["operator"].(string),
-				cm["value"].(string),
-			))
-		}
-
-		groupConditions = append(groupConditions, groupFn(m["group_operator"].(string), conditions))
-	}
-
-	return groupConditions
-}
-
 func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[string]any, []map[string]any, []map[string]any) {
 	var singles []map[string]any
 	var groups []map[string]any
@@ -86,18 +46,50 @@ func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[strin
 
 		case "group":
 			if gc, ok := item.Fields.(rules.GroupCondition); ok {
-				conds := make([]any, len(gc.Conditions))
-				for i, c := range gc.Conditions {
-					conds[i] = map[string]any{
-						"field":    c.Field,
-						"operator": c.Operator,
-						"value":    c.Value,
+				var conds []any
+				var multivalConds []any
+
+				// Iterate through all conditions in the group
+				for _, gci := range gc.Conditions {
+					switch gci.Type {
+					case "single":
+						if sc, ok := gci.Fields.(rules.SingleCondition); ok {
+							conds = append(conds, map[string]any{
+								"field":    sc.Field,
+								"operator": sc.Operator,
+								"value":    sc.Value,
+							})
+						}
+
+					case "multival":
+						if mc, ok := gci.Fields.(rules.MultivalCondition); ok {
+							mvConds := make([]any, len(mc.Conditions))
+							for i, c := range mc.Conditions {
+								mvConds[i] = map[string]any{
+									"field":    c.Field,
+									"operator": c.Operator,
+									"value":    c.Value,
+								}
+							}
+
+							multivalConds = append(multivalConds, map[string]any{
+								"field":          mc.Field,
+								"operator":       mc.Operator,
+								"group_operator": mc.GroupOperator,
+								"condition":      mvConds,
+							})
+						}
 					}
 				}
 
 				group := map[string]any{
 					"group_operator": gc.GroupOperator,
-					"condition":      conds,
+				}
+				if len(conds) > 0 {
+					group["condition"] = conds
+				}
+				if len(multivalConds) > 0 {
+					group["multival_condition"] = multivalConds
 				}
 
 				groups = append(groups, group)

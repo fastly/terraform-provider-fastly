@@ -160,6 +160,71 @@ func TestAccFastlyServiceLoggingElasticsearch_compute_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceLoggingElasticsearch_vcl_url_tld_change(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	endpointName := "logging-elasticsearch-url-tld-change"
+	index := "fastly-cdn-logs-test"
+	urlInvalid := "https://fastly-logs-ingest-ext.svc.us-west-2.example.invalid"
+	urlTest := "https://fastly-logs-ingest-ext.svc.us-west-2.example.test"
+
+	empty := ""
+
+	logInvalid := gofastly.Elasticsearch{
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer(endpointName),
+		Index:             gofastly.ToPointer(index),
+		URL:               gofastly.ToPointer(urlInvalid),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+
+		// VCL logging attributes (set explicitly because we include them in config)
+		FormatVersion:    gofastly.ToPointer(2),
+		Format:           gofastly.ToPointer(LoggingElasticsearchDefaultFormat),
+		Placement:        gofastly.ToPointer("none"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+
+		// Optional strings come back as "" from the API
+		User:              gofastly.ToPointer(empty),
+		Password:          gofastly.ToPointer(empty),
+		Pipeline:          gofastly.ToPointer(empty),
+		TLSHostname:       gofastly.ToPointer(empty),
+		ResponseCondition: gofastly.ToPointer(empty),
+	}
+
+	logTest := logInvalid
+	logTest.URL = gofastly.ToPointer(urlTest)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLElasticsearchURLConfig(name, domain, endpointName, index, urlInvalid),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*gofastly.Elasticsearch{&logInvalid}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_elasticsearch.#", "1"),
+				),
+			},
+			{
+				// Only change is the URL TLD (.invalid -> .test)
+				Config: testAccServiceVCLElasticsearchURLConfig(name, domain, endpointName, index, urlTest),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*gofastly.Elasticsearch{&logTest}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_elasticsearch.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *gofastly.ServiceDetail, elasticsearch []*gofastly.Elasticsearch, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -211,6 +276,36 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *gofastly.Servi
 
 		return nil
 	}
+}
+
+func testAccServiceVCLElasticsearchURLConfig(serviceName, domain, endpointName, index, url string) string {
+	// Minimal config focused on URL diff behavior.
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-elasticsearch-logging-url-tld-change"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_elasticsearch {
+    name              = %q
+    index             = %q
+    url               = %q
+    format_version    = 2
+    placement         = "none"
+    processing_region = "none"
+  }
+
+  force_destroy = true
+}
+`, serviceName, domain, endpointName, index, url)
 }
 
 func testAccServiceVCLElasticsearchComputeConfig(name string, domain string) string {

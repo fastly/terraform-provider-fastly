@@ -1,6 +1,15 @@
 ## [UNRELEASED]
 
-### BREAKING:
+### ENHANCEMENTS:
+
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+
+## 8.7.0 (February 20, 2026)
 
 ### ENHANCEMENTS:
 

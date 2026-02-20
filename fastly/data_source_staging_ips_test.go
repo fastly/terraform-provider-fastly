@@ -51,15 +51,18 @@ resource "fastly_service_vcl" "example" {
     name = "%s.com"
   }
 
-  force_destroy = true
+  backend {
+    address = "httpbin.org"
+    name    = "tf-test backend"
+  }
 
-  stage = true
+  force_destroy = true
 }
 
 data "fastly_staging_ips" "example" {
   depends_on      = [fastly_service_vcl.example]
   service_id      = fastly_service_vcl.example.id
-  service_version = fastly_service_vcl.example.staged_version
+  service_version = fastly_service_vcl.example.active_version
 }
 `
 

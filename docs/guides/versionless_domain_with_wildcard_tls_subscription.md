@@ -1,11 +1,11 @@
 ---
-page_title: versionless_domain_with_wildcard_tls_subscription
+page_title: Delivery service with a versionless subdomain of a wildcard TLS subscription
 subcategory: "Guides"
 ---
 
 ## Creating a Delivery Service using an existing Wildcard TLS Subscription
 
-If you have an existing wildcard TLS subscription managed outside of Terraform, you can create a new Delivery service in Terraform and then link it to a domain
+If you have an existing wildcard TLS subscription managed outside of Terraform, you can create a new Delivery service in Terraform and then link it to a subdomain of the wildcard domain.
 
 ```
 terraform {

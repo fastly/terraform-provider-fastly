@@ -29,17 +29,13 @@ data "fastly_tls_subscription" "subscription" {
   certificate_authority = "certainly"
 }
 
-resource "fastly_domain" "domain_demo" {
-  fqdn = "example.fastlyversionlessdomain.com"
-}
-
-resource "fastly_service_vcl" "vcl_demo" {
-  name          = "demofastly"
+resource "fastly_service_vcl" "vcl_example" {
+  name          = "versionlessdomainexample"
   force_destroy = true
 }
 
-resource "fastly_domain_service_link" "link" {
-  domain_id  = fastly_domain.domain_demo.id
-  service_id = fastly_service_vcl.vcl_demo.id
+resource "fastly_domain" "domain_example" {
+  fqdn       = "example.fastlyversionlessdomain.com"
+  service_id = fastly_service_vcl.vcl_example.id
 }
 ```

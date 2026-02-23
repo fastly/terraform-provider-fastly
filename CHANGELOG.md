@@ -10,6 +10,7 @@
 
 ### DOCUMENTATION:
 
+- docs(templates/guides): add a guide for adding a versionless domain to a service using a wildcard tls subscription ([#1194](https://github.com/fastly/terraform-provider-fastly/pull/1194))
 
 ## 8.7.0 (February 20, 2026)
 

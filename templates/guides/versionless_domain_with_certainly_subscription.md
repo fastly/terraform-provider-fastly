@@ -5,7 +5,7 @@ subcategory: "Guides"
 
 ## Creating a Delivery Service with a Certainly TLS Subscription using a versionless domain
 
-The following guide examplifies how to use versionless domains with a Certainly subscription to link to a new delivery service. 
+The following guide exemplifies how to use versionless domains with a Certainly subscription to link to a new delivery service. 
 
 ```
 terraform {
@@ -42,8 +42,8 @@ resource "fastly_tls_subscription" "subscription" {
   domains               = [fastly_domain.domain_example.fqdn]
   certificate_authority = "certainly"
   
-  // The 'depends_on' attribute ensures the order of 
-  // operations for domain management is maintained
+  // The 'depends_on' attribute ensures that the 
+  // TLS subscription is created after the domain.
   depends_on = [fastly_domain.domain_example]
 }
 
@@ -101,8 +101,8 @@ resource "fastly_tls_subscription" "subscription" {
     domains               = local.subdomains
     certificate_authority = "certainly"
 
-    // The 'depends_on' attribute ensures the order of 
-    // operations for domain management is maintained
+    // The 'depends_on' attribute ensures that the 
+    // TLS subscription is created after the domain.
     depends_on = [fastly_domain.bulk_domains]
 }
 

@@ -1,15 +1,11 @@
 ---
-page_title: versionless_domains
+page_title: versionless_domain_with_wildcard_tls_subscription
 subcategory: "Guides"
 ---
 
-## Versionless Domains
+## Creating a Delivery Service using an existing Wildcard TLS Subscription
 
-There are several different ways your Fastly services can use versionless domains
-
-## Delivery Service
-
-If you have an existing wildcard TLS subscription managed outside of Terraform, you can create a new subdomain in Terraform and then link it to a Delivery service
+If you have an existing wildcard TLS subscription managed outside of Terraform, you can create a new Delivery service in Terraform and then link it to a domain
 
 ```
 terraform {

@@ -19,7 +19,7 @@ resource "fastly_service_vcl" "vcl_example" {
 ```
 
 Once you [use the control panel to migrate this domain to a versionless domain](https://www.fastly.com/documentation/guides/getting-started/domains/working-with-domains/migrating-classic-domains/), you will need to update your HCL to match the pattern below.
-You can find the documentation on versionless domain patterns here: https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/domain. Do not apply your changes before running the import step below, as that will result in an error.
+You can find the documentation on versionless domain patterns here: https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/domain. Do not apply your changes before running the import in the next step, as that will result in an error.
 
 ```
 resource "fastly_service_vcl" "vcl_example" {

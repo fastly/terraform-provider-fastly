@@ -53,7 +53,7 @@ func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[strin
 				for _, gci := range gc.Conditions {
 					switch gci.Type {
 					case "single":
-						if sc, ok := gci.Fields.(rules.SingleCondition); ok {
+						if sc, ok := gci.Fields.(rules.Condition); ok {
 							conds = append(conds, map[string]any{
 								"field":    sc.Field,
 								"operator": sc.Operator,

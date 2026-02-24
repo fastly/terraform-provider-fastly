@@ -53,11 +53,11 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 					Conditions: []rules.GroupConditionItem{
 						{
 							Type:   "single",
-							Fields: rules.SingleCondition{Field: "country", Operator: "equals", Value: "AD"},
+							Fields: rules.Condition{Type: "single", Field: "country", Operator: "equals", Value: "AD"},
 						},
 						{
 							Type:   "single",
-							Fields: rules.SingleCondition{Field: "method", Operator: "equals", Value: "POST"},
+							Fields: rules.Condition{Type: "single", Field: "method", Operator: "equals", Value: "POST"},
 						},
 					},
 				},
@@ -69,15 +69,15 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 					Conditions: []rules.GroupConditionItem{
 						{
 							Type:   "single",
-							Fields: rules.SingleCondition{Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
+							Fields: rules.Condition{Type: "single", Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
 						},
 						{
 							Type:   "single",
-							Fields: rules.SingleCondition{Field: "method", Operator: "equals", Value: "HEAD"},
+							Fields: rules.Condition{Type: "single", Field: "method", Operator: "equals", Value: "HEAD"},
 						},
 						{
 							Type:   "single",
-							Fields: rules.SingleCondition{Field: "domain", Operator: "equals", Value: "example.com"},
+							Fields: rules.Condition{Type: "single", Field: "domain", Operator: "equals", Value: "example.com"},
 						},
 					},
 				},
@@ -89,7 +89,7 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 					Conditions: []rules.GroupConditionItem{
 						{
 							Type:   "single",
-							Fields: rules.SingleCondition{Field: "ip", Operator: "in_list", Value: "site.mylist"},
+							Fields: rules.Condition{Type: "single", Field: "ip", Operator: "in_list", Value: "site.mylist"},
 						},
 						{
 							Type: "multival",
@@ -98,8 +98,8 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 								Operator:      "exists",
 								GroupOperator: "all",
 								Conditions: []rules.ConditionMul{
-									{Field: "name", Operator: "equals", Value: "X-myHeader"},
-									{Field: "value_string", Operator: "equals", Value: "sampleString"},
+									{Type: "single", Field: "name", Operator: "equals", Value: "X-myHeader"},
+									{Type: "single", Field: "value_string", Operator: "equals", Value: "sampleString"},
 								},
 							},
 						},
@@ -142,6 +142,33 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 	// Group conditions
 	groups := d.Get("group_condition").([]any)
 	require.Len(t, groups, 3)
+
+	// Check first group's nested single conditions
+	group1 := groups[0].(map[string]any)
+	require.Equal(t, "all", group1["group_operator"])
+	group1Conds := group1["condition"].([]any)
+	require.Len(t, group1Conds, 2, "First group should have 2 nested single conditions")
+	require.Equal(t, "country", group1Conds[0].(map[string]any)["field"])
+	require.Equal(t, "equals", group1Conds[0].(map[string]any)["operator"])
+	require.Equal(t, "AD", group1Conds[0].(map[string]any)["value"])
+	require.Equal(t, "method", group1Conds[1].(map[string]any)["field"])
+	require.Equal(t, "equals", group1Conds[1].(map[string]any)["operator"])
+	require.Equal(t, "POST", group1Conds[1].(map[string]any)["value"])
+
+	// Check second group's nested single conditions
+	group2 := groups[1].(map[string]any)
+	require.Equal(t, "any", group2["group_operator"])
+	group2Conds := group2["condition"].([]any)
+	require.Len(t, group2Conds, 3, "Second group should have 3 nested single conditions")
+	require.Equal(t, "protocol_version", group2Conds[0].(map[string]any)["field"])
+	require.Equal(t, "equals", group2Conds[0].(map[string]any)["operator"])
+	require.Equal(t, "HTTP/1.0", group2Conds[0].(map[string]any)["value"])
+	require.Equal(t, "method", group2Conds[1].(map[string]any)["field"])
+	require.Equal(t, "equals", group2Conds[1].(map[string]any)["operator"])
+	require.Equal(t, "HEAD", group2Conds[1].(map[string]any)["value"])
+	require.Equal(t, "domain", group2Conds[2].(map[string]any)["field"])
+	require.Equal(t, "equals", group2Conds[2].(map[string]any)["operator"])
+	require.Equal(t, "example.com", group2Conds[2].(map[string]any)["value"])
 
 	// Check the group with nested multival condition (third group)
 	groupWithMultival := groups[2].(map[string]any)

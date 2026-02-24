@@ -32,7 +32,7 @@ resource "fastly_domain" "domain_example" {
 }
 ```
 
-Before making other changes you will need to import domain using terraform. The Domain ID can using the Fastly CLI by running `fastly domain list --fqdn=foo.example.com` and using the Domain ID from the record.
+Before making other changes you will need to import domain using terraform. The Domain ID can using [the Fastly CLI](https://www.fastly.com/documentation/reference/tools/cli/) by running `fastly domain list --fqdn=foo.example.com` and using the Domain ID from the record.
 
 ```
 terraform import fastly_domain.domain_example YOUR_DOMAIN_ID

@@ -14,7 +14,8 @@
 
 - docs(templates/guides): add a guide for adding a versionless domain to a service using a wildcard tls subscription ([#1194](https://github.com/fastly/terraform-provider-fastly/pull/1194))
 - docs(templates/guides): add a guide for using versionless domains with a Certainly subscription to a new devlivery service ([#1195](https://github.com/fastly/terraform-provider-fastly/pull/1195))
-- docs(templates/guides): add guide for migrating delivery service classic domain to a versionless domain ([#1196](https://github.com/fastly/terraform-provider-fastly/pull/1196))
+- docs(templates/guides): add a guide for migrating delivery service classic domain to a versionless domain ([#1196](https://github.com/fastly/terraform-provider-fastly/pull/1196))
+- docs(templates/guides): add a guide for linking versionless domains to a service when the domains are not managed in Terraform  ([#1199](https://github.com/fastly/terraform-provider-fastly/pull/1199))
 
 ## 8.7.0 (February 20, 2026)
 

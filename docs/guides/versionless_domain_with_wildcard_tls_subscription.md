@@ -21,7 +21,7 @@ provider "fastly" {
 }
 
 data "fastly_tls_subscription" "subscription" {
-  domains               = ["*.fastlyversionlessdomain.com"]
+  domains               = ["*.example.com"]
   certificate_authority = "certainly"
 }
 
@@ -31,7 +31,7 @@ resource "fastly_service_vcl" "vcl_example" {
 }
 
 resource "fastly_domain" "domain_example" {
-  fqdn       = "example.fastlyversionlessdomain.com"
+  fqdn       = "example.example.com"
   service_id = fastly_service_vcl.vcl_example.id
 }
 ```

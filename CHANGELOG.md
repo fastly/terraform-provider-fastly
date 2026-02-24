@@ -6,6 +6,8 @@
 
 ### BUG FIXES:
 
+- fix(ngwaf/rules): corrected the condition type assertion for nested single conditions a group condition ([#1198](https://github.com/fastly/terraform-provider-fastly/pull/1198))
+
 ### DEPENDENCIES:
 
 ### DOCUMENTATION:

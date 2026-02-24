@@ -60,7 +60,7 @@ resource "fastly_domain" "domain_example" {
 Before making other changes you will need to import domain using terraform.
 
 ```
-terraform import fastly_domain.domain_example <domain_id>
+terraform import fastly_domain.domain_example YOUR_DOMAIN_ID
 ```
 
 After importing, running `terraform plan` should result in no changes.

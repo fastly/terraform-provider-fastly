@@ -18,7 +18,7 @@ resource "fastly_service_vcl" "vcl_example" {
 }
 ```
 
-Once you [use the control panel to migrate this domain to a versionless domain](https://www.fastly.com/documentation/guides/getting-started/domains/working-with-domains/migrating-classic-domains/), you will need to update your HCL to look something like this.
+Once you [use the control panel to migrate this domain to a versionless domain](https://www.fastly.com/documentation/guides/getting-started/domains/working-with-domains/migrating-classic-domains/), you will need to update your HCL to match the pattern below.
 You can find the documentation on versionless domain patterns here: https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/domain. Do not apply your changes before running the import step below, as that will result in an error.
 
 ```
@@ -32,7 +32,7 @@ resource "fastly_domain" "domain_example" {
 }
 ```
 
-Before making other changes you will need to import domain using terraform. The Domain ID can using the Fastly CLI by running `fastly domain list --fqdn=foo.example.com` and using the Domain ID fromt the record.
+Before making other changes you will need to import domain using terraform. The Domain ID can using the Fastly CLI by running `fastly domain list --fqdn=foo.example.com` and using the Domain ID from the record.
 
 ```
 terraform import fastly_domain.domain_example YOUR_DOMAIN_ID

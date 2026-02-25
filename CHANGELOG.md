@@ -16,6 +16,7 @@
 - docs(templates/guides): add a guide for using versionless domains with a Certainly subscription to a new devlivery service ([#1195](https://github.com/fastly/terraform-provider-fastly/pull/1195))
 - docs(templates/guides): add guide for migrating delivery service classic domain to a versionless domain ([#1196](https://github.com/fastly/terraform-provider-fastly/pull/1196))
 - docs(templates/guides): add a guide for migrating from the deprecated 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources and data sources  ([#1200](https://github.com/fastly/terraform-provider-fastly/pull/1200))
+- docs(ngwaf/rules): updated list of supported values for the 'operator' field for NGWAF WAF rule conditions ([#1201](https://github.com/fastly/terraform-provider-fastly/pull/1201))
 
 ## 8.7.0 (February 20, 2026)
 

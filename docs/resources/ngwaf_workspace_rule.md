@@ -351,7 +351,7 @@ Optional:
 Required:
 
 - `field` (String) Field to inspect (e.g., `ip`, `path`).
-- `operator` (String) Operator to apply (e.g., `equals`, `contains`).
+- `operator` (String) Operator to apply. One of: `equals`, `does_not_equal`, `contains`, `does_not_contain`, `like`, `not_like`, `in_list`, `not_in_list`, `matches`, `does_not_match`, `greater_equal`, `lesser_equal`.
 - `value` (String) The value to test the field against.
 
 
@@ -373,7 +373,7 @@ Optional:
 Required:
 
 - `field` (String) Field to inspect (e.g., `ip`, `path`).
-- `operator` (String) Operator to apply (e.g., `equals`, `contains`).
+- `operator` (String) Operator to apply. One of: `equals`, `does_not_equal`, `contains`, `does_not_contain`, `like`, `not_like`, `in_list`, `not_in_list`, `matches`, `does_not_match`, `greater_equal`, `lesser_equal`.
 - `value` (String) The value to test the field against.
 
 
@@ -415,7 +415,7 @@ Required:
 Required:
 
 - `field` (String) Field to inspect (e.g., `name`, `value`, `signal_id`).
-- `operator` (String) Operator to apply (e.g., `equals`, `contains`).
+- `operator` (String) Operator to apply. One of: `equals`, `does_not_equal`, `contains`, `does_not_contain`, `like`, `not_like`, `in_list`, `not_in_list`, `matches`, `does_not_match`, `greater_equal`, `lesser_equal`.
 - `value` (String) The value to test the field against.
 
 

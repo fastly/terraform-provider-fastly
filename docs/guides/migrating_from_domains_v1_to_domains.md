@@ -1,11 +1,15 @@
 ---
-page_title: Migrating from domain_v1 objects to domain resources
+page_title: Migrating from 'domain_v1' resources to 'domain' resources
 subcategory: "Guides"
 ---
 
-## Migrating 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources and data sources to 'fastly_domain' and 'fastly_domain_service_link'
+## Migrating 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources to 'fastly_domain' and 'fastly_domain_service_link'
 
 As the `_v1` domain objects are deprecated, this guide will cover how you can migrate to the newer resources and data sources. 
+
+**Important**:
+* Ensure you are on a provider version that includes these new domain resources
+* Backup your state file or use a remote state with locking
 
 ### Step 1:
 In the deprecated pattern, we'll need to remove the `_v1` suffix from domain resources and data sources. 
@@ -59,10 +63,6 @@ terraform state mv fastly_domain_v1_service_link.example fastly_domain_service_l
 ```
 
 ### Step 3: Confirm there are no changes / drift 
-
-**Important**:
-* Ensure you are on a provider version that includes these new domain resources
-* Backup your state file or use a remote state with locking
 
 If there were no HCL changes since the last `terraform apply`, you should expect to see no diff when performing a `terraform plan` after these steps have been taken. 
 

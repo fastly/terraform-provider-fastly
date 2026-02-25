@@ -1,5 +1,5 @@
 ---
-page_title: Migrating from domain_v1 objects to domain
+page_title: Migrating from domain_v1 objects to domain resources
 subcategory: "Guides"
 ---
 
@@ -20,8 +20,8 @@ resource "fastly_domain_v1" "example" {
 }
 
 resource "fastly_domain_v1_service_link" "example" {
-    domain_id = "%s"
-    service_id = "%s"
+    domain_id = fastly_domain_v1.example.id
+    service_id = fastly_service_vcl.example.id
 }
 
 data "fastly_domains_v1" "example_source" {
@@ -39,8 +39,8 @@ resource "fastly_domain" "example" {
 }
 
 resource "fastly_domain_service_link" "example" {
-    domain_id = "%s"
-    service_id = "%s"
+    domain_id = fastly_domain_v1.example.id
+    service_id = fastly_service_vcl.example.id
 }
 
 data "fastly_domains" "example_source" {
@@ -56,11 +56,13 @@ terraform state mv fastly_domain_v1.example fastly_domain.example
 
 terraform state mv fastly_domain_v1_service_link.example fastly_domain_service_link.example
 
-terraform state mv fastly_domain_v1.example_source fastly_domain.example_source
-
 ```
 
 ### Step 3: Confirm there are no changes / drift 
+
+**Important**:
+* Ensure you are on a provider version that includes these new domain resources
+* Backup your state file or use a remote state with locking
 
 If there were no HCL changes since the last `terraform apply`, you should expect to see no diff when performing a `terraform plan` after these steps have been taken. 
 

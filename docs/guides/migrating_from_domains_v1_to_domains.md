@@ -5,7 +5,7 @@ subcategory: "Guides"
 
 ## Migrating 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources and data sources to 'fastly_domain' and 'fastly_domain_service_link'
 
-As the `_v1` domain objects have become depricated, this guide will cover how you can migrate to the newer resources and data sources. 
+As the `_v1` domain objects are deprecated, this guide will cover how you can migrate to the newer resources and data sources. 
 
 ### Step 1:
 In the deprecated pattern, we'll need to remove the `_v1` suffix from domain resources and data sources. 

@@ -72,8 +72,6 @@ resource "fastly_service_vcl" "linking_service2" {
     address = "127.0.0.1"
     name    = "localhost"
   }
-
-  force_destroy = true
 }
 
 # Link example domains to linking_service1

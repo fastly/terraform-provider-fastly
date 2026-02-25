@@ -8,7 +8,7 @@ subcategory: "Guides"
 As the `_v1` domain objects have become depricated, this guide will cover how you can migrate to the newer resources and data sources. 
 
 ### Step 1:
-In the depircated pattern, we'll need to remove the `_v1` suffix from domain resources and data sources. 
+In the deprecated pattern, we'll need to remove the `_v1` suffix from domain resources and data sources. 
 
 _Before:_
 

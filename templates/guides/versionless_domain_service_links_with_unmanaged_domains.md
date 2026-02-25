@@ -1,5 +1,5 @@
 ---
-page_title: Linking versionless domains to a service with unmanaged domains 
+page_title: Linking versionless domains to a service with unmanaged domains
 subcategory: "Guides"
 ---
 
@@ -7,7 +7,7 @@ subcategory: "Guides"
 
 The following guide goes over how you would link versionless domains to a given service without managing domains directly in your HCL. 
 
-_Note: These domains must exist in your Fastly configuration prior in order for this pattern to be sucessful_ 
+_Note: These domains must already exist in your Fastly account / configuration prior in order for this pattern to be successful_ 
 
 
 ```
@@ -63,8 +63,6 @@ resource "fastly_service_vcl" "linking_service1" {
     address = "127.0.0.1"
     name    = "localhost"
   }
-
-  force_destroy = true
 }
 
 resource "fastly_service_vcl" "linking_service2" {

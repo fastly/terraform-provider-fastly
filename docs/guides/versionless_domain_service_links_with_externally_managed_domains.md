@@ -1,11 +1,11 @@
 ---
-page_title: Linking versionless domains to a service with unmanaged domains
+page_title: Linking versionless domains to a service with externally managed domains
 subcategory: "Guides"
 ---
 
-## Linking versionless domains that are unmanaged in Terraform to a delivery service
+## Linking versionless domains that are externally managed in Terraform to a delivery service
 
-The following guide goes over how you would link versionless domains to a given service without managing domains directly in your HCL. 
+The following guide goes over how you would link versionless domains to a given service to domains that are not managed in Terraform. 
 
 _Note: These domains must already exist in your Fastly account / configuration prior in order for this pattern to be successful_ 
 

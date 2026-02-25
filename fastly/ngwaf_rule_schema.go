@@ -80,7 +80,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 						"operator": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Operator to apply (e.g., `equals`, `contains`).",
+							Description: "Operator to apply. One of: `equals`, `does_not_equal`, `contains`, `does_not_contain`, `like`, `not_like`, `in_list`, `not_in_list`, `matches`, `does_not_match`, `greater_equal`, `lesser_equal`.",
 						},
 						"value": {
 							Type:        schema.TypeString,
@@ -122,7 +122,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 									"operator": {
 										Type:        schema.TypeString,
 										Required:    true,
-										Description: "Operator to apply (e.g., `equals`, `contains`).",
+										Description: "Operator to apply. One of: `equals`, `does_not_equal`, `contains`, `does_not_contain`, `like`, `not_like`, `in_list`, `not_in_list`, `matches`, `does_not_match`, `greater_equal`, `lesser_equal`.",
 									},
 									"value": {
 										Type:        schema.TypeString,
@@ -224,7 +224,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 									"operator": {
 										Type:        schema.TypeString,
 										Required:    true,
-										Description: "Operator to apply (e.g., `equals`, `contains`).",
+										Description: "Operator to apply. One of: `equals`, `does_not_equal`, `contains`, `does_not_contain`, `like`, `not_like`, `in_list`, `not_in_list`, `matches`, `does_not_match`, `greater_equal`, `lesser_equal`.",
 									},
 									"value": {
 										Type:        schema.TypeString,

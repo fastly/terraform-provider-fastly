@@ -26,10 +26,10 @@ resource "fastly_tls_subscription" "migrate_example" {
 }
 ```
 
-Before making other changes you will need to import your domain(s) using terraform. We'll need to run the following import command for each domain:
+Before making other changes you will need to import your domain(s) using Terraform. We'll need to run the following import command for each domain:
 > `terraform import fastly_domain.domain_example <domain_id>` 
 
-The Domain ID can using [the Fastly CLI](https://www.fastly.com/documentation/reference/tools/cli/) by running `fastly domain list --fqdn=foo.example.com` and using the Domain ID from the record.
+The Domain ID can be obtained by using [the Fastly CLI](https://www.fastly.com/documentation/reference/tools/cli/) by running `fastly domain list --fqdn=foo.example.com` and then using the Domain ID from the record.
 
 Terraform should produce a message similar to the following.
 
@@ -85,7 +85,7 @@ You should excpect to see something like this from your `terraform plan` / `terr
     }
 ```
 
-You now have associated the versionless domain with your service, but we'll still need to remove the class domain from your HCL. The final step is to remove the `domain` attribute from your `fastly_service_vcl` block, as seen below.
+You now have associated the versionless domain with your service, but we'll still need to remove the classic domain from your HCL. The final step is to remove the `domain` attribute from your `fastly_service_vcl` block, as seen below.
 
 ```
 resource "fastly_service_vcl" "vcl_example" {
@@ -119,7 +119,7 @@ You can now perform the `terraform plan` / `terraform apply` commands. You shoul
         # (11 unchanged attributes hidden)
 
       - domain {
-          - name    = "migrate4.rcproject.net" -> null
+          - name    = "demo.example.com" -> null
             # (1 unchanged attribute hidden)
         }
 

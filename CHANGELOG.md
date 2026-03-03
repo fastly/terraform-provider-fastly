@@ -7,6 +7,8 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.2 to 2.39.0 ([#1204](https://github.com/fastly/terraform-provider-fastly/pull/1204))
+- build(deps): `golang.org/x/net` from 0.50.0 to 0.51.0 ([#1204](https://github.com/fastly/terraform-provider-fastly/pull/1204))
 
 ### DOCUMENTATION:
 

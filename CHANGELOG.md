@@ -8,11 +8,14 @@
 
 ### DEPENDENCIES:
 
+- build(deps): `github.com/fastly/go-fastly/v13` from 13.0.1 to 13.1.0 ([#1208](https://github.com/fastly/terraform-provider-fastly/pull/1208))
+
 ### DOCUMENTATION:
 
 ## 8.7.2 (March 10, 2026)
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.2 to 2.39.0 ([#1204](https://github.com/fastly/terraform-provider-fastly/pull/1204))
 - build(deps): `golang.org/x/net` from 0.50.0 to 0.51.0 ([#1204](https://github.com/fastly/terraform-provider-fastly/pull/1204))
 - build(deps): `hashicorp/setup-terraform` from 3 to 4 ([#1205](https://github.com/fastly/terraform-provider-fastly/pull/1205))
@@ -30,9 +33,8 @@
 - docs(templates/guides): add a guide for using versionless domains with a Certainly subscription to a new devlivery service ([#1195](https://github.com/fastly/terraform-provider-fastly/pull/1195))
 - docs(templates/guides): add a guide for migrating delivery service classic domain to a versionless domain ([#1202](https://github.com/fastly/terraform-provider-fastly/pull/1202))
 - docs(templates/guides): add a guide for linking versionless domains to a service when the domains are not managed in Terraform ([#1199](https://github.com/fastly/terraform-provider-fastly/pull/1199))
-- docs(templates/guides): add a guide for migrating from the deprecated 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources and data sources  ([#1200](https://github.com/fastly/terraform-provider-fastly/pull/1200))
+- docs(templates/guides): add a guide for migrating from the deprecated 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources and data sources ([#1200](https://github.com/fastly/terraform-provider-fastly/pull/1200))
 - docs(ngwaf/rules): updated list of supported values for the 'operator' field for NGWAF WAF rule conditions ([#1201](https://github.com/fastly/terraform-provider-fastly/pull/1201))
-
 
 ## 8.7.0 (February 20, 2026)
 
@@ -43,7 +45,6 @@
 - feat(domains): Removed `_v1` suffixes from domain-related resources and data sources, leaving deprecated aliases in place. ([#1181](https://github.com/fastly/terraform-provider-fastly/pull/1181))
 - feat(products/staging): Add a Data Source for Staging IP addresses ([#1186](https://github.com/fastly/terraform-provider-fastly/pull/1186))
 - feat(ngwaf/rules): Added support for `multival` type conditions nested in `group_operator` blocks. ([#1189](https://github.com/fastly/terraform-provider-fastly/pull/1189))
-
 
 ### DEPENDENCIES:
 
@@ -56,7 +57,6 @@
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.1 to 12.1.2 ([#1185](https://github.com/fastly/terraform-provider-fastly/pull/1185))
 - build(deps): `golang.org/x/net` from 0.49.0 to 0.50.0 ([#1188](https://github.com/fastly/terraform-provider-fastly/pull/1188))
 - build(deps): `github.com/fastly/go-fastly/v12` from 12.1.2 to 13.0.0 ([#1190](https://github.com/fastly/terraform-provider-fastly/pull/1190))
-
 
 ## 8.6.0 (December 17, 2025)
 

@@ -6,7 +6,7 @@ toolchain go1.25.7
 
 require (
 	github.com/deckarep/golang-set/v2 v2.8.0
-	github.com/fastly/go-fastly/v13 v13.0.1
+	github.com/fastly/go-fastly/v13 v13.1.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-hclog v1.6.3
@@ -62,7 +62,7 @@ require (
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/tools v0.41.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

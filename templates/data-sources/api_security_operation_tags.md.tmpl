@@ -1,0 +1,19 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_api_security_operation_tags"
+sidebar_current: "docs-fastly-datasource-fastly_api_security_operation_tags"
+description: |-
+  Get API Security operation tags for a Fastly service.
+---
+
+# fastly_api_security_operation_tags
+
+Use this data source to list API Security operation tags for a Fastly service.
+
+Note: The `/tags` endpoint currently returns all tags and does not support pagination or a `limit` parameter (query args like `?limit=...` are ignored).
+
+## Example Usage
+
+{{ tffile "examples/data-sources/api_security_operation_tags.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}

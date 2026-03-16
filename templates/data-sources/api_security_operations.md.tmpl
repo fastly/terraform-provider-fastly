@@ -1,0 +1,19 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_api_security_operations"
+sidebar_current: "docs-fastly-datasource-fastly_api_security_operations"
+description: |-
+  Get API Security operations for a Fastly service.
+---
+
+# fastly_api_security_operations
+
+Use this data source to list API Security operations for a Fastly service.
+
+Pagination: the API uses `page`+`limit` pagination and returns `meta.total`. This data source automatically requests all pages until `meta.total` results have been retrieved. The `limit` argument controls the page size (results per request).
+
+## Example Usage
+
+{{ tffile "examples/data-sources/api_security_operations.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}

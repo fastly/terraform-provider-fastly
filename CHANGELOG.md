@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(api-security): add support for API Security operations ([#1211](https://github.com/fastly/terraform-provider-fastly/pull/1211))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

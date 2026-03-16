@@ -1,0 +1,1 @@
+terraform import fastly_api_security_operation_tag.example <service_id>/<tag_id>

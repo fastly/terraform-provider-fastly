@@ -1,0 +1,1 @@
+terraform import fastly_api_security_operation.example <service_id>/<operation_id>

@@ -7,8 +7,9 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
-
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.0.1 to 13.1.0 ([#1208](https://github.com/fastly/terraform-provider-fastly/pull/1208))
+- build(deps): `github.com/fastly/go-fastly/v13` from 13.1.0 to 13.1.1 ([#1210](https://github.com/fastly/terraform-provider-fastly/pull/1210))
+- build(deps): `actions/create-github-app-token` from 2 to 3 ([#1213](https://github.com/fastly/terraform-provider-fastly/pull/1213))
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.1.0 to 13.1.1 ([#1210](https://github.com/fastly/terraform-provider-fastly/pull/1210))
 
 ### DOCUMENTATION:

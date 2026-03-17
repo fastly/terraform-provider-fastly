@@ -22,7 +22,7 @@ func dataSourceFastlyAPISecurityDiscoveredOperations() *schema.Resource {
 			"domain": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Filter by one or more domains (exact match).",
+				Description: "Filter by one or more fully-qualified domains (exact match).",
 				Elem: &schema.Schema{
 					Type:        schema.TypeString,
 					Description: "A domain value used for filtering.",

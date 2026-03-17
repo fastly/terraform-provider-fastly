@@ -1,0 +1,25 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_api_security_operation_tag"
+sidebar_current: "docs-fastly-resource-api-security-operation-tag"
+description: |-
+  Manages an API Security operation tag for a Fastly service.
+---
+
+# fastly_api_security_operation_tag
+
+Manages an API Security operation tag for a Fastly service. Operation tags can be used to group and organize operations.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/api_security_operation_tag_basic_usage.tf" }}
+
+## Import
+
+API Security operation tags can be imported using a composite ID of the form `<service_id>/<tag_id>`, e.g.
+
+{{ codefile "sh" "examples/resources/components/api_security_operation_tag_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

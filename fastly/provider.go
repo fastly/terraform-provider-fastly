@@ -51,6 +51,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"fastly_api_security_operations":                 dataSourceFastlyAPISecurityOperations(),
+			"fastly_api_security_operation_tags":             dataSourceFastlyAPISecurityOperationTags(),
+			"fastly_api_security_discovered_operations":      dataSourceFastlyAPISecurityDiscoveredOperations(),
 			"fastly_compute_acls":                            dataSourceFastlyComputeACLs(),
 			"fastly_configstores":                            dataSourceFastlyConfigStores(),
 			"fastly_datacenters":                             dataSourceFastlyDatacenters(),
@@ -97,6 +100,8 @@ func Provider() *schema.Provider {
 			"fastly_vcl_snippets":                            dataSourceFastlyVCLSnippets(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"fastly_api_security_operation":                  resourceFastlyAPISecurityOperation(),
+			"fastly_api_security_operation_tag":              resourceFastlyAPISecurityOperationTag(),
 			"fastly_alert":                                   resourceFastlyAlert(),
 			"fastly_compute_acl_entries":                     resourceFastlyComputeACLEntries(),
 			"fastly_compute_acl":                             resourceFastlyComputeACL(),

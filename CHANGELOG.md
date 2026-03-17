@@ -9,10 +9,12 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
-
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.0.1 to 13.1.0 ([#1208](https://github.com/fastly/terraform-provider-fastly/pull/1208))
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.1.0 to 13.1.1 ([#1210](https://github.com/fastly/terraform-provider-fastly/pull/1210))
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.1.1 to 13.1.2 ([#1214](https://github.com/fastly/terraform-provider-fastly/pull/1214))
+- build(deps): `actions/create-github-app-token` from 2 to 3 ([#1213](https://github.com/fastly/terraform-provider-fastly/pull/1213))
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.39.0 to 2.40.0 ([#1212](https://github.com/fastly/terraform-provider-fastly/pull/1212))
+- build(deps): `golang.org/x/net` from 0.51.0 to 0.52.0 ([#1212](https://github.com/fastly/terraform-provider-fastly/pull/1212))
 - build(deps): `actions/create-github-app-token` from 2 to 3 ([#1213](https://github.com/fastly/terraform-provider-fastly/pull/1213))
 
 ### DOCUMENTATION:

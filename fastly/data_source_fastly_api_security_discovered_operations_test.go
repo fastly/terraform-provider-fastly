@@ -21,10 +21,6 @@ func TestAccFastlyDataSourceAPISecurityDiscoveredOperations_Basic(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.fastly_api_security_discovered_operations.example", "id"),
 					resource.TestCheckResourceAttrSet("data.fastly_api_security_discovered_operations.example", "total"),
-
-					// meta.limit may vary; just ensure it's present when the API returns it.
-					resource.TestCheckResourceAttrSet("data.fastly_api_security_discovered_operations.example", "limit_returned"),
-
 					resource.TestCheckResourceAttrSet("data.fastly_api_security_discovered_operations.example", "operations.#"),
 				),
 			},
@@ -49,9 +45,6 @@ resource "fastly_service_vcl" "svc1" {
 
 data "fastly_api_security_discovered_operations" "example" {
   service_id = fastly_service_vcl.svc1.id
-
-  # Page size = 1 (provider will auto-fetch pages if there are any)
-  limit = 1
 
   depends_on = [
     fastly_service_vcl.svc1

@@ -3,7 +3,6 @@ package fastly
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -27,16 +26,6 @@ func dataSourceFastlyAPISecurityOperations() *schema.Resource {
 					Type:        schema.TypeString,
 					Description: "A domain value used for filtering.",
 				},
-			},
-			"limit": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: fmt.Sprintf("Page size (maximum number of results per request). Default value `%d`.", apiSecurityDefaultPageLimit),
-			},
-			"limit_returned": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The limit value returned by the API in the response metadata (if present).",
 			},
 			"method": {
 				Type:        schema.TypeSet,
@@ -143,17 +132,11 @@ func dataSourceFastlyAPISecurityOperationsRead(ctx context.Context, d *schema.Re
 	conn := meta.(*APIClient).conn
 	serviceID := d.Get("service_id").(string)
 
-	pageLimit := apiSecurityDefaultPageLimit
-	if v, ok := d.GetOk("limit"); ok {
-		if n := v.(int); n > 0 {
-			pageLimit = n
-		}
-	}
-
 	in := &operations.ListOperationsInput{
 		ServiceID: gofastly.ToPointer(serviceID),
-		Limit:     gofastly.ToPointer(pageLimit),
-		Page:      gofastly.ToPointer(0),
+		// Keep pagination internal; go-fastly will paginate across all pages.
+		Page:  gofastly.ToPointer(0),
+		Limit: gofastly.ToPointer(apiSecurityDefaultPageLimit),
 	}
 
 	if v, ok := d.GetOk("tag_id"); ok {
@@ -175,7 +158,7 @@ func dataSourceFastlyAPISecurityOperationsRead(ctx context.Context, d *schema.Re
 		}
 	}
 
-	// First request: capture meta.total/meta.limit (for state + docs).
+	// Capture meta.total from the first page.
 	log.Printf("[DEBUG] Reading API Security operations (page 0): %#v", in)
 	first, err := operations.ListOperations(ctx, conn, in)
 	if err != nil {
@@ -199,12 +182,9 @@ func dataSourceFastlyAPISecurityOperationsRead(ctx context.Context, d *schema.Re
 
 	total := first.Meta.Total
 	if total == 0 {
-		// fallback safety: if API doesn't return meta.total for some reason
 		total = len(all)
 	}
-
 	_ = d.Set("total", total)
-	_ = d.Set("limit_returned", first.Meta.Limit)
 
 	return nil
 }

@@ -3,7 +3,6 @@ package fastly
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -28,16 +27,6 @@ func dataSourceFastlyAPISecurityDiscoveredOperations() *schema.Resource {
 					Type:        schema.TypeString,
 					Description: "A domain value used for filtering.",
 				},
-			},
-			"limit": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: fmt.Sprintf("Page size (maximum number of results per request). Default value `%d`.", apiSecurityDefaultPageLimit),
-			},
-			"limit_returned": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The limit value returned by the API in the response metadata (if present).",
 			},
 			"method": {
 				Type:        schema.TypeSet,
@@ -87,7 +76,7 @@ func dataSourceFastlyAPISecurityDiscoveredOperations() *schema.Resource {
 						"status": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Discovered operation status (when present). One of `DISCOVERED`, `SAVED`, or `IGNORED`.",
+							Description: "Discovered operation status (when present).",
 						},
 						"updated_at": {
 							Type:        schema.TypeString,
@@ -108,14 +97,10 @@ func dataSourceFastlyAPISecurityDiscoveredOperations() *schema.Resource {
 				Description: "Service ID.",
 			},
 			"status": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Filter discovered operations by status. Accepted values are `DISCOVERED`, `SAVED`, and `IGNORED`.",
-				ValidateFunc: validation.StringInSlice([]string{
-					"DISCOVERED",
-					"SAVED",
-					"IGNORED",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Filter discovered operations by status. Accepted values are `DISCOVERED`, `SAVED`, and `IGNORED`.",
+				ValidateFunc: validation.StringInSlice([]string{"DISCOVERED", "SAVED", "IGNORED"}, false),
 			},
 			"total": {
 				Type:        schema.TypeInt,
@@ -130,17 +115,11 @@ func dataSourceFastlyAPISecurityDiscoveredOperationsRead(ctx context.Context, d 
 	conn := meta.(*APIClient).conn
 	serviceID := d.Get("service_id").(string)
 
-	pageLimit := apiSecurityDefaultPageLimit
-	if v, ok := d.GetOk("limit"); ok {
-		if n := v.(int); n > 0 {
-			pageLimit = n
-		}
-	}
-
 	in := &operations.ListDiscoveredInput{
 		ServiceID: gofastly.ToPointer(serviceID),
-		Limit:     gofastly.ToPointer(pageLimit),
-		Page:      gofastly.ToPointer(0),
+		// Keep pagination internal; go-fastly will paginate across all pages.
+		Page:  gofastly.ToPointer(0),
+		Limit: gofastly.ToPointer(apiSecurityDefaultPageLimit),
 	}
 
 	if v, ok := d.GetOk("status"); ok {
@@ -162,7 +141,7 @@ func dataSourceFastlyAPISecurityDiscoveredOperationsRead(ctx context.Context, d 
 		}
 	}
 
-	// First request: capture meta.total/meta.limit (for state + docs).
+	// Capture meta.total from the first page.
 	log.Printf("[DEBUG] Reading API Security discovered operations (page 0): %#v", in)
 	first, err := operations.ListDiscovered(ctx, conn, in)
 	if err != nil {
@@ -187,9 +166,7 @@ func dataSourceFastlyAPISecurityDiscoveredOperationsRead(ctx context.Context, d 
 	if total == 0 {
 		total = len(all)
 	}
-
 	_ = d.Set("total", total)
-	_ = d.Set("limit_returned", first.Meta.Limit)
 
 	return nil
 }

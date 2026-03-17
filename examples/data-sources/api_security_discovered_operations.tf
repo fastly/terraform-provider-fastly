@@ -9,11 +9,6 @@ resource "fastly_service_vcl" "svc1" {
 }
 
 # Discovered operations depend on traffic and may legitimately be empty.
-#
-# Pagination:
-# - The API uses page+limit pagination and returns meta.total and meta.limit.
-# - This data source automatically fetches all pages until meta.total is reached.
-# - The `limit` argument controls the page size (results per request).
 data "fastly_api_security_discovered_operations" "discovered" {
   service_id = fastly_service_vcl.svc1.id
 
@@ -22,9 +17,6 @@ data "fastly_api_security_discovered_operations" "discovered" {
   method = ["GET"]
   domain = ["api.example.com"]
   path   = "/v1/things"
-
-  # Optional page size
-  limit = 100
 }
 
 output "api_security_discovered_operations" {

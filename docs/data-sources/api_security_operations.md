@@ -32,10 +32,6 @@ resource "fastly_api_security_operation" "example" {
   description = "Retrieve things"
 }
 
-# Pagination:
-# - The API uses page+limit pagination and returns meta.total and meta.limit.
-# - This data source automatically fetches all pages until meta.total is reached.
-# - The `limit` argument controls the page size (results per request).
 data "fastly_api_security_operations" "ops" {
   service_id = fastly_service_vcl.svc1.id
 
@@ -43,9 +39,6 @@ data "fastly_api_security_operations" "ops" {
   method = ["GET"]
   domain = ["api.example.com"]
   path   = "/v1/things"
-
-  # Optional page size
-  limit = 100
 
   depends_on = [fastly_api_security_operation.example]
 }
@@ -69,7 +62,6 @@ output "api_security_operations_total" {
 ### Optional
 
 - `domain` (Set of String) Filter by one or more domains (exact match).
-- `limit` (Number) Page size (maximum number of results per request). Default value `100`.
 - `method` (Set of String) Filter by one or more HTTP methods.
 - `path` (String) Filter by path (exact match).
 - `tag_id` (String) Filter by tag ID.
@@ -77,7 +69,6 @@ output "api_security_operations_total" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `limit_returned` (Number) The limit value returned by the API in the response metadata (if present).
 - `operations` (Set of Object) Matching API Security operations. (see [below for nested schema](#nestedatt--operations))
 - `total` (Number) Total number of matching results, as returned by the API.
 

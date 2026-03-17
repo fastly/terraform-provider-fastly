@@ -26,11 +26,6 @@ resource "fastly_service_vcl" "svc1" {
 }
 
 # Discovered operations depend on traffic and may legitimately be empty.
-#
-# Pagination:
-# - The API uses page+limit pagination and returns meta.total and meta.limit.
-# - This data source automatically fetches all pages until meta.total is reached.
-# - The `limit` argument controls the page size (results per request).
 data "fastly_api_security_discovered_operations" "discovered" {
   service_id = fastly_service_vcl.svc1.id
 
@@ -39,9 +34,6 @@ data "fastly_api_security_discovered_operations" "discovered" {
   method = ["GET"]
   domain = ["api.example.com"]
   path   = "/v1/things"
-
-  # Optional page size
-  limit = 100
 }
 
 output "api_security_discovered_operations" {
@@ -63,15 +55,13 @@ output "api_security_discovered_operations_total" {
 ### Optional
 
 - `domain` (Set of String) Filter by one or more domains (exact match).
-- `limit` (Number) Page size (maximum number of results per request). Default value `100`.
 - `method` (Set of String) Filter by one or more HTTP methods.
 - `path` (String) Filter by path (exact match).
-- `status` (String) Filter discovered operations by status.
+- `status` (String) Filter discovered operations by status. Accepted values are `DISCOVERED`, `SAVED`, and `IGNORED`.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `limit_returned` (Number) The limit value returned by the API in the response metadata (if present).
 - `operations` (Set of Object) Discovered operations. (see [below for nested schema](#nestedatt--operations))
 - `total` (Number) Total number of matching results, as returned by the API.
 

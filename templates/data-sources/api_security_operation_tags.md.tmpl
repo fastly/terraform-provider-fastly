@@ -10,8 +10,6 @@ description: |-
 
 Use this data source to list API Security operation tags for a Fastly service.
 
-Pagination: the API uses `page`+`limit` pagination and returns `meta.total`. This data source automatically requests all pages until `meta.total` results have been retrieved. The `limit` argument controls the page size (results per request).
-
 ## Example Usage
 
 {{ tffile "examples/data-sources/api_security_operation_tags.tf"}}

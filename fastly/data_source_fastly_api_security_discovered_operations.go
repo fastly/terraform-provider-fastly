@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v13/fastly"
 	"github.com/fastly/go-fastly/v13/fastly/apisecurity/operations"
@@ -86,7 +87,7 @@ func dataSourceFastlyAPISecurityDiscoveredOperations() *schema.Resource {
 						"status": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Discovered operation status (when present).",
+							Description: "Discovered operation status (when present). One of `DISCOVERED`, `SAVED`, or `IGNORED`.",
 						},
 						"updated_at": {
 							Type:        schema.TypeString,
@@ -109,7 +110,12 @@ func dataSourceFastlyAPISecurityDiscoveredOperations() *schema.Resource {
 			"status": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Filter discovered operations by status.",
+				Description: "Filter discovered operations by status. Accepted values are `DISCOVERED`, `SAVED`, and `IGNORED`.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"DISCOVERED",
+					"SAVED",
+					"IGNORED",
+				}, false),
 			},
 			"total": {
 				Type:        schema.TypeInt,

@@ -83,8 +83,8 @@ func dataSourceFastlyAPISecurityOperations() *schema.Resource {
 							Description: "Observed requests per second (when present).",
 						},
 						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
 							Description: "Discovery status (when present). One of `DISCOVERED`, `SAVED`, or `IGNORED`.",
 						},
 						"tag_ids": {

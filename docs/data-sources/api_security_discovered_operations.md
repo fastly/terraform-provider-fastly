@@ -54,7 +54,7 @@ output "api_security_discovered_operations_total" {
 
 ### Optional
 
-- `domain` (Set of String) Filter by one or more domains (exact match).
+- `domain` (Set of String) Filter by one or more fully-qualified domains (exact match).
 - `method` (Set of String) Filter by one or more HTTP methods.
 - `path` (String) Filter by path (exact match).
 - `status` (String) Filter discovered operations by status. Accepted values are `DISCOVERED`, `SAVED`, and `IGNORED`.

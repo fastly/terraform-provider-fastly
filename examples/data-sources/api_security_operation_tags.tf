@@ -15,11 +15,15 @@ resource "fastly_api_security_operation_tag" "example" {
   description = "Example tag"
 }
 
-# Note:
-# The /tags endpoint currently returns all tags and does not support pagination
-# or a limit parameter (query args like ?limit=... are ignored).
+# Pagination:
+# - The API uses page+limit pagination and returns meta.total and meta.limit.
+# - This data source automatically fetches all pages until meta.total is reached.
+# - The `limit` argument controls the page size (results per request).
 data "fastly_api_security_operation_tags" "tags" {
   service_id = fastly_service_vcl.svc1.id
+
+  # Optional page size
+  limit = 100
 
   depends_on = [fastly_api_security_operation_tag.example]
 }

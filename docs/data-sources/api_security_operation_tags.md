@@ -10,7 +10,7 @@ description: |-
 
 Use this data source to list API Security operation tags for a Fastly service.
 
-Note: The `/tags` endpoint currently returns all tags and does not support pagination or a `limit` parameter (query args like `?limit=...` are ignored).
+Pagination: the API uses `page`+`limit` pagination and returns `meta.total`. This data source automatically requests all pages until `meta.total` results have been retrieved. The `limit` argument controls the page size (results per request).
 
 ## Example Usage
 
@@ -32,11 +32,15 @@ resource "fastly_api_security_operation_tag" "example" {
   description = "Example tag"
 }
 
-# Note:
-# The /tags endpoint currently returns all tags and does not support pagination
-# or a limit parameter (query args like ?limit=... are ignored).
+# Pagination:
+# - The API uses page+limit pagination and returns meta.total and meta.limit.
+# - This data source automatically fetches all pages until meta.total is reached.
+# - The `limit` argument controls the page size (results per request).
 data "fastly_api_security_operation_tags" "tags" {
   service_id = fastly_service_vcl.svc1.id
+
+  # Optional page size
+  limit = 100
 
   depends_on = [fastly_api_security_operation_tag.example]
 }
@@ -57,9 +61,14 @@ output "api_security_operation_tags_total" {
 
 - `service_id` (String) Service ID.
 
+### Optional
+
+- `limit` (Number) Page size (maximum number of results per request). Default value `100`.
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `limit_returned` (Number) The limit value returned by the API in the response metadata (if present).
 - `tags` (Set of Object) Operation tags. (see [below for nested schema](#nestedatt--tags))
 - `total` (Number) Total number of matching results, as returned by the API.
 

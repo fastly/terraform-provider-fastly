@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `google.golang.org/grpc` from 1.79.2 to 1.79.3 ([#1216](https://github.com/fastly/terraform-provider-fastly/pull/1216))
 
 ### DOCUMENTATION:
 

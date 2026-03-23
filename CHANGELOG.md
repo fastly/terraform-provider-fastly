@@ -11,6 +11,8 @@
 
 ### DOCUMENTATION:
 
+-docs(ngwaf/lists): updated docs to provide important prefix information for usage with a NGWAF rule. ([#1217](https://github.com/fastly/terraform-provider-fastly/pull/1217))
+
 
 ## 8.8.0 (March 17, 2026)
 

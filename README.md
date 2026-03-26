@@ -2,6 +2,7 @@
 
 - Website: https://www.terraform.io
 - Documentation: https://registry.terraform.io/providers/fastly/fastly/latest/docs
+- Issues: https://github.com/fastly/terraform-provider-fastly/blob/main/ISSUES.md 
 - Mailing list: http://groups.google.com/group/terraform-tool
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
 

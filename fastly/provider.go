@@ -17,12 +17,11 @@ import (
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"
 
 // This value can be set to allow terraform output to display sensitive info.
-var DisplaySensitiveFields = false
+// Read at package init time so it is available before service schema vars are built.
+var DisplaySensitiveFields = os.Getenv("FASTLY_TF_DISPLAY_SENSITIVE_FIELDS") == "true"
 
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
-	DisplaySensitiveFields = os.Getenv("FASTLY_TF_DISPLAY_SENSITIVE_FIELDS") == "true"
-
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_key": {

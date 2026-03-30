@@ -252,20 +252,12 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 	if len(ddp) != 0 {
 		if ddp[0].(map[string]any)["enabled"].(bool) {
 			log.Println("[DEBUG] ddos_protection set")
-			_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			mode := ddp[0].(map[string]any)["mode"].(string)
+			_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.EnableInput{
+				Mode: mode,
+			})
 			if err != nil {
 				return fmt.Errorf("failed to enable ddos_protection: %w", err)
-			}
-
-			// The operation mode is set by default to "log"
-			mode := ddp[0].(map[string]any)["mode"].(string)
-			if mode != "log" {
-				_, err := ddosprotection.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.ConfigureInput{
-					Mode: mode,
-				})
-				if err != nil {
-					return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
-				}
 			}
 		}
 	}
@@ -600,19 +592,12 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 		if len(ddp) != 0 {
 			if ddp[0].(map[string]any)["enabled"].(bool) {
 				log.Println("[DEBUG] ddos_protection will be enabled")
-				_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+				mode := ddp[0].(map[string]any)["mode"].(string)
+				_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.EnableInput{
+					Mode: mode,
+				})
 				if err != nil {
 					return fmt.Errorf("failed to enable ddos_protection: %w", err)
-				}
-
-				mode := ddp[0].(map[string]any)["mode"].(string)
-				log.Printf("[DEBUG] ddos_protection mode will be set to %s", mode)
-				_, err = ddosprotection.UpdateConfiguration(
-					gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID,
-					ddosprotection.ConfigureInput{Mode: mode},
-				)
-				if err != nil {
-					return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] ddos_protection will be disabled")

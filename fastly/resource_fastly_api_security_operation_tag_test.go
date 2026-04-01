@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v13/fastly"
-	"github.com/fastly/go-fastly/v13/fastly/apisecurity/operations"
+	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	"github.com/fastly/go-fastly/v14/fastly/apisecurity/operations"
 )
 
 func TestAccFastlyAPISecurityOperationTag_Basic(t *testing.T) {

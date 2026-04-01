@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	wsr "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces/redactions"
+	wsr "github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/workspaces/redactions"
 )
 
 func dataSourceFastlyNGWAFRedactions() *schema.Resource {

@@ -1,6 +1,7 @@
 ## [UNRELEASED]
 
 ### BREAKING:
+- breaking(product_enablement/bot_management): added support for ContentGuard, which is now a required parameter ([#1216](https://github.com/fastly/terraform-provider-fastly/pull/1216))
 
 ### ENHANCEMENTS:
 

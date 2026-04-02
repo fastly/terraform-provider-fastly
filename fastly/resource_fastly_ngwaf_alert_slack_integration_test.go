@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	webhookAlerts "github.com/fastly/go-fastly/v13/fastly/ngwaf/v1/workspaces/alerts/slack"
+	webhookAlerts "github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/workspaces/alerts/slack"
 )
 
 const (

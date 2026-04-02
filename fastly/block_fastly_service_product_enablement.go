@@ -11,18 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v13/fastly"
-	"github.com/fastly/go-fastly/v13/fastly/products/apidiscovery"
-	"github.com/fastly/go-fastly/v13/fastly/products/botmanagement"
-	"github.com/fastly/go-fastly/v13/fastly/products/brotlicompression"
-	"github.com/fastly/go-fastly/v13/fastly/products/ddosprotection"
-	"github.com/fastly/go-fastly/v13/fastly/products/domaininspector"
-	"github.com/fastly/go-fastly/v13/fastly/products/fanout"
-	"github.com/fastly/go-fastly/v13/fastly/products/imageoptimizer"
-	"github.com/fastly/go-fastly/v13/fastly/products/logexplorerinsights"
-	"github.com/fastly/go-fastly/v13/fastly/products/ngwaf"
-	"github.com/fastly/go-fastly/v13/fastly/products/origininspector"
-	"github.com/fastly/go-fastly/v13/fastly/products/websockets"
+	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	"github.com/fastly/go-fastly/v14/fastly/products/apidiscovery"
+	"github.com/fastly/go-fastly/v14/fastly/products/botmanagement"
+	"github.com/fastly/go-fastly/v14/fastly/products/brotlicompression"
+	"github.com/fastly/go-fastly/v14/fastly/products/ddosprotection"
+	"github.com/fastly/go-fastly/v14/fastly/products/domaininspector"
+	"github.com/fastly/go-fastly/v14/fastly/products/fanout"
+	"github.com/fastly/go-fastly/v14/fastly/products/imageoptimizer"
+	"github.com/fastly/go-fastly/v14/fastly/products/logexplorerinsights"
+	"github.com/fastly/go-fastly/v14/fastly/products/ngwaf"
+	"github.com/fastly/go-fastly/v14/fastly/products/origininspector"
+	"github.com/fastly/go-fastly/v14/fastly/products/websockets"
 )
 
 // ProductEnablementServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -252,20 +252,12 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 	if len(ddp) != 0 {
 		if ddp[0].(map[string]any)["enabled"].(bool) {
 			log.Println("[DEBUG] ddos_protection set")
-			_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			mode := ddp[0].(map[string]any)["mode"].(string)
+			_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.EnableInput{
+				Mode: mode,
+			})
 			if err != nil {
 				return fmt.Errorf("failed to enable ddos_protection: %w", err)
-			}
-
-			// The operation mode is set by default to "log"
-			mode := ddp[0].(map[string]any)["mode"].(string)
-			if mode != "log" {
-				_, err := ddosprotection.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.ConfigureInput{
-					Mode: mode,
-				})
-				if err != nil {
-					return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
-				}
 			}
 		}
 	}
@@ -600,19 +592,12 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 		if len(ddp) != 0 {
 			if ddp[0].(map[string]any)["enabled"].(bool) {
 				log.Println("[DEBUG] ddos_protection will be enabled")
-				_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+				mode := ddp[0].(map[string]any)["mode"].(string)
+				_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.EnableInput{
+					Mode: mode,
+				})
 				if err != nil {
 					return fmt.Errorf("failed to enable ddos_protection: %w", err)
-				}
-
-				mode := ddp[0].(map[string]any)["mode"].(string)
-				log.Printf("[DEBUG] ddos_protection mode will be set to %s", mode)
-				_, err = ddosprotection.UpdateConfiguration(
-					gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID,
-					ddosprotection.ConfigureInput{Mode: mode},
-				)
-				if err != nil {
-					return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] ddos_protection will be disabled")

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v13/fastly"
-	"github.com/fastly/go-fastly/v13/fastly/apisecurity/operations"
+	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	"github.com/fastly/go-fastly/v14/fastly/apisecurity/operations"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 

@@ -35,13 +35,17 @@ func TestAccFastlyServiceProductEnablement_vcl_basic(t *testing.T) {
 
     product_enablement {
       api_discovery         = false
-      bot_management        = false
       brotli_compression    = true
       domain_inspector      = false
       image_optimizer       = false
       log_explorer_insights = false
       origin_inspector      = false
       websockets            = false
+
+      bot_management {
+        enabled      = false
+        contentguard = "off"
+      }
 
       ddos_protection {
         enabled = false
@@ -184,6 +188,90 @@ resource "fastly_service_vcl" "foo" {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ddos_protection.0.mode", "log"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceProductEnablement_vcl_botManagementUpdate(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	initialConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    bot_management {
+      enabled      = true
+      contentguard = "off"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	updatedConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    bot_management {
+      enabled      = true
+      contentguard = "on"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.bot_management.0.contentguard", "off"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.bot_management.0.contentguard", "on"),
 				),
 			},
 		},

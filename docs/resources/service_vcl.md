@@ -1166,7 +1166,7 @@ Optional:
 Optional:
 
 - `api_discovery` (Boolean) Enable API Discovery support
-- `bot_management` (Boolean) Enable Bot Management support
+- `bot_management` (Block List, Max: 1) Enable Bot Management support (see [below for nested schema](#nestedblock--product_enablement--bot_management))
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `ddos_protection` (Block List, Max: 1) DDoS Protection product (see [below for nested schema](#nestedblock--product_enablement--ddos_protection))
 - `domain_inspector` (Boolean) Enable Domain Inspector support
@@ -1176,6 +1176,15 @@ Optional:
 - `ngwaf` (Block List, Max: 1) Next-Gen WAF product (see [below for nested schema](#nestedblock--product_enablement--ngwaf))
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support
+
+<a id="nestedblock--product_enablement--bot_management"></a>
+### Nested Schema for `product_enablement.bot_management`
+
+Required:
+
+- `contentguard` (String) ContentGuard status. Can be either `off`, or `on`.
+- `enabled` (Boolean) Enable Bot Management support
+
 
 <a id="nestedblock--product_enablement--ddos_protection"></a>
 ### Nested Schema for `product_enablement.ddos_protection`

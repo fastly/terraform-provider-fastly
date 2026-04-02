@@ -6,6 +6,8 @@
 
 ### BUG FIXES:
 
+- fix(provider): `FASTLY_TF_DISPLAY_SENSITIVE_FIELDS` env var now takes effect on service schemas. Previously the value was read too late, after the schema vars had already been initialized. ([#1219](https://github.com/fastly/terraform-provider-fastly/pull/1219))
+
 ### DEPENDENCIES:
 - build(deps): `google.golang.org/grpc` from 1.79.2 to 1.79.3 ([#1216](https://github.com/fastly/terraform-provider-fastly/pull/1216))
 - build(deps): `github.com/fastly/go-fastly/v14` from 13.1.2 to 14.0.0 ([#1220](https://github.com/fastly/terraform-provider-fastly/pull/1220))

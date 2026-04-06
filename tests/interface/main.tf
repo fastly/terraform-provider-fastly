@@ -149,12 +149,16 @@ EOT
   }
 
   product_enablement {
-    bot_management     = false
     brotli_compression = true
     domain_inspector   = false
     image_optimizer    = false
     origin_inspector   = false
     websockets         = false
+
+    bot_management {
+      enabled      = false
+      contentguard = "off"
+    }
   }
 
   rate_limiter {

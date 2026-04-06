@@ -384,6 +384,13 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 				})
 
 				result["bot_management"] = bp
+			} else if len(localState) > 0 {
+				// Preserve explicitly disabled nested blocks from config to prevent drift
+				if localMap, ok := localState[0].(map[string]any); ok {
+					if bm, ok := localMap["bot_management"].([]any); ok && len(bm) > 0 {
+						result["bot_management"] = bm
+					}
+				}
 			}
 
 			if _, err := brotlicompression.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -423,6 +430,13 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 			})
 
 			result["ddos_protection"] = ddp
+		} else if len(localState) > 0 {
+			// Preserve explicitly disabled nested blocks from config to prevent drift
+			if localMap, ok := localState[0].(map[string]any); ok {
+				if ddp, ok := localMap["ddos_protection"].([]any); ok && len(ddp) > 0 {
+					result["ddos_protection"] = ddp
+				}
+			}
 		}
 
 		if _, err := apidiscovery.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -448,6 +462,13 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 			})
 
 			result["ngwaf"] = ngw
+		} else if len(localState) > 0 {
+			// Preserve explicitly disabled nested blocks from config to prevent drift
+			if localMap, ok := localState[0].(map[string]any); ok {
+				if ngw, ok := localMap["ngwaf"].([]any); ok && len(ngw) > 0 {
+					result["ngwaf"] = ngw
+				}
+			}
 		}
 
 		results := []map[string]any{result}

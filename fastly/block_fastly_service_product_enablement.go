@@ -384,9 +384,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 				})
 
 				result["bot_management"] = bp
-			} else if len(localState) > 0 {
-				bp := localState[0].(map[string]any)["bot_management"].([]any)
-				result["bot_management"] = bp
 			}
 
 			if _, err := brotlicompression.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -426,10 +423,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 			})
 
 			result["ddos_protection"] = ddp
-		} else if len(localState) > 0 {
-			ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
-			result["ddos_protection"] = ddp
-
 		}
 
 		if _, err := apidiscovery.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -455,10 +448,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 			})
 
 			result["ngwaf"] = ngw
-		} else if len(localState) > 0 {
-			ngw := localState[0].(map[string]any)["ngwaf"].([]any)
-			result["ngwaf"] = ngw
-
 		}
 
 		results := []map[string]any{result}

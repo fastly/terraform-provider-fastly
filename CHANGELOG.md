@@ -1,11 +1,20 @@
 ## [UNRELEASED]
 
 ### BREAKING:
-- breaking(product_enablement/bot_management): added support for ContentGuard, which is now requires the `contentguard` and `enabled` parameters ([#1309](https://github.com/fastly/terraform-provider-fastly/pull/1309))
 
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+
+## 9.0.0 (April 04, 2026)
+
+### BREAKING:
+- breaking(product_enablement/bot_management): added support for ContentGuard, which is now requires the `contentguard` and `enabled` parameters ([#1309](https://github.com/fastly/terraform-provider-fastly/pull/1309))
 
 ### DEPENDENCIES:
 - build(deps): `google.golang.org/grpc` from 1.79.2 to 1.79.3 ([#1216](https://github.com/fastly/terraform-provider-fastly/pull/1216))

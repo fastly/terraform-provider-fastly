@@ -72,7 +72,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Description: "Enable Bot Management support",
 			MaxItems:    1,
-			MinItems:    1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"contentguard": {

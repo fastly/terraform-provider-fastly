@@ -3,6 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+- feat(product_enablement): add state upgrader for bot_management schema change from v9.0.0 - automatically migrates existing boolean values to new list structure with contentguard attribute ([#1226](https://github.com/fastly/terraform-provider-fastly/pull/1226))
 
 ### BUG FIXES:
 
@@ -21,7 +22,7 @@
 
 ### DOCUMENTATION:
 
--docs(ngwaf/lists): updated docs to provide important prefix information for usage with a NGWAF rule. ([#1217](https://github.com/fastly/terraform-provider-fastly/pull/1217))
+-docs(ngwaf/lists): updated docs to provide important prefix information for usage with a NGWAF rule ([#1217](https://github.com/fastly/terraform-provider-fastly/pull/1217))
 
 ## 8.8.0 (March 17, 2026)
 

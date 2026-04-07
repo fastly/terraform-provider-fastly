@@ -5,7 +5,6 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
-- fix(product_enablement/bot_management): fix bot_management schema validation  ([#1228](https://github.com/fastly/terraform-provider-fastly/pull/1228))
 
 ### DEPENDENCIES:
 
@@ -15,6 +14,9 @@
 
 ### ENHANCEMENTS:
 - feat(product_enablement): add state upgrader for bot_management schema change from v9.0.0 - automatically migrates existing boolean values to new list structure with contentguard attribute ([#1226](https://github.com/fastly/terraform-provider-fastly/pull/1226))
+
+### BUG FIXES:
+- fix(product_enablement/bot_management): fix Optional/MinItems schema conflict ([#1228](https://github.com/fastly/terraform-provider-fastly/pull/1228))
 
 ## 9.0.0 (April 04, 2026)
 

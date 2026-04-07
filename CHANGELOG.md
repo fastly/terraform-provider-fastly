@@ -10,7 +10,7 @@
 
 ### DOCUMENTATION:
 
-## 9.1.0 (April 05, 2026)
+## 9.1.0 (April 07, 2026)
 
 ### ENHANCEMENTS:
 - feat(product_enablement): add state upgrader for bot_management schema change from v9.0.0 - automatically migrates existing boolean values to new list structure with contentguard attribute ([#1226](https://github.com/fastly/terraform-provider-fastly/pull/1226))

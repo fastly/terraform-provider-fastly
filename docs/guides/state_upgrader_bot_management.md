@@ -6,7 +6,7 @@ This document describes the state upgrader implemented for the breaking change i
 
 ## The Change state_upgrader_bot_management
 
-### Old Schema (v0)
+### Old Schema
 ```hcl
 resource "fastly_service_vcl" "example" {
   # ...
@@ -17,7 +17,7 @@ resource "fastly_service_vcl" "example" {
 }
 ```
 
-### New Schema (v1)
+### New Schema
 ```hcl
 resource "fastly_service_vcl" "example" {
   # ...

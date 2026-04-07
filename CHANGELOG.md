@@ -5,6 +5,7 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+- fix(product_enablement/bot_management): fix bot_management schema validation  ([#1228](https://github.com/fastly/terraform-provider-fastly/pull/1228))
 
 ### DEPENDENCIES:
 

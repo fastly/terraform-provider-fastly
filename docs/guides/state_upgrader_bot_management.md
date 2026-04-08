@@ -1,3 +1,8 @@
+---
+page_title: Bot Management State Upgrade
+subcategory: "Guides"
+---
+
 # State Upgrader for bot_management Schema Change
 
 ## Overview

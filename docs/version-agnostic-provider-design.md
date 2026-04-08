@@ -162,12 +162,13 @@ To make this concrete, the repo examples demonstrate a multi-service orchestrati
 - CD for `apply`
 - explicit activation after apply
 
-The examples are provided in two variants:
+The examples are provided in three variants:
 
 - [`examples/orchestration-cli`](https://github.com/fastly/terraform-provider-fastly/tree/version-agnostic-design/examples/orchestration-cli)
 - [`examples/orchestration-actions`](https://github.com/fastly/terraform-provider-fastly/tree/version-agnostic-design/examples/orchestration-actions)
+- [`examples/orchestration-latest`](https://github.com/fastly/terraform-provider-fastly/tree/version-agnostic-design/examples/orchestration-latest) (an optional convenience workflow that uses the latest version data source and is not recommended for CI/CD)
 
-Both show the same provider model with different lifecycle mechanisms.
+The CLI and Terraform Actions examples show the recommended pinned-version workflow. The `orchestration-latest` example shows a more convenience-oriented workflow with important tradeoffs around determinism and auditability.
 
 ## Recommended workflow
 

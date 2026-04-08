@@ -10,26 +10,32 @@
 
 ### DOCUMENTATION:
 
+- docs(state_upgrader_bot_management): add subcategory and header to state upgrade guide ([#1230](https://github.com/fastly/terraform-provider-fastly/pull/1230))
+
 ## 9.1.0 (April 07, 2026)
 
 ### ENHANCEMENTS:
+
 - feat(product_enablement): add state upgrader for bot_management schema change from v9.0.0 - automatically migrates existing boolean values to new list structure with contentguard attribute ([#1226](https://github.com/fastly/terraform-provider-fastly/pull/1226))
 
 ### BUG FIXES:
+
 - fix(product_enablement/bot_management): fix Optional/MinItems schema conflict ([#1228](https://github.com/fastly/terraform-provider-fastly/pull/1228))
 
 ## 9.0.0 (April 04, 2026)
 
 ### BREAKING:
+
 - breaking(product_enablement/bot_management): added support for ContentGuard, which is now requires the `contentguard` and `enabled` parameters ([#1221](https://github.com/fastly/terraform-provider-fastly/pull/1221))
 
 ### DEPENDENCIES:
+
 - build(deps): `google.golang.org/grpc` from 1.79.2 to 1.79.3 ([#1216](https://github.com/fastly/terraform-provider-fastly/pull/1216))
 - build(deps): `github.com/fastly/go-fastly/v14` from 13.1.2 to 14.0.0 ([#1220](https://github.com/fastly/terraform-provider-fastly/pull/1220))
 
 ### DOCUMENTATION:
 
--docs(ngwaf/lists): updated docs to provide important prefix information for usage with a NGWAF rule ([#1217](https://github.com/fastly/terraform-provider-fastly/pull/1217))
+- docs(ngwaf/lists): updated docs to provide important prefix information for usage with a NGWAF rule ([#1217](https://github.com/fastly/terraform-provider-fastly/pull/1217))
 
 ## 8.8.0 (March 17, 2026)
 
@@ -38,6 +44,7 @@
 - feat(api-security): add support for API Security operations ([#1211](https://github.com/fastly/terraform-provider-fastly/pull/1211))
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.0.1 to 13.1.0 ([#1208](https://github.com/fastly/terraform-provider-fastly/pull/1208))
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.1.0 to 13.1.1 ([#1210](https://github.com/fastly/terraform-provider-fastly/pull/1210))
 - build(deps): `github.com/fastly/go-fastly/v13` from 13.1.1 to 13.1.2 ([#1214](https://github.com/fastly/terraform-provider-fastly/pull/1214))

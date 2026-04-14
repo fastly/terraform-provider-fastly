@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `actions/github-script` from 8 to 9 ([#1232](https://github.com/fastly/terraform-provider-fastly/pull/1232))
 
 ### DOCUMENTATION:
 

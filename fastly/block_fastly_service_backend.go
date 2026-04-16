@@ -80,11 +80,23 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     200,
 			Description: "Maximum number of connections for this Backend. Default `200`",
 		},
+		"max_lifetime": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Maximum backend connection lifetime in milliseconds.",
+		},
 		"max_tls_version": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
 			Description: "Maximum allowed TLS version on SSL connections to this backend.",
+		},
+		"max_use": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Maximum number of requests allowed for a single backend connection.",
 		},
 		"min_tls_version": {
 			Type:        schema.TypeString,
@@ -316,6 +328,12 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	if resource["keepalive_time"].(int) > 0 {
 		opts.KeepAliveTime = gofastly.ToPointer(resource["keepalive_time"].(int))
 	}
+	if resource["max_lifetime"].(int) > 0 {
+		opts.MaxLifetime = gofastly.ToPointer(resource["max_lifetime"].(int))
+	}
+	if resource["max_use"].(int) > 0 {
+		opts.MaxUse = gofastly.ToPointer(resource["max_use"].(int))
+	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
@@ -381,6 +399,16 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["keepalive_time"]; ok {
 		opts.KeepAliveTime = gofastly.ToPointer(v.(int))
+	}
+	if v, ok := modified["max_lifetime"]; ok {
+		if v.(int) > 0 {
+			opts.MaxLifetime = gofastly.ToPointer(v.(int))
+		}
+	}
+	if v, ok := modified["max_use"]; ok {
+		if v.(int) > 0 {
+			opts.MaxUse = gofastly.ToPointer(v.(int))
+		}
 	}
 	if v, ok := modified["max_conn"]; ok {
 		opts.MaxConn = gofastly.ToPointer(v.(int))
@@ -478,6 +506,12 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 		}
 		if resource.MaxConn != nil {
 			data["max_conn"] = *resource.MaxConn
+		}
+		if resource.MaxLifetime != nil {
+			data["max_lifetime"] = *resource.MaxLifetime
+		}
+		if resource.MaxUse != nil {
+			data["max_use"] = *resource.MaxUse
 		}
 		if resource.MaxTLSVersion != nil {
 			data["max_tls_version"] = *resource.MaxTLSVersion

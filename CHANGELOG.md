@@ -12,6 +12,7 @@
 - build(deps): `actions/github-script` from 8 to 9 ([#1232](https://github.com/fastly/terraform-provider-fastly/pull/1232))
 - build(deps): `github.com/fastly/go-fastly/v14` from 14.0.0 to 14.2.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
 - build(deps): `golang.org/x/net` from 0.52.0 to 0.53.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
+- build(deps): `github.com/deckarep/golang-set/v2` from 2.8.0 to 2.9.0 ([#1234](https://github.com/fastly/terraform-provider-fastly/pull/1234))
 
 ### DOCUMENTATION:
 

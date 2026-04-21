@@ -6,7 +6,7 @@
 
 ### BUG FIXES:
 
-- fix(ngwaf/rules): updated validation to allow the maximum value of rate limit rule thresholds to `1000000` ([#](https://github.com/fastly/terraform-provider-fastly/pull/))
+- fix(ngwaf/rules): updated validation to allow the maximum value of rate limit rule thresholds to `1000000` ([#1236](https://github.com/fastly/terraform-provider-fastly/pull/1236))
 
 ### DEPENDENCIES:
 - build(deps): `actions/github-script` from 8 to 9 ([#1232](https://github.com/fastly/terraform-provider-fastly/pull/1232))

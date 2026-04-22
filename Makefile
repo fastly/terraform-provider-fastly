@@ -75,7 +75,7 @@ fmt:
 	golangci-lint fmt
 
 goreleaser-bin:
-	$(GO_BIN) get -modfile=tools.mod -tool github.com/goreleaser/goreleaser/v2@v2.11.2
+	$(GO_BIN) get -modfile=tools/go.mod -tool github.com/goreleaser/goreleaser/v2@v2.11.2
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip=validate will skip the checks
@@ -84,7 +84,7 @@ goreleaser-bin:
 # e.g.
 # make goreleaser GORELEASER_ARGS="--skip=validate --clean"
 goreleaser: goreleaser-bin
-	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" $(GO_BIN) tool -modfile=tools.mod goreleaser build ${GORELEASER_ARGS}
+	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" $(GO_BIN) tool -modfile=tools/go.mod goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -96,17 +96,17 @@ test-compile:
 
 generate-docs:
 	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)
-	$(GO_BIN) tool -modfile=tools.mod tfplugindocs generate
+	$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs generate
 	rm examples/index-fastly-provider.tf
 
 validate-docs:
-	$(GO_BIN) tool -modfile=tools.mod tfplugindocs validate
+	$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs validate
 
 tfproviderlintx:
-	$(GO_BIN) tool -modfile=tools.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools/go.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
 tfproviderlint:
-	$(GO_BIN) tool -modfile=tools.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools/go.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
 
 sweep:
 	@if [ "$(SILENCE)" != "true" ]; then \

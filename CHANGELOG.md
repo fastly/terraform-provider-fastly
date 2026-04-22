@@ -22,6 +22,7 @@
 - build(tools): `github.com/sigstore/sigstore` from 1.10.3 to 1.10.4 ([#1248](https://github.com/fastly/terraform-provider-fastly/pull/1248))
 - build(tools): `github.com/sigstore/cosign/v2` from 2.5.0 to 2.6.2 ([#1250](https://github.com/fastly/terraform-provider-fastly/pull/1250))
 - build(tools): `github.com/theupdateframework/go-tuf/v2` from 2.3.0 to 2.4.1 ([#1247](https://github.com/fastly/terraform-provider-fastly/pull/1247))
+- build(tools): `github.com/anchore/quill` from 0.5.1 to 0.7.1 ([#1242](https://github.com/fastly/terraform-provider-fastly/pull/1242))
 
 ### DOCUMENTATION:
 

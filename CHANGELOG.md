@@ -13,6 +13,8 @@
 - build(deps): `github.com/fastly/go-fastly/v14` from 14.0.0 to 14.2.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
 - build(deps): `golang.org/x/net` from 0.52.0 to 0.53.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
 - build(deps): `github.com/deckarep/golang-set/v2` from 2.8.0 to 2.9.0 ([#1234](https://github.com/fastly/terraform-provider-fastly/pull/1234))
+- build(tools): `github.com/aws/aws-sdk-go-v2/service/s3` from 1.85.1 to 1.97.3 ([#1246](https://github.com/fastly/terraform-provider-fastly/pull/1246))
+- build(tools): `github.com/go-jose/go-jose/v4` from 4.1.0 to 4.1.4 ([#1243](https://github.com/fastly/terraform-provider-fastly/pull/1243))
 
 ### DOCUMENTATION:
 

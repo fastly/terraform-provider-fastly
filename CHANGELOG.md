@@ -17,6 +17,7 @@
 - build(tools): `github.com/go-jose/go-jose/v4` from 4.1.0 to 4.1.4 ([#1243](https://github.com/fastly/terraform-provider-fastly/pull/1243))
 - build(tools): `google.golang.org/grpc` from 1.73.0 to 1.79.3 ([#1239](https://github.com/fastly/terraform-provider-fastly/pull/1239))
 - build(tools): `go.opentelemetry.io/otel/sdk` from 1.39.0 to 1.43.0 ([#1238](https://github.com/fastly/terraform-provider-fastly/pull/1238))
+- build(tools): `github.com/sigstore/rekor` from 1.3.9 to 1.5.0 ([#1249](https://github.com/fastly/terraform-provider-fastly/pull/1249))
 
 ### DOCUMENTATION:
 

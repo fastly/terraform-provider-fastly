@@ -18,6 +18,7 @@
 - build(tools): `google.golang.org/grpc` from 1.73.0 to 1.79.3 ([#1239](https://github.com/fastly/terraform-provider-fastly/pull/1239))
 - build(tools): `go.opentelemetry.io/otel/sdk` from 1.39.0 to 1.43.0 ([#1238](https://github.com/fastly/terraform-provider-fastly/pull/1238))
 - build(tools): `github.com/sigstore/rekor` from 1.3.9 to 1.5.0 ([#1249](https://github.com/fastly/terraform-provider-fastly/pull/1249))
+- build(tools): `github.com/buger/jsonparser` from 1.1.1 to 1.1.2 ([#1240](https://github.com/fastly/terraform-provider-fastly/pull/1240))
 
 ### DOCUMENTATION:
 

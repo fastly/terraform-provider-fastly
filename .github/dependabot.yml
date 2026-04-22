@@ -9,6 +9,17 @@ updates:
       go-dependencies:
         patterns:
           - "*"
+  # Dependencies listed in tools/go.mod
+  - package-ecosystem: "gomod"
+    directory: "/tools"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "tools"
+    groups:
+      tools-dependencies:
+        patterns:
+          - "*"
   # Dependencies listed in .github/workflows/*.yml
   - package-ecosystem: "github-actions"
     directory: "/"

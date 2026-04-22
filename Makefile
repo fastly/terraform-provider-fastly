@@ -85,17 +85,17 @@ test-compile:
 
 generate-docs:
 	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)
-	$(GO_BIN) tool -modfile=tools.mod tfplugindocs generate
+	$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs generate
 	rm examples/index-fastly-provider.tf
 
 validate-docs:
-	$(GO_BIN) tool -modfile=tools.mod tfplugindocs validate
+	$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs validate
 
 tfproviderlintx:
-	$(GO_BIN) tool -modfile=tools.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools/go.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
 tfproviderlint:
-	$(GO_BIN) tool -modfile=tools.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools/go.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
 
 sweep:
 	@if [ "$(SILENCE)" != "true" ]; then \

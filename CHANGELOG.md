@@ -23,6 +23,7 @@
 - build(tools): `github.com/sigstore/cosign/v2` from 2.5.0 to 2.6.2 ([#1250](https://github.com/fastly/terraform-provider-fastly/pull/1250))
 - build(tools): `github.com/theupdateframework/go-tuf/v2` from 2.3.0 to 2.4.1 ([#1247](https://github.com/fastly/terraform-provider-fastly/pull/1247))
 - build(tools): `github.com/docker/cli` from 29.0.3+incompatible to 29.2.0+incompatible ([#1241](https://github.com/fastly/terraform-provider-fastly/pull/1241))
+- build(tools): `github.com/sigstore/timestamp-authority/v2` from 2.0.3 to 2.0.6 ([#1251](https://github.com/fastly/terraform-provider-fastly/pull/1251))
 
 ### DOCUMENTATION:
 

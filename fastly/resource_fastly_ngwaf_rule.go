@@ -97,8 +97,8 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 				"threshold": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					Description:  "Rate limit threshold. Minimum 1 and maximum 10,000.",
-					ValidateFunc: validation.IntBetween(1, 10000),
+					Description:  "Rate limit threshold. Minimum 1 and maximum 100,000.",
+					ValidateFunc: validation.IntBetween(1, 100000),
 				},
 			},
 		},

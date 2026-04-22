@@ -429,7 +429,7 @@ Required:
 - `duration` (Number) Duration in seconds for the rate limit.
 - `interval` (Number) Time interval for the rate limit in seconds. Accepted values are 60, 600, and 3600.
 - `signal` (String) Reference ID of the custom signal this rule uses to count requests.
-- `threshold` (Number) Rate limit threshold. Minimum 1 and maximum 10,000.
+- `threshold` (Number) Rate limit threshold. Minimum 1 and maximum 100,000.
 
 <a id="nestedblock--rate_limit--client_identifiers"></a>
 ### Nested Schema for `rate_limit.client_identifiers`

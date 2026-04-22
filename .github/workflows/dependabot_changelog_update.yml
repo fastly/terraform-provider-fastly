@@ -33,6 +33,12 @@ jobs:
           activationLabels: dependencies
           changelogPath: './CHANGELOG.md'
           entryPrefix: 'build(deps): '
+      - name: Generate changelog entry (tools)
+        uses: dangoslen/dependabot-changelog-helper@v4
+        with:
+          activationLabels: tools
+          changelogPath: './CHANGELOG.md'
+          entryPrefix: 'build(tools): '
       - name: Commit changelog entry
         uses: stefanzweifel/git-auto-commit-action@v7
         with:

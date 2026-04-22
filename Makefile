@@ -21,9 +21,6 @@ TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false -XR001=false
 # XAT001: missing resource.TestCase ErrorCheck.
 TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false
 
-GOHOSTOS ?= $(shell $(GO_BIN) env GOHOSTOS || echo unknown)
-GOHOSTARCH ?= $(shell $(GO_BIN) env GOHOSTARCH || echo unknown)
-
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the
 # tests is network bandwidth and Fastly API rate limits. Therefore using the

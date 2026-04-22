@@ -6,6 +6,14 @@
 
 ### BUG FIXES:
 
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 9.1.1 (April 22, 2026)
+
+### BUG FIXES:
+
 - fix(ngwaf/rules): updated validation to allow the maximum value of rate limit rule thresholds to `1000000` ([#1236](https://github.com/fastly/terraform-provider-fastly/pull/1236))
 
 ### DEPENDENCIES:
@@ -13,17 +21,6 @@
 - build(deps): `github.com/fastly/go-fastly/v14` from 14.0.0 to 14.2.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
 - build(deps): `golang.org/x/net` from 0.52.0 to 0.53.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
 - build(deps): `github.com/deckarep/golang-set/v2` from 2.8.0 to 2.9.0 ([#1234](https://github.com/fastly/terraform-provider-fastly/pull/1234))
-- build(tools): `github.com/aws/aws-sdk-go-v2/service/s3` from 1.85.1 to 1.97.3 ([#1246](https://github.com/fastly/terraform-provider-fastly/pull/1246))
-- build(tools): `github.com/go-jose/go-jose/v4` from 4.1.0 to 4.1.4 ([#1243](https://github.com/fastly/terraform-provider-fastly/pull/1243))
-- build(tools): `google.golang.org/grpc` from 1.73.0 to 1.79.3 ([#1239](https://github.com/fastly/terraform-provider-fastly/pull/1239))
-- build(tools): `go.opentelemetry.io/otel/sdk` from 1.39.0 to 1.43.0 ([#1238](https://github.com/fastly/terraform-provider-fastly/pull/1238))
-- build(tools): `github.com/sigstore/rekor` from 1.3.9 to 1.5.0 ([#1249](https://github.com/fastly/terraform-provider-fastly/pull/1249))
-- build(tools): `github.com/buger/jsonparser` from 1.1.1 to 1.1.2 ([#1240](https://github.com/fastly/terraform-provider-fastly/pull/1240))
-- build(tools): `github.com/sigstore/sigstore` from 1.10.3 to 1.10.4 ([#1248](https://github.com/fastly/terraform-provider-fastly/pull/1248))
-- build(tools): `github.com/sigstore/cosign/v2` from 2.5.0 to 2.6.2 ([#1250](https://github.com/fastly/terraform-provider-fastly/pull/1250))
-- build(tools): `github.com/theupdateframework/go-tuf/v2` from 2.3.0 to 2.4.1 ([#1247](https://github.com/fastly/terraform-provider-fastly/pull/1247))
-- build(tools): `github.com/docker/cli` from 29.0.3+incompatible to 29.2.0+incompatible ([#1241](https://github.com/fastly/terraform-provider-fastly/pull/1241))
-- build(tools): `github.com/sigstore/timestamp-authority/v2` from 2.0.3 to 2.0.6 ([#1251](https://github.com/fastly/terraform-provider-fastly/pull/1251))
 
 ### DOCUMENTATION:
 

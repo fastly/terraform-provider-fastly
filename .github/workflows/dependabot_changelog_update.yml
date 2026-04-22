@@ -1,6 +1,7 @@
 name: Generate changelog entry for Dependabot
 permissions:
   contents: read
+  pull-requests: write
 
 on:
   pull_request:
@@ -13,7 +14,45 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code (for path check)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check if PR changes GitHub Actions or tools/go.mod
+        id: check-paths
+        run: |
+          # Get the list of changed files
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+
+          # Skip workflow if changes are in excluded paths
+          if echo "$CHANGED_FILES" | grep -q "^\.github/workflows/"; then
+            echo "Skipping changelog update: GitHub Actions workflow changes detected"
+            echo "continue=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "^tools/go\.mod$\|^tools/go\.sum$"; then
+            echo "Skipping changelog update: tools/go.mod or tools/go.sum changes detected"
+            echo "continue=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Proceeding with changelog update: changes are not in excluded paths"
+          echo "continue=true" >> $GITHUB_OUTPUT
+      - name: Add Skip-Changelog label
+        if: steps.check-paths.outputs.continue == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['Skip-Changelog']
+            })
       - name: Generate a GitHub token
+        if: steps.check-paths.outputs.continue == 'true'
         id: github-token
         uses: actions/create-github-app-token@v3
         with:
@@ -21,25 +60,29 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: "terraform-provider-fastly"
-      - name: Checkout code
+      - name: Checkout code (for changelog generation)
+        if: steps.check-paths.outputs.continue == 'true'
         uses: actions/checkout@v6
         with:
           token: ${{ steps.github-token.outputs.token }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Generate changelog entry
+        if: steps.check-paths.outputs.continue == 'true'
         uses: dangoslen/dependabot-changelog-helper@v4
         with:
           activationLabels: dependencies
           changelogPath: './CHANGELOG.md'
           entryPrefix: 'build(deps): '
       - name: Generate changelog entry (tools)
+        if: steps.check-paths.outputs.continue == 'true'
         uses: dangoslen/dependabot-changelog-helper@v4
         with:
           activationLabels: tools
           changelogPath: './CHANGELOG.md'
           entryPrefix: 'build(tools): '
       - name: Commit changelog entry
+        if: steps.check-paths.outputs.continue == 'true'
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "docs(CHANGELOG.md): add dependency bump from dependabot"

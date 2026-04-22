@@ -15,6 +15,7 @@
 - build(deps): `github.com/deckarep/golang-set/v2` from 2.8.0 to 2.9.0 ([#1234](https://github.com/fastly/terraform-provider-fastly/pull/1234))
 - build(tools): `github.com/aws/aws-sdk-go-v2/service/s3` from 1.85.1 to 1.97.3 ([#1246](https://github.com/fastly/terraform-provider-fastly/pull/1246))
 - build(tools): `github.com/go-jose/go-jose/v4` from 4.1.0 to 4.1.4 ([#1243](https://github.com/fastly/terraform-provider-fastly/pull/1243))
+- build(tools): `google.golang.org/grpc` from 1.73.0 to 1.79.3 ([#1239](https://github.com/fastly/terraform-provider-fastly/pull/1239))
 
 ### DOCUMENTATION:
 

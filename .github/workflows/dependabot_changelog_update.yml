@@ -14,32 +14,29 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code (for path check)
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Check if PR changes GitHub Actions or tools/go.mod
+      - name: Check if PR should skip changelog
         id: check-paths
-        run: |
-          # Get the list of changed files
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get PR labels
+            const labels = context.payload.pull_request.labels.map(label => label.name);
 
-          # Skip workflow if changes are in excluded paths
-          if echo "$CHANGED_FILES" | grep -q "^\.github/workflows/"; then
-            echo "Skipping changelog update: GitHub Actions workflow changes detected"
-            echo "continue=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+            // Check if PR has 'tools' or 'github_actions' label
+            if (labels.includes('tools')) {
+              console.log('Skipping changelog update: PR has tools label');
+              core.setOutput('continue', 'false');
+              return;
+            }
 
-          if echo "$CHANGED_FILES" | grep -q "^tools/go\.mod$\|^tools/go\.sum$"; then
-            echo "Skipping changelog update: tools/go.mod or tools/go.sum changes detected"
-            echo "continue=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+            if (labels.includes('github_actions')) {
+              console.log('Skipping changelog update: PR has github_actions label');
+              core.setOutput('continue', 'false');
+              return;
+            }
 
-          echo "Proceeding with changelog update: changes are not in excluded paths"
-          echo "continue=true" >> $GITHUB_OUTPUT
+            console.log('Proceeding with changelog update');
+            core.setOutput('continue', 'true');
       - name: Add Skip-Changelog label
         if: steps.check-paths.outputs.continue == 'false'
         uses: actions/github-script@v7

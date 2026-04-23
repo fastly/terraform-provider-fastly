@@ -177,7 +177,10 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: "~> 2"
-          args: build --skip=validate --clean --snapshot # snapshot is needed as local git has no tags
+          args: build --skip=validate --clean --snapshot --id default # snapshot is needed as local git has no tags
+        env:
+          GOOS: linux,darwin,windows
+          GOARCH: amd64,arm
   golangci-latest:
     name: lint-latest (informational)
     runs-on: ubuntu-latest

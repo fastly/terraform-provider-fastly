@@ -1,6 +1,7 @@
 name: Generate changelog entry for Dependabot
 permissions:
   contents: read
+  pull-requests: write
 
 on:
   pull_request:
@@ -13,7 +14,42 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: Check if PR should skip changelog
+        id: check-paths
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get PR labels
+            const labels = context.payload.pull_request.labels.map(label => label.name);
+
+            // Check if PR has 'tools' or 'github_actions' label
+            if (labels.includes('tools')) {
+              console.log('Skipping changelog update: PR has tools label');
+              core.setOutput('continue', 'false');
+              return;
+            }
+
+            if (labels.includes('github_actions')) {
+              console.log('Skipping changelog update: PR has github_actions label');
+              core.setOutput('continue', 'false');
+              return;
+            }
+
+            console.log('Proceeding with changelog update');
+            core.setOutput('continue', 'true');
+      - name: Add Skip-Changelog label
+        if: steps.check-paths.outputs.continue == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+           await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['Skip-Changelog']
+            })
       - name: Generate a GitHub token
+        if: steps.check-paths.outputs.continue == 'true'
         id: github-token
         uses: actions/create-github-app-token@v3
         with:
@@ -21,25 +57,29 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: "terraform-provider-fastly"
-      - name: Checkout code
+      - name: Checkout code (for changelog generation)
+        if: steps.check-paths.outputs.continue == 'true'
         uses: actions/checkout@v6
         with:
           token: ${{ steps.github-token.outputs.token }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Generate changelog entry
+        if: steps.check-paths.outputs.continue == 'true'
         uses: dangoslen/dependabot-changelog-helper@v4
         with:
           activationLabels: dependencies
           changelogPath: './CHANGELOG.md'
           entryPrefix: 'build(deps): '
       - name: Generate changelog entry (tools)
+        if: steps.check-paths.outputs.continue == 'true'
         uses: dangoslen/dependabot-changelog-helper@v4
         with:
           activationLabels: tools
           changelogPath: './CHANGELOG.md'
           entryPrefix: 'build(tools): '
       - name: Commit changelog entry
+        if: steps.check-paths.outputs.continue == 'true'
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "docs(CHANGELOG.md): add dependency bump from dependabot"

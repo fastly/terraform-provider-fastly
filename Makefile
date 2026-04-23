@@ -21,9 +21,6 @@ TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false -XR001=false
 # XAT001: missing resource.TestCase ErrorCheck.
 TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false
 
-GOHOSTOS ?= $(shell $(GO_BIN) env GOHOSTOS || echo unknown)
-GOHOSTARCH ?= $(shell $(GO_BIN) env GOHOSTARCH || echo unknown)
-
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the
 # tests is network bandwidth and Fastly API rate limits. Therefore using the
@@ -74,17 +71,6 @@ clean_test:
 fmt:
 	golangci-lint fmt
 
-goreleaser-bin:
-	$(GO_BIN) get -modfile=tools/go.mod -tool github.com/goreleaser/goreleaser/v2@v2.11.2
-
-# You can pass flags to goreleaser via GORELEASER_ARGS
-# --skip=validate will skip the checks
-# --clean will save you deleting the dist dir
-# --single-target will be quicker and only build for your os & architecture
-# e.g.
-# make goreleaser GORELEASER_ARGS="--skip=validate --clean"
-goreleaser: goreleaser-bin
-	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" $(GO_BIN) tool -modfile=tools/go.mod goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -143,4 +129,4 @@ clean-bin: ## Removes locally installed binaries
 	@echo "==> Cleaning ./bin directory"
 	@rm -rf $(BIN_DIR)
 
-.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin lint install-linter check-linter-version clean-bin sweep test test-compile testacc validate-docs validate-interface vet
+.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs lint install-linter check-linter-version clean-bin sweep test test-compile testacc validate-docs validate-interface vet

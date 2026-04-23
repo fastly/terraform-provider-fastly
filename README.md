@@ -8,6 +8,6 @@ Contents:
 - docs/version-agnostic-provider-design.md
 - examples/orchestration-cli
 - examples/orchestration-actions
+- examples/orchestration-latest-cli
 
 This branch is published for documentation and example hosting only.
-

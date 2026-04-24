@@ -2,19 +2,24 @@ terraform {
   required_providers {
     fastly = {
       source  = "fastly/fastly"
-      version = ">1.0.0"
+      version = ">= 9.0.0"
     }
   }
+}
+
+variable "service_name" {
+  type    = string
+  default = "interface-test-project"
 }
 
 resource "fastly_service_vcl" "interface-test-project" {
   activate           = true
   comment            = "Fastly Terraform Provider: Interface Test Suite"
-  default_host       = "interface-test-project.fastly-terraform.com"
+  default_host       = "${var.service_name}.fastly-terraform.com"
   default_ttl        = 3600
   force_destroy      = true # Omitted `reuse` as it conflicts
   http3              = false
-  name               = "interface-test-project"
+  name               = var.service_name
   stale_if_error     = false
   stale_if_error_ttl = 43200
   version_comment    = "Fastly Terraform Provider: Version comment example"
@@ -76,7 +81,7 @@ resource "fastly_service_vcl" "interface-test-project" {
 
   domain {
     comment = "demo"
-    name    = "interface-test-project.fastly-terraform.com"
+    name    = "${var.service_name}.fastly-terraform.com"
   }
 
   dynamicsnippet {
@@ -185,7 +190,7 @@ EOT
   request_setting {
     action            = "pass"
     bypass_busy_wait  = true
-    default_host      = "interface-test-project.fastly-terraform.com"
+    default_host      = "${var.service_name}.fastly-terraform.com"
     force_miss        = true
     force_ssl         = false
     hash_keys         = "req.url.path, req.http.host" # Omitted because of error... Syntax error: Expected string variable or constant

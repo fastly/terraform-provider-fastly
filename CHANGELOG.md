@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.40.0 to 2.40.1 ([#1259](https://github.com/fastly/terraform-provider-fastly/pull/1259))
 
 ### DOCUMENTATION:
 

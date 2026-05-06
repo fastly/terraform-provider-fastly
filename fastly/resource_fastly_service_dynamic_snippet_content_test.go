@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	gofastly "github.com/fastly/go-fastly/v15/fastly"
 )
 
 func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
@@ -341,7 +341,7 @@ func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 		t.Fatalf("[ERR] Error update content for Dynamic snippet records for (%s), snippet id (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dynamicSnippet.SnippetID), err)
 	}
 
-	latest, err := conn.GetServiceDetails(context.TODO(), &gofastly.GetServiceInput{
+	latest, err := conn.GetServiceDetails(context.TODO(), &gofastly.GetServiceDetailsInput{
 		ServiceID: gofastly.ToValue(service.ServiceID),
 	})
 	if err != nil {

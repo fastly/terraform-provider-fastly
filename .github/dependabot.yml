@@ -25,6 +25,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "github_actions"
     groups:
       gha-dependencies:
         patterns:

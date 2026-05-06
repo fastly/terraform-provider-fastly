@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+RUN_ID="${GITHUB_RUN_ID:-$(date +%s)}"
+export TF_VAR_service_name="interface-test-${RUN_ID}"
+
 cd ./tests/interface/ || exit
 
 echo DEPLOYING USING LATEST TERRAFORM VERSION

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	gofastly "github.com/fastly/go-fastly/v15/fastly"
 )
 
 func init() {
@@ -520,7 +520,7 @@ func testAccCheckServiceExists(n string, service *gofastly.ServiceDetail) resour
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := conn.GetServiceDetails(context.TODO(), &gofastly.GetServiceInput{
+		latest, err := conn.GetServiceDetails(context.TODO(), &gofastly.GetServiceDetailsInput{
 			ServiceID: rs.Primary.ID,
 		})
 		if err != nil {
@@ -1077,7 +1077,7 @@ func testSweepServices(region string) error {
 
 	for _, service := range services {
 		if strings.HasPrefix(gofastly.ToValue(service.Name), testResourcePrefix) {
-			s, err := client.GetServiceDetails(context.TODO(), &gofastly.GetServiceInput{
+			s, err := client.GetServiceDetails(context.TODO(), &gofastly.GetServiceDetailsInput{
 				ServiceID: gofastly.ToValue(service.ServiceID),
 			})
 			if err != nil {

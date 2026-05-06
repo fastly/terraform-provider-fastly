@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	pagerdutyAlerts "github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/workspaces/alerts/pagerduty"
+	pagerdutyAlerts "github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/workspaces/alerts/pagerduty"
 )
 
 const (

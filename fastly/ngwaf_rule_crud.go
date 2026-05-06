@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v14/fastly"
-	"github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/rules"
 )
 
 func resourceFastlyNGWAFRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

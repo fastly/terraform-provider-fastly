@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	github.com/deckarep/golang-set/v2 v2.9.0
-	github.com/fastly/go-fastly/v14 v14.2.0
+	github.com/fastly/go-fastly/v15 v15.0.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-hclog v1.6.3

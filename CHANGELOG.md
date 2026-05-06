@@ -8,6 +8,7 @@
 
 ### DEPENDENCIES:
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.40.0 to 2.40.1 ([#1259](https://github.com/fastly/terraform-provider-fastly/pull/1259))
+- build(deps): `github.com/fastly/go-fastly/v15` from 14.0.2 to 15.0.1([#1260](https://github.com/fastly/terraform-provider-fastly/pull/1260))
 
 ### DOCUMENTATION:
 

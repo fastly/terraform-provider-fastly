@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	gofastly "github.com/fastly/go-fastly/v15/fastly"
 )
 
 func TestAccFastlyServiceLoggingGCS_vcl_basic(t *testing.T) {

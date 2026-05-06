@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v14/fastly"
+	gofastly "github.com/fastly/go-fastly/v15/fastly"
 )
 
 var errFastlyNoServiceFound = errors.New("no matching Fastly service found")
@@ -546,7 +546,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 
 	var diags diag.Diagnostics
 
-	s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceInput{
+	s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceDetailsInput{
 		ServiceID: d.Id(),
 	})
 	if err != nil {
@@ -741,7 +741,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 	// If `force_destroy` is given, we deactivate the active version and then send
 	// the DELETE call.
 	if d.Get("force_destroy").(bool) || d.Get("reuse").(bool) {
-		s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceInput{
+		s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceDetailsInput{
 			ServiceID: d.Id(),
 		})
 		if err != nil {

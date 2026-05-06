@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v14/fastly"
-	webhookAlerts "github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/workspaces/alerts/webhook"
+	gofastly "github.com/fastly/go-fastly/v15/fastly"
+	webhookAlerts "github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/workspaces/alerts/webhook"
 )
 
 func resourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {

@@ -3,9 +3,9 @@ package fastly
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v14/fastly"
-	"github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/rules"
-	"github.com/fastly/go-fastly/v14/fastly/ngwaf/v1/scope"
+	gofastly "github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/scope"
 )
 
 func expandNGWAFRuleCreateInput(d *schema.ResourceData, s *scope.Scope) *rules.CreateInput {

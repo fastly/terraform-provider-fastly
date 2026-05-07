@@ -89,6 +89,75 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 				},
 			},
 		},
+		{
+			serviceMetadata: ServiceMetadata{
+				serviceType: ServiceTypeVCL,
+			},
+			remote: []*gofastly.Backend{
+				{
+					Name:                gofastly.ToPointer("test.notexample.com"),
+					Address:             gofastly.ToPointer("www.notexample.com"),
+					OverrideHost:        gofastly.ToPointer(""),
+					Port:                gofastly.ToPointer(80),
+					AutoLoadbalance:     gofastly.ToPointer(false),
+					BetweenBytesTimeout: gofastly.ToPointer(10000),
+					ConnectTimeout:      gofastly.ToPointer(1000),
+					ErrorThreshold:      gofastly.ToPointer(0),
+					FirstByteTimeout:    gofastly.ToPointer(15000),
+					KeepAliveTime:       gofastly.ToPointer(0),
+					MaxConn:             gofastly.ToPointer(200),
+					MaxLifetime:         gofastly.ToPointer(0),
+					MaxUse:              gofastly.ToPointer(0),
+					RequestCondition:    gofastly.ToPointer(""),
+					HealthCheck:         gofastly.ToPointer(""),
+					UseSSL:              gofastly.ToPointer(false),
+					ShareKey:            gofastly.ToPointer(""),
+					SSLCheckCert:        gofastly.ToPointer(true),
+					SSLCACert:           gofastly.ToPointer(""),
+					SSLCertHostname:     gofastly.ToPointer(""),
+					SSLSNIHostname:      gofastly.ToPointer(""),
+					SSLClientKey:        gofastly.ToPointer(""),
+					SSLClientCert:       gofastly.ToPointer(""),
+					MaxTLSVersion:       gofastly.ToPointer(""),
+					MinTLSVersion:       gofastly.ToPointer(""),
+					SSLCiphers:          gofastly.ToPointer(""),
+					Shield:              gofastly.ToPointer(""),
+					Weight:              gofastly.ToPointer(100),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":                  "test.notexample.com",
+					"address":               "www.notexample.com",
+					"override_host":         "",
+					"port":                  80,
+					"auto_loadbalance":      false,
+					"between_bytes_timeout": 10000,
+					"connect_timeout":       1000,
+					"error_threshold":       0,
+					"first_byte_timeout":    15000,
+					"keepalive_time":        0,
+					"max_conn":              200,
+					"max_lifetime":          0,
+					"max_use":               0,
+					"request_condition":     "",
+					"healthcheck":           "",
+					"use_ssl":               false,
+					"ssl_check_cert":        true,
+					"ssl_ca_cert":           "",
+					"ssl_cert_hostname":     "",
+					"ssl_sni_hostname":      "",
+					"ssl_client_key":        "",
+					"ssl_client_cert":       "",
+					"max_tls_version":       "",
+					"min_tls_version":       "",
+					"ssl_ciphers":           "",
+					"share_key":             "",
+					"shield":                "",
+					"weight":                100,
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {
@@ -168,6 +237,69 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 				},
 			},
 		},
+		{
+			serviceMetadata: ServiceMetadata{
+				serviceType: ServiceTypeCompute,
+			},
+			remote: []*gofastly.Backend{
+				{
+					Name:                gofastly.ToPointer("test.notexample.com"),
+					Address:             gofastly.ToPointer("www.notexample.com"),
+					OverrideHost:        gofastly.ToPointer(""),
+					Port:                gofastly.ToPointer(80),
+					BetweenBytesTimeout: gofastly.ToPointer(10000),
+					ConnectTimeout:      gofastly.ToPointer(1000),
+					ErrorThreshold:      gofastly.ToPointer(0),
+					FirstByteTimeout:    gofastly.ToPointer(15000),
+					KeepAliveTime:       gofastly.ToPointer(0),
+					MaxConn:             gofastly.ToPointer(200),
+					MaxLifetime:         gofastly.ToPointer(0),
+					MaxUse:              gofastly.ToPointer(0),
+					HealthCheck:         gofastly.ToPointer(""),
+					UseSSL:              gofastly.ToPointer(false),
+					SSLCheckCert:        gofastly.ToPointer(true),
+					SSLCACert:           gofastly.ToPointer(""),
+					SSLCertHostname:     gofastly.ToPointer(""),
+					SSLSNIHostname:      gofastly.ToPointer(""),
+					SSLClientKey:        gofastly.ToPointer(""),
+					SSLClientCert:       gofastly.ToPointer(""),
+					MaxTLSVersion:       gofastly.ToPointer(""),
+					MinTLSVersion:       gofastly.ToPointer(""),
+					SSLCiphers:          gofastly.ToPointer(""),
+					Shield:              gofastly.ToPointer(""),
+					Weight:              gofastly.ToPointer(100),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":                  "test.notexample.com",
+					"address":               "www.notexample.com",
+					"override_host":         "",
+					"port":                  80,
+					"between_bytes_timeout": 10000,
+					"connect_timeout":       1000,
+					"error_threshold":       0,
+					"first_byte_timeout":    15000,
+					"keepalive_time":        0,
+					"max_conn":              200,
+					"max_lifetime":          0,
+					"max_use":               0,
+					"healthcheck":           "",
+					"use_ssl":               false,
+					"ssl_check_cert":        true,
+					"ssl_ca_cert":           "",
+					"ssl_cert_hostname":     "",
+					"ssl_sni_hostname":      "",
+					"ssl_client_key":        "",
+					"ssl_client_cert":       "",
+					"max_tls_version":       "",
+					"min_tls_version":       "",
+					"ssl_ciphers":           "",
+					"shield":                "",
+					"weight":                100,
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {
@@ -219,6 +351,31 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		Port:        gofastly.ToPointer(443),
 		MaxLifetime: gofastly.ToPointer(60000),
 		MaxUse:      gofastly.ToPointer(20),
+
+		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
+	}
+	// This validates that max_lifetime/max_use can be reset to 0 (unlimited).
+	b1Reset := gofastly.Backend{
+		Address:     gofastly.ToPointer(backendAddress),
+		Name:        gofastly.ToPointer(backendName),
+		Port:        gofastly.ToPointer(443),
+		MaxLifetime: gofastly.ToPointer(0),
+		MaxUse:      gofastly.ToPointer(0),
 
 		// NOTE: The following are defaults applied by the API.
 		AutoLoadbalance:     gofastly.ToPointer(false),
@@ -335,6 +492,15 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1Updated, &b2, &b3, &b4}),
 				),
 			},
+
+			{
+				Config: testAccServiceVCLBackendReset(serviceName, domainName, backendAddress, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1Reset}),
+				),
+			},
 		},
 	})
 }
@@ -404,6 +570,28 @@ resource "fastly_service_vcl" "foo" {
 
   force_destroy = true
 }`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName)
+}
+
+func testAccServiceVCLBackendReset(serviceName, domainName, backendAddress, backendName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address      = "%s"
+    name         = "%s"
+    port         = 443
+    max_lifetime = 0
+    max_use      = 0
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, backendAddress, backendName)
 }
 
 func TestAccFastlyServiceVCLBackend_BooleanFieldsPreservedOnTimeoutUpdate(t *testing.T) {

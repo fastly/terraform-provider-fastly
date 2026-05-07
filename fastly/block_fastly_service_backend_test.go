@@ -37,6 +37,8 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					FirstByteTimeout:    gofastly.ToPointer(15000),
 					KeepAliveTime:       gofastly.ToPointer(1500),
 					MaxConn:             gofastly.ToPointer(200),
+					MaxLifetime:         gofastly.ToPointer(30000),
+					MaxUse:              gofastly.ToPointer(10),
 					RequestCondition:    gofastly.ToPointer(""),
 					HealthCheck:         gofastly.ToPointer(""),
 					UseSSL:              gofastly.ToPointer(false),
@@ -67,6 +69,8 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"first_byte_timeout":    15000,
 					"keepalive_time":        1500,
 					"max_conn":              200,
+					"max_lifetime":          30000,
+					"max_use":               10,
 					"request_condition":     "",
 					"healthcheck":           "",
 					"use_ssl":               false,
@@ -117,6 +121,8 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					FirstByteTimeout:    gofastly.ToPointer(15000),
 					KeepAliveTime:       gofastly.ToPointer(1500),
 					MaxConn:             gofastly.ToPointer(200),
+					MaxLifetime:         gofastly.ToPointer(30000),
+					MaxUse:              gofastly.ToPointer(10),
 					HealthCheck:         gofastly.ToPointer(""),
 					UseSSL:              gofastly.ToPointer(false),
 					SSLCheckCert:        gofastly.ToPointer(true),
@@ -144,6 +150,8 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"first_byte_timeout":    15000,
 					"keepalive_time":        1500,
 					"max_conn":              200,
+					"max_lifetime":          30000,
+					"max_use":               10,
 					"healthcheck":           "",
 					"use_ssl":               false,
 					"ssl_check_cert":        true,
@@ -204,11 +212,13 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		Weight:              gofastly.ToPointer(100),
 		UseSSL:              gofastly.ToPointer(false),
 	}
-	// This validates the ShareKey is unset.
+	// This validates the ShareKey is unset and max_lifetime/max_use are updated.
 	b1Updated := gofastly.Backend{
-		Address: gofastly.ToPointer(backendAddress),
-		Name:    gofastly.ToPointer(backendName),
-		Port:    gofastly.ToPointer(443),
+		Address:     gofastly.ToPointer(backendAddress),
+		Name:        gofastly.ToPointer(backendName),
+		Port:        gofastly.ToPointer(443),
+		MaxLifetime: gofastly.ToPointer(60000),
+		MaxUse:      gofastly.ToPointer(20),
 
 		// NOTE: The following are defaults applied by the API.
 		AutoLoadbalance:     gofastly.ToPointer(false),
@@ -365,9 +375,11 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "%s"
-    name    = "%s"
-    port    = 443
+    address      = "%s"
+    name         = "%s"
+    port         = 443
+    max_lifetime = 60000
+    max_use      = 20
   }
 
   backend {

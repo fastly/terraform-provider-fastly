@@ -84,7 +84,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Computed:    true,
-			Description: "Maximum backend connection lifetime in milliseconds.",
+			Description: "Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited.",
 		},
 		"max_tls_version": {
 			Type:        schema.TypeString,
@@ -96,7 +96,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Computed:    true,
-			Description: "Maximum number of requests allowed for a single backend connection.",
+			Description: "Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited.",
 		},
 		"min_tls_version": {
 			Type:        schema.TypeString,

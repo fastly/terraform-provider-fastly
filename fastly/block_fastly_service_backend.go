@@ -84,7 +84,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		"max_lifetime": {
 			Type:             schema.TypeInt,
 			Optional:         true,
-			Default:          0,
+			Computed:         true,
 			Description:      "Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited.",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
@@ -97,7 +97,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		"max_use": {
 			Type:             schema.TypeInt,
 			Optional:         true,
-			Default:          0,
+			Computed:         true,
 			Description:      "Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited.",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},

@@ -106,8 +106,6 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					FirstByteTimeout:    gofastly.ToPointer(15000),
 					KeepAliveTime:       gofastly.ToPointer(0),
 					MaxConn:             gofastly.ToPointer(200),
-					MaxLifetime:         gofastly.ToPointer(0),
-					MaxUse:              gofastly.ToPointer(0),
 					RequestCondition:    gofastly.ToPointer(""),
 					HealthCheck:         gofastly.ToPointer(""),
 					UseSSL:              gofastly.ToPointer(false),
@@ -138,8 +136,6 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"first_byte_timeout":    15000,
 					"keepalive_time":        0,
 					"max_conn":              200,
-					"max_lifetime":          0,
-					"max_use":               0,
 					"request_condition":     "",
 					"healthcheck":           "",
 					"use_ssl":               false,
@@ -253,8 +249,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					FirstByteTimeout:    gofastly.ToPointer(15000),
 					KeepAliveTime:       gofastly.ToPointer(0),
 					MaxConn:             gofastly.ToPointer(200),
-					MaxLifetime:         gofastly.ToPointer(0),
-					MaxUse:              gofastly.ToPointer(0),
 					HealthCheck:         gofastly.ToPointer(""),
 					UseSSL:              gofastly.ToPointer(false),
 					SSLCheckCert:        gofastly.ToPointer(true),
@@ -282,8 +276,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"first_byte_timeout":    15000,
 					"keepalive_time":        0,
 					"max_conn":              200,
-					"max_lifetime":          0,
-					"max_use":               0,
 					"healthcheck":           "",
 					"use_ssl":               false,
 					"ssl_check_cert":        true,
@@ -371,11 +363,9 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	}
 	// This validates that max_lifetime/max_use can be reset to 0 (unlimited).
 	b1Reset := gofastly.Backend{
-		Address:     gofastly.ToPointer(backendAddress),
-		Name:        gofastly.ToPointer(backendName),
-		Port:        gofastly.ToPointer(443),
-		MaxLifetime: gofastly.ToPointer(0),
-		MaxUse:      gofastly.ToPointer(0),
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName),
+		Port:    gofastly.ToPointer(443),
 
 		// NOTE: The following are defaults applied by the API.
 		AutoLoadbalance:     gofastly.ToPointer(false),

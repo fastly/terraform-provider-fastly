@@ -84,8 +84,8 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		"max_lifetime": {
 			Type:             schema.TypeInt,
 			Optional:         true,
-			Computed:         true,
-			Description:      "Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited.",
+			Default:          0,
+			Description:      "Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited - which is the default behavior.",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		"max_tls_version": {
@@ -97,8 +97,8 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		"max_use": {
 			Type:             schema.TypeInt,
 			Optional:         true,
-			Computed:         true,
-			Description:      "Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited.",
+			Default:          0,
+			Description:      "Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited - which is the default behavior.",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		"min_tls_version": {
@@ -331,8 +331,13 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	if resource["keepalive_time"].(int) > 0 {
 		opts.KeepAliveTime = gofastly.ToPointer(resource["keepalive_time"].(int))
 	}
-	opts.MaxLifetime = gofastly.ToPointer(resource["max_lifetime"].(int))
-	opts.MaxUse = gofastly.ToPointer(resource["max_use"].(int))
+
+	if resource["max_lifetime"].(int) > 0 {
+		opts.MaxLifetime = gofastly.ToPointer(resource["max_lifetime"].(int))
+	}
+	if resource["max_use"].(int) > 0 {
+		opts.MaxUse = gofastly.ToPointer(resource["max_use"].(int))
+	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.

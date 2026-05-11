@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(service/backend): added support for the `MaxLifetime` and `MaxUse` attributes ([#1233](https://github.com/fastly/terraform-provider-fastly/pull/1233))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

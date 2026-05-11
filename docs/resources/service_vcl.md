@@ -322,7 +322,9 @@ Optional:
 - `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
 - `keepalive_time` (Number) How long in seconds to keep a persistent connection to the backend between requests.
 - `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
+- `max_lifetime` (Number) Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited - which is the default behavior.
 - `max_tls_version` (String) Maximum allowed TLS version on SSL connections to this backend.
+- `max_use` (Number) Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited - which is the default behavior.
 - `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.
 - `override_host` (String) The hostname to override the Host header
 - `port` (Number) The port number on which the Backend responds. Default `80`

@@ -6,7 +6,7 @@ terraform {
     }
   }
 }
-
+ 
 variable "service_name" {
   type    = string
   default = "interface-test-project"

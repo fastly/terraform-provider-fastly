@@ -1,3 +1,0 @@
-resource "fastly_service_vcl" "myservice" {
-# ...
-}

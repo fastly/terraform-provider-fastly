@@ -1,1 +1,0 @@
-$ terraform import fastly_ngwaf_workspace.demo xxxxxxxxxxxxxxxxxxxx

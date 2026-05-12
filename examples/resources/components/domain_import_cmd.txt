@@ -1,1 +1,0 @@
-terraform import fastly_domain.example <domain_id>

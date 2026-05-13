@@ -1,0 +1,23 @@
+---
+layout: "fastly"
+page_title: "Fastly: dns_zone"
+sidebar_current: "docs-fastly-resource-dns_zone"
+description: |-
+  Provides a Fastly DNS Zone.
+---
+
+# fastly_dns_zone
+
+Provides a Fastly DNS Zone.
+
+## Example Usage
+
+{{ tffile "examples/resources/dns_zone_basic_usage.tf"}}
+
+## Import
+
+Fastly DNS Zones can be imported using their Zone ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/dns_zone_import_cmd.txt"}}
+
+{{ .SchemaMarkdown | trimspace }}

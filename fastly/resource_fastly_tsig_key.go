@@ -13,7 +13,7 @@ import (
 	"github.com/fastly/go-fastly/v15/fastly/dns/v1/tsigkeys"
 )
 
-func resourceFastlyTSIGKeys() *schema.Resource {
+func resourceFastlyTSIGKey() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFastlyTSIGKeysCreate,
 		ReadContext:   resourceFastlyTSIGKeysRead,
@@ -27,7 +27,7 @@ func resourceFastlyTSIGKeys() *schema.Resource {
 			"algorithm": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The algorithm of the TSIG key. One of: `hmac-sha224`, `hmac-sha256`, `hmac-sha384`,  `hmac-sha512`.",
+				Description: "The algorithm of the TSIG key. One of: `hmac-sha224`, `hmac-sha256`, `hmac-sha384`, `hmac-sha512`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
 					[]string{"hmac-sha224", "hmac-sha256", "hmac-sha384", "hmac-sha512"},
 					false,
@@ -42,7 +42,7 @@ func resourceFastlyTSIGKeys() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the TSIG Key.",
-				// These constraints  may change in the future - so we are using simple validation for now.
+				// These constraints may change in the future - so we are using simple validation for now.
 				ValidateDiagFunc: validation.ToDiagFunc(
 					validation.StringMatch(regexp.MustCompile(`^\S+$`), "must not contain spaces"),
 				),

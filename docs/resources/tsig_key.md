@@ -37,7 +37,7 @@ $ terraform import fastly_tsig_key.example xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
-- `algorithm` (String) The algorithm of the TSIG key. One of: `hmac-sha224`, `hmac-sha256`, `hmac-sha384`,  `hmac-sha512`.
+- `algorithm` (String) The algorithm of the TSIG key. One of: `hmac-sha224`, `hmac-sha256`, `hmac-sha384`, `hmac-sha512`.
 - `name` (String) The name of the TSIG Key.
 - `secret` (String, Sensitive) The Base64 encoded secret key.
 

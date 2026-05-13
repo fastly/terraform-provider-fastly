@@ -85,7 +85,7 @@ func flattenDNSZones(zones []dnszones.Zone) []map[string]any {
 	result := make([]map[string]any, len(zones))
 	for i, zone := range zones {
 		data := map[string]any{
-			"id":          strconv.Itoa(i),
+			"id":          "",
 			"name":        "",
 			"description": "",
 		}

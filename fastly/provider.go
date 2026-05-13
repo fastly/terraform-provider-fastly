@@ -144,7 +144,7 @@ func Provider() *schema.Provider {
 			"fastly_service_dynamic_snippet_content":         resourceServiceDynamicSnippetContent(),
 			"fastly_service_vcl":                             resourceServiceVCL(),
 			"fastly_tls_activation":                          resourceFastlyTLSActivation(),
-			"fastly_tsig_key":                                resourceFastlyTSIGKeys(),
+			"fastly_tsig_key":                                resourceFastlyTSIGKey(),
 			"fastly_tls_certificate":                         resourceFastlyTLSCertificate(),
 			"fastly_tls_mutual_authentication":               resourceFastlyTLSMutualAuthentication(),
 			"fastly_tls_platform_certificate":                resourceFastlyTLSPlatformCertificate(),

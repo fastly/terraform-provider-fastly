@@ -33,6 +33,7 @@ func resourceFastlyDNSZone() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The domain name for your zone in FQDN format (e.g. `example.com.`). Must include a trailing dot.",
+				// Since the API returns 'name' with a trailing dot, we are simply forcing users input to match the API response.
 				ValidateFunc: func(v any, k string) (warnings []string, errors []error) {
 					if !strings.HasSuffix(v.(string), ".") {
 						errors = append(errors, fmt.Errorf("%q must be in FQDN format, ending with a trailing dot (e.g. `example.com.`)", k))

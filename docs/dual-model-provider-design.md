@@ -311,9 +311,9 @@ User or pipeline activates or stages vN explicitly
 ### Notes
 
 - In explicit mode, the provider does not choose the target version.
-- The caller is responsible for ensuring the chosen version is writable.
-- The provider may check version mutability and reject writes to active or
-  locked versions.
+- The caller chooses the target version.
+- The provider checks target version mutability and rejects writes to active or
+  locked versions with a clear diagnostic.
 - This is the controlled workflow for auditability, rollout control, and
   staging.
 

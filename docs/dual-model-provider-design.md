@@ -393,9 +393,9 @@ Manual or explicit activation is supported only by the explicit resource family.
 
 It is better suited to:
 
-- controlled rollout order
-- pre-production validation
-- service chaining
+- coordinated multi-service production rollouts
+- pre-production validation followed by an explicit production promotion step
+- service chaining workflows where related services may need to be activated in a specific order
 - staging-first workflows
 - CI/CD systems that want an explicit promotion step
 

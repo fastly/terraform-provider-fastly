@@ -374,9 +374,10 @@ compatibility family’s automatic clone-and-activate lifecycle.
 
 Automatic activation is supported only by the compatibility resource family.
 
-For the current VCL implementation, that means:
+For service resources, that means:
 
 - `fastly_service_vcl`
+- `fastly_service_compute`
 
 Automatic activation is best suited to:
 

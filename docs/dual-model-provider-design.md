@@ -227,19 +227,24 @@ validate selected version
 activate selected version automatically
 ```
 
-### Draft selection order for compatibility updates
+### Bootstrap version selection
 
-When `fastly_service_vcl` needs a working version for an update, it should use
-this selection order:
+When `fastly_service_vcl` creates a new Fastly service, Fastly service creation
+already creates version `1`.
+
+The provider uses version `1` directly for the initial nested configuration,
+then validates and activates it.
+
+### Update version selection
+
+When `fastly_service_vcl` updates an existing service, it should use this
+selection order:
 
 1. If the service has an active version, clone the active version.
-2. Otherwise, if the service has exactly one version and that version is
-   unlocked, use that version directly.
-3. Otherwise, clone the latest existing version.
+2. If the service has no active version, clone the latest existing version.
 
-This gives predictable behavior for existing services, brand-new unactivated
-services, services with a single unlocked draft, and services that have draft
-history but no active version.
+This gives predictable behavior for both activated services and services that
+have draft history but no active version.
 
 ### Compatibility flow diagram
 
@@ -249,10 +254,7 @@ Service S update through fastly_service_vcl
   | active version exists?
   |---- yes ---> clone active version
   |
-  |---- no ----> exactly one unlocked version exists?
-                  |---- yes ---> use that version directly
-                  |
-                  |---- no ----> clone latest existing version
+  |---- no ----> clone latest existing version
   v
 working version selected for service S
   |

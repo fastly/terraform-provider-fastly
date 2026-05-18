@@ -507,5 +507,5 @@ inspect service S
 generate *_explicit resources with version pinned to the version read
   |
   v
-no clone, no activation, no staging, no mutation
+read-only discovery; no version lifecycle operations
 ```

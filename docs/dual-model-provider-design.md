@@ -59,8 +59,8 @@ resource "fastly_service_vcl" "example" {
 }
 ```
 
-`fastly_service_vcl` owns the full service configuration for the resource types
-nested under it.
+`fastly_service_vcl` owns the full service configuration for the versioned
+resource types nested under it.
 
 Future Compute support should follow the same naming pattern:
 
@@ -166,7 +166,7 @@ resource family instead.
 It automatically:
 
 1. creates or selects a writable service version
-2. reconciles nested configuration into that version
+2. reconciles nested versioned resources into that version
 3. validates the version
 4. activates the version
 
@@ -175,8 +175,8 @@ It automatically:
 When `fastly_service_vcl` creates a new Fastly service, Fastly service creation
 already creates version `1`.
 
-The provider should use that version for initial nested configuration. It does
-not need to create an initial version itself.
+The provider should use that version for initial nested versioned configuration.
+It does not need to create an initial version itself.
 
 Bootstrap flow:
 
@@ -187,7 +187,7 @@ Create fastly_service_vcl
 Fastly creates service and editable version 1
   |
   v
-Provider writes nested domains/backends to version 1
+Provider writes nested versioned resources to version 1
   |
   v
 Provider validates version 1
@@ -201,24 +201,21 @@ Provider activates version 1
 When nested versioned configuration changes, `fastly_service_vcl` selects one
 working version for the service update.
 
-All changed nested configuration for that service is written to the same working
-version.
+All changed nested versioned resources for that service are written to the same
+working version.
 
-The provider must not clone once per nested block.
+The provider must not clone once per changed nested versioned resource.
 
 Update flow:
 
 ```text
-fastly_service_vcl detects changed nested configuration
+fastly_service_vcl detects changed nested versioned configuration
   |
   v
 select one working version for the service
   |
   v
-reconcile all nested domains to that version
-  |
-  v
-reconcile all nested backends to that version
+reconcile all nested versioned resources to that version
   |
   v
 validate selected version
@@ -232,8 +229,8 @@ activate selected version automatically
 When `fastly_service_vcl` creates a new Fastly service, Fastly service creation
 already creates version `1`.
 
-The provider uses version `1` directly for the initial nested configuration,
-then validates and activates it.
+The provider uses version `1` directly for the initial nested versioned
+configuration, then validates and activates it.
 
 ### Update version selection
 
@@ -259,7 +256,7 @@ Service S update through fastly_service_vcl
 working version selected for service S
   |
   v
-all nested domain/backend changes for service S write to that same version
+all nested versioned resource changes for service S write to that same version
   |
   v
 validate selected version
@@ -500,9 +497,9 @@ terraform query for explicit resources
 inspect service S
   |
   | active version exists?
-  |---- yes ---> read domains/backends from active version
+  |---- yes ---> read explicit versioned resources from active version
   |
-  |---- no ----> read domains/backends from latest version
+  |---- no ----> read explicit versioned resources from latest version
   v
 generate *_explicit resources with version pinned to the version read
   |

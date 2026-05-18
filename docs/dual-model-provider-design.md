@@ -401,6 +401,21 @@ It is better suited to:
 
 ---
 
+## Do not mix resource families for one service
+
+A single Fastly service should be managed through one resource family only:
+
+- compatibility resources
+- explicit resources
+
+Do not manage the same Fastly service with both `fastly_service_vcl` and
+`*_explicit` resources.
+
+The provider may not be able to reliably detect mixed ownership in all cases,
+especially across separate Terraform states or imported resources. Mixed
+ownership can cause drift, conflicting writes, or unexpected version lifecycle
+behavior.
+
 ## Import and query support
 
 The two resource families use different configuration-generation workflows.

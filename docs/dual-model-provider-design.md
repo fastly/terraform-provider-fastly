@@ -471,7 +471,8 @@ resource "fastly_service_backend_explicit" "example" {
 ```
 
 Because these resources are first-class, `terraform query` is the right mechanism
-for discovery and generated configuration.
+for discovery. When used with `-generate-config-out`, it can generate
+configuration and import blocks for the explicit resource family.
 
 For query-based discovery, the provider selects the version to read from using
 this order:
@@ -482,7 +483,8 @@ this order:
 A Fastly service is expected to have at least one version because service
 creation creates version `1`.
 
-Generated explicit resources include the version number that was read.
+When configuration is generated, the generated explicit resources include the
+version number that was read.
 
 If that version is active or locked, the generated configuration is still useful
 for discovery. Before making changes with the explicit resource family, the user

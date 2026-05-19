@@ -1,7 +1,7 @@
 # Orchestration Example (`fastly_service_vcl` compatibility surface)
 
-This example demonstrates the compatibility surface in the dual-model
-provider rewrite. It uses `fastly_service_vcl` with nested
+This example is the first orchestration-style example for the compatibility
+surface in the dual-model Fastly Terraform provider. It uses `fastly_service_vcl` with nested
 `domain` and `backend` blocks.
 
 The example provisions and manages:
@@ -13,8 +13,8 @@ The example provisions and manages:
 
 ## What this example is for
 
-This example is intended to demonstrate current-provider-style behavior in the
-dual-model provider rewrite:
+This example is intended to test the current-provider-style behavior in the new
+dual-model Fastly Terraform provider:
 
 - one service resource owns the whole service configuration
 - nested domain/backend changes are reconciled at the service level
@@ -27,17 +27,9 @@ dual-model provider rewrite:
 examples/orchestration-compat-vcl/
   main.tf
   variables.tf
-  terraform.tfvars.example
+  terraform.tfvars
   outputs.tf
   README.md
-```
-
-## Setup
-
-Copy the example variables file and fill in the values for your environment:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
 ```
 
 ## One-time bootstrap
@@ -94,7 +86,7 @@ terraform apply
 
 You should see:
 
-- `service_1_cloned_version` increase
+- `service_1_managed_version` increase
 - `service_1_active_version` move to the new version
 - `service_2_*` outputs remain unchanged
 
@@ -123,7 +115,7 @@ terraform apply
 
 You should see:
 
-- `service_1_cloned_version` increase
+- `service_1_managed_version` increase
 - `service_1_active_version` move to the new version
 - the removed backend disappear from the service configuration
 - `service_2_*` outputs remain unchanged
@@ -133,7 +125,7 @@ A follow-up `terraform plan` should show no changes.
 ## Notes
 
 - This example is for the compatibility surface only.
-- Do not mix `fastly_service_vcl` with the explicit resources
+- Do not mix `fastly_service_vcl` with the explicit version-agnostic resources
   for the same Fastly service.
-- This example mirrors the current provider’s convenience-oriented lifecycle
-  behavior for service, domain, and backend.
+- This first cut is intended to mirror the current provider’s
+  convenience-oriented lifecycle behavior for service, domain, and backend.

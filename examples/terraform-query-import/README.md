@@ -2,7 +2,7 @@
 
 This example demonstrates how to use **`terraform query`** to discover existing
 Fastly services and generate importable Terraform configuration with the
-**dual-model Fastly Terraform provider rewrite**.
+**dual-model Fastly Terraform provider**.
 
 The generated `output.tf` was produced by running:
 
@@ -11,7 +11,7 @@ terraform query -generate-config-out=output.tf
 ```
 
 It covers three services — `Prod-Service`, `Staging-Service`, and `Development-Service` — along with
-their domains and backends as independent resources at the active version, or at the latest version when no active version exists.
+their domains and backends as independent resources at the active version.
 
 ## What this example shows
 

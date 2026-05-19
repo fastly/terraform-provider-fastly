@@ -1,7 +1,7 @@
 # Orchestration Example (CLI / Scripts)
 
 This example demonstrates how to manage **multiple Fastly services** with the
-**dual-model Fastly Terraform provider rewrite explicit surface**, while performing **version
+**dual-model Fastly Terraform provider explicit surface**, while performing **version
 cloning and activation explicitly with the Fastly CLI**.
 
 The example provisions and manages:
@@ -26,20 +26,12 @@ examples/orchestration-explicit-cli/
   main.tf
   variables.tf
   outputs.tf
-  terraform.tfvars.example
+  terraform.tfvars
   modules/service/
   scripts/
     clone.sh
     activate.sh
     changed-services.sh
-```
-
-## Setup
-
-Copy the example variables file and fill in the values for your environment:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
 ```
 
 ## Local engineer workflow

@@ -26,7 +26,7 @@ locals {
 
 resource "fastly_service_vcl" "service_1" {
   name     = var.service_1_name
-  comment  = "Managed by Terraform dual-model provider rewrite"
+  comment  = "Managed by Terraform"
   domain {
     name = "www.service1.example.com"
   }
@@ -44,7 +44,7 @@ resource "fastly_service_vcl" "service_1" {
 
 resource "fastly_service_vcl" "service_2" {
   name     = var.service_2_name
-  comment  = "Managed by Terraform dual-model provider rewrite"
+  comment  = "Managed by Terraform"
   domain {
     name = "www.service2.example.com"
   }

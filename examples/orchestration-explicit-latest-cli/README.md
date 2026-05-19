@@ -1,20 +1,13 @@
 # Orchestration Example (Latest-Version Convenience Workflow, CLI)
 
-This example demonstrates a convenience-oriented workflow for the dual-model Fastly Terraform provider rewrite explicit surface. It targets the latest version for each service
+This example demonstrates a convenience-oriented workflow for the version-agnostic
+Fastly Terraform demo provider. It targets the latest version for each service
 and keeps version lifecycle explicit, but uses the Fastly CLI for clone and
 activate operations.
 
 This variant improves the original latest-version example by using one helper
 script to clone only the services that actually changed, and one helper script
 to activate only the services that changed.
-
-## Setup
-
-Copy the example variables file and fill in the values for your environment:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
-```
 
 ## One-time bootstrap
 

@@ -8,7 +8,7 @@ terraform {
 
 resource "fastly_service_vcl_explicit" "this" {
   name    = var.service_name
-  comment = "Managed by Terraform demo provider"
+  comment = "Managed by Terraform"
 }
 
 resource "fastly_service_domain_explicit" "this" {

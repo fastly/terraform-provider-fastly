@@ -1,0 +1,14 @@
+fastly_api_key = "<your_token>"
+
+service_name    = "compute-service"
+service_version = 1
+domain_name     = "www.compute.example.com"
+
+backend = {
+  name    = "origin"
+  address = "origin.example.com"
+  port    = 443
+}
+
+# Build or copy a Compute package to this path before running terraform apply.
+package_filename = "pkg/package.tar.gz"

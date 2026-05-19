@@ -391,6 +391,7 @@ resource "fastly_service_compute" "foo" {
 
   product_enablement {
     api_discovery         = false
+    bot_management        = false
     domain_inspector      = true
     fanout                = false
     log_explorer_insights = false

@@ -67,30 +67,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	// These products are supported only on Delivery (VCL) services.
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		blockAttributes["bot_management"] = &schema.Schema{
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "Enable Bot Management support",
-			MaxItems:    1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"contentguard": {
-						Type:        schema.TypeString,
-						Required:    true,
-						Description: "ContentGuard status. Can be either `off`, or `on`.",
-						ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-							[]string{"off", "on"},
-							false,
-						)),
-					},
-					"enabled": {
-						Type:        schema.TypeBool,
-						Required:    true,
-						Description: "Enable Bot Management support",
-					},
-				},
-			},
-		}
 		blockAttributes["brotli_compression"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -109,6 +85,30 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 
 	// These products are supported for both Compute (WASM) and Delivery (VCL) services.
+	blockAttributes["bot_management"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Enable Bot Management support",
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"contentguard": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "ContentGuard status. Can be either `off`, or `on`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"off", "on"},
+						false,
+					)),
+				},
+				"enabled": {
+					Type:        schema.TypeBool,
+					Required:    true,
+					Description: "Enable Bot Management support",
+				},
+			},
+		},
+	}
 	blockAttributes["domain_inspector"] = &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,

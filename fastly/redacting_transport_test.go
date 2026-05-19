@@ -83,7 +83,8 @@ func TestRedactingTransport_ResponseBodyLogging(t *testing.T) {
 				underlying: http.DefaultTransport,
 				redactKeys: []string{"Fastly-Key"},
 				logf: func(_ context.Context, msg string) {
-					logBuf.WriteString(msg + "\n")
+					logBuf.WriteString(msg)
+					logBuf.WriteString("\n")
 				},
 			}
 

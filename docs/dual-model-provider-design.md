@@ -33,6 +33,8 @@ The dual-model provider design should provide the following properties:
 - make staging explicit-only
 - support generated configuration for both resource families using the mechanism
   that fits each model
+- support both CDN and Compute service resources as first-class parts of the
+  design
 
 ---
 
@@ -40,13 +42,14 @@ The dual-model provider design should provide the following properties:
 
 ### Compatibility resource family
 
-The compatibility family uses an aggregate service resource with nested
-versioned configuration.
+The compatibility family uses aggregate service resources with nested versioned
+configuration.
 
-Current VCL resource:
+For CDN services, the compatibility resource owns nested CDN service
+configuration:
 
 ```hcl
-resource "fastly_service_vcl" "example" {
+resource "fastly_service_cdn" "example" {
   domain {
     name = "www.example.com"
   }
@@ -59,32 +62,90 @@ resource "fastly_service_vcl" "example" {
 }
 ```
 
-`fastly_service_vcl` owns the full service configuration for the versioned
-resource types nested under it.
+For Compute services, the compatibility resource owns nested Compute service
+configuration, including the Compute package associated with the selected service
+version:
 
-Future Compute support should follow the same naming pattern:
+```hcl
+resource "fastly_service_compute" "example" {
+  domain {
+    name = "www.example.com"
+  }
 
+  backend {
+    name    = "origin"
+    address = "origin.example.com"
+    port    = 443
+  }
+
+  package {
+    filename         = "${path.module}/pkg/package.tar.gz"
+    source_code_hash = filebase64sha256("${path.module}/pkg/package.tar.gz")
+  }
+}
+```
+
+Compatibility service resources own the full service configuration for the
+versioned resource types nested under them.
+
+The compatibility service resources are:
+
+- `fastly_service_cdn`
 - `fastly_service_compute`
+
+### `fastly_service_vcl` compatibility alias
+
+`fastly_service_cdn` is the canonical compatibility resource name for CDN
+services.
+
+`fastly_service_vcl` should continue to work as a deprecated alias for a
+transition period. The provider should surface deprecation warnings that point
+users from `fastly_service_vcl` to `fastly_service_cdn` so existing users have
+time to migrate without an immediate configuration break.
 
 ### Explicit resource family
 
 The explicit family uses first-class resources.
 
-Current VCL resources:
+For CDN services, the explicit service resource is separate from the versioned
+resources that belong to a service version:
 
 ```hcl
-resource "fastly_service_vcl_explicit" "example" {
+resource "fastly_service_cdn_explicit" "example" {
   name = "example"
 }
 
 resource "fastly_service_domain_explicit" "example" {
-  service_id = fastly_service_vcl_explicit.example.id
+  service_id = fastly_service_cdn_explicit.example.id
   version    = var.service_version
   name       = "www.example.com"
 }
 
 resource "fastly_service_backend_explicit" "example" {
-  service_id = fastly_service_vcl_explicit.example.id
+  service_id = fastly_service_cdn_explicit.example.id
+  version    = var.service_version
+  name       = "origin"
+  address    = "origin.example.com"
+  port       = 443
+}
+```
+
+For Compute services, the explicit service resource is also separate from the
+versioned resources and package upload operation:
+
+```hcl
+resource "fastly_service_compute_explicit" "example" {
+  name = "example"
+}
+
+resource "fastly_service_domain_explicit" "example" {
+  service_id = fastly_service_compute_explicit.example.id
+  version    = var.service_version
+  name       = "www.example.com"
+}
+
+resource "fastly_service_backend_explicit" "example" {
+  service_id = fastly_service_compute_explicit.example.id
   version    = var.service_version
   name       = "origin"
   address    = "origin.example.com"
@@ -96,9 +157,14 @@ The explicit family does not clone or activate versions during normal resource
 CRUD. The caller is responsible for selecting a writable version and performing
 version lifecycle operations explicitly.
 
-Future Compute support should follow the same naming pattern:
+The explicit service resources are:
 
+- `fastly_service_cdn_explicit`
 - `fastly_service_compute_explicit`
+
+Shared explicit versioned resources, such as domains and backends, may support
+both CDN and Compute services. Versioned resources that apply only to one service
+kind must validate the target service kind before writing.
 
 ---
 
@@ -111,28 +177,31 @@ and cannot be derived from remote state during import or query operations.
 
 Instead, the resource type defines the lifecycle model:
 
-- `fastly_service_vcl` means compatibility / automatic lifecycle behavior
+- compatibility service resources mean automatic lifecycle behavior
 - `*_explicit` resources mean explicit / caller-managed lifecycle behavior
 
 ---
 
 ## No `type` field
 
-The provider does not expose a `type` field such as `delivery`, `vcl`, or
-`compute`.
+The provider does not expose a `type` field such as `delivery`, `vcl`, `wasm`,
+`cdn`, or `compute`.
 
 Service kind should be represented by the resource type, not by provider-only
 metadata.
 
-Current VCL service resources:
+CDN service resources:
 
-- `fastly_service_vcl`
-- `fastly_service_vcl_explicit`
+- `fastly_service_cdn`
+- `fastly_service_cdn_explicit`
 
-Future Compute service resources should be separate resources:
+Compute service resources:
 
 - `fastly_service_compute`
 - `fastly_service_compute_explicit`
+
+`fastly_service_vcl` remains available as a deprecated compatibility alias for
+`fastly_service_cdn` during the transition period.
 
 ---
 
@@ -140,40 +209,40 @@ Future Compute service resources should be separate resources:
 
 Only two lifecycle workflows are supported.
 
-| Resource family                     | Clone behavior   | Version selection | Activation        | Staging             |
-| ----------------------------------- | ---------------- | ----------------- | ----------------- | ------------------- |
-| Compatibility: `fastly_service_vcl` | Provider-managed | Provider-managed  | Automatic         | Not supported       |
-| Explicit: `*_explicit`              | Caller-managed   | Caller-managed    | Manual / explicit | Supported only here |
+| Resource family                           | Clone behavior   | Version selection | Activation        | Staging             |
+| ----------------------------------------- | ---------------- | ----------------- | ----------------- | ------------------- |
+| Compatibility: service aggregate resource | Provider-managed | Provider-managed  | Automatic         | Not supported       |
+| Explicit: `*_explicit` resources          | Caller-managed   | Caller-managed    | Manual / explicit | Supported only here |
 
 The provider should not support intermediate variants:
 
 - compatibility + manual activation
 - explicit resources + automatic activation
 
-There is intentionally no `activate` field on `fastly_service_vcl`. The
-compatibility resource family always performs automatic clone and activation
+There is intentionally no `activate` field on compatibility service resources.
+The compatibility resource family always performs automatic clone and activation
 during normal CRUD. Users who do not want that behavior should use the explicit
 resource family instead.
 
 ---
 
-## Compatibility resource behavior: `fastly_service_vcl`
+## Compatibility resource behavior
 
 ### Core rule
 
-`fastly_service_vcl` is the compatibility surface.
+Compatibility service resources are the automatic lifecycle surface.
 
-It automatically:
+They automatically:
 
-1. creates or selects a writable service version
-2. reconciles nested versioned resources into that version
-3. validates the version
-4. activates the version
+1. create or select a writable service version
+2. reconcile nested versioned resources into that version
+3. validate the version
+4. activate the version
 
 ### Bootstrap behavior
 
-When `fastly_service_vcl` creates a new Fastly service, Fastly service creation
-already creates version `1`.
+When a compatibility service resource creates a new Fastly service, Fastly
+service creation already creates version `1`.
 
 The provider should use that version for initial nested versioned configuration.
 It does not need to create an initial version itself.
@@ -181,7 +250,7 @@ It does not need to create an initial version itself.
 Bootstrap flow:
 
 ```text
-Create fastly_service_vcl
+Create compatibility service resource
   |
   v
 Fastly creates service and editable version 1
@@ -198,8 +267,8 @@ Provider activates version 1
 
 ### Update behavior
 
-When nested versioned configuration changes, `fastly_service_vcl` selects one
-working version for the service update.
+When nested versioned configuration changes, the compatibility service resource
+selects one working version for the service update.
 
 All changed nested versioned resources for that service are written to the same
 working version.
@@ -209,7 +278,7 @@ The provider must not clone once per changed nested versioned resource.
 Update flow:
 
 ```text
-fastly_service_vcl detects changed nested versioned configuration
+compatibility service resource detects changed nested versioned configuration
   |
   v
 select one working version for the service
@@ -226,16 +295,16 @@ activate selected version automatically
 
 ### Bootstrap version selection
 
-When `fastly_service_vcl` creates a new Fastly service, Fastly service creation
-already creates version `1`.
+When a compatibility service resource creates a new Fastly service, Fastly
+service creation already creates version `1`.
 
 The provider uses version `1` directly for the initial nested versioned
 configuration, then validates and activates it.
 
 ### Update version selection
 
-When `fastly_service_vcl` updates an existing service, it should use this
-selection order:
+When a compatibility service resource updates an existing service, it should use
+this selection order:
 
 1. If the service has an active version, clone the active version.
 2. If the service has no active version, clone the latest existing version.
@@ -246,7 +315,7 @@ have draft history but no active version.
 ### Compatibility flow diagram
 
 ```text
-Service S update through fastly_service_vcl
+Service S update through compatibility service resource
   |
   | active version exists?
   |---- yes ---> clone active version
@@ -275,7 +344,7 @@ activate selected version automatically
 
 ---
 
-## Explicit resource behavior: `*_explicit` resources
+## Explicit resource behavior
 
 ### Core rule
 
@@ -283,7 +352,10 @@ In the explicit family, versioned resources specify `version`.
 
 The provider writes directly to the specified version.
 
-The caller is responsible for ensuring that the version is writable.
+The caller chooses the target version.
+
+The provider checks target version mutability and rejects writes to active or
+locked versions with a clear diagnostic.
 
 Clone timing, version selection, activation, and staging are controlled by the
 caller or by external automation.
@@ -307,6 +379,99 @@ All explicit versioned resources for service S write directly to vN
   v
 User or pipeline activates or stages vN explicitly
 ```
+
+### Service-kind validation
+
+Some explicit versioned resources can be used with both CDN and Compute services.
+Other explicit versioned resources are service-kind specific.
+
+The provider should validate the service kind before writing when a resource is
+not supported by all service kinds.
+
+Examples:
+
+- domains and backends can be shared by CDN and Compute services
+- CDN-only resources should reject Compute service IDs
+- Compute-only resources should reject CDN service IDs
+
+This validation usually cannot be guaranteed by `terraform validate`, because
+`service_id` may be computed, imported, or come from remote state. The provider
+should therefore return clear diagnostics during planning or CRUD when the
+service kind is known.
+
+### Compute package upload
+
+Compute packages are associated with a specific service version. In the explicit
+family, the service resource itself should remain versionless, while the package
+upload targets the caller-selected service version.
+
+For that reason, package upload should not be modeled as an attribute or nested
+block on `fastly_service_compute_explicit`.
+
+It should also not be modeled as a normal first-class managed resource unless the
+Fastly API supports full resource lifecycle semantics, including delete. Compute
+package upload is modeled as an explicit action because package upload is a
+versioned operation and the API supports upload/read semantics, but not a
+dedicated package delete operation.
+
+A simple explicit Compute workflow can use `terraform_data` as the stateful
+trigger and an action to upload the package during normal `terraform apply`:
+
+```hcl
+variable "service_version" {
+  type = number
+}
+
+resource "fastly_service_compute_explicit" "app" {
+  name = "example-compute-service"
+}
+
+resource "fastly_service_domain_explicit" "app" {
+  service_id = fastly_service_compute_explicit.app.id
+  version    = var.service_version
+  name       = "www.example.com"
+}
+
+resource "fastly_service_backend_explicit" "origin" {
+  service_id = fastly_service_compute_explicit.app.id
+  version    = var.service_version
+  name       = "origin"
+  address    = "origin.example.com"
+  port       = 443
+}
+
+resource "terraform_data" "compute_package" {
+  input = {
+    service_id       = fastly_service_compute_explicit.app.id
+    version          = var.service_version
+    filename         = "${path.module}/pkg/package.tar.gz"
+    source_code_hash = filebase64sha256("${path.module}/pkg/package.tar.gz")
+  }
+
+  lifecycle {
+    action_trigger {
+      action = action.fastly_service_compute_package_upload.this
+      events = ["create", "update"]
+    }
+  }
+}
+
+action "fastly_service_compute_package_upload" "this" {
+  config {
+    service_id       = fastly_service_compute_explicit.app.id
+    version          = var.service_version
+    filename         = "${path.module}/pkg/package.tar.gz"
+    source_code_hash = filebase64sha256("${path.module}/pkg/package.tar.gz")
+  }
+}
+```
+
+With this pattern, users run a normal `terraform apply` to create or update the
+Compute package on the pinned service version. The upload action is triggered
+when `terraform_data.compute_package` is created or updated, for example because
+the target version or `source_code_hash` changed.
+
+Activation or staging remains a separate explicit lifecycle step.
 
 ### Notes
 
@@ -376,7 +541,7 @@ Automatic activation is supported only by the compatibility resource family.
 
 For service resources, that means:
 
-- `fastly_service_vcl`
+- `fastly_service_cdn`
 - `fastly_service_compute`
 
 Automatic activation is best suited to:
@@ -395,7 +560,8 @@ It is better suited to:
 
 - coordinated multi-service production rollouts
 - pre-production validation followed by an explicit production promotion step
-- service chaining workflows where related services may need to be activated in a specific order
+- service chaining workflows where related services may need to be activated in
+  a specific order
 - staging-first workflows
 - CI/CD systems that want an explicit promotion step
 
@@ -408,13 +574,15 @@ A single Fastly service should be managed through one resource family only:
 - compatibility resources
 - explicit resources
 
-Do not manage the same Fastly service with both `fastly_service_vcl` and
-`*_explicit` resources.
+Do not manage the same Fastly service with both a compatibility service resource
+and `*_explicit` resources.
 
 The provider may not be able to reliably detect mixed ownership in all cases,
 especially across separate Terraform states or imported resources. Mixed
 ownership can cause drift, conflicting writes, or unexpected version lifecycle
 behavior.
+
+---
 
 ## Import and query support
 
@@ -427,7 +595,7 @@ The compatibility family uses nested configuration.
 Example:
 
 ```hcl
-resource "fastly_service_vcl" "example" {
+resource "fastly_service_cdn" "example" {
   domain {
     name = "www.example.com"
   }
@@ -440,7 +608,7 @@ resource "fastly_service_vcl" "example" {
 }
 ```
 
-Because `fastly_service_vcl` owns the nested service configuration as one
+Because compatibility service resources own nested service configuration as one
 aggregate resource, `terraform query` is not the right mechanism for generating
 that configuration.
 
@@ -448,11 +616,11 @@ For the compatibility family, generated configuration should come from Terraform
 import:
 
 ```bash
-terraform import fastly_service_vcl.example <service_id>
+terraform import fastly_service_cdn.example <service_id>
 ```
 
-During read/import, `fastly_service_vcl` selects the version to read from using
-this order:
+During read/import, compatibility service resources select the version to read
+from using this order:
 
 1. If the service has an active version, read from the active version.
 2. If the service has no active version, read from the latest service version.
@@ -464,18 +632,18 @@ The explicit family uses independent first-class resources.
 Example:
 
 ```hcl
-resource "fastly_service_vcl_explicit" "example" {
+resource "fastly_service_cdn_explicit" "example" {
   name = "example"
 }
 
 resource "fastly_service_domain_explicit" "example" {
-  service_id = fastly_service_vcl_explicit.example.id
+  service_id = fastly_service_cdn_explicit.example.id
   version    = 1
   name       = "www.example.com"
 }
 
 resource "fastly_service_backend_explicit" "example" {
-  service_id = fastly_service_vcl_explicit.example.id
+  service_id = fastly_service_cdn_explicit.example.id
   version    = 1
   name       = "origin"
   address    = "origin.example.com"

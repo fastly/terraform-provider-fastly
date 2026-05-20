@@ -68,8 +68,9 @@ clean_test:
 		TEST_PARALLELISM=8 make testacc; \
 	fi
 
-fmt:
-	golangci-lint fmt
+fmt: install-linter check-linter-version
+	@echo "==> Running golangci-lint --fix"
+	@$(GOLANGCI_LINT) run --fix
 
 
 test-compile:

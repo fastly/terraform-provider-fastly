@@ -135,6 +135,45 @@ func TestAccFastlyIntegration_webhook(t *testing.T) {
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
 
+func TestAccFastlyIntegration_recreateAfterManualDelete(t *testing.T) {
+	var integrationID string
+
+	integration := gofastly.Integration{
+		Config: map[string]string{
+			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer("slack"),
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig(integration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyIntegrationsRemoteState(integration),
+					testAccCaptureFastlyIntegrationID("fastly_integration.foo", &integrationID),
+				),
+			},
+			{
+				PreConfig: func() {
+					testAccDeleteFastlyIntegrationByID(t, integrationID)
+				},
+				Config: testAccIntegrationConfig(integration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyIntegrationsRemoteState(integration),
+				),
+			},
+		},
+	})
+}
+
 func testAccFastlyIntegration(createIntegration, updateIntegration gofastly.Integration, t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -228,6 +267,43 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccCaptureFastlyIntegrationID(resourceName string, integrationID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found in state: %s", resourceName)
+		}
+
+		if rs.Primary == nil || rs.Primary.ID == "" {
+			return fmt.Errorf("resource %s has no ID in state", resourceName)
+		}
+
+		*integrationID = rs.Primary.ID
+
+		return nil
+	}
+}
+
+func testAccDeleteFastlyIntegrationByID(t *testing.T, integrationID string) {
+	t.Helper()
+
+	if integrationID == "" {
+		t.Fatal("integration ID is not set")
+	}
+
+	conn := testAccProvider.Meta().(*APIClient).conn
+	err := conn.DeleteIntegration(context.TODO(), &gofastly.DeleteIntegrationInput{
+		ID: integrationID,
+	})
+	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			return
+		}
+
+		t.Fatalf("error deleting integration out of band (%s): %s", integrationID, err)
+	}
 }
 
 func testAccIntegrationConfig(integration gofastly.Integration) string {

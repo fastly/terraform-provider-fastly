@@ -83,6 +83,12 @@ func resourceFastlyIntegrationRead(ctx context.Context, d *schema.ResourceData, 
 		ID: d.Id(),
 	})
 	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			log.Printf("[WARN] Integration not found (%s); removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
 		return diag.FromErr(err)
 	}
 
@@ -149,6 +155,10 @@ func resourceFastlyIntegrationDelete(ctx context.Context, d *schema.ResourceData
 		ID: d.Id(),
 	})
 	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			return nil
+		}
+
 		return diag.FromErr(err)
 	}
 

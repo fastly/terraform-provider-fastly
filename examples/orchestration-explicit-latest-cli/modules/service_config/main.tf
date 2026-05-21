@@ -6,13 +6,13 @@ terraform {
   }
 }
 
-resource "fastly_service_domain_explicit" "this" {
+resource "fastly_service_domain" "this" {
   service_id = var.service_id
   version    = var.service_version
   name       = var.domain_name
 }
 
-resource "fastly_service_backend_explicit" "this" {
+resource "fastly_service_backend" "this" {
   for_each = { for b in var.backends : b.name => b }
 
   service_id = var.service_id

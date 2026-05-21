@@ -14,19 +14,19 @@ locals {
   package_path = "${path.module}/${var.package_filename}"
 }
 
-resource "fastly_service_compute_explicit" "app" {
+resource "fastly_service_compute" "app" {
   name    = var.service_name
   comment = "Managed by Terraform"
 }
 
-resource "fastly_service_domain_explicit" "app" {
-  service_id = fastly_service_compute_explicit.app.id
+resource "fastly_service_domain" "app" {
+  service_id = fastly_service_compute.app.id
   version    = var.service_version
   name       = var.domain_name
 }
 
-resource "fastly_service_backend_explicit" "origin" {
-  service_id = fastly_service_compute_explicit.app.id
+resource "fastly_service_backend" "origin" {
+  service_id = fastly_service_compute.app.id
   version    = var.service_version
   name       = var.backend.name
   address    = var.backend.address
@@ -37,7 +37,7 @@ resource "fastly_service_backend_explicit" "origin" {
 # provides the stateful diff that triggers package uploads during normal apply.
 resource "terraform_data" "compute_package" {
   input = {
-    service_id       = fastly_service_compute_explicit.app.id
+    service_id       = fastly_service_compute.app.id
     version          = var.service_version
     filename         = local.package_path
     source_code_hash = filebase64sha256(local.package_path)
@@ -53,7 +53,7 @@ resource "terraform_data" "compute_package" {
 
 action "fastly_service_compute_package_upload" "this" {
   config {
-    service_id = fastly_service_compute_explicit.app.id
+    service_id = fastly_service_compute.app.id
     version    = var.service_version
     filename   = local.package_path
   }
@@ -63,7 +63,7 @@ action "fastly_service_compute_package_upload" "this" {
 # version and confirming the package upload and versioned resources are ready.
 action "fastly_service_version_activate" "production" {
   config {
-    service_id = fastly_service_compute_explicit.app.id
+    service_id = fastly_service_compute.app.id
     version    = var.service_version
     staging    = false
   }

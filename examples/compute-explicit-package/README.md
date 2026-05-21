@@ -1,15 +1,15 @@
 # Compute Explicit Package Example
 
-This example demonstrates a minimal explicit-family workflow for a Fastly
+This example demonstrates a minimal explicit/default workflow for a Fastly
 Compute service.
 
 It manages:
 
-- one `fastly_service_compute_explicit` service
-- one explicit domain
-- one explicit backend
+- one `fastly_service_compute` service
+- one domain resource
+- one backend resource
 - one Compute package upload action
-- one explicit activation action
+- one activation action
 
 The Compute package upload is triggered during a normal `terraform apply` by a
 `terraform_data` resource and `lifecycle.action_trigger`.

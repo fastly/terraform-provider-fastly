@@ -1,7 +1,7 @@
 # Orchestration Example (Terraform Actions)
 
 This example demonstrates how to manage **multiple Fastly services** with the
-**dual-model Fastly Terraform provider explicit surface**, while performing **version
+**dual-model Fastly Terraform provider explicit/default resource family**, while performing **version
 cloning and activation explicitly with Terraform Actions**.
 
 The example provisions and manages:
@@ -14,7 +14,7 @@ The example provisions and manages:
 
 - Managing **multiple Fastly services** in one Terraform configuration
 - Reusing shared configuration across services
-- Attaching `fastly_service_domain_explicit` and `fastly_service_backend_explicit` resources to an explicit service version
+- Attaching `fastly_service_domain` and `fastly_service_backend` resources to an caller-selected service version
 - Using `data.fastly_service_version` to inspect current version state
 - Explicit version cloning with Terraform Actions
 - Explicit version activation with Terraform Actions

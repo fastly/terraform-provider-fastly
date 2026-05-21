@@ -1,7 +1,7 @@
 # Orchestration Example (Latest-Version Convenience Workflow, CLI)
 
-This example demonstrates a convenience-oriented workflow for the version-agnostic
-Fastly Terraform demo provider. It targets the latest version for each service
+This example demonstrates a convenience-oriented workflow for the dual-model
+Fastly Terraform provider. It targets the latest version for each service
 and keeps version lifecycle explicit, but uses the Fastly CLI for clone and
 activate operations.
 

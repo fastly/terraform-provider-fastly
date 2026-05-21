@@ -15,8 +15,8 @@ their domains and backends as independent resources at the active version.
 
 ## What this example shows
 
-- Using `terraform query` to list all `fastly_service_vcl_explicit`,
-  `fastly_service_domain_explicit`, and `fastly_service_backend_explicit` resources
+- Using `terraform query` to list all `fastly_service_cdn`,
+  `fastly_service_compute`, `fastly_service_domain`, and `fastly_service_backend` resources
 - Generated `import` blocks alongside each resource for use with `terraform apply`
 
 ## Files

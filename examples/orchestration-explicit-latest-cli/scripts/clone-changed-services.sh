@@ -13,7 +13,7 @@ changed_service_ids="$(
     [
       .resource_changes[]
       | select(.mode == "managed")
-      | select(.type | IN("fastly_service_domain_explicit", "fastly_service_backend_explicit"))
+      | select(.type | IN("fastly_service_domain", "fastly_service_backend"))
       | select(
           (.change.actions | index("create")) or
           (.change.actions | index("update")) or

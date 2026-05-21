@@ -5,40 +5,41 @@
 This document explains how to use `terraform query` with the dual-model Fastly
 Terraform provider.
 
-`terraform query` is supported for the **explicit first-class resource family**
-only. It is intended for read-only discovery and generated configuration.
+`terraform query` is supported for the **explicit/default first-class resource
+family** only. It is intended for read-only discovery and generated
+configuration.
 
-It is not used for the compatibility resource family.
+It is not used for the automatic compatibility resource family.
 
 ---
 
 ## Supported resource family
 
-`terraform query` is supported for the **explicit first-class resource family**
-only:
+`terraform query` is supported for these explicit/default resources:
 
-- `fastly_service_vcl_explicit`
-- `fastly_service_domain_explicit`
-- `fastly_service_backend_explicit`
+- `fastly_service_cdn`
+- `fastly_service_compute`
+- `fastly_service_domain`
+- `fastly_service_backend`
 
 These resources are first-class Terraform resources, so they can be discovered
 independently and generated as separate resource blocks.
 
-Example explicit configuration:
+Example explicit/default configuration:
 
 ```hcl
-resource "fastly_service_vcl_explicit" "example" {
+resource "fastly_service_cdn" "example" {
   name = "example"
 }
 
-resource "fastly_service_domain_explicit" "example" {
-  service_id = fastly_service_vcl_explicit.example.id
+resource "fastly_service_domain" "example" {
+  service_id = fastly_service_cdn.example.id
   version    = 1
   name       = "www.example.com"
 }
 
-resource "fastly_service_backend_explicit" "example" {
-  service_id = fastly_service_vcl_explicit.example.id
+resource "fastly_service_backend" "example" {
+  service_id = fastly_service_cdn.example.id
   version    = 1
   name       = "origin"
   address    = "origin.example.com"
@@ -48,16 +49,17 @@ resource "fastly_service_backend_explicit" "example" {
 
 ---
 
-## Compatibility resources use import instead
+## Automatic compatibility resources use import instead
 
-`terraform query` is not supported for the compatibility resource family:
+`terraform query` is not supported for automatic compatibility resources:
 
-- `fastly_service_vcl`
+- `fastly_service_cdn_auto`
+- `fastly_service_compute_auto`
 
-The compatibility resource uses nested configuration:
+Automatic compatibility resources use nested configuration:
 
 ```hcl
-resource "fastly_service_vcl" "example" {
+resource "fastly_service_cdn_auto" "example" {
   domain {
     name = "www.example.com"
   }
@@ -70,12 +72,12 @@ resource "fastly_service_vcl" "example" {
 }
 ```
 
-Because `fastly_service_vcl` owns nested configuration as one aggregate resource,
-generated configuration for this resource family should come from Terraform
-import, not from query:
+Because automatic compatibility resources own nested configuration as one
+aggregate resource, generated configuration for this resource family should come
+from Terraform import, not from query:
 
 ```bash
-terraform import fastly_service_vcl.example <service_id>
+terraform import fastly_service_cdn_auto.example <service_id>
 ```
 
 ---
@@ -93,30 +95,30 @@ For each Fastly service, query selects the version to read from using this order
 A Fastly service is expected to have at least one version because service
 creation creates version `1`.
 
-Generated explicit resources include the version number that was read.
+Generated explicit/default resources include the version number that was read.
 
 If the generated version is active or locked, the generated configuration is
-still useful for discovery and import. Before making changes with the explicit
-resource family, clone or select a writable version and update the generated
-resources to target that writable version.
+still useful for discovery and import. Before making changes with the
+explicit/default resource family, clone or select a writable version and update
+the generated resources to target that writable version.
 
 ### Query flow
 
 ```text
-terraform query for explicit resources
+terraform query for explicit/default resources
   |
   v
 inspect service S
   |
   | active version exists?
-  |---- yes ---> read domains/backends from active version
+  |---- yes ---> read first-class versioned resources from active version
   |
-  |---- no ----> read domains/backends from latest version
+  |---- no ----> read first-class versioned resources from latest version
   v
-generate *_explicit resources with version pinned to the version read
+generate first-class resources with version pinned to the version read
   |
   v
-no clone, no activation, no staging, no mutation
+read-only discovery; no version lifecycle operations
 ```
 
 ---
@@ -142,15 +144,19 @@ Create a query configuration file:
 
 ```hcl
 # fastly.tfquery.hcl
-list "fastly_service_vcl_explicit" "all" {
+list "fastly_service_cdn" "all" {
   provider = fastly
 }
 
-list "fastly_service_domain_explicit" "all" {
+list "fastly_service_compute" "all" {
   provider = fastly
 }
 
-list "fastly_service_backend_explicit" "all" {
+list "fastly_service_domain" "all" {
+  provider = fastly
+}
+
+list "fastly_service_backend" "all" {
   provider = fastly
 }
 ```
@@ -183,6 +189,26 @@ If `generated.tf` already exists, remove it before running
 
 ---
 
+## Local development usage
+
+When testing a locally built provider with development overrides, first build the
+provider and export the generated Terraform CLI config file:
+
+```bash
+make build
+export TF_CLI_CONFIG_FILE=/path/to/repo/bin/developer_overrides.tfrc
+export FASTLY_API_KEY=<token>
+```
+
+Then run query from an example or test configuration directory:
+
+```bash
+terraform query
+terraform query -generate-config-out=generated.tf
+```
+
+---
+
 ## Generated configuration
 
 `terraform query -generate-config-out=generated.tf` produces Terraform resource
@@ -191,13 +217,13 @@ blocks and matching import blocks.
 Example service output:
 
 ```hcl
-resource "fastly_service_vcl_explicit" "my_service" {
+resource "fastly_service_cdn" "my_service" {
   provider = fastly
   name     = "My Service"
 }
 
 import {
-  to       = fastly_service_vcl_explicit.my_service
+  to       = fastly_service_cdn.my_service
   provider = fastly
   identity = {
     service_id = "abc123"
@@ -208,7 +234,7 @@ import {
 Example domain output:
 
 ```hcl
-resource "fastly_service_domain_explicit" "www_example_com" {
+resource "fastly_service_domain" "www_example_com" {
   provider   = fastly
   service_id = "abc123"
   version    = 7
@@ -216,7 +242,7 @@ resource "fastly_service_domain_explicit" "www_example_com" {
 }
 
 import {
-  to       = fastly_service_domain_explicit.www_example_com
+  to       = fastly_service_domain.www_example_com
   provider = fastly
   identity = {
     service_id = "abc123"
@@ -229,7 +255,7 @@ import {
 Example backend output:
 
 ```hcl
-resource "fastly_service_backend_explicit" "origin" {
+resource "fastly_service_backend" "origin" {
   provider   = fastly
   service_id = "abc123"
   version    = 7
@@ -239,7 +265,7 @@ resource "fastly_service_backend_explicit" "origin" {
 }
 
 import {
-  to       = fastly_service_backend_explicit.origin
+  to       = fastly_service_backend.origin
   provider = fastly
   identity = {
     service_id = "abc123"
@@ -259,9 +285,9 @@ After generating configuration:
 
 ---
 
-## Editing generated explicit resources
+## Editing generated explicit/default resources
 
-Generated explicit resources are pinned to the version that query read.
+Generated explicit/default resources are pinned to the version that query read.
 
 If that version is active or locked, do not edit and apply those resources
 directly. First clone or select a writable version, then update the generated
@@ -270,30 +296,31 @@ directly. First clone or select a writable version, then update the generated
 For example:
 
 ```hcl
-resource "fastly_service_domain_explicit" "www_example_com" {
-  service_id = fastly_service_vcl_explicit.my_service.id
+resource "fastly_service_domain" "www_example_com" {
+  service_id = fastly_service_cdn.my_service.id
   version    = var.service_version
   name       = "www.example.com"
 }
 ```
 
-The explicit resource family is intended for caller-managed lifecycle workflows.
-Terraform writes to the version you specify; it does not choose, clone, or
-activate versions during normal resource CRUD.
+The explicit/default resource family is intended for caller-managed lifecycle
+workflows. Terraform writes to the version you specify; it does not choose,
+clone, or activate versions during normal resource CRUD.
 
 ---
 
 ## Summary
 
 ```text
-fastly_service_vcl
-  -> compatibility nested resource family
+*_auto service resources
+  -> automatic compatibility nested resource family
   -> generated configuration through terraform import
   -> automatic clone and activation during CRUD
 
-*_explicit resources
-  -> explicit first-class resource family
+clean first-class resources
+  -> explicit/default resource family
   -> generated configuration through terraform query
   -> query reads active version, or latest version if no active version exists
+  -> query never clones or activates
   -> lifecycle is caller-managed
 ```

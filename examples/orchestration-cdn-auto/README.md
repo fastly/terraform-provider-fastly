@@ -1,30 +1,30 @@
-# Orchestration Example (`fastly_service_vcl` compatibility surface)
+# Orchestration Example (`fastly_service_cdn_auto`)
 
-This example is the first orchestration-style example for the compatibility
-surface in the dual-model Fastly Terraform provider. It uses `fastly_service_vcl` with nested
+This example demonstrates the automatic compatibility workflow in the dual-model
+Fastly Terraform provider. It uses `fastly_service_cdn_auto` with nested
 `domain` and `backend` blocks.
 
 The example provisions and manages:
 
-- two Fastly VCL services
+- two Fastly CDN services
 - one shared backend reused across both services
 - one service-specific backend on only service 1
 - one domain per service
 
 ## What this example is for
 
-This example is intended to test the current-provider-style behavior in the new
-dual-model Fastly Terraform provider:
+This example tests current-provider-style behavior with the automatic
+compatibility resource family:
 
-- one service resource owns the whole service configuration
+- one aggregate service resource owns the nested service configuration
 - nested domain/backend changes are reconciled at the service level
-- one draft version is cloned per changed service update
+- one working version is selected per changed service update
 - the provider validates and activates automatically
 
 ## Files
 
 ```text
-examples/orchestration-compat-vcl/
+examples/orchestration-cdn-auto/
   main.tf
   variables.tf
   terraform.tfvars
@@ -37,14 +37,14 @@ examples/orchestration-compat-vcl/
 For a brand new environment:
 
 ```bash
-cd examples/orchestration-compat-vcl
+cd examples/orchestration-cdn-auto
 terraform init
 terraform apply
 ```
 
 Expected bootstrap behavior:
 
-1. Terraform creates both `fastly_service_vcl` services.
+1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
 3. The provider reconciles the nested `domain` and `backend` blocks to version `1`.
 4. The provider validates and activates version `1`.
@@ -62,14 +62,12 @@ terraform apply
 
 Expected update behavior for a changed service:
 
-1. the provider picks the current tracked service version as the source
-2. it clones one new draft version for that service
-3. it reconciles all nested domains to that draft
-4. it reconciles all nested backends to that draft
-5. it validates the draft
-6. it activates the new version automatically
+1. the provider selects one working version for that service
+2. it reconciles all nested versioned resources to that working version
+3. it validates the working version
+4. it activates the working version automatically
 
-If only `service_1` changes, only `service_1` should get a new cloned and active
+If only `service_1` changes, only `service_1` should get a new managed and active
 version. `service_2` should remain unchanged.
 
 ## Suggested manual tests
@@ -124,8 +122,8 @@ A follow-up `terraform plan` should show no changes.
 
 ## Notes
 
-- This example is for the compatibility surface only.
-- Do not mix `fastly_service_vcl` with the explicit version-agnostic resources
-  for the same Fastly service.
+- This example is for the automatic compatibility resource family only.
+- Do not mix `fastly_service_cdn_auto` with first-class explicit/default
+  resources for the same Fastly service.
 - This first cut is intended to mirror the current provider’s
   convenience-oriented lifecycle behavior for service, domain, and backend.

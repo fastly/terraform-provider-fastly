@@ -24,7 +24,7 @@ locals {
   service_2_backends = [var.shared_backend]
 }
 
-resource "fastly_service_vcl" "service_1" {
+resource "fastly_service_cdn_auto" "service_1" {
   name     = var.service_1_name
   comment  = "Managed by Terraform"
   domain {
@@ -42,7 +42,7 @@ resource "fastly_service_vcl" "service_1" {
   }
 }
 
-resource "fastly_service_vcl" "service_2" {
+resource "fastly_service_cdn_auto" "service_2" {
   name     = var.service_2_name
   comment  = "Managed by Terraform"
   domain {

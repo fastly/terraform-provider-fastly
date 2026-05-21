@@ -1,6 +1,6 @@
 output "service_id" {
   description = "The Fastly Compute service ID."
-  value       = fastly_service_compute_explicit.app.id
+  value       = fastly_service_compute.app.id
 }
 
 output "service_version" {

@@ -32,7 +32,7 @@ examples/terraform-query-import/
 
 ```bash
 export TF_CLI_CONFIG_FILE=.../bin/developer_overrides.tfrc
-export FASTLY_API_KEY=<token>
+export FASTLY_API_TOKEN=<token>
 
 # Discover all services and generate config
 terraform query -generate-config-out=output.tf

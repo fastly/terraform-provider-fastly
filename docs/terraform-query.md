@@ -167,7 +167,7 @@ which provider configuration to use.
 Then run:
 
 ```bash
-export FASTLY_API_KEY=<token>
+export FASTLY_API_TOKEN=<token>
 
 terraform query
 ```
@@ -197,7 +197,7 @@ provider and export the generated Terraform CLI config file:
 ```bash
 make build
 export TF_CLI_CONFIG_FILE=/path/to/repo/bin/developer_overrides.tfrc
-export FASTLY_API_KEY=<token>
+export FASTLY_API_TOKEN=<token>
 ```
 
 Then run query from an example or test configuration directory:

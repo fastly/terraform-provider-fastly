@@ -82,6 +82,16 @@ func (a *serviceComputePackageUploadAction) Invoke(ctx context.Context, req acti
 	serviceID := cfg.ServiceID.ValueString()
 	version := int(cfg.Version.ValueInt64())
 
+	pkg := []serviceComputePackageModel{{
+		Content:  cfg.Content,
+		Filename: cfg.Filename,
+	}}
+
+	if err := validateComputePackageInput(pkg); err != nil {
+		resp.Diagnostics.AddError("Invalid Fastly Compute package configuration", err.Error())
+		return
+	}
+
 	if err := ensureServiceTypeSupported(ctx, a.providerData.client, serviceID, "fastly_service_compute_package_upload", serviceTypeCompute); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
@@ -91,11 +101,6 @@ func (a *serviceComputePackageUploadAction) Invoke(ctx context.Context, req acti
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	pkg := []serviceComputePackageModel{{
-		Content:  cfg.Content,
-		Filename: cfg.Filename,
-	}}
 
 	tflog.Info(ctx, "Uploading Fastly Compute package", map[string]any{
 		"service_id": serviceID,

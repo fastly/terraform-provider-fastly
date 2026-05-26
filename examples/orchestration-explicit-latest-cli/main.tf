@@ -7,7 +7,7 @@ terraform {
 }
 
 provider "fastly" {
-  api_key = var.fastly_api_key
+  api_token = var.fastly_api_token
 }
 
 resource "fastly_service_cdn" "service_1" {

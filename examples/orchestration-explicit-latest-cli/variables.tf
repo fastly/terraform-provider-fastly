@@ -1,4 +1,4 @@
-variable "fastly_api_key" {
+variable "fastly_api_token" {
   description = "Fastly API token."
   type        = string
 }

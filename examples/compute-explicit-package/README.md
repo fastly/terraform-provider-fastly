@@ -63,7 +63,7 @@ terraform init
 
 Edit `terraform.tfvars` and set:
 
-- `fastly_api_key`
+- `fastly_api_token`
 - `service_name`
 - `domain_name`
 - `backend`

@@ -1,4 +1,4 @@
-fastly_api_key = "<your_token>"
+fastly_api_token = "<your_token>"
 
 # Service 1 (new service)
 service_1_name    = "service-1"

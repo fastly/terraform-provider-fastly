@@ -191,6 +191,9 @@ func (d *serviceVersionDataSource) Read(ctx context.Context, req datasource.Read
 		"service_id": serviceID,
 	})
 
+	// Use ListVersions instead of GetServiceDetails because this data source only
+	// needs version metadata. GetServiceDetails can return full service version
+	// configuration, which is unnecessary and potentially large for this use case.
 	versions, err := d.client.ListVersions(ctx, &fastly.ListVersionsInput{
 		ServiceID: serviceID,
 	})

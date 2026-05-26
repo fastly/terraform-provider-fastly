@@ -33,7 +33,7 @@ func (a *serviceComputePackageUploadAction) Metadata(_ context.Context, req acti
 
 func (a *serviceComputePackageUploadAction) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Uploads or replaces a Compute package on a specific Fastly service version. Intended for explicit lifecycle workflows.",
+		Description: "Uploads or replaces a Compute package on a specific Fastly service version. Intended for explicit/default workflows; not for use with automatic versioned service resources.",
 		Attributes: map[string]schema.Attribute{
 			"service_id": schema.StringAttribute{
 				Required:    true,

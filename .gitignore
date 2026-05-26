@@ -1,0 +1,14 @@
+# Provider binary
+bin/
+terraform-provider-fastly
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

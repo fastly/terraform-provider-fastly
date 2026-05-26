@@ -8,6 +8,7 @@ terraform-provider-fastly
 terraform.tfstate
 terraform.tfstate.backup
 *.tfplan
+example.tf
 override.tf
 override.tf.json
 *_override.tf

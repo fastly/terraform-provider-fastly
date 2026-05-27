@@ -67,30 +67,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	// These products are supported only on Delivery (VCL) services.
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		blockAttributes["bot_management"] = &schema.Schema{
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "Enable Bot Management support",
-			MaxItems:    1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"contentguard": {
-						Type:        schema.TypeString,
-						Required:    true,
-						Description: "ContentGuard status. Can be either `off`, or `on`.",
-						ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-							[]string{"off", "on"},
-							false,
-						)),
-					},
-					"enabled": {
-						Type:        schema.TypeBool,
-						Required:    true,
-						Description: "Enable Bot Management support",
-					},
-				},
-			},
-		}
 		blockAttributes["brotli_compression"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -109,6 +85,30 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 
 	// These products are supported for both Compute (WASM) and Delivery (VCL) services.
+	blockAttributes["bot_management"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Enable Bot Management support",
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"contentguard": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "ContentGuard status. Can be either `off`, or `on`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"off", "on"},
+						false,
+					)),
+				},
+				"enabled": {
+					Type:        schema.TypeBool,
+					Required:    true,
+					Description: "Enable Bot Management support",
+				},
+			},
+		},
+	}
 	blockAttributes["domain_inspector"] = &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -211,27 +211,6 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		bp := resource["bot_management"].([]any)
-		if len(bp) != 0 {
-			if bp[0].(map[string]any)["enabled"].(bool) {
-				log.Println("[DEBUG] bot_management set")
-				_, err := botmanagement.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-				if err != nil {
-					return fmt.Errorf("failed to enable bot_management: %w", err)
-				}
-
-				contentguard := bp[0].(map[string]any)["contentguard"].(string)
-				_, err = botmanagement.UpdateConfiguration(
-					gofastly.NewContextForResourceID(ctx, d.Id()),
-					conn,
-					serviceID,
-					botmanagement.ConfigureInput{ContentGuard: contentguard},
-				)
-				if err != nil {
-					return fmt.Errorf("failed to configure bot_management: %w", err)
-				}
-			}
-		}
 		if resource["brotli_compression"].(bool) {
 			log.Println("[DEBUG] brotli_compression set")
 			_, err := brotlicompression.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
@@ -253,6 +232,28 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 			_, err := origininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable origin_inspector: %w", err)
+			}
+		}
+	}
+
+	bp := resource["bot_management"].([]any)
+	if len(bp) != 0 {
+		if bp[0].(map[string]any)["enabled"].(bool) {
+			log.Println("[DEBUG] bot_management set")
+			_, err := botmanagement.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("failed to enable bot_management: %w", err)
+			}
+
+			contentguard := bp[0].(map[string]any)["contentguard"].(string)
+			_, err = botmanagement.UpdateConfiguration(
+				gofastly.NewContextForResourceID(ctx, d.Id()),
+				conn,
+				serviceID,
+				botmanagement.ConfigureInput{ContentGuard: contentguard},
+			)
+			if err != nil {
+				return fmt.Errorf("failed to configure bot_management: %w", err)
 			}
 		}
 	}
@@ -370,28 +371,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			if _, err := botmanagement.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
-				c, err := botmanagement.GetConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-				if err != nil {
-					return fmt.Errorf("error looking up Bot Management product configuration for (%s): %s", serviceID, err)
-				}
-
-				bp := []map[string]any{}
-				bp = append(bp, map[string]any{
-					"enabled":      true,
-					"contentguard": *c.Configuration.ContentGuard,
-				})
-
-				result["bot_management"] = bp
-			} else if len(localState) > 0 {
-				// Preserve explicitly disabled nested blocks from config to prevent drift
-				if localMap, ok := localState[0].(map[string]any); ok {
-					if bm, ok := localMap["bot_management"].([]any); ok && len(bm) > 0 {
-						result["bot_management"] = bm
-					}
-				}
-			}
-
 			if _, err := brotlicompression.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["brotli_compression"] = true
 			}
@@ -402,6 +381,27 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 
 			if _, err := origininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["origin_inspector"] = true
+			}
+		}
+		if _, err := botmanagement.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
+			c, err := botmanagement.GetConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("error looking up Bot Management product configuration for (%s): %s", serviceID, err)
+			}
+
+			bp := []map[string]any{}
+			bp = append(bp, map[string]any{
+				"enabled":      true,
+				"contentguard": *c.Configuration.ContentGuard,
+			})
+
+			result["bot_management"] = bp
+		} else if len(localState) > 0 {
+			// Preserve explicitly disabled nested blocks from config to prevent drift
+			if localMap, ok := localState[0].(map[string]any); ok {
+				if bm, ok := localMap["bot_management"].([]any); ok && len(bm) > 0 {
+					result["bot_management"] = bm
+				}
 			}
 		}
 		if _, err := domaininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -518,37 +518,6 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		if v, ok := modified["bot_management"]; ok {
-			bp := v.([]any)
-			if len(bp) != 0 {
-				if bp[0].(map[string]any)["enabled"].(bool) {
-					log.Println("[DEBUG] bot_management will be enabled")
-					_, err := botmanagement.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-					if err != nil {
-						return fmt.Errorf("failed to enable bot_management: %w", err)
-					}
-
-					contentguard := bp[0].(map[string]any)["contentguard"].(string)
-					log.Printf("[DEBUG] bot_management contentguard will be set to %s", contentguard)
-					_, err = botmanagement.UpdateConfiguration(
-						gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID,
-						botmanagement.ConfigureInput{ContentGuard: contentguard},
-					)
-					if err != nil {
-						return fmt.Errorf("failed to set the configuration of bot_management: %w", err)
-					}
-				} else {
-					log.Println("[DEBUG] bot_management will be disabled")
-					err := botmanagement.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-					if err != nil {
-						if e := h.checkAPIError(err); e != nil {
-							return e
-						}
-					}
-				}
-			}
-		}
-
 		if v, ok := modified["brotli_compression"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] brotli_compression will be enabled")
@@ -595,6 +564,36 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 			} else {
 				log.Println("[DEBUG] origin_inspector will be disabled")
 				err := origininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+				if err != nil {
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
+				}
+			}
+		}
+	}
+	if v, ok := modified["bot_management"]; ok {
+		bp := v.([]any)
+		if len(bp) != 0 {
+			if bp[0].(map[string]any)["enabled"].(bool) {
+				log.Println("[DEBUG] bot_management will be enabled")
+				_, err := botmanagement.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+				if err != nil {
+					return fmt.Errorf("failed to enable bot_management: %w", err)
+				}
+
+				contentguard := bp[0].(map[string]any)["contentguard"].(string)
+				log.Printf("[DEBUG] bot_management contentguard will be set to %s", contentguard)
+				_, err = botmanagement.UpdateConfiguration(
+					gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID,
+					botmanagement.ConfigureInput{ContentGuard: contentguard},
+				)
+				if err != nil {
+					return fmt.Errorf("failed to set the configuration of bot_management: %w", err)
+				}
+			} else {
+				log.Println("[DEBUG] bot_management will be disabled")
+				err := botmanagement.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -781,16 +780,8 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(ctx context.Context, d
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		log.Println("[DEBUG] disable bot_management")
-		err := botmanagement.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
-		if err != nil {
-			if e := h.checkAPIError(err); e != nil {
-				return e
-			}
-		}
-
 		log.Println("[DEBUG] disable brotli_compression")
-		err = brotlicompression.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+		err := brotlicompression.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -814,8 +805,16 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(ctx context.Context, d
 		}
 	}
 
+	log.Println("[DEBUG] disable bot_management")
+	err := botmanagement.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+	if err != nil {
+		if e := h.checkAPIError(err); e != nil {
+			return e
+		}
+	}
+
 	log.Println("[DEBUG] disable domain_inspector")
-	err := domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+	err = domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e

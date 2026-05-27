@@ -4,17 +4,29 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 9.2.0 (May 20, 2026)
+
+### ENHANCEMENTS:
+
 - feat(service/backend): added support for the `MaxLifetime` and `MaxUse` attributes ([#1233](https://github.com/fastly/terraform-provider-fastly/pull/1233))
 - feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
 
 ### BUG FIXES:
 
+- fix(block_fastly_service_product_enablement): Allow `bot_management` to be enabled on Compute services ([#1270](https://github.com/fastly/terraform-provider-fastly/pull/1270))
+- fix(resource_fastly_integration): recreate integrations deleted outside of Terraform ([#1273](https://github.com/fastly/terraform-provider-fastly/pull/1273))
+
 ### DEPENDENCIES:
+
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.40.0 to 2.40.1 ([#1259](https://github.com/fastly/terraform-provider-fastly/pull/1259))
 - build(deps): `github.com/fastly/go-fastly/v15` from 14.0.2 to 15.0.1([#1260](https://github.com/fastly/terraform-provider-fastly/pull/1260))
 - build(deps): `golang.org/x/net` from 0.53.0 to 0.54.0 ([#1267](https://github.com/fastly/terraform-provider-fastly/pull/1267))
-
-### DOCUMENTATION:
 
 ## 9.1.1 (April 22, 2026)
 
@@ -23,6 +35,7 @@
 - fix(ngwaf/rules): updated validation to allow the maximum value of rate limit rule thresholds to `1000000` ([#1236](https://github.com/fastly/terraform-provider-fastly/pull/1236))
 
 ### DEPENDENCIES:
+
 - build(deps): `actions/github-script` from 8 to 9 ([#1232](https://github.com/fastly/terraform-provider-fastly/pull/1232))
 - build(deps): `github.com/fastly/go-fastly/v14` from 14.0.0 to 14.2.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
 - build(deps): `golang.org/x/net` from 0.52.0 to 0.53.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))

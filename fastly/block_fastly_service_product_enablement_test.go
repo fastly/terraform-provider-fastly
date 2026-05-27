@@ -396,6 +396,11 @@ resource "fastly_service_compute" "foo" {
     log_explorer_insights = false
     websockets            = false
 
+    bot_management {
+      enabled       = false
+      contentguard  = "off"
+    }
+
     ddos_protection {
       enabled = false
       mode    = "block"

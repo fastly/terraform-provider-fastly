@@ -42,10 +42,11 @@ func resourceFastlyTSIGKey() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of the TSIG Key.",
-				// These constraints may change in the future - so we are using simple validation for now.
-				ValidateDiagFunc: validation.ToDiagFunc(
+				// We rely on the API for further validation here.
+				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
+					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexp.MustCompile(`^\S+$`), "must not contain spaces"),
-				),
+				)),
 			},
 			"secret": {
 				Type:             schema.TypeString,

@@ -22,12 +22,12 @@ resource "fastly_dns_zone" "example" {
 
       primaries {
         address     = "192.0.2.1"
-        description = "Primary nameserver"
+        description = "Primary nameserver #1"
       }
 
       primaries {
         address     = "192.0.2.2"
-        description = "Secondary primary nameserver"
+        description = "Primary nameserver #1"
       }
     }
   }

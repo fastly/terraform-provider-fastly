@@ -1,8 +1,14 @@
-package provider
+package servicecomputeauto
 
 import (
 	"context"
 	"fmt"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+	"terraform-provider-fastly-dual-model-poc/internal/computepackage"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/backend"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/domain"
+	"terraform-provider-fastly-dual-model-poc/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -16,36 +22,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type serviceComputeAutoResource struct {
-	providerData *providerData
+type Resource struct {
+	providerData *fastlyclient.Data
 }
 
-var _ resource.Resource = &serviceComputeAutoResource{}
-var _ resource.ResourceWithConfigure = &serviceComputeAutoResource{}
-var _ resource.ResourceWithImportState = &serviceComputeAutoResource{}
+var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithConfigure = &Resource{}
+var _ resource.ResourceWithImportState = &Resource{}
 
-func NewServiceComputeAutoResource() resource.Resource {
-	return &serviceComputeAutoResource{}
+func NewResource() resource.Resource {
+	return &Resource{}
 }
 
-type serviceComputeAutoModel struct {
-	ID             types.String                 `tfsdk:"id"`
-	Name           types.String                 `tfsdk:"name"`
-	Comment        types.String                 `tfsdk:"comment"`
-	ForceDestroy   types.Bool                   `tfsdk:"force_destroy"`
-	Reuse          types.Bool                   `tfsdk:"reuse"`
-	ActiveVersion  types.Int64                  `tfsdk:"active_version"`
-	ManagedVersion types.Int64                  `tfsdk:"managed_version"`
-	Domain         []serviceDomainNestedModel   `tfsdk:"domain"`
-	Backend        []serviceBackendNestedModel  `tfsdk:"backend"`
-	Package        []serviceComputePackageModel `tfsdk:"package"`
+type Model struct {
+	ID             types.String           `tfsdk:"id"`
+	Name           types.String           `tfsdk:"name"`
+	Comment        types.String           `tfsdk:"comment"`
+	ForceDestroy   types.Bool             `tfsdk:"force_destroy"`
+	Reuse          types.Bool             `tfsdk:"reuse"`
+	ActiveVersion  types.Int64            `tfsdk:"active_version"`
+	ManagedVersion types.Int64            `tfsdk:"managed_version"`
+	Domain         []domain.NestedModel   `tfsdk:"domain"`
+	Backend        []backend.NestedModel  `tfsdk:"backend"`
+	Package        []computepackage.Model `tfsdk:"package"`
 }
 
-func (r *serviceComputeAutoResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_compute_auto"
 }
 
-func (r *serviceComputeAutoResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Automatic-lifecycle Fastly Compute service resource with nested versioned configuration. The provider automatically clones, validates, and activates changed versions.",
 		Attributes: map[string]schema.Attribute{
@@ -88,32 +94,25 @@ func (r *serviceComputeAutoResource) Schema(_ context.Context, _ resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"domain":  domainNestedBlockSchema(),
-			"backend": backendNestedBlockSchema(),
-			"package": computePackageNestedBlockSchema(),
+			"domain":  domain.NestedBlockSchema(),
+			"backend": backend.NestedBlockSchema(),
+			"package": computepackage.NestedBlockSchema(),
 		},
 	}
 }
 
-func (r *serviceComputeAutoResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (r *Resource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
 
-	pd, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected provider data type",
-			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
-		)
-		return
-	}
-
-	r.providerData = pd
+	r.providerData = data
 }
 
-func (r *serviceComputeAutoResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan serviceComputeAutoModel
+func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,22 +126,22 @@ func (r *serviceComputeAutoResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	if err := validateComputePackageInput(plan.Package); err != nil {
+	if err := computepackage.ValidateInput(plan.Package); err != nil {
 		resp.Diagnostics.AddError("Invalid Compute package", err.Error())
 		return
 	}
 
-	service, err := r.providerData.client.CreateService(ctx, &fastly.CreateServiceInput{
+	created, err := r.providerData.Client.CreateService(ctx, &fastly.CreateServiceInput{
 		Name:    fastly.ToPointer(plan.Name.ValueString()),
 		Comment: fastly.ToPointer(plan.Comment.ValueString()),
-		Type:    fastly.ToPointer(serviceTypeCompute),
+		Type:    fastly.ToPointer(service.TypeCompute),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Fastly Compute service", err.Error())
 		return
 	}
 
-	serviceID := fastly.ToValue(service.ServiceID)
+	serviceID := fastly.ToValue(created.ServiceID)
 	version := 1
 
 	tflog.Info(ctx, "Created Fastly Compute service", map[string]any{
@@ -150,29 +149,29 @@ func (r *serviceComputeAutoResource) Create(ctx context.Context, req resource.Cr
 		"version":    version,
 	})
 
-	if err := reconcileDomains(ctx, r.providerData.client, serviceID, version, plan.Domain); err != nil {
+	if err := domain.Reconcile(ctx, r.providerData.Client, serviceID, version, plan.Domain); err != nil {
 		resp.Diagnostics.AddError("Error reconciling domains", err.Error())
 		return
 	}
 
-	if err := reconcileBackends(ctx, r.providerData.client, serviceID, version, plan.Backend); err != nil {
+	if err := backend.Reconcile(ctx, r.providerData.Client, serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 		return
 	}
 
-	if err := updateComputePackage(ctx, r.providerData.client, serviceID, version, plan.Package); err != nil {
+	if err := computepackage.Update(ctx, r.providerData.Client, serviceID, version, plan.Package); err != nil {
 		resp.Diagnostics.AddError("Error updating Compute package", err.Error())
 		return
 	}
 
-	packages, err := readComputePackageForVersion(ctx, r.providerData.client, serviceID, version, plan.Package)
+	packages, err := computepackage.ReadForVersion(ctx, r.providerData.Client, serviceID, version, plan.Package)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Compute package", err.Error())
 		return
 	}
 	plan.Package = packages
 
-	if err := validateServiceVersion(ctx, r.providerData.client, serviceID, version); err != nil {
+	if err := service.ValidateVersion(ctx, r.providerData.Client, serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
 		return
 	}
@@ -180,7 +179,7 @@ func (r *serviceComputeAutoResource) Create(ctx context.Context, req resource.Cr
 	plan.ID = types.StringValue(serviceID)
 	plan.ManagedVersion = types.Int64Value(int64(version))
 
-	if _, err := r.providerData.client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
+	if _, err := r.providerData.Client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
 	}); err != nil {
@@ -192,14 +191,14 @@ func (r *serviceComputeAutoResource) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *serviceComputeAutoResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state serviceComputeAutoModel
+func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	service, err := r.providerData.client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
+	details, err := r.providerData.Client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -211,23 +210,23 @@ func (r *serviceComputeAutoResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	serviceType := fastly.ToValue(service.Type)
-	if serviceType != serviceTypeCompute {
+	serviceType := fastly.ToValue(details.Type)
+	if serviceType != service.TypeCompute {
 		resp.Diagnostics.AddError(
 			"Unexpected Fastly service type",
-			fmt.Sprintf("Expected Compute service %q to have type %q, got %q.", state.ID.ValueString(), serviceTypeCompute, serviceType),
+			fmt.Sprintf("Expected Compute service %q to have type %q, got %q.", state.ID.ValueString(), service.TypeCompute, serviceType),
 		)
 		return
 	}
 
-	if service.Name != nil {
-		state.Name = types.StringValue(*service.Name)
+	if details.Name != nil {
+		state.Name = types.StringValue(*details.Name)
 	}
-	if service.Comment != nil {
-		state.Comment = types.StringValue(*service.Comment)
+	if details.Comment != nil {
+		state.Comment = types.StringValue(*details.Comment)
 	}
 
-	readVersion, active, err := selectServiceReadVersionFromDetails(service, state.ID.ValueString())
+	readVersion, active, err := service.SelectReadVersionFromDetails(details, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error selecting service version for read", err.Error())
 		return
@@ -240,12 +239,12 @@ func (r *serviceComputeAutoResource) Read(ctx context.Context, req resource.Read
 	}
 	state.ManagedVersion = types.Int64Value(int64(readVersion))
 
-	domains, err := readDomainsForVersion(ctx, r.providerData.client, state.ID.ValueString(), readVersion)
+	domains, err := domain.ReadForVersion(ctx, r.providerData.Client, state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service domains", err.Error())
 		return
 	}
-	backends, err := readBackendsForVersion(ctx, r.providerData.client, state.ID.ValueString(), readVersion)
+	backends, err := backend.ReadForVersion(ctx, r.providerData.Client, state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
@@ -253,7 +252,7 @@ func (r *serviceComputeAutoResource) Read(ctx context.Context, req resource.Read
 	state.Domain = domains
 	state.Backend = backends
 
-	packages, err := readComputePackageForVersion(ctx, r.providerData.client, state.ID.ValueString(), readVersion, state.Package)
+	packages, err := computepackage.ReadForVersion(ctx, r.providerData.Client, state.ID.ValueString(), readVersion, state.Package)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Compute package", err.Error())
 		return
@@ -263,9 +262,9 @@ func (r *serviceComputeAutoResource) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan serviceComputeAutoModel
-	var state serviceComputeAutoModel
+func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan Model
+	var state Model
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -276,7 +275,7 @@ func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.Up
 	serviceID := state.ID.ValueString()
 
 	// Update service metadata in place. Name and comment are versionless service fields.
-	_, err := r.providerData.client.UpdateService(ctx, &fastly.UpdateServiceInput{
+	_, err := r.providerData.Client.UpdateService(ctx, &fastly.UpdateServiceInput{
 		ServiceID: serviceID,
 		Name:      fastly.ToPointer(plan.Name.ValueString()),
 		Comment:   fastly.ToPointer(plan.Comment.ValueString()),
@@ -286,7 +285,7 @@ func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	nestedChanged := !domainsEqual(plan.Domain, state.Domain) || !backendsEqual(plan.Backend, state.Backend) || !computePackagesEqual(plan.Package, state.Package)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !computepackage.Equal(plan.Package, state.Package)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -299,7 +298,7 @@ func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.Up
 		}
 
 		if shouldClone {
-			cloned, err := r.providerData.client.CloneVersion(ctx, &fastly.CloneVersionInput{
+			cloned, err := r.providerData.Client.CloneVersion(ctx, &fastly.CloneVersionInput{
 				ServiceID:      serviceID,
 				ServiceVersion: sourceVersion,
 			})
@@ -320,12 +319,12 @@ func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.Up
 			"nested_changed": nestedChanged,
 		})
 
-		if err := reconcileDomains(ctx, r.providerData.client, serviceID, targetVersion, plan.Domain); err != nil {
+		if err := domain.Reconcile(ctx, r.providerData.Client, serviceID, targetVersion, plan.Domain); err != nil {
 			resp.Diagnostics.AddError("Error reconciling domains", err.Error())
 			return
 		}
 
-		if err := reconcileBackends(ctx, r.providerData.client, serviceID, targetVersion, plan.Backend); err != nil {
+		if err := backend.Reconcile(ctx, r.providerData.Client, serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 			return
 		}
@@ -338,26 +337,26 @@ func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		if err := updateComputePackage(ctx, r.providerData.client, serviceID, targetVersion, plan.Package); err != nil {
+		if err := computepackage.Update(ctx, r.providerData.Client, serviceID, targetVersion, plan.Package); err != nil {
 			resp.Diagnostics.AddError("Error updating Compute package", err.Error())
 			return
 		}
 
-		packages, err := readComputePackageForVersion(ctx, r.providerData.client, serviceID, targetVersion, plan.Package)
+		packages, err := computepackage.ReadForVersion(ctx, r.providerData.Client, serviceID, targetVersion, plan.Package)
 		if err != nil {
 			resp.Diagnostics.AddError("Error reading Compute package", err.Error())
 			return
 		}
 		plan.Package = packages
 
-		if err := validateServiceVersion(ctx, r.providerData.client, serviceID, targetVersion); err != nil {
+		if err := service.ValidateVersion(ctx, r.providerData.Client, serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
 		}
 
 		plan.ManagedVersion = types.Int64Value(int64(targetVersion))
 
-		if _, err := r.providerData.client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
+		if _, err := r.providerData.Client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
 			ServiceID:      serviceID,
 			ServiceVersion: targetVersion,
 		}); err != nil {
@@ -374,36 +373,36 @@ func (r *serviceComputeAutoResource) Update(ctx context.Context, req resource.Up
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *serviceComputeAutoResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state serviceComputeAutoModel
+func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := deleteServiceWithPolicy(
+	err := service.DeleteWithPolicy(
 		ctx,
-		r.providerData.client,
+		r.providerData.Client,
 		state.ID.ValueString(),
-		boolValue(state.ForceDestroy),
-		boolValue(state.Reuse),
+		service.BoolValue(state.ForceDestroy),
+		service.BoolValue(state.Reuse),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting Fastly Compute service", err.Error())
 	}
 }
 
-func (r *serviceComputeAutoResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *serviceComputeAutoResource) selectWorkingVersion(ctx context.Context, serviceID string) (version int, shouldClone bool, err error) {
-	service, err := r.providerData.client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
+func (r *Resource) selectWorkingVersion(ctx context.Context, serviceID string) (version int, shouldClone bool, err error) {
+	details, err := r.providerData.Client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 		ServiceID: serviceID,
 	})
 	if err != nil {
 		return 0, false, err
 	}
 
-	return selectServiceWorkingVersionFromDetails(service, serviceID)
+	return service.SelectWorkingVersionFromDetails(details, serviceID)
 }

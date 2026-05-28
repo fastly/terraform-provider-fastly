@@ -1,8 +1,11 @@
-package provider
+package domain
 
 import (
 	"context"
 	"fmt"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+	"terraform-provider-fastly-dual-model-poc/internal/service"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,46 +17,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var _ list.ListResource = &serviceDomainListResource{}
-var _ list.ListResourceWithConfigure = &serviceDomainListResource{}
+var _ list.ListResource = &ListResource{}
+var _ list.ListResourceWithConfigure = &ListResource{}
 
-type serviceDomainListResource struct {
+type ListResource struct {
 	client *fastly.Client
 }
 
-func NewServiceDomainListResource() list.ListResource {
-	return &serviceDomainListResource{}
+func NewListResource() list.ListResource {
+	return &ListResource{}
 }
 
-func (l *serviceDomainListResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (l *ListResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_domain"
 }
 
-func (l *serviceDomainListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
+func (l *ListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
 	resp.Schema = listschema.Schema{
 		Description: "List all domains across all Fastly CDN and Compute services at their active version, or latest version when no active version exists.",
 		Attributes:  map[string]listschema.Attribute{},
 	}
 }
 
-func (l *serviceDomainListResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (l *ListResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected ProviderData type",
-			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
-		)
-		return
-	}
-
-	l.client = providerData.client
+	l.client = data.Client
 }
 
-func (l *serviceDomainListResource) List(ctx context.Context, req list.ListRequest, stream *list.ListResultsStream) {
+func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *list.ListResultsStream) {
 	tflog.Debug(ctx, "Listing Fastly service domains ")
 
 	services, err := l.client.ListServices(ctx, &fastly.ListServicesInput{})
@@ -67,7 +63,7 @@ func (l *serviceDomainListResource) List(ctx context.Context, req list.ListReque
 	stream.Results = func(push func(list.ListResult) bool) {
 		var count int64
 		for _, svc := range services {
-			if svc == nil || svc.Type == nil || !serviceTypeSupported(*svc.Type, serviceTypeVCL, serviceTypeCompute) {
+			if svc == nil || svc.Type == nil || !service.TypeSupported(*svc.Type, service.TypeVCL, service.TypeCompute) {
 				continue
 			}
 			serviceID := fastly.ToValue(svc.ServiceID)
@@ -75,7 +71,7 @@ func (l *serviceDomainListResource) List(ctx context.Context, req list.ListReque
 				continue
 			}
 
-			version, _, err := selectServiceReadVersionFromServiceSummary(ctx, l.client, svc)
+			version, _, err := service.SelectReadVersionFromServiceSummary(ctx, l.client, svc)
 			if err != nil {
 				tflog.Warn(ctx, "Error selecting service version for query", map[string]any{
 					"service_id": serviceID,
@@ -106,14 +102,14 @@ func (l *serviceDomainListResource) List(ctx context.Context, req list.ListReque
 				count++
 
 				result := req.NewListResult(ctx)
-				result.DisplayName = toGeneratedResourceName(fastly.ToValue(svc.Name), serviceID, *d.Name)
+				result.DisplayName = service.ToGeneratedResourceName(fastly.ToValue(svc.Name), serviceID, *d.Name)
 
 				result.Diagnostics.Append(result.Identity.SetAttribute(ctx, path.Root("service_id"), serviceID)...)
 				result.Diagnostics.Append(result.Identity.SetAttribute(ctx, path.Root("version"), int64(version))...)
 				result.Diagnostics.Append(result.Identity.SetAttribute(ctx, path.Root("name"), *d.Name)...)
 
 				if req.IncludeResource {
-					result.Diagnostics.Append(setServiceDomainResourceAttrs(ctx, &result, d, serviceID, version)...)
+					result.Diagnostics.Append(setResourceAttrs(ctx, &result, d, serviceID, version)...)
 				}
 
 				if !push(result) {
@@ -124,7 +120,7 @@ func (l *serviceDomainListResource) List(ctx context.Context, req list.ListReque
 	}
 }
 
-func setServiceDomainResourceAttrs(ctx context.Context, result *list.ListResult, d *fastly.Domain, serviceID string, version int) diag.Diagnostics {
+func setResourceAttrs(ctx context.Context, result *list.ListResult, d *fastly.Domain, serviceID string, version int) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(d.Name)

@@ -1,0 +1,89 @@
+package versionstage
+
+import (
+	"context"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+
+	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	"github.com/hashicorp/terraform-plugin-framework/action/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+type Action struct {
+	client *fastly.Client
+}
+
+var _ action.Action = &Action{}
+
+func NewAction() action.Action {
+	return &Action{}
+}
+
+type Model struct {
+	ServiceID types.String `tfsdk:"service_id"`
+	Version   types.Int64  `tfsdk:"version"`
+}
+
+func (a *Action) Metadata(_ context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_service_version_stage"
+}
+
+func (a *Action) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Description: "Stages a Fastly service version. Implemented as a Terraform Action (non-CRUD).",
+		Attributes: map[string]schema.Attribute{
+			"service_id": schema.StringAttribute{
+				Required:    true,
+				Description: "Fastly service ID.",
+			},
+			"version": schema.Int64Attribute{
+				Required:    true,
+				Description: "Service version number to stage.",
+			},
+		},
+	}
+}
+
+func (a *Action) Configure(_ context.Context, req action.ConfigureRequest, resp *action.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
+		return
+	}
+
+	a.client = data.Client
+}
+
+func (a *Action) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
+	var cfg Model
+	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	serviceID := cfg.ServiceID.ValueString()
+	version := int(cfg.Version.ValueInt64())
+
+	tflog.Info(ctx, "Staging Fastly service version", map[string]any{
+		"service_id": serviceID,
+		"version":    version,
+	})
+
+	_, err := a.client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Environment:    "staging",
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to stage Fastly service version", err.Error())
+		return
+	}
+
+	tflog.Info(ctx, "Staged Fastly service version successfully", map[string]any{
+		"service_id": serviceID,
+		"version":    version,
+	})
+}

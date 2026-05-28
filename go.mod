@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/fastly/go-fastly/v15 v15.0.1
 	github.com/hashicorp/terraform-plugin-framework v1.17.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	golang.org/x/sync v0.20.0
 )

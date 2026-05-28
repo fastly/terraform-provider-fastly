@@ -1,8 +1,11 @@
-package provider
+package backend
 
 import (
 	"context"
-	"strconv"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+	"terraform-provider-fastly-dual-model-poc/internal/service"
+	"terraform-provider-fastly-dual-model-poc/internal/validation"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,19 +16,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var _ resource.Resource = &serviceBackendResource{}
-var _ resource.ResourceWithImportState = &serviceBackendResource{}
-var _ resource.ResourceWithIdentity = &serviceBackendResource{}
+var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithImportState = &Resource{}
+var _ resource.ResourceWithIdentity = &Resource{}
 
-type serviceBackendResource struct {
-	providerData *providerData
+type Resource struct {
+	providerData *fastlyclient.Data
 }
 
-func NewServiceBackendResource() resource.Resource {
-	return &serviceBackendResource{}
+func NewResource() resource.Resource {
+	return &Resource{}
 }
 
-type serviceBackendModel struct {
+type Model struct {
 	ID                  types.String `tfsdk:"id"`
 	Service             types.String `tfsdk:"service_id"`
 	Version             types.Int64  `tfsdk:"version"`
@@ -61,65 +64,63 @@ type serviceBackendModel struct {
 	Weight              types.Int64  `tfsdk:"weight"`
 }
 
-func (r *serviceBackendResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_backend"
 }
 
-func (r *serviceBackendResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fastly service backend resource. Writes directly to the specified writable service version.",
-		Attributes:  backendResourceAttributes(),
+		Attributes:  ResourceAttributes(),
 	}
 }
 
-func (r *serviceBackendResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (r *Resource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
-	providerData, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError("Unexpected ProviderData type", "Expected *providerData.")
-		return
-	}
-	r.providerData = providerData
+
+	r.providerData = data
 }
 
-func (r *serviceBackendResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan serviceBackendModel
+func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if err := ensureServiceTypeSupported(ctx, r.providerData.client, plan.Service.ValueString(), "fastly_service_backend", serviceTypeVCL, serviceTypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.Client, plan.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(r.providerData.ensureVersionMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
+	resp.Diagnostics.Append(r.providerData.VersionChecker.EnsureMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	opts := buildCreateBackendInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), explicitBackendToVCLModel(plan))
+	opts := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), ModelToNested(plan))
 	tflog.Debug(ctx, "Creating Fastly service backend", map[string]any{
 		"service_id": opts.ServiceID,
 		"version":    opts.ServiceVersion,
-		"name":       stringValue(plan.Name),
+		"name":       service.StringValue(plan.Name),
 	})
 
-	b, err := r.providerData.client.CreateBackend(ctx, opts)
+	b, err := r.providerData.Client.CreateBackend(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating explicit service backend", err.Error())
 		return
 	}
 
-	flattenServiceBackend(ctx, b, &plan)
+	flatten(ctx, b, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *serviceBackendResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state serviceBackendModel
+func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -131,7 +132,7 @@ func (r *serviceBackendResource) Read(ctx context.Context, req resource.ReadRequ
 		"name":       state.Name.ValueString(),
 	})
 
-	b, err := r.providerData.client.GetBackend(ctx, &fastly.GetBackendInput{
+	b, err := r.providerData.Client.GetBackend(ctx, &fastly.GetBackendInput{
 		ServiceID:      state.Service.ValueString(),
 		ServiceVersion: int(state.Version.ValueInt64()),
 		Name:           state.Name.ValueString(),
@@ -149,13 +150,13 @@ func (r *serviceBackendResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	flattenServiceBackend(ctx, b, &state)
+	flatten(ctx, b, &state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *serviceBackendResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan serviceBackendModel
-	var state serviceBackendModel
+func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan Model
+	var state Model
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -163,22 +164,22 @@ func (r *serviceBackendResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	if err := ensureServiceTypeSupported(ctx, r.providerData.client, plan.Service.ValueString(), "fastly_service_backend", serviceTypeVCL, serviceTypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.Client, plan.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(r.providerData.ensureVersionMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
+	resp.Diagnostics.Append(r.providerData.VersionChecker.EnsureMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	forceAll := plan.Version.ValueInt64() != state.Version.ValueInt64()
-	stateBackend := explicitBackendToVCLModel(state)
-	opts := buildUpdateBackendInput(
+	stateBackend := ModelToNested(state)
+	opts := BuildUpdateInput(
 		plan.Service.ValueString(),
 		int(plan.Version.ValueInt64()),
-		explicitBackendToVCLModel(plan),
+		ModelToNested(plan),
 		&stateBackend,
 		forceAll,
 	)
@@ -190,18 +191,18 @@ func (r *serviceBackendResource) Update(ctx context.Context, req resource.Update
 		"force_all":  forceAll,
 	})
 
-	b, err := r.providerData.client.UpdateBackend(ctx, opts)
+	b, err := r.providerData.Client.UpdateBackend(ctx, opts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating explicit service backend", err.Error())
 		return
 	}
 
-	flattenServiceBackend(ctx, b, &plan)
+	flatten(ctx, b, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *serviceBackendResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state serviceBackendModel
+func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -213,34 +214,34 @@ func (r *serviceBackendResource) Delete(ctx context.Context, req resource.Delete
 		"name":       state.Name.ValueString(),
 	})
 
-	if err := ensureServiceTypeSupported(ctx, r.providerData.client, state.Service.ValueString(), "fastly_service_backend", serviceTypeVCL, serviceTypeCompute); err != nil {
-		if isFastlyNotFound(err) {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.Client, state.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
+		if fastlyclient.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 
-	notFound, diags := r.providerData.ensureVersionMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
+	notFound, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
 	resp.Diagnostics.Append(diags...)
 	if notFound || resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := r.providerData.client.DeleteBackend(ctx, &fastly.DeleteBackendInput{
+	err := r.providerData.Client.DeleteBackend(ctx, &fastly.DeleteBackendInput{
 		ServiceID:      state.Service.ValueString(),
 		ServiceVersion: int(state.Version.ValueInt64()),
 		Name:           state.Name.ValueString(),
 	})
 	if err != nil {
-		if isFastlyNotFound(err) {
+		if fastlyclient.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Error deleting explicit service backend", err.Error())
 	}
 }
 
-func (r *serviceBackendResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	if req.ID != "" {
 		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 		return
@@ -259,7 +260,7 @@ func (r *serviceBackendResource) ImportState(ctx context.Context, req resource.I
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }
 
-func (r *serviceBackendResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	resp.IdentitySchema = identityschema.Schema{
 		Attributes: map[string]identityschema.Attribute{
 			"service_id": identityschema.StringAttribute{
@@ -276,26 +277,4 @@ func (r *serviceBackendResource) IdentitySchema(_ context.Context, _ resource.Id
 			},
 		},
 	}
-}
-
-func flattenServiceBackend(ctx context.Context, b *fastly.Backend, m *serviceBackendModel) {
-	if b == nil {
-		tflog.Warn(ctx, "flattenServiceBackend called with nil backend")
-		return
-	}
-
-	id := fastly.ToValue(b.ServiceID) + "-" + strconv.Itoa(fastly.ToValue(b.ServiceVersion)) + "-" + fastly.ToValue(b.Name)
-	m.ID = types.StringValue(id)
-	m.Service = types.StringValue(fastly.ToValue(b.ServiceID))
-	m.Version = types.Int64Value(int64(fastly.ToValue(b.ServiceVersion)))
-
-	backendModel := flattenBackendToVCLModel(b)
-	applyVCLModelToExplicitBackend(backendModel, m)
-
-	tflog.Debug(ctx, "Flattened service backend state", map[string]any{
-		"id":      id,
-		"service": m.Service.ValueString(),
-		"version": m.Version.ValueInt64(),
-		"name":    m.Name.ValueString(),
-	})
 }

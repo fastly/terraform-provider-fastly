@@ -1,4 +1,4 @@
-package provider
+package domain
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type serviceDomainNestedModel struct {
+type NestedModel struct {
 	Name    types.String `tfsdk:"name"`
 	Comment types.String `tfsdk:"comment"`
 }
 
-func domainCommonAttributes() map[string]schema.Attribute {
+func CommonAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"name": schema.StringAttribute{
 			Required:    true,
@@ -27,7 +27,7 @@ func domainCommonAttributes() map[string]schema.Attribute {
 	}
 }
 
-func domainResourceAttributes() map[string]schema.Attribute {
+func ResourceAttributes() map[string]schema.Attribute {
 	attrs := map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			Computed:    true,
@@ -42,23 +42,23 @@ func domainResourceAttributes() map[string]schema.Attribute {
 			Description: "Writable Fastly service version to modify.",
 		},
 	}
-	for k, v := range domainCommonAttributes() {
+	for k, v := range CommonAttributes() {
 		attrs[k] = v
 	}
 	return attrs
 }
 
-func domainNestedBlockSchema() schema.ListNestedBlock {
+func NestedBlockSchema() schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		Description: "Domains attached to this service.",
 		NestedObject: schema.NestedBlockObject{
-			Attributes: domainCommonAttributes(),
+			Attributes: CommonAttributes(),
 		},
 	}
 }
 
-func normalizeDomainModels(input []serviceDomainNestedModel) []serviceDomainNestedModel {
-	out := make([]serviceDomainNestedModel, len(input))
+func Normalize(input []NestedModel) []NestedModel {
+	out := make([]NestedModel, len(input))
 	copy(out, input)
 
 	sort.Slice(out, func(i, j int) bool {
@@ -68,7 +68,7 @@ func normalizeDomainModels(input []serviceDomainNestedModel) []serviceDomainNest
 	return out
 }
 
-func readDomainsForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]serviceDomainNestedModel, error) {
+func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
 	remote, err := client.ListDomains(ctx, &fastly.ListDomainsInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -77,9 +77,9 @@ func readDomainsForVersion(ctx context.Context, client *fastly.Client, serviceID
 		return nil, err
 	}
 
-	result := make([]serviceDomainNestedModel, 0, len(remote))
+	result := make([]NestedModel, 0, len(remote))
 	for _, d := range remote {
-		model := serviceDomainNestedModel{
+		model := NestedModel{
 			Name: types.StringValue(fastly.ToValue(d.Name)),
 		}
 		if d.Comment != nil && *d.Comment != "" {
@@ -90,10 +90,10 @@ func readDomainsForVersion(ctx context.Context, client *fastly.Client, serviceID
 		result = append(result, model)
 	}
 
-	return normalizeDomainModels(result), nil
+	return Normalize(result), nil
 }
 
-func reconcileDomains(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []serviceDomainNestedModel) error {
+func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
 	remote, err := client.ListDomains(ctx, &fastly.ListDomainsInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -102,14 +102,14 @@ func reconcileDomains(ctx context.Context, client *fastly.Client, serviceID stri
 		return err
 	}
 
-	desired = normalizeDomainModels(desired)
+	desired = Normalize(desired)
 
 	remoteByName := make(map[string]*fastly.Domain, len(remote))
 	for _, d := range remote {
 		remoteByName[fastly.ToValue(d.Name)] = d
 	}
 
-	desiredByName := make(map[string]serviceDomainNestedModel, len(desired))
+	desiredByName := make(map[string]NestedModel, len(desired))
 	for _, d := range desired {
 		desiredByName[d.Name.ValueString()] = d
 	}
@@ -177,9 +177,9 @@ func reconcileDomains(ctx context.Context, client *fastly.Client, serviceID stri
 	return nil
 }
 
-func domainsEqual(a, b []serviceDomainNestedModel) bool {
-	a = normalizeDomainModels(a)
-	b = normalizeDomainModels(b)
+func Equal(a, b []NestedModel) bool {
+	a = Normalize(a)
+	b = Normalize(b)
 
 	if len(a) != len(b) {
 		return false

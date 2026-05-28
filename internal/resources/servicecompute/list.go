@@ -1,8 +1,10 @@
-package provider
+package servicecompute
 
 import (
 	"context"
-	"fmt"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+	"terraform-provider-fastly-dual-model-poc/internal/service"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -13,46 +15,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var _ list.ListResource = &serviceComputeListResource{}
-var _ list.ListResourceWithConfigure = &serviceComputeListResource{}
+var _ list.ListResource = &ListResource{}
+var _ list.ListResourceWithConfigure = &ListResource{}
 
-type serviceComputeListResource struct {
+type ListResource struct {
 	client *fastly.Client
 }
 
-func NewServiceComputeListResource() list.ListResource {
-	return &serviceComputeListResource{}
+func NewListResource() list.ListResource {
+	return &ListResource{}
 }
 
-func (l *serviceComputeListResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (l *ListResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_compute"
 }
 
-func (l *serviceComputeListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
+func (l *ListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
 	resp.Schema = listschema.Schema{
 		Description: "List all Fastly Compute services accessible to the API token.",
 		Attributes:  map[string]listschema.Attribute{},
 	}
 }
 
-func (l *serviceComputeListResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (l *ListResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected ProviderData type",
-			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
-		)
-		return
-	}
-
-	l.client = providerData.client
+	l.client = data.Client
 }
 
-func (l *serviceComputeListResource) List(ctx context.Context, req list.ListRequest, stream *list.ListResultsStream) {
+func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *list.ListResultsStream) {
 	tflog.Debug(ctx, "Listing Fastly Compute services")
 
 	services, err := l.client.ListServices(ctx, &fastly.ListServicesInput{})
@@ -66,7 +61,7 @@ func (l *serviceComputeListResource) List(ctx context.Context, req list.ListRequ
 	stream.Results = func(push func(list.ListResult) bool) {
 		var count int64
 		for _, svc := range services {
-			if svc == nil || svc.Type == nil || *svc.Type != serviceTypeCompute {
+			if svc == nil || svc.Type == nil || *svc.Type != service.TypeCompute {
 				continue
 			}
 			if req.Limit > 0 && count >= req.Limit {
@@ -75,7 +70,7 @@ func (l *serviceComputeListResource) List(ctx context.Context, req list.ListRequ
 			count++
 
 			result := req.NewListResult(ctx)
-			result.DisplayName = toGeneratedResourceName(fastly.ToValue(svc.Name), fastly.ToValue(svc.ServiceID))
+			result.DisplayName = service.ToGeneratedResourceName(fastly.ToValue(svc.Name), fastly.ToValue(svc.ServiceID))
 
 			if svc.ServiceID != nil {
 				result.Diagnostics.Append(
@@ -84,7 +79,7 @@ func (l *serviceComputeListResource) List(ctx context.Context, req list.ListRequ
 			}
 
 			if req.IncludeResource {
-				result.Diagnostics.Append(setServiceComputeResourceAttrs(ctx, &result, svc)...)
+				result.Diagnostics.Append(setResourceAttrs(ctx, &result, svc)...)
 			}
 
 			if !push(result) {
@@ -94,7 +89,7 @@ func (l *serviceComputeListResource) List(ctx context.Context, req list.ListRequ
 	}
 }
 
-func setServiceComputeResourceAttrs(ctx context.Context, result *list.ListResult, svc *fastly.Service) diag.Diagnostics {
+func setResourceAttrs(ctx context.Context, result *list.ListResult, svc *fastly.Service) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(result.Resource.SetAttribute(ctx, path.Root("id"), fastly.ToValue(svc.ServiceID))...)

@@ -1,9 +1,10 @@
-package provider
+package serviceversion
 
 import (
 	"context"
-	"fmt"
+
 	"sort"
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
 	"time"
 
 	"github.com/fastly/go-fastly/v15/fastly"
@@ -13,52 +14,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var _ datasource.DataSource = &serviceVersionDataSource{}
+var _ datasource.DataSource = &DataSource{}
 
-type serviceVersionDataSource struct {
+type DataSource struct {
 	client *fastly.Client
 }
 
-type serviceVersionDataSourceModel struct {
-	ID             types.String                  `tfsdk:"id"`
-	ServiceID      types.String                  `tfsdk:"service_id"`
-	LatestVersion  types.Int64                   `tfsdk:"latest_version"`
-	ActiveVersion  types.Int64                   `tfsdk:"active_version"`
-	StagingVersion types.Int64                   `tfsdk:"staging_version"`
-	LockedVersions []types.Int64                 `tfsdk:"locked_versions"`
-	Versions       []serviceVersionMetadataModel `tfsdk:"versions"`
+type DataSourceModel struct {
+	ID             types.String    `tfsdk:"id"`
+	ServiceID      types.String    `tfsdk:"service_id"`
+	LatestVersion  types.Int64     `tfsdk:"latest_version"`
+	ActiveVersion  types.Int64     `tfsdk:"active_version"`
+	StagingVersion types.Int64     `tfsdk:"staging_version"`
+	LockedVersions []types.Int64   `tfsdk:"locked_versions"`
+	Versions       []MetadataModel `tfsdk:"versions"`
 }
 
-type serviceVersionMetadataModel struct {
-	Number       types.Int64                      `tfsdk:"number"`
-	Active       types.Bool                       `tfsdk:"active"`
-	Staging      types.Bool                       `tfsdk:"staging"`
-	Locked       types.Bool                       `tfsdk:"locked"`
-	Deployed     types.Bool                       `tfsdk:"deployed"`
-	Testing      types.Bool                       `tfsdk:"testing"`
-	Comment      types.String                     `tfsdk:"comment"`
-	ServiceID    types.String                     `tfsdk:"service_id"`
-	CreatedAt    types.String                     `tfsdk:"created_at"`
-	UpdatedAt    types.String                     `tfsdk:"updated_at"`
-	DeletedAt    types.String                     `tfsdk:"deleted_at"`
-	Environments []serviceVersionEnvironmentModel `tfsdk:"environments"`
+type MetadataModel struct {
+	Number       types.Int64        `tfsdk:"number"`
+	Active       types.Bool         `tfsdk:"active"`
+	Staging      types.Bool         `tfsdk:"staging"`
+	Locked       types.Bool         `tfsdk:"locked"`
+	Deployed     types.Bool         `tfsdk:"deployed"`
+	Testing      types.Bool         `tfsdk:"testing"`
+	Comment      types.String       `tfsdk:"comment"`
+	ServiceID    types.String       `tfsdk:"service_id"`
+	CreatedAt    types.String       `tfsdk:"created_at"`
+	UpdatedAt    types.String       `tfsdk:"updated_at"`
+	DeletedAt    types.String       `tfsdk:"deleted_at"`
+	Environments []EnvironmentModel `tfsdk:"environments"`
 }
 
-type serviceVersionEnvironmentModel struct {
+type EnvironmentModel struct {
 	Name          types.String `tfsdk:"name"`
 	ActiveVersion types.Int64  `tfsdk:"active_version"`
 	ServiceID     types.String `tfsdk:"service_id"`
 }
 
-func NewServiceVersionDataSource() datasource.DataSource {
-	return &serviceVersionDataSource{}
+func NewDataSource() datasource.DataSource {
+	return &DataSource{}
 }
 
-func (d *serviceVersionDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_version"
 }
 
-func (d *serviceVersionDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Read-only view of Fastly service versions for a service. This data source is for observability only and never creates, clones, activates, or mutates versions.",
 		Attributes: map[string]schema.Attribute{
@@ -160,25 +161,18 @@ func (d *serviceVersionDataSource) Schema(_ context.Context, _ datasource.Schema
 	}
 }
 
-func (d *serviceVersionDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (d *DataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected ProviderData type",
-			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = providerData.client
+	d.client = data.Client
 }
 
-func (d *serviceVersionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state serviceVersionDataSourceModel
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state DataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -207,7 +201,7 @@ func (d *serviceVersionDataSource) Read(ctx context.Context, req datasource.Read
 	state.ActiveVersion = types.Int64Null()
 	state.StagingVersion = types.Int64Null()
 	state.LockedVersions = make([]types.Int64, 0)
-	state.Versions = make([]serviceVersionMetadataModel, 0, len(versions))
+	state.Versions = make([]MetadataModel, 0, len(versions))
 
 	lockedSet := make([]int64, 0)
 
@@ -241,19 +235,19 @@ func (d *serviceVersionDataSource) Read(ctx context.Context, req datasource.Read
 			lockedSet = append(lockedSet, number)
 		}
 
-		envs := make([]serviceVersionEnvironmentModel, 0, len(version.Environments))
+		envs := make([]EnvironmentModel, 0, len(version.Environments))
 		for _, env := range version.Environments {
 			if env == nil {
 				continue
 			}
-			envs = append(envs, serviceVersionEnvironmentModel{
+			envs = append(envs, EnvironmentModel{
 				Name:          stringPointerValue(env.Name),
 				ActiveVersion: int64PointerValue(env.ServiceVersion),
 				ServiceID:     stringPointerValue(env.ServiceID),
 			})
 		}
 
-		state.Versions = append(state.Versions, serviceVersionMetadataModel{
+		state.Versions = append(state.Versions, MetadataModel{
 			Number:       intPointerValue(version.Number),
 			Active:       types.BoolValue(active),
 			Staging:      types.BoolValue(staging),

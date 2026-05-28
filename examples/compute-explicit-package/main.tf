@@ -65,6 +65,5 @@ action "fastly_service_version_activate" "production" {
   config {
     service_id = fastly_service_compute.app.id
     version    = var.service_version
-    staging    = false
   }
 }

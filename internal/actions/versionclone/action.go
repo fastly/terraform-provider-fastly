@@ -1,8 +1,9 @@
-package provider
+package versionclone
 
 import (
 	"context"
-	"fmt"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/action"
@@ -11,26 +12,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type serviceVersionCloneAction struct {
+type Action struct {
 	client *fastly.Client
 }
 
-var _ action.Action = &serviceVersionCloneAction{}
+var _ action.Action = &Action{}
 
-func NewServiceVersionCloneAction() action.Action {
-	return &serviceVersionCloneAction{}
+func NewAction() action.Action {
+	return &Action{}
 }
 
-type serviceVersionCloneModel struct {
+type Model struct {
 	ServiceID types.String `tfsdk:"service_id"`
 	Version   types.Int64  `tfsdk:"version"`
 }
 
-func (a *serviceVersionCloneAction) Metadata(_ context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
+func (a *Action) Metadata(_ context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_version_clone"
 }
 
-func (a *serviceVersionCloneAction) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
+func (a *Action) Schema(_ context.Context, _ action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Clones a Fastly service version. Implemented as a Terraform Action (non-CRUD).",
 		Attributes: map[string]schema.Attribute{
@@ -46,25 +47,18 @@ func (a *serviceVersionCloneAction) Schema(_ context.Context, _ action.SchemaReq
 	}
 }
 
-func (a *serviceVersionCloneAction) Configure(_ context.Context, req action.ConfigureRequest, resp *action.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (a *Action) Configure(_ context.Context, req action.ConfigureRequest, resp *action.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected ProviderData type",
-			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
-		)
-		return
-	}
-
-	a.client = providerData.client
+	a.client = data.Client
 }
 
-func (a *serviceVersionCloneAction) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
-	var cfg serviceVersionCloneModel
+func (a *Action) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
+	var cfg Model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -1,30 +1,45 @@
-package provider
+package computepackage
 
 import (
 	"context"
 	"encoding/base64"
 	"fmt"
 
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+
 	fastly "github.com/fastly/go-fastly/v15/fastly"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type serviceComputePackageModel struct {
+type Model struct {
 	Content        types.String `tfsdk:"content"`
 	Filename       types.String `tfsdk:"filename"`
 	SourceCodeHash types.String `tfsdk:"source_code_hash"`
 }
 
-func computePackageCommonAttributes() map[string]schema.Attribute {
+func CommonAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"content": schema.StringAttribute{
 			Optional:    true,
 			Description: "The contents of the Compute deployment package as a base64-encoded string. Conflicts with `filename`.",
+			Validators: []validator.String{
+				stringvalidator.ConflictsWith(
+					path.MatchRelative().AtParent().AtName("filename"),
+				),
+			},
 		},
 		"filename": schema.StringAttribute{
 			Optional:    true,
 			Description: "The path to the Compute deployment package on the local filesystem. Conflicts with `content`.",
+			Validators: []validator.String{
+				stringvalidator.ConflictsWith(
+					path.MatchRelative().AtParent().AtName("content"),
+				),
+			},
 		},
 		"source_code_hash": schema.StringAttribute{
 			Optional:    true,
@@ -34,16 +49,16 @@ func computePackageCommonAttributes() map[string]schema.Attribute {
 	}
 }
 
-func computePackageNestedBlockSchema() schema.ListNestedBlock {
+func NestedBlockSchema() schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		Description: "Compute package attached to this service version. At most one package block is supported.",
 		NestedObject: schema.NestedBlockObject{
-			Attributes: computePackageCommonAttributes(),
+			Attributes: CommonAttributes(),
 		},
 	}
 }
 
-func computePackagesEqual(a, b []serviceComputePackageModel) bool {
+func Equal(a, b []Model) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -52,12 +67,12 @@ func computePackagesEqual(a, b []serviceComputePackageModel) bool {
 		return true
 	}
 
-	return packageStringValuesEqual(a[0].Content, b[0].Content) &&
-		packageStringValuesEqual(a[0].Filename, b[0].Filename) &&
-		packageStringValuesEqual(a[0].SourceCodeHash, b[0].SourceCodeHash)
+	return stringValuesEqual(a[0].Content, b[0].Content) &&
+		stringValuesEqual(a[0].Filename, b[0].Filename) &&
+		stringValuesEqual(a[0].SourceCodeHash, b[0].SourceCodeHash)
 }
 
-func packageStringValuesEqual(a, b types.String) bool {
+func stringValuesEqual(a, b types.String) bool {
 	if a.IsNull() && b.IsNull() {
 		return true
 	}
@@ -73,7 +88,7 @@ func packageStringValuesEqual(a, b types.String) bool {
 	return a.ValueString() == b.ValueString()
 }
 
-func validateComputePackageInput(packages []serviceComputePackageModel) error {
+func ValidateInput(packages []Model) error {
 	if len(packages) == 0 {
 		return nil
 	}
@@ -97,12 +112,12 @@ func validateComputePackageInput(packages []serviceComputePackageModel) error {
 	}
 }
 
-func updateComputePackage(ctx context.Context, client *fastly.Client, serviceID string, version int, packages []serviceComputePackageModel) error {
+func Update(ctx context.Context, client *fastly.Client, serviceID string, version int, packages []Model) error {
 	if len(packages) == 0 {
 		return nil
 	}
 
-	if err := validateComputePackageInput(packages); err != nil {
+	if err := ValidateInput(packages); err != nil {
 		return err
 	}
 
@@ -132,7 +147,7 @@ func updateComputePackage(ctx context.Context, client *fastly.Client, serviceID 
 	return nil
 }
 
-func readComputePackageForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int, current []serviceComputePackageModel) ([]serviceComputePackageModel, error) {
+func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int, current []Model) ([]Model, error) {
 	if len(current) == 0 {
 		return current, nil
 	}
@@ -142,7 +157,7 @@ func readComputePackageForVersion(ctx context.Context, client *fastly.Client, se
 		ServiceVersion: version,
 	})
 	if err != nil {
-		if isFastlyNotFound(err) {
+		if fastlyclient.IsNotFound(err) {
 			return nil, nil
 		}
 		return nil, err
@@ -155,5 +170,5 @@ func readComputePackageForVersion(ctx context.Context, client *fastly.Client, se
 		result.SourceCodeHash = types.StringNull()
 	}
 
-	return []serviceComputePackageModel{result}, nil
+	return []Model{result}, nil
 }

@@ -12,6 +12,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"terraform-provider-fastly-dual-model-poc/internal/actions/computepackageupload"
+	"terraform-provider-fastly-dual-model-poc/internal/actions/versionactivate"
+	"terraform-provider-fastly-dual-model-poc/internal/actions/versionclone"
+	"terraform-provider-fastly-dual-model-poc/internal/actions/versionstage"
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+	"terraform-provider-fastly-dual-model-poc/internal/datasources/serviceversion"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/backend"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/domain"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/servicecdn"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/servicecdnauto"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/servicecompute"
+	"terraform-provider-fastly-dual-model-poc/internal/resources/servicecomputeauto"
 )
 
 type fastlyProvider struct{}
@@ -66,7 +79,7 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	data := newProviderData(client)
+	data := fastlyclient.NewData(client)
 
 	resp.ResourceData = data
 	resp.DataSourceData = data
@@ -76,34 +89,35 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewServiceBackendResource,
-		NewServiceDomainResource,
-		NewServiceComputeResource,
-		NewServiceComputeAutoResource,
-		NewServiceCDNResource,
-		NewServiceCDNAutoResource,
+		backend.NewResource,
+		domain.NewResource,
+		servicecompute.NewResource,
+		servicecomputeauto.NewResource,
+		servicecdn.NewResource,
+		servicecdnauto.NewResource,
 	}
 }
 
 func (p *fastlyProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewServiceVersionDataSource,
+		serviceversion.NewDataSource,
 	}
 }
 
 func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListResource {
 	return []func() list.ListResource{
-		NewServiceBackendListResource,
-		NewServiceDomainListResource,
-		NewServiceComputeListResource,
-		NewServiceCDNListResource,
+		backend.NewListResource,
+		domain.NewListResource,
+		servicecompute.NewListResource,
+		servicecdn.NewListResource,
 	}
 }
 
 func (p *fastlyProvider) Actions(_ context.Context) []func() action.Action {
 	return []func() action.Action{
-		NewServiceVersionCloneAction,
-		NewServiceVersionActivateAction,
-		NewServiceComputePackageUploadAction,
+		versionclone.NewAction,
+		versionactivate.NewAction,
+		versionstage.NewAction,
+		computepackageupload.NewAction,
 	}
 }

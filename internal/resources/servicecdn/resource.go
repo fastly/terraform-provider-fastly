@@ -1,8 +1,11 @@
-package provider
+package servicecdn
 
 import (
 	"context"
 	"fmt"
+
+	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
+	"terraform-provider-fastly-dual-model-poc/internal/service"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -15,19 +18,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type serviceCDNResource struct {
+type Resource struct {
 	client *fastly.Client
 }
 
-var _ resource.Resource = &serviceCDNResource{}
-var _ resource.ResourceWithImportState = &serviceCDNResource{}
-var _ resource.ResourceWithIdentity = &serviceCDNResource{}
+var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithImportState = &Resource{}
+var _ resource.ResourceWithIdentity = &Resource{}
 
-func NewServiceCDNResource() resource.Resource {
-	return &serviceCDNResource{}
+func NewResource() resource.Resource {
+	return &Resource{}
 }
 
-type serviceCDNModel struct {
+type Model struct {
 	ID           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
 	Comment      types.String `tfsdk:"comment"`
@@ -35,11 +38,11 @@ type serviceCDNModel struct {
 	Reuse        types.Bool   `tfsdk:"reuse"`
 }
 
-func (r *serviceCDNResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_cdn"
 }
 
-func (r *serviceCDNResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fastly CDN service resource. Version lifecycle is managed outside normal resource CRUD.",
 		Attributes: map[string]schema.Attribute{
@@ -73,25 +76,18 @@ func (r *serviceCDNResource) Schema(_ context.Context, _ resource.SchemaRequest,
 	}
 }
 
-func (r *serviceCDNResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (r *Resource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	data, diags := fastlyclient.FromProviderData(req.ProviderData)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || data == nil {
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*providerData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected ProviderData type",
-			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = providerData.client
+	r.client = data.Client
 }
 
-func (r *serviceCDNResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan serviceCDNModel
+func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -102,34 +98,34 @@ func (r *serviceCDNResource) Create(ctx context.Context, req resource.CreateRequ
 		"comment": plan.Comment.ValueString(),
 	})
 
-	service, err := r.client.CreateService(ctx, &fastly.CreateServiceInput{
+	created, err := r.client.CreateService(ctx, &fastly.CreateServiceInput{
 		Name:    fastly.ToPointer(plan.Name.ValueString()),
 		Comment: fastly.ToPointer(plan.Comment.ValueString()),
-		Type:    fastly.ToPointer(serviceTypeVCL),
+		Type:    fastly.ToPointer(service.TypeVCL),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Fastly CDN service", err.Error())
 		return
 	}
 
-	if service.ServiceID == nil {
+	if created.ServiceID == nil {
 		resp.Diagnostics.AddError("Error creating Fastly CDN service", "Fastly API returned nil service ID.")
 		return
 	}
 
-	plan.ID = types.StringValue(*service.ServiceID)
+	plan.ID = types.StringValue(*created.ServiceID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *serviceCDNResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state serviceCDNModel
+func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	service, err := r.client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
+	details, err := r.client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -141,23 +137,23 @@ func (r *serviceCDNResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	serviceType := fastly.ToValue(service.Type)
-	if serviceType != serviceTypeVCL {
+	serviceType := fastly.ToValue(details.Type)
+	if serviceType != service.TypeVCL {
 		resp.Diagnostics.AddError(
 			"Unexpected Fastly service type",
-			fmt.Sprintf("Expected VCL service %q to have type %q, got %q.", state.ID.ValueString(), serviceTypeVCL, serviceType),
+			fmt.Sprintf("Expected VCL service %q to have type %q, got %q.", state.ID.ValueString(), service.TypeVCL, serviceType),
 		)
 		return
 	}
 
-	if service.ServiceID != nil {
-		state.ID = types.StringValue(*service.ServiceID)
+	if details.ServiceID != nil {
+		state.ID = types.StringValue(*details.ServiceID)
 	}
-	if service.Name != nil {
-		state.Name = types.StringValue(*service.Name)
+	if details.Name != nil {
+		state.Name = types.StringValue(*details.Name)
 	}
-	if service.Comment != nil {
-		state.Comment = types.StringValue(*service.Comment)
+	if details.Comment != nil {
+		state.Comment = types.StringValue(*details.Comment)
 	} else {
 		state.Comment = types.StringValue("")
 	}
@@ -165,9 +161,9 @@ func (r *serviceCDNResource) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *serviceCDNResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan serviceCDNModel
-	var state serviceCDNModel
+func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan Model
+	var state Model
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -189,23 +185,23 @@ func (r *serviceCDNResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *serviceCDNResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state serviceCDNModel
+func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if err := deleteServiceWithPolicy(ctx, r.client, state.ID.ValueString(), boolValue(state.ForceDestroy), boolValue(state.Reuse)); err != nil {
+	if err := service.DeleteWithPolicy(ctx, r.client, state.ID.ValueString(), service.BoolValue(state.ForceDestroy), service.BoolValue(state.Reuse)); err != nil {
 		resp.Diagnostics.AddError("Error deleting Fastly CDN service", err.Error())
 	}
 }
 
-func (r *serviceCDNResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughWithIdentity(ctx, path.Root("id"), path.Root("service_id"), req, resp)
 }
 
-func (r *serviceCDNResource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	resp.IdentitySchema = identityschema.Schema{
 		Attributes: map[string]identityschema.Attribute{
 			"service_id": identityschema.StringAttribute{

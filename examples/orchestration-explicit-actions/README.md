@@ -2,7 +2,7 @@
 
 This example demonstrates how to manage **multiple Fastly services** with the
 **dual-model Fastly Terraform provider explicit/default resource family**, while performing **version
-cloning and activation explicitly with Terraform Actions**.
+cloning, activation, and staging explicitly with Terraform Actions**.
 
 The example provisions and manages:
 
@@ -18,6 +18,7 @@ The example provisions and manages:
 - Using `data.fastly_service_version` to inspect current version state
 - Explicit version cloning with Terraform Actions
 - Explicit version activation with Terraform Actions
+- Explicit version staging with Terraform Actions
 
 ## Files
 

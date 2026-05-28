@@ -4,7 +4,7 @@ import (
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"terraform-provider-fastly-dual-model-poc/internal/service"
+	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
 func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateBackendInput {

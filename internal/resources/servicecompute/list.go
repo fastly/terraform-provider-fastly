@@ -3,8 +3,8 @@ package servicecompute
 import (
 	"context"
 
-	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
-	"terraform-provider-fastly-dual-model-poc/internal/service"
+	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/diag"

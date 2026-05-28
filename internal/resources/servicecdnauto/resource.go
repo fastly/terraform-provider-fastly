@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	fastlyclient "terraform-provider-fastly-dual-model-poc/internal/client"
-	"terraform-provider-fastly-dual-model-poc/internal/resources/backend"
-	"terraform-provider-fastly-dual-model-poc/internal/resources/domain"
-	"terraform-provider-fastly-dual-model-poc/internal/service"
+	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/path"

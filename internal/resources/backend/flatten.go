@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"terraform-provider-fastly-dual-model-poc/internal/service"
+	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
 func FlattenToNestedModel(b *fastly.Backend) NestedModel {

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"terraform-provider-fastly-dual-model-poc/internal/provider"
+	"github.com/fastly/terraform-provider-fastly/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )

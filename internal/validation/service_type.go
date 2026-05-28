@@ -6,7 +6,7 @@ import (
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 
-	"terraform-provider-fastly-dual-model-poc/internal/service"
+	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
 // EnsureServiceTypeSupported checks that a service ID belongs to one of the

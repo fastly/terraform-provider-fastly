@@ -1,4 +1,4 @@
-module terraform-provider-fastly-dual-model-poc
+module github.com/fastly/terraform-provider-fastly
 
 go 1.25.0
 

@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `golang.org/x/net` from 0.54.0 to 0.55.0 ([#1276](https://github.com/fastly/terraform-provider-fastly/pull/1276))
 
 ### DOCUMENTATION:
 

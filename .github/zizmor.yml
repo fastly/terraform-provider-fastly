@@ -1,0 +1,14 @@
+# zizmor configuration.
+# https://docs.zizmor.sh/configuration/
+
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": hash-pin
+  cache-poisoning:
+    ignore:
+      # setup-go does enable caching by default, and this workflow has
+      # a job which uses goreleaser, but none of the artifacts created
+      # by goreleaser in that workflow are published
+      - pr.yml

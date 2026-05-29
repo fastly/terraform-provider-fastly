@@ -27,7 +27,7 @@ func resourceFastlyDNSZone() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The description for your dns zone.",
+				Description: "A freeform descriptive note.",
 			},
 			"name": {
 				Type:        schema.TypeString,
@@ -56,7 +56,7 @@ func resourceFastlyDNSZone() *schema.Resource {
 						"primaries": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: "Primary DNS Servers",
+							Description: "An array of the primary DNS server objects associated with inbound zone transfers.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"address": {

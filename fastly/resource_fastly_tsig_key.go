@@ -36,12 +36,12 @@ func resourceFastlyTSIGKey() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The description for your TSIG Key.",
+				Description: "A freeform descriptive note.",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the TSIG Key.",
+				Description: "The name of the TSIG key.",
 				// We rely on the API for further validation here.
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 255),

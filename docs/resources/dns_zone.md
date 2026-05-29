@@ -50,7 +50,7 @@ $ terraform import fastly_dns_zone.example xxxxxxxxxxxxxxxxxxxx
 
 ### Optional
 
-- `description` (String) The description for your dns zone.
+- `description` (String) A freeform descriptive note.
 - `xfr_config_inbound` (Block List, Max: 1) All attributes associated with inbound zone transfers. (see [below for nested schema](#nestedblock--xfr_config_inbound))
 
 ### Read-Only
@@ -63,7 +63,7 @@ $ terraform import fastly_dns_zone.example xxxxxxxxxxxxxxxxxxxx
 Optional:
 
 - `inbound_tsig_key_id` (String) The ID of the TSIG key used to secure inbound zone transfers.
-- `primaries` (Block List) Primary DNS Servers (see [below for nested schema](#nestedblock--xfr_config_inbound--primaries))
+- `primaries` (Block List) An array of the primary DNS server objects associated with inbound zone transfers. (see [below for nested schema](#nestedblock--xfr_config_inbound--primaries))
 
 <a id="nestedblock--xfr_config_inbound--primaries"></a>
 ### Nested Schema for `xfr_config_inbound.primaries`

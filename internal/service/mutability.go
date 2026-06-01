@@ -7,7 +7,6 @@ import (
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"golang.org/x/sync/singleflight"
 )
 
 type VersionCheckKey struct {
@@ -24,7 +23,6 @@ type VersionChecker struct {
 
 	mu    sync.Mutex
 	cache map[VersionCheckKey]VersionMutabilityResult
-	group singleflight.Group
 }
 
 func NewVersionChecker(client *fastly.Client) *VersionChecker {
@@ -45,49 +43,26 @@ func (c *VersionChecker) GetMutability(
 	}
 
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if cached, ok := c.cache[key]; ok {
-		c.mu.Unlock()
 		return cached, nil
 	}
-	c.mu.Unlock()
 
-	cacheKey := fmt.Sprintf("%s:%d", serviceID, version)
-
-	value, err, _ := c.group.Do(cacheKey, func() (interface{}, error) {
-		c.mu.Lock()
-		if cached, ok := c.cache[key]; ok {
-			c.mu.Unlock()
-			return cached, nil
-		}
-		c.mu.Unlock()
-
-		v, err := c.client.GetVersion(ctx, &fastly.GetVersionInput{
-			ServiceID:      serviceID,
-			ServiceVersion: version,
-		})
-		if err != nil {
-			return VersionMutabilityResult{}, err
-		}
-
-		result := VersionMutabilityResult{}
-		if v != nil && v.Locked != nil {
-			result.Locked = *v.Locked
-		}
-
-		c.mu.Lock()
-		c.cache[key] = result
-		c.mu.Unlock()
-
-		return result, nil
+	v, err := c.client.GetVersion(ctx, &fastly.GetVersionInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
 	})
 	if err != nil {
 		return VersionMutabilityResult{}, err
 	}
 
-	result, ok := value.(VersionMutabilityResult)
-	if !ok {
-		return VersionMutabilityResult{}, fmt.Errorf("unexpected version mutability result type %T", value)
+	result := VersionMutabilityResult{}
+	if v != nil && v.Locked != nil {
+		result.Locked = *v.Locked
 	}
+
+	c.cache[key] = result
 
 	return result, nil
 }

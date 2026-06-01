@@ -67,20 +67,11 @@ action "fastly_service_version_clone" "service_2" {
   }
 }
 
-# Activate versions (invoked explicitly)
+# Activate production versions (invoked explicitly)
 action "fastly_service_version_activate" "service_1_prod" {
   config {
     service_id = module.service_1.service_id
     version    = var.service_1_version
-    staging    = false
-  }
-}
-
-action "fastly_service_version_activate" "service_1_staging" {
-  config {
-    service_id = module.service_1.service_id
-    version    = var.service_1_version
-    staging    = true
   }
 }
 
@@ -88,14 +79,20 @@ action "fastly_service_version_activate" "service_2_prod" {
   config {
     service_id = module.service_2.service_id
     version    = var.service_2_version
-    staging    = false
   }
 }
 
-action "fastly_service_version_activate" "service_2_staging" {
+# Stage versions (invoked explicitly)
+action "fastly_service_version_stage" "service_1_staging" {
+  config {
+    service_id = module.service_1.service_id
+    version    = var.service_1_version
+  }
+}
+
+action "fastly_service_version_stage" "service_2_staging" {
   config {
     service_id = module.service_2.service_id
     version    = var.service_2_version
-    staging    = true
   }
 }

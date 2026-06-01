@@ -67,8 +67,14 @@ func (c *ServiceTypeChecker) Get(
 		}
 		c.mu.Unlock()
 
+		// GetServiceDetails returns the service type, but without a version query
+		// parameter the API can also include every service version. Some services
+		// have hundreds of versions, so constrain the response to a single version
+		// while still retrieving the top-level service metadata needed for validation.
+		version := 1
 		serviceDetails, err := c.client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 			ServiceID: serviceID,
+			Version:   &version,
 		})
 		if err != nil {
 			return ServiceTypeResult{}, err

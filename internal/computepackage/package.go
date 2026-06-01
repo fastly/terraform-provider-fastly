@@ -58,6 +58,8 @@ func NestedBlockSchema() schema.ListNestedBlock {
 	}
 }
 
+// Equal reports whether two compute package model slices represent the same package configuration.
+// At most one package block is supported, so only the first element is compared when present.
 func Equal(a, b []Model) bool {
 	if len(a) != len(b) {
 		return false

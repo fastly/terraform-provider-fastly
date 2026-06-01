@@ -10,14 +10,16 @@ import (
 )
 
 type Data struct {
-	Client         *fastly.Client
-	VersionChecker *service.VersionChecker
+	Client             *fastly.Client
+	VersionChecker     *service.VersionChecker
+	ServiceTypeChecker *service.ServiceTypeChecker
 }
 
 func NewData(client *fastly.Client) *Data {
 	return &Data{
-		Client:         client,
-		VersionChecker: service.NewVersionChecker(client),
+		Client:             client,
+		VersionChecker:     service.NewVersionChecker(client),
+		ServiceTypeChecker: service.NewServiceTypeChecker(client),
 	}
 }
 

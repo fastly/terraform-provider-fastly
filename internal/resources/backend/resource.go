@@ -92,7 +92,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.Client, plan.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, plan.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
@@ -164,7 +164,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.Client, plan.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, plan.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
@@ -214,7 +214,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		"name":       state.Name.ValueString(),
 	})
 
-	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.Client, state.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, state.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
 		if fastlyclient.IsNotFound(err) {
 			return
 		}

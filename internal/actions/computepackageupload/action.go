@@ -102,7 +102,7 @@ func (a *Action) Invoke(ctx context.Context, req action.InvokeRequest, resp *act
 		return
 	}
 
-	if err := validation.EnsureServiceTypeSupported(ctx, a.providerData.Client, serviceID, "fastly_service_compute_package_upload", service.TypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, a.providerData.ServiceTypeChecker, serviceID, "fastly_service_compute_package_upload", service.TypeCompute); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}

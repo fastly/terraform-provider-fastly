@@ -4,7 +4,7 @@ BIN_DIR := $(CURDIR)/bin
 BINARY := $(BIN_DIR)/terraform-provider-$(PKG_NAME)_$(VERSION)
 OVERRIDES_FILE := $(BIN_DIR)/developer_overrides.tfrc
 
-.PHONY: fmt build dev-overrides clean
+.PHONY: fmt build dev-overrides clean test-unit test-acc
 
 fmt:
 	@echo "==> Formatting Go code..."
@@ -23,3 +23,12 @@ dev-overrides:
 clean:
 	@echo "==> Cleaning build artifacts..."
 	@rm -rf $(BIN_DIR)
+
+test-unit:
+	@echo "==> Running unit tests..."
+	@go test ./internal/...
+
+test-acc:
+	@echo "==> Running acceptance tests..."
+	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
+	@TF_ACC=1 go test -v -timeout 30m ./internal/resources/... -run TestAcc

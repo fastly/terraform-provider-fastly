@@ -854,10 +854,6 @@ Required:
 - `enabled` (Boolean) Enable Next-Gen WAF support
 - `workspace_id` (String) The workspace to link
 
-Optional:
-
-- `traffic_ramp` (Number) The percentage of traffic to inspect
-
 
 
 <a id="nestedblock--resource_link"></a>

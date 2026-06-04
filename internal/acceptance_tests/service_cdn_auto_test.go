@@ -18,7 +18,7 @@ func TestAccFastlyServiceCDNAuto_basic(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configCDNAutoBasic(serviceName, domainName),
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
@@ -46,7 +46,7 @@ func TestAccFastlyServiceCDNAuto_withBackend(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configCDNAutoWithBackend(serviceName, domainName, backendName),
+				Config: ConfigCDNAutoWithBackend(serviceName, domainName, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
@@ -72,7 +72,7 @@ func TestAccFastlyServiceCDNAuto_update(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configCDNAutoBasic(serviceName, domainName),
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
@@ -81,7 +81,7 @@ func TestAccFastlyServiceCDNAuto_update(t *testing.T) {
 				),
 			},
 			{
-				Config: configCDNAutoBasic(serviceNameUpdated, domainName),
+				Config: ConfigCDNAutoBasic(serviceNameUpdated, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceNameUpdated),
@@ -103,7 +103,7 @@ func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configCDNAutoMultipleBackends(serviceName, domainName),
+				Config: ConfigCDNAutoMultipleBackends(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "2"),
@@ -125,7 +125,7 @@ func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configCDNAutoBasic(serviceName, domainName),
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 				),
@@ -138,42 +138,4 @@ func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Configuration templates
-
-func configCDNAutoBasic(serviceName, domainName string) string {
-	return BuildConfig(
-		ServiceCDNAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-	)
-}
-
-func configCDNAutoWithBackend(serviceName, domainName, backendName string) string {
-	return BuildConfig(
-		ServiceCDNAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"BACKEND_NAME": backendName,
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/backend_single.tf",
-	)
-}
-
-func configCDNAutoMultipleBackends(serviceName, domainName string) string {
-	return BuildConfig(
-		ServiceCDNAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/backend_multiple.tf",
-	)
 }

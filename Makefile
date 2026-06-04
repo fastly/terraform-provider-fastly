@@ -31,4 +31,4 @@ test-unit:
 test-acc:
 	@echo "==> Running acceptance tests..."
 	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
-	@TF_ACC=1 go test -v -timeout 30m ./internal/resources/... -run TestAcc
+	@TF_ACC=1 go test -v -timeout 30m ./internal/acceptance_tests -run TestAcc

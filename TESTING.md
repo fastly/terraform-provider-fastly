@@ -30,35 +30,12 @@ Acceptance tests validate end-to-end functionality against the live Fastly API.
 
 ⚠️ **Warning**: These tests create real resources in your Fastly account and consume API rate limits. Resources are automatically cleaned up with `force_destroy = true`.
 
-### Test Coverage
-
-**Backend Resource** (`fastly_service_backend`)
-- Basic configuration with defaults
-- Field updates (address, port, weight, comment)
-- Complete SSL/TLS, timeouts, load balancing configuration
-- Import functionality
-- SSL certificate fields
-
-**CDN Auto Resource** (`fastly_service_cdn_auto`)
-- Basic service with domain
-- Service with backend configuration
-- Updates (name, comment, multiple domains)
-- Multiple backends with load balancing
-- Import functionality
-
-**Compute Auto Resource** (`fastly_service_compute_auto`)
-- Basic service with domain and package
-- Service with backend configuration
-- Updates (name, comment, multiple domains)
-- Multiple backends with load balancing
-- Import functionality
-
 ### Cleanup
 
 If tests are interrupted and leave resources behind:
 
 ```bash
-# List services created by tests
+# List services created by tests using the CLI
 fastly service list | grep "tf-test-"
 
 # Delete a specific service
@@ -85,8 +62,6 @@ internal/acceptance_tests/
 │       └── valid.tar.gz            # WebAssembly package for compute tests
 ├── config_builder.go                # Config template builder
 ├── test_helpers.go                  # Shared test helpers
-├── service_cdn_auto_test.go         # CDN auto acceptance tests
-└── service_compute_auto_test.go     # Compute auto acceptance tests
 ```
 
 ### Shared Test Helpers
@@ -152,35 +127,6 @@ func TestAccFastlyServiceYourResource_basic(t *testing.T) {
 }
 ```
 
-## CI/CD Integration
-
-To run these tests in CI/CD:
-
-```yaml
-# Example GitHub Actions
-- name: Run Unit Tests
-  run: make test-unit
-
-- name: Run Acceptance Tests
-  env:
-    FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
-  run: make test-acc
-```
-
-## Troubleshooting
-
-### "FASTLY_API_TOKEN must be set"
-Verify the token is exported: `fastly whoami`
-
-### Rate limit exceeded
-Add delays between test runs or run serially instead of in parallel.
-
-### Resources not cleaned up
-Manually delete via Fastly dashboard/CLI or verify `force_destroy = true` is set.
-
-### Tests timeout
-Check Fastly API status and network connectivity.
-
 ## Test Configuration Builder
 
 Test configurations are built dynamically using `BuildConfig()` within the `acceptancetests` package:
@@ -198,6 +144,21 @@ func configYourServiceBasic(serviceName, domainName string) string {
     )
 }
 ```
+
+## Troubleshooting
+
+### "FASTLY_API_TOKEN must be set"
+Verify the token is exported: `fastly whoami`
+
+### Rate limit exceeded
+Add delays between test runs or run serially instead of in parallel.
+
+### Resources not cleaned up
+Manually delete via Fastly dashboard/CLI or verify `force_destroy = true` is set.
+
+### Tests timeout
+Check Fastly API status and network connectivity.
+
 
 ### Available Service Templates
 

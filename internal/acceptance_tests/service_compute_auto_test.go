@@ -18,7 +18,7 @@ func TestAccFastlyServiceComputeAuto_basic(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configComputeAutoBasic(serviceName, domainName),
+				Config: ConfigComputeAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
@@ -46,7 +46,7 @@ func TestAccFastlyServiceComputeAuto_withBackend(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configComputeAutoWithBackend(serviceName, domainName, backendName),
+				Config: ConfigComputeAutoWithBackend(serviceName, domainName, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
@@ -72,7 +72,7 @@ func TestAccFastlyServiceComputeAuto_update(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configComputeAutoBasic(serviceName, domainName),
+				Config: ConfigComputeAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
@@ -81,7 +81,7 @@ func TestAccFastlyServiceComputeAuto_update(t *testing.T) {
 				),
 			},
 			{
-				Config: configComputeAutoBasic(serviceNameUpdated, domainName),
+				Config: ConfigComputeAutoBasic(serviceNameUpdated, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceNameUpdated),
@@ -103,7 +103,7 @@ func TestAccFastlyServiceComputeAuto_multipleBackends(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configComputeAutoMultipleBackends(serviceName, domainName),
+				Config: ConfigComputeAutoMultipleBackends(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.#", "2"),
@@ -125,7 +125,7 @@ func TestAccFastlyServiceComputeAuto_import(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configComputeAutoBasic(serviceName, domainName),
+				Config: ConfigComputeAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 				),
@@ -138,49 +138,4 @@ func TestAccFastlyServiceComputeAuto_import(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Configuration templates
-
-
-func configComputeAutoBasic(serviceName, domainName string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
-}
-
-func configComputeAutoWithBackend(serviceName, domainName, backendName string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"BACKEND_NAME": backendName,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/backend_single.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
-}
-
-func configComputeAutoMultipleBackends(serviceName, domainName string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/backend_multiple.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
 }

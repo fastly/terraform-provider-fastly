@@ -112,3 +112,91 @@ func GetPackagePath() string {
 	}
 	return filepath.Join(wd, "fixtures", "packages", "valid.tar.gz")
 }
+
+// Configuration helpers for CDN Auto service
+
+// ConfigCDNAutoBasic returns a basic CDN auto service config with a single domain
+func ConfigCDNAutoBasic(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackend returns a CDN auto service config with a domain and backend
+func ConfigCDNAutoWithBackend(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+	)
+}
+
+// ConfigCDNAutoMultipleBackends returns a CDN auto service config with multiple backends
+func ConfigCDNAutoMultipleBackends(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_multiple.tf",
+	)
+}
+
+// Configuration helpers for Compute Auto service
+
+// ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package
+func ConfigComputeAutoBasic(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithBackend returns a Compute auto service config with a domain, backend, and package
+func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoMultipleBackends returns a Compute auto service config with multiple backends and a package
+func ConfigComputeAutoMultipleBackends(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_multiple.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}

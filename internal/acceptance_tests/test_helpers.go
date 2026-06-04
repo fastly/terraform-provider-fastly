@@ -1,4 +1,4 @@
-package acceptancetesthelpers
+package acceptancetests
 
 import (
 	"context"
@@ -104,12 +104,11 @@ func CheckServiceExists(resourceName string) resource.TestCheckFunc {
 }
 
 // GetPackagePath returns the path to the valid.tar.gz test package
+// Assumes tests are always run from the acceptance_tests package directory
 func GetPackagePath() string {
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(fmt.Sprintf("failed to get working directory: %v", err))
 	}
-	// Navigate up to the repo root and then to acceptance_test_helpers
-	repoRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
-	return filepath.Join(repoRoot, "internal", "acceptance_test_helpers", "fixtures", "packages", "valid.tar.gz")
+	return filepath.Join(wd, "fixtures", "packages", "valid.tar.gz")
 }

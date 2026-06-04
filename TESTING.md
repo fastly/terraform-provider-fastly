@@ -65,6 +65,41 @@ fastly service list | grep "tf-test-"
 fastly service delete --service-id=<service-id> --force
 ```
 
+## Test Organization
+
+### Directory Structure
+
+All acceptance tests are consolidated in `internal/acceptance_tests/`:
+
+```
+internal/acceptance_tests/
+├── blocks/                          # Terraform config blocks
+│   ├── backend_single.tf
+│   ├── backend_multiple.tf
+│   ├── domain_single.tf
+│   ├── package.tf
+│   ├── service_cdn_auto.tf
+│   └── service_compute_auto.tf
+├── fixtures/                        # Test fixture files
+│   └── packages/
+│       └── valid.tar.gz            # WebAssembly package for compute tests
+├── config_builder.go                # Config template builder
+├── test_helpers.go                  # Shared test helpers
+├── service_cdn_auto_test.go         # CDN auto acceptance tests
+└── service_compute_auto_test.go     # Compute auto acceptance tests
+```
+
+### Shared Test Helpers
+
+Common functionality is centralized in `test_helpers.go`:
+
+- **`ProtoV6ProviderFactories()`** - Provider factories for tests
+- **`PreCheck(t)`** - Validates FASTLY_API_TOKEN is set
+- **`NewFastlyClient()`** - Creates Fastly API client
+- **`CheckServiceDestroy(resourceType)`** - Verifies service destruction
+- **`CheckServiceExists(resourceName)`** - Verifies service exists
+- **`GetPackagePath()`** - Returns path to test package
+
 ## Writing New Tests
 
 ### Unit Test Pattern
@@ -94,18 +129,22 @@ func TestYourFunction(t *testing.T) {
 
 ### Acceptance Test Pattern
 
+Acceptance tests should be added to `internal/acceptance_tests/` (package `acceptancetests`) and use the shared helpers:
+
 ```go
-func TestAccFastlyServiceBackend_yourTest(t *testing.T) {
+package acceptancetests
+
+func TestAccFastlyServiceYourResource_basic(t *testing.T) {
     resource.Test(t, resource.TestCase{
-        PreCheck:                 func() { testAccPreCheck(t) },
-        ProtoV6ProviderFactories: testAccProtoV6ProviderFactories(),
-        CheckDestroy:             testAccCheckFastlyServiceBackendDestroy,
+        PreCheck:                 func() { PreCheck(t) },
+        ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+        CheckDestroy:             CheckServiceDestroy("fastly_service_your_resource"),
         Steps: []resource.TestStep{
             {
-                Config: testAccFastlyServiceBackendConfig_yourConfig(...),
+                Config: configYourResourceBasic(serviceName, domainName),
                 Check: resource.ComposeTestCheckFunc(
-                    testAccCheckFastlyServiceBackendExists("fastly_service_backend.test"),
-                    resource.TestCheckResourceAttr("fastly_service_backend.test", "attribute", "expected_value"),
+                    CheckServiceExists("fastly_service_your_resource.test"),
+                    resource.TestCheckResourceAttr("fastly_service_your_resource.test", "name", serviceName),
                 ),
             },
         },
@@ -142,24 +181,40 @@ Manually delete via Fastly dashboard/CLI or verify `force_destroy = true` is set
 ### Tests timeout
 Check Fastly API status and network connectivity.
 
-## Test Configuration Templates
+## Test Configuration Builder
 
-Test configurations are stored as templates in `test_fixtures/configs/`:
-
-- **`basic.tf`** - Minimal service with domain and package
-- **`with_backend.tf`** - Service with backend configuration  
-- **`updated.tf`** - Multiple domains with comment
-- **`multiple_backends.tf`** - Service with multiple backends
-
-Templates use placeholder strings (`SERVICE_NAME`, `DOMAIN_NAME`, `BACKEND_NAME`) that are replaced at test runtime using `strings.ReplaceAll()`:
+Test configurations are built dynamically using `BuildConfig()` within the `acceptancetests` package:
 
 ```go
-func testAccServiceComputeAutoConfig_basic(serviceName, domainName string) string {
-    return strings.ReplaceAll(strings.ReplaceAll(basicTemplate, 
-        "SERVICE_NAME", serviceName), 
-        "DOMAIN_NAME", domainName)
+func configYourServiceBasic(serviceName, domainName string) string {
+    return BuildConfig(
+        ServiceCDNAuto,  // or ServiceComputeAuto
+        map[string]string{
+            "SERVICE_NAME": serviceName,
+            "DOMAIN_NAME":  domainName,
+        },
+        "internal/acceptance_tests/blocks/domain_single.tf",
+        "internal/acceptance_tests/blocks/backend_single.tf",  // optional additional blocks
+    )
 }
 ```
+
+### Available Service Templates
+
+- **`service_cdn_auto.tf`** - CDN service resource
+- **`service_compute_auto.tf`** - Compute service resource
+
+### Available Configuration Blocks
+
+- **`domain_single.tf`** - Single domain configuration
+- **`backend_single.tf`** - Single backend configuration
+- **`backend_multiple.tf`** - Multiple backend configuration
+- **`package.tf`** - Compute package configuration
+
+The `BuildConfig` function:
+1. Loads the service template
+2. Injects the specified blocks into the `RESOURCES` placeholder
+3. Replaces all placeholders (`SERVICE_NAME`, `DOMAIN_NAME`, etc.) with actual values
 
 ## References
 

@@ -1,4 +1,4 @@
-package acceptancetesthelpers
+package acceptancetests
 
 import (
 	"strings"
@@ -12,7 +12,7 @@ func TestBuildConfig(t *testing.T) {
 			"SERVICE_NAME": "test-service",
 			"DOMAIN_NAME":  "example.com",
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
 	)
 
 	// Check that the service type is correct
@@ -56,8 +56,8 @@ func TestBuildConfigMultipleBlocks(t *testing.T) {
 			"DOMAIN_NAME":  "example.com",
 			"BACKEND_NAME": "test-backend",
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
-		"internal/acceptance_test_helpers/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
 	)
 
 	// Check that both blocks are present
@@ -81,7 +81,7 @@ func TestBuildConfigOutput(t *testing.T) {
 			"SERVICE_NAME": "my-service",
 			"DOMAIN_NAME":  "example.com",
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
 	)
 
 	expected := `resource "fastly_service_cdn_auto" "test" {
@@ -105,8 +105,8 @@ func TestBuildConfigMultipleBlocksOutput(t *testing.T) {
 			"DOMAIN_NAME":  "example.com",
 			"BACKEND_NAME": "my-backend",
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
-		"internal/acceptance_test_helpers/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
 	)
 
 	expected := `resource "fastly_service_cdn_auto" "test" {

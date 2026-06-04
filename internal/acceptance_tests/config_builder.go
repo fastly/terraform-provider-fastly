@@ -1,4 +1,4 @@
-package acceptancetesthelpers
+package acceptancetests
 
 import (
 	"fmt"
@@ -38,13 +38,13 @@ const (
 // BuildConfig constructs a Terraform config for a service with nested blocks.
 // It loads a service template from the blocks directory, injects nested blocks into the RESOURCES placeholder,
 // and replaces all placeholders with actual values.
-// The service template file is "internal/acceptance_test_helpers/blocks/{serviceType}.tf".
-// Block paths should be relative to the repository root (e.g., "internal/acceptance_test_helpers/blocks/domain_single.tf").
+// The service template file is "internal/acceptance_tests/blocks/{serviceType}.tf".
+// Block paths should be relative to the repository root (e.g., "internal/acceptance_tests/blocks/domain_single.tf").
 func BuildConfig(serviceType ServiceType, replacements map[string]string, blockPaths ...string) string {
 	repoRoot := getRepoRoot()
 
 	// Load service template
-	templatePath := filepath.Join(repoRoot, "internal/acceptance_test_helpers/blocks", string(serviceType)+".tf")
+	templatePath := filepath.Join(repoRoot, "internal/acceptance_tests/blocks", string(serviceType)+".tf")
 	templateBytes, err := os.ReadFile(templatePath)
 	if err != nil {
 		panic(fmt.Sprintf("failed to load service template %s: %v", templatePath, err))

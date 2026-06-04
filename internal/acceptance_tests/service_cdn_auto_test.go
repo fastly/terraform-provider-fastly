@@ -1,4 +1,4 @@
-package servicecdnauto_test
+package acceptancetests
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
-	acceptancetesthelpers "github.com/fastly/terraform-provider-fastly/internal/acceptance_test_helpers"
 )
 
 func TestAccFastlyServiceCDNAuto_basic(t *testing.T) {
@@ -15,14 +13,14 @@ func TestAccFastlyServiceCDNAuto_basic(t *testing.T) {
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acceptancetesthelpers.PreCheck(t) },
-		ProtoV6ProviderFactories: acceptancetesthelpers.ProtoV6ProviderFactories(),
-		CheckDestroy:             acceptancetesthelpers.CheckServiceDestroy("fastly_service_cdn_auto"),
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configBasic(serviceName, domainName),
+				Config: configCDNAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					acceptancetesthelpers.CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "comment", "Managed by Terraform"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
@@ -43,14 +41,14 @@ func TestAccFastlyServiceCDNAuto_withBackend(t *testing.T) {
 	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acceptancetesthelpers.PreCheck(t) },
-		ProtoV6ProviderFactories: acceptancetesthelpers.ProtoV6ProviderFactories(),
-		CheckDestroy:             acceptancetesthelpers.CheckServiceDestroy("fastly_service_cdn_auto"),
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configWithBackend(serviceName, domainName, backendName),
+				Config: configCDNAutoWithBackend(serviceName, domainName, backendName),
 				Check: resource.ComposeTestCheckFunc(
-					acceptancetesthelpers.CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", backendName),
@@ -69,23 +67,23 @@ func TestAccFastlyServiceCDNAuto_update(t *testing.T) {
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acceptancetesthelpers.PreCheck(t) },
-		ProtoV6ProviderFactories: acceptancetesthelpers.ProtoV6ProviderFactories(),
-		CheckDestroy:             acceptancetesthelpers.CheckServiceDestroy("fastly_service_cdn_auto"),
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configBasic(serviceName, domainName),
+				Config: configCDNAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					acceptancetesthelpers.CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.0.name", domainName),
 				),
 			},
 			{
-				Config: configBasic(serviceNameUpdated, domainName),
+				Config: configCDNAutoBasic(serviceNameUpdated, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					acceptancetesthelpers.CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceNameUpdated),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.0.name", domainName),
@@ -100,14 +98,14 @@ func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acceptancetesthelpers.PreCheck(t) },
-		ProtoV6ProviderFactories: acceptancetesthelpers.ProtoV6ProviderFactories(),
-		CheckDestroy:             acceptancetesthelpers.CheckServiceDestroy("fastly_service_cdn_auto"),
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configMultipleBackends(serviceName, domainName),
+				Config: configCDNAutoMultipleBackends(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					acceptancetesthelpers.CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "2"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", "backend-primary"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.1.name", "backend-secondary"),
@@ -122,14 +120,14 @@ func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acceptancetesthelpers.PreCheck(t) },
-		ProtoV6ProviderFactories: acceptancetesthelpers.ProtoV6ProviderFactories(),
-		CheckDestroy:             acceptancetesthelpers.CheckServiceDestroy("fastly_service_cdn_auto"),
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: configBasic(serviceName, domainName),
+				Config: configCDNAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					acceptancetesthelpers.CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckServiceExists("fastly_service_cdn_auto.test"),
 				),
 			},
 			{
@@ -144,38 +142,38 @@ func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 
 // Configuration templates
 
-func configBasic(serviceName, domainName string) string {
-	return acceptancetesthelpers.BuildConfig(
-		acceptancetesthelpers.ServiceCDNAuto,
+func configCDNAutoBasic(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
 		map[string]string{
 			"SERVICE_NAME": serviceName,
 			"DOMAIN_NAME":  domainName,
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
 	)
 }
 
-func configWithBackend(serviceName, domainName, backendName string) string {
-	return acceptancetesthelpers.BuildConfig(
-		acceptancetesthelpers.ServiceCDNAuto,
+func configCDNAutoWithBackend(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
 		map[string]string{
 			"SERVICE_NAME": serviceName,
 			"DOMAIN_NAME":  domainName,
 			"BACKEND_NAME": backendName,
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
-		"internal/acceptance_test_helpers/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
 	)
 }
 
-func configMultipleBackends(serviceName, domainName string) string {
-	return acceptancetesthelpers.BuildConfig(
-		acceptancetesthelpers.ServiceCDNAuto,
+func configCDNAutoMultipleBackends(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
 		map[string]string{
 			"SERVICE_NAME": serviceName,
 			"DOMAIN_NAME":  domainName,
 		},
-		"internal/acceptance_test_helpers/blocks/domain_single.tf",
-		"internal/acceptance_test_helpers/blocks/backend_multiple.tf",
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_multiple.tf",
 	)
 }

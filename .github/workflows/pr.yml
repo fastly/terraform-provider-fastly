@@ -92,7 +92,7 @@ jobs:
 
   # Branch-based pull request from owner or trusted developer who has WRITE access.
   validate-interface-trusted:
-    if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository"
+    if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

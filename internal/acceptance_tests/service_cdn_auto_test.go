@@ -126,12 +126,27 @@ func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
 		Steps: []resource.TestStep{
 			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "0"),
+					// Initial version should be 1
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
 				Config: ConfigCDNAutoMultipleBackends(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "2"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", "backend-primary"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.1.name", "backend-secondary"),
+					// Both backend additions should land in version 2 (proves multiple nested changes in same version)
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
 				),
 			},
 		},

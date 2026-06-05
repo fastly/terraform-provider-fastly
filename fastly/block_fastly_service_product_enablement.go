@@ -149,33 +149,35 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 			},
 		},
 	}
+	ngwafSchema := map[string]*schema.Schema{
+		"enabled": {
+			Type:        schema.TypeBool,
+			Required:    true,
+			Description: "Enable Next-Gen WAF support",
+		},
+		"workspace_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The workspace to link",
+		},
+	}
+	// "traffic_ramp" is only available for VCL services, so we need to check the service type.
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		ngwafSchema["traffic_ramp"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      100,
+			Description:  "The percentage of traffic to inspect",
+			ValidateFunc: validation.IntBetween(0, 100),
+		}
+	}
 	blockAttributes["ngwaf"] = &schema.Schema{
 		Type:        schema.TypeList,
 		Optional:    true,
 		Description: "Next-Gen WAF product",
 		MaxItems:    1,
 		MinItems:    1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"enabled": {
-					Type:        schema.TypeBool,
-					Required:    true,
-					Description: "Enable Next-Gen WAF support",
-				},
-				"traffic_ramp": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      100,
-					Description:  "The percentage of traffic to inspect",
-					ValidateFunc: validation.IntBetween(0, 100),
-				},
-				"workspace_id": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The workspace to link",
-				},
-			},
-		},
+		Elem:        &schema.Resource{Schema: ngwafSchema},
 	}
 	blockAttributes["api_discovery"] = &schema.Schema{
 		Type:        schema.TypeBool,
@@ -309,15 +311,17 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 				return fmt.Errorf("failed to enable ngwaf: %w", err)
 			}
 
-			// The percentage of traffic to inspect is set by default to 100
-			tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
-			if tr != 100 {
-				_, err := ngwaf.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.ConfigureInput{
-					WorkspaceID: id,
-					TrafficRamp: strconv.Itoa(tr),
-				})
-				if err != nil {
-					return fmt.Errorf("failed to set the configuration of ngwaf: %w", err)
+			if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+				// The percentage of traffic to inspect is set by default to 100
+				tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
+				if tr != 100 {
+					_, err := ngwaf.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.ConfigureInput{
+						WorkspaceID: id,
+						TrafficRamp: strconv.Itoa(tr),
+					})
+					if err != nil {
+						return fmt.Errorf("failed to set the configuration of ngwaf: %w", err)
+					}
 				}
 			}
 		}
@@ -448,19 +452,19 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 				return fmt.Errorf("error looking up Next-Gen WAF product configuration for (%s): %s", serviceID, err)
 			}
 
-			tf, err := strconv.Atoi(*c.Configuration.TrafficRamp)
-			if err != nil {
-				return fmt.Errorf("error converting Next-Gen WAF's percentage of traffic for (%s): %s", serviceID, err)
-			}
-
-			ngw := []map[string]any{}
-			ngw = append(ngw, map[string]any{
+			ngwEntry := map[string]any{
 				"enabled":      true,
 				"workspace_id": *c.Configuration.WorkspaceID,
-				"traffic_ramp": tf,
-			})
+			}
+			if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+				tf, err := strconv.Atoi(*c.Configuration.TrafficRamp)
+				if err != nil {
+					return fmt.Errorf("error converting Next-Gen WAF's percentage of traffic for (%s): %s", serviceID, err)
+				}
+				ngwEntry["traffic_ramp"] = tf
+			}
 
-			result["ngwaf"] = ngw
+			result["ngwaf"] = []map[string]any{ngwEntry}
 		} else if len(localState) > 0 {
 			// Preserve explicitly disabled nested blocks from config to prevent drift
 			if localMap, ok := localState[0].(map[string]any); ok {
@@ -694,13 +698,15 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 					return fmt.Errorf("failed to enable ngwaf: %w", err)
 				}
 
-				tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
-				_, err = ngwaf.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.ConfigureInput{
-					WorkspaceID: id,
-					TrafficRamp: strconv.Itoa(tr),
-				})
-				if err != nil {
-					return fmt.Errorf("failed to set the configuration of ngwaf: %w", err)
+				if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+					tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
+					_, err = ngwaf.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.ConfigureInput{
+						WorkspaceID: id,
+						TrafficRamp: strconv.Itoa(tr),
+					})
+					if err != nil {
+						return fmt.Errorf("failed to set the configuration of ngwaf: %w", err)
+					}
 				}
 			} else {
 				log.Println("[DEBUG] ngwaf will be disabled")

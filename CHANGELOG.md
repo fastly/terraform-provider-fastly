@@ -3,6 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+- feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
 
 ### BUG FIXES:
 

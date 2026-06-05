@@ -200,3 +200,100 @@ func ConfigComputeAutoMultipleBackends(serviceName, domainName string) string {
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }
+
+// Configuration helpers for CDN service (explicit version management)
+
+// ConfigServiceCDNBasic returns a basic CDN service config without any nested resources
+func ConfigServiceCDNBasic(serviceName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+		},
+	)
+}
+
+// ConfigServiceCDNWithComment returns a CDN service config with a comment
+func ConfigServiceCDNWithComment(serviceName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "Managed by Terraform",
+		},
+	)
+}
+
+// ConfigServiceCDNWithDomain returns a CDN service config with a domain resource
+func ConfigServiceCDNWithDomain(serviceName, domainName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": fmt.Sprintf("%d", version),
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+	)
+}
+
+// ConfigServiceCDNWithBackend returns a CDN service config with a domain and backend resource
+func ConfigServiceCDNWithBackend(serviceName, domainName, backendName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"BACKEND_NAME":    backendName,
+			"SERVICE_VERSION": fmt.Sprintf("%d", version),
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+	)
+}
+
+// ConfigServiceCDNWithVersionClone returns a CDN service config with a version clone action
+func ConfigServiceCDNWithVersionClone(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/action_version_clone.tf",
+	)
+}
+
+// ConfigServiceCDNWithVersionActivate returns a CDN service config with a version activate action
+func ConfigServiceCDNWithVersionActivate(serviceName, domainName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": fmt.Sprintf("%d", version),
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/action_version_activate.tf",
+	)
+}
+
+// ConfigServiceCDNWithCloneAndActivate returns a CDN service config with both clone and activate actions
+func ConfigServiceCDNWithCloneAndActivate(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"BACKEND_NAME":    backendName,
+			"SERVICE_VERSION": "1",
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/action_version_clone.tf",
+		"internal/acceptance_tests/blocks/action_version_activate.tf",
+	)
+}

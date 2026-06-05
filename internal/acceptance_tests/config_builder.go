@@ -31,6 +31,7 @@ func getRepoRoot() string {
 type ServiceType string
 
 const (
+	ServiceCDN         ServiceType = "service_cdn"
 	ServiceCDNAuto     ServiceType = "service_cdn_auto"
 	ServiceComputeAuto ServiceType = "service_compute_auto"
 )

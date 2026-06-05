@@ -27,8 +27,10 @@ func TestAccFastlyServiceComputeAuto_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.0.name", domainName),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "force_destroy", "true"),
 					resource.TestCheckResourceAttrSet("fastly_service_compute_auto.test", "id"),
-					resource.TestCheckResourceAttrSet("fastly_service_compute_auto.test", "active_version"),
-					resource.TestCheckResourceAttrSet("fastly_service_compute_auto.test", "managed_version"),
+
+					// Prove version 1 is bootstrapped and activated
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
 			},
 		},

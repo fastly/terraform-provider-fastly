@@ -504,10 +504,21 @@ func TestBuildUpdateInput(t *testing.T) {
 				assert.Equal(t, "service-456", input.ServiceID)
 				assert.Equal(t, 10, input.ServiceVersion)
 				assert.Equal(t, "backend-2", input.Name)
+
+				// Changed fields should be present
 				assert.NotNil(t, input.Address)
 				assert.Equal(t, "api.changed.com", *input.Address)
 				assert.NotNil(t, input.Port)
 				assert.Equal(t, 8080, *input.Port)
+
+				// Unchanged fields should be nil (not sent in update payload)
+				assert.Nil(t, input.UseSSL)
+				assert.Nil(t, input.Weight)
+				assert.Nil(t, input.ConnectTimeout)
+				assert.Nil(t, input.BetweenBytesTimeout)
+				assert.Nil(t, input.MaxConn)
+				assert.Nil(t, input.AutoLoadbalance)
+				assert.Nil(t, input.SSLCheckCert)
 			},
 		},
 		{

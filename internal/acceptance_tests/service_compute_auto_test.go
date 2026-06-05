@@ -48,6 +48,18 @@ func TestAccFastlyServiceComputeAuto_withBackend(t *testing.T) {
 		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
+				Config: ConfigComputeAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.0.name", domainName),
+					// Initial version should be 1
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
+				),
+			},
+			{
 				Config: ConfigComputeAutoWithBackend(serviceName, domainName, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
@@ -57,6 +69,9 @@ func TestAccFastlyServiceComputeAuto_withBackend(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.0.address", "api.example.com"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.0.port", "443"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.0.use_ssl", "true"),
+					// Adding backend should create and activate version 2
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
 				),
 			},
 		},
@@ -80,6 +95,9 @@ func TestAccFastlyServiceComputeAuto_update(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.0.name", domainName),
+					// Initial version should be 1
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
 			},
 			{
@@ -89,6 +107,9 @@ func TestAccFastlyServiceComputeAuto_update(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceNameUpdated),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.0.name", domainName),
+					// Service name update should create and activate version 2
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
 				),
 			},
 		},
@@ -141,3 +162,4 @@ func TestAccFastlyServiceComputeAuto_import(t *testing.T) {
 		},
 	})
 }
+

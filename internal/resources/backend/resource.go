@@ -64,6 +64,12 @@ type Model struct {
 	Weight              types.Int64  `tfsdk:"weight"`
 }
 
+type BackendIdentityModel struct {
+	ServiceID types.String `tfsdk:"service_id"`
+	Version   types.Int64  `tfsdk:"version"`
+	Name      types.String `tfsdk:"name"`
+}
+
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_backend"
 }
@@ -122,7 +128,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("backend_id"), plan.ID)...)
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
+			ServiceID: plan.Service,
+			Version:   plan.Version,
+			Name:      plan.Name,
+		})...)
 	}
 }
 
@@ -164,7 +174,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 
 	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("backend_id"), state.ID)...)
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
+			ServiceID: state.Service,
+			Version:   state.Version,
+			Name:      state.Name,
+		})...)
 	}
 }
 
@@ -277,10 +291,6 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	resp.IdentitySchema = identityschema.Schema{
 		Attributes: map[string]identityschema.Attribute{
-			"backend_id": identityschema.StringAttribute{
-				OptionalForImport: true,
-				Description:       "Backend ID (composite of service_id-version-name).",
-			},
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",

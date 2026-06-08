@@ -234,18 +234,17 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 		return
 	}
-	var serviceID types.String
-	var version types.Int64
-	var name types.String
-	resp.Diagnostics.Append(req.Identity.GetAttribute(ctx, path.Root("service_id"), &serviceID)...)
-	resp.Diagnostics.Append(req.Identity.GetAttribute(ctx, path.Root("version"), &version)...)
-	resp.Diagnostics.Append(req.Identity.GetAttribute(ctx, path.Root("name"), &name)...)
+	var identity DomainIdentityModel
+	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_id"), serviceID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("version"), version)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &DomainIdentityModel{
+		ServiceID: identity.ServiceID,
+		Version:   identity.Version,
+		Name:      identity.Name,
+	})...)
 }
 
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {

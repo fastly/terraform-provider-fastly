@@ -153,6 +153,61 @@ func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_noOpApply(t *testing.T) {
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create service with domain and backend
+				Config: ConfigCDNAutoWithBackend(serviceName, domainName, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "1"),
+					// Initial version should be 1
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				// Step 2: Re-apply same config (no-op)
+				// Should NOT clone a new version - should remain at version 1
+				Config: ConfigCDNAutoWithBackend(serviceName, domainName, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "1"),
+					// No-op apply should NOT increment version
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				// Step 3: Re-apply same config again (another no-op)
+				// Should still remain at version 1
+				Config: ConfigCDNAutoWithBackend(serviceName, domainName, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "1"),
+					// Still should NOT increment version
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))

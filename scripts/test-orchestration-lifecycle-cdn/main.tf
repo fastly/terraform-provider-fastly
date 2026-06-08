@@ -45,6 +45,26 @@ resource "fastly_service_backend" "service_1_backend_unique" {
   ssl_sni_hostname  = "unique1.origin.example.com"
 }
 
+# Optional domain and backend for testing version writes
+resource "fastly_service_domain" "service_1_new_domain" {
+  count      = var.service_1_new_domain != "" ? 1 : 0
+  service_id = fastly_service_cdn.service_1.id
+  version    = var.service_1_version
+  name       = var.service_1_new_domain
+}
+
+resource "fastly_service_backend" "service_1_new_backend" {
+  count             = var.service_1_new_backend != "" ? 1 : 0
+  service_id        = fastly_service_cdn.service_1.id
+  version           = var.service_1_version
+  name              = "new-origin"
+  address           = var.service_1_new_backend
+  port              = 443
+  use_ssl           = true
+  ssl_cert_hostname = var.service_1_new_backend
+  ssl_sni_hostname  = var.service_1_new_backend
+}
+
 # Service 2
 resource "fastly_service_cdn" "service_2" {
   name          = var.service_2_name
@@ -92,6 +112,13 @@ action "fastly_service_version_clone" "service_1_clone" {
   config {
     service_id = fastly_service_cdn.service_1.id
     version    = data.fastly_service_version.service_1.active_version
+  }
+}
+
+action "fastly_service_version_clone" "service_1_clone_from_latest" {
+  config {
+    service_id = fastly_service_cdn.service_1.id
+    version    = data.fastly_service_version.service_1.latest_version
   }
 }
 

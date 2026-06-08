@@ -40,3 +40,15 @@ variable "package_path" {
   type        = string
   description = "Path to the compute package tar.gz file"
 }
+
+variable "service_1_new_domain" {
+  type        = string
+  description = "Additional domain name for service 1 to be added to cloned version"
+  default     = ""
+}
+
+variable "service_1_new_backend" {
+  type        = string
+  description = "Additional backend address for service 1 to be added to cloned version"
+  default     = ""
+}

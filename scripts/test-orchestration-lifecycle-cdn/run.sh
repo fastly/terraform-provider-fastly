@@ -3,6 +3,12 @@
 # Test script for the full orchestration lifecycle
 # Tests: fastly_service_cdn, fastly_service_domain, fastly_service_backend,
 #        fastly_service_version_clone, and fastly_service_version_activate actions
+#
+# Coverage includes:
+#   - Clone from active version
+#   - Clone from latest version (when latest != active)
+#   - Version-locked resource writes (domains, backends)
+#   - Version activation workflow
 
 set -euo pipefail
 
@@ -59,7 +65,7 @@ cleanup() {
             log_info "Attempting emergency cleanup of services..."
 
             # Deactivate and delete services
-            for version in 1 2 3 4 5; do
+            for version in 1 2 3 4 5 6 7 8; do
                 [ -n "$SERVICE_1_ID" ] && curl -s -X PUT -H "Fastly-Key: $FASTLY_API_TOKEN" \
                     "https://api.fastly.com/service/$SERVICE_1_ID/version/$version/deactivate" > /dev/null 2>&1 || true
                 [ -n "$SERVICE_2_ID" ] && curl -s -X PUT -H "Fastly-Key: $FASTLY_API_TOKEN" \
@@ -382,6 +388,124 @@ test_resource_updates() {
     log_success "Resource updates work correctly"
 }
 
+# Test clone from latest version and version-locked resource writes
+test_clone_from_latest_and_version_writes() {
+    log_step "Testing clone from latest version and version-locked resource writes"
+
+    cd "$TEST_DIR"
+
+    # At this point, version 2 should be active for service 1
+    local svc1_active=$(terraform output -raw service_1_active_version)
+    local svc1_latest=$(terraform output -raw service_1_latest_version)
+    log_info "Service 1 - Active: $svc1_active, Latest: $svc1_latest"
+
+    # Clone from active (version 2) to create version 3
+    log_info "Cloning from active version ($svc1_active) to create version 3..."
+    if terraform apply -invoke=action.fastly_service_version_clone.service_1_clone -auto-approve; then
+        log_success "Version cloned from active"
+        terraform refresh > /dev/null
+        svc1_latest=$(terraform output -raw service_1_latest_version)
+        log_info "New latest version: $svc1_latest"
+    else
+        log_error "Failed to clone from active version"
+        return 1
+    fi
+
+    # Now active=2, latest=3 (draft version exists)
+    # Test clone from latest (version 3)
+    log_info "Now active=$svc1_active, latest=$svc1_latest (draft exists)"
+    log_info "Cloning from latest version ($svc1_latest) to create version 4..."
+
+    if terraform apply -invoke=action.fastly_service_version_clone.service_1_clone_from_latest -auto-approve; then
+        log_success "Version cloned from latest (draft version)"
+        terraform refresh > /dev/null
+        local new_latest=$(terraform output -raw service_1_latest_version)
+        log_info "New latest version after cloning from latest: $new_latest"
+
+        if [ "$new_latest" = "4" ]; then
+            log_success "Clone from latest successful - created version 4 from version 3"
+        else
+            log_error "Expected version 4, got version $new_latest"
+            return 1
+        fi
+    else
+        log_error "Failed to clone from latest version"
+        return 1
+    fi
+
+    # Test version-locked resource writes
+    # Add a new domain and backend to version 4
+    log_info "Testing version-locked resource writes on version 4..."
+    log_info "Updating terraform.tfvars to add new domain and backend to version 4..."
+
+    cat > terraform.tfvars << EOF
+fastly_api_token     = "$FASTLY_API_TOKEN"
+service_1_name       = "$TEST_SERVICE_1_NAME"
+service_1_version    = 4
+service_1_domain     = "test-orch-svc1-$$.example.com"
+service_1_new_domain = "test-orch-svc1-new-$$.example.com"
+service_1_new_backend = "new-backend.example.com"
+service_2_name       = "$TEST_SERVICE_2_NAME"
+service_2_version    = 2
+service_2_domain     = "test-orch-svc2-$$.example.com"
+EOF
+
+    log_info "Running terraform plan to add domain and backend..."
+    terraform plan -out=tfplan
+
+    log_info "Running terraform apply to write resources to version 4..."
+    if terraform apply tfplan; then
+        log_success "New domain and backend added to version 4"
+    else
+        log_error "Failed to add resources to version 4"
+        return 1
+    fi
+
+    # Verify the resources were added
+    log_info "Verifying new resources were added to version 4..."
+    local domain_count=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/service/$SERVICE_1_ID/version/4/domain" | jq '. | length')
+    local backend_count=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/service/$SERVICE_1_ID/version/4/backend" | jq '. | length')
+
+    log_info "Version 4 has $domain_count domains and $backend_count backends"
+
+    if [ "$domain_count" -ge "2" ]; then
+        log_success "Domain successfully added to version 4"
+    else
+        log_error "Expected at least 2 domains in version 4, found $domain_count"
+        return 1
+    fi
+
+    if [ "$backend_count" -ge "3" ]; then
+        log_success "Backend successfully added to version 4"
+    else
+        log_error "Expected at least 3 backends in version 4, found $backend_count"
+        return 1
+    fi
+
+    # Activate version 4
+    log_info "Activating version 4 with new resources..."
+    if terraform apply -invoke=action.fastly_service_version_activate.service_1_activate -auto-approve; then
+        log_success "Version 4 activated"
+        terraform refresh > /dev/null
+        local final_active=$(terraform output -raw service_1_active_version)
+        log_info "Final active version: $final_active"
+
+        if [ "$final_active" = "4" ]; then
+            log_success "Version 4 (with new resources) is now active"
+        else
+            log_error "Expected active version 4, got $final_active"
+            return 1
+        fi
+    else
+        log_error "Failed to activate version 4"
+        return 1
+    fi
+
+    log_success "Clone from latest and version write tests completed"
+}
+
 # Test resource destruction
 test_resource_destruction() {
     log_step "Testing resource destruction"
@@ -406,6 +530,8 @@ test_resource_destruction() {
     terraform state rm fastly_service_backend.service_2_backend_shared > /dev/null 2>&1 || true
     terraform state rm fastly_service_domain.service_1_domain > /dev/null 2>&1 || true
     terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
+    terraform state rm 'fastly_service_domain.service_1_new_domain[0]' > /dev/null 2>&1 || true
+    terraform state rm 'fastly_service_backend.service_1_new_backend[0]' > /dev/null 2>&1 || true
     log_success "Version-locked resources removed from state"
 
     # Now run terraform destroy to delete the services
@@ -459,6 +585,7 @@ main() {
     test_resource_updates
     test_version_clone_action
     test_version_activate_action
+    test_clone_from_latest_and_version_writes
     test_resource_destruction
 
     log_step "Test Summary"
@@ -470,6 +597,7 @@ main() {
     log_success "✓ Resource updates"
     log_success "✓ Version clone action (fastly_service_version_clone)"
     log_success "✓ Version activate action (fastly_service_version_activate)"
+    log_success "✓ Clone from latest version and version writes"
     log_success "✓ Resource destruction"
 
     echo ""

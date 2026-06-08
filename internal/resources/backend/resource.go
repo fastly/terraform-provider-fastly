@@ -117,6 +117,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	flatten(ctx, b, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("backend_id"), plan.ID)...)
+	}
 }
 
 func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -152,6 +159,13 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	flatten(ctx, b, &state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("backend_id"), state.ID)...)
+	}
 }
 
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -263,6 +277,10 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	resp.IdentitySchema = identityschema.Schema{
 		Attributes: map[string]identityschema.Attribute{
+			"backend_id": identityschema.StringAttribute{
+				OptionalForImport: true,
+				Description:       "Backend ID (composite of service_id-version-name).",
+			},
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",

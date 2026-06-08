@@ -106,7 +106,8 @@ func CommonAttributes() map[string]schema.Attribute {
 		"keepalive_time": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Description: "How long in seconds to keep a persistent connection to the backend between requests.",
+			Default:     int64default.StaticInt64(0),
+			Description: "How long in seconds to keep a persistent connection to the backend between requests. Default `0` (disabled).",
 		},
 		"max_conn": schema.Int64Attribute{
 			Optional:    true,

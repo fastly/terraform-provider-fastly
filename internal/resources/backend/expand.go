@@ -29,18 +29,10 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 		RequestCondition:    fastly.ToPointer(service.StringValue(m.RequestCondition)),
 	}
 
-	if service.Int64Value(m.KeepaliveTime) > 0 {
-		input.KeepAliveTime = fastly.ToPointer(int(service.Int64Value(m.KeepaliveTime)))
-	}
-	if service.Int64Value(m.MaxLifetime) > 0 {
-		input.MaxLifetime = fastly.ToPointer(int(service.Int64Value(m.MaxLifetime)))
-	}
-	if service.Int64Value(m.MaxUse) > 0 {
-		input.MaxUse = fastly.ToPointer(int(service.Int64Value(m.MaxUse)))
-	}
-	if service.StringValue(m.Comment) != "" {
-		input.Comment = fastly.ToPointer(service.StringValue(m.Comment))
-	}
+	input.KeepAliveTime = fastly.NullInt(int(service.Int64Value(m.KeepaliveTime)))
+	input.MaxLifetime = fastly.NullInt(int(service.Int64Value(m.MaxLifetime)))
+	input.MaxUse = fastly.NullInt(int(service.Int64Value(m.MaxUse)))
+	input.Comment = fastly.NullString(service.StringValue(m.Comment))
 	setCreateOnlyNonEmptyStrings(input, m)
 
 	return input
@@ -108,36 +100,16 @@ func BuildUpdateInput(serviceID string, version int, plan NestedModel, state *Ne
 }
 
 func setCreateOnlyNonEmptyStrings(input *fastly.CreateBackendInput, m NestedModel) {
-	if service.StringValue(m.MinTLSVersion) != "" {
-		input.MinTLSVersion = fastly.ToPointer(service.StringValue(m.MinTLSVersion))
-	}
-	if service.StringValue(m.MaxTLSVersion) != "" {
-		input.MaxTLSVersion = fastly.ToPointer(service.StringValue(m.MaxTLSVersion))
-	}
-	if service.StringValue(m.OverrideHost) != "" {
-		input.OverrideHost = fastly.ToPointer(service.StringValue(m.OverrideHost))
-	}
-	if service.StringValue(m.ShareKey) != "" {
-		input.ShareKey = fastly.ToPointer(service.StringValue(m.ShareKey))
-	}
-	if service.StringValue(m.SSLCACert) != "" {
-		input.SSLCACert = fastly.ToPointer(service.StringValue(m.SSLCACert))
-	}
-	if service.StringValue(m.SSLCertHostname) != "" {
-		input.SSLCertHostname = fastly.ToPointer(service.StringValue(m.SSLCertHostname))
-	}
-	if service.StringValue(m.SSLCiphers) != "" {
-		input.SSLCiphers = fastly.ToPointer(service.StringValue(m.SSLCiphers))
-	}
-	if service.StringValue(m.SSLClientCert) != "" {
-		input.SSLClientCert = fastly.ToPointer(service.StringValue(m.SSLClientCert))
-	}
-	if service.StringValue(m.SSLClientKey) != "" {
-		input.SSLClientKey = fastly.ToPointer(service.StringValue(m.SSLClientKey))
-	}
-	if service.StringValue(m.SSLSNIHostname) != "" {
-		input.SSLSNIHostname = fastly.ToPointer(service.StringValue(m.SSLSNIHostname))
-	}
+	input.MinTLSVersion = fastly.NullString(service.StringValue(m.MinTLSVersion))
+	input.MaxTLSVersion = fastly.NullString(service.StringValue(m.MaxTLSVersion))
+	input.OverrideHost = fastly.NullString(service.StringValue(m.OverrideHost))
+	input.ShareKey = fastly.NullString(service.StringValue(m.ShareKey))
+	input.SSLCACert = fastly.NullString(service.StringValue(m.SSLCACert))
+	input.SSLCertHostname = fastly.NullString(service.StringValue(m.SSLCertHostname))
+	input.SSLCiphers = fastly.NullString(service.StringValue(m.SSLCiphers))
+	input.SSLClientCert = fastly.NullString(service.StringValue(m.SSLClientCert))
+	input.SSLClientKey = fastly.NullString(service.StringValue(m.SSLClientKey))
+	input.SSLSNIHostname = fastly.NullString(service.StringValue(m.SSLSNIHostname))
 }
 
 func ModelToNested(m Model) NestedModel {

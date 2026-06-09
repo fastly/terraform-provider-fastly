@@ -24,7 +24,7 @@ func defaultNestedModel() NestedModel {
 		ErrorThreshold:      types.Int64Value(0),
 		FirstByteTimeout:    types.Int64Value(15000),
 		HealthCheck:         types.StringValue(""),
-		KeepaliveTime:       types.Int64Null(),
+		KeepaliveTime:       types.Int64Value(0),
 		MaxConn:             types.Int64Value(200),
 		MaxLifetime:         types.Int64Value(0),
 		MaxTLSVersion:       types.StringValue(""),

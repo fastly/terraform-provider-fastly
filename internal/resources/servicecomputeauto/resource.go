@@ -393,8 +393,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ActiveVersion = types.Int64Value(int64(targetVersion))
 	} else {
+		// No version change needed - preserve version numbers and nested state
 		plan.ManagedVersion = state.ManagedVersion
 		plan.ActiveVersion = state.ActiveVersion
+		plan.Domain = state.Domain
+		plan.Backend = state.Backend
+		plan.Package = state.Package
 	}
 
 	plan.ID = state.ID

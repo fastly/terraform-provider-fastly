@@ -95,9 +95,9 @@ func TestAccFastlyServiceComputeAuto_update(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceNameUpdated),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.0.name", domainName),
-					// Service name update should create and activate version 2
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
+					// Service name update does not create a new version (service-level attribute)
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
 			},
 		},

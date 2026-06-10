@@ -1,3 +1,3 @@
   domain {
-    name = "DOMAIN_NAME"
+    name = "{{.DOMAIN_NAME}}"
   }

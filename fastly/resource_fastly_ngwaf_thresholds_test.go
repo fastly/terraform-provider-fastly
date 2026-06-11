@@ -32,7 +32,7 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNGWAFThresholdsConfig(thresholdName),
+				Config: testAccNGWAFThresholdsConfigBlock(thresholdName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "action", "block"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "dont_notify", "false"),
@@ -47,9 +47,24 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNGWAFThresholdsConfigUpdate(thresholdName),
+				Config: testAccNGWAFThresholdsConfigLog(thresholdName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "action", "log"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "dont_notify", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "duration", "43200"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "enabled", "false"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "interval", "600"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "limit", "50"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "name", thresholdName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "BHH"),
+					resource.TestCheckResourceAttrPair("fastly_ngwaf_thresholds.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
+					testAccNGWAFThresholdsExists("fastly_ngwaf_thresholds.sample"),
+				),
+			},
+			{
+				Config: testAccNGWAFThresholdsConfigBlockImmediately(thresholdName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "action", "block_immediately"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "dont_notify", "true"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "duration", "43200"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "enabled", "false"),
@@ -109,7 +124,7 @@ func testAccNGWAFThresholdsExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccNGWAFThresholdsConfig(thresholdName string) string {
+func testAccNGWAFThresholdsConfigBlock(thresholdName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -127,12 +142,30 @@ resource "fastly_ngwaf_thresholds" "sample" {
   `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)
 }
 
-func testAccNGWAFThresholdsConfigUpdate(thresholdName string) string {
+func testAccNGWAFThresholdsConfigLog(thresholdName string) string {
 	return fmt.Sprintf(`
 %s
 
 resource "fastly_ngwaf_thresholds" "sample" {
     action       = "log"
+    dont_notify  = true
+    duration     = 43200
+    enabled      = false
+    interval     = 600
+    limit        = 50
+    name         = "%s"
+    signal       = "BHH"
+    workspace_id = fastly_ngwaf_workspace.example.id
+  }
+  `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)
+}
+
+func testAccNGWAFThresholdsConfigBlockImmediately(thresholdName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "fastly_ngwaf_thresholds" "sample" {
+    action       = "block_immediately"
     dont_notify  = true
     duration     = 43200
     enabled      = false

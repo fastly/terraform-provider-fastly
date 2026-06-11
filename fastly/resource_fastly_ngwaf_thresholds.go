@@ -28,7 +28,7 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 				Type:             schema.TypeString,
 				Description:      "Action to take when threshold is exceeded.",
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"block", "log"}, false)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"block", "block_immediately", "log"}, false)),
 			},
 			"dont_notify": {
 				Type:        schema.TypeBool,

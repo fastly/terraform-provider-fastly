@@ -103,17 +103,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	tflog.Debug(ctx, "Creating Fastly service backend", map[string]any{
+		"service_id": plan.Service.ValueString(),
+		"version":    plan.Version.ValueInt64(),
+		"name":       service.StringValue(plan.Name),
+	})
+
 	resp.Diagnostics.Append(r.providerData.VersionChecker.EnsureMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	opts := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), ModelToNested(plan))
-	tflog.Debug(ctx, "Creating Fastly service backend", map[string]any{
-		"service_id": opts.ServiceID,
-		"version":    opts.ServiceVersion,
-		"name":       service.StringValue(plan.Name),
-	})
 
 	b, err := r.providerData.Client.CreateBackend(ctx, opts)
 	if err != nil {
@@ -130,7 +131,6 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if resp.Identity != nil {
 		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
 			ServiceID: plan.Service,
-			Version:   plan.Version,
 			Name:      plan.Name,
 		})...)
 	}
@@ -176,7 +176,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	if resp.Identity != nil {
 		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
 			ServiceID: state.Service,
-			Version:   state.Version,
 			Name:      state.Name,
 		})...)
 	}
@@ -227,6 +226,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	flatten(ctx, b, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	// Update identity to reflect any changes
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
+			ServiceID: plan.Service,
+			Name:      plan.Name,
+		})...)
+	}
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -282,7 +289,6 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &BackendIdentityModel{
 		ServiceID: identity.ServiceID,
-		Version:   identity.Version,
 		Name:      identity.Name,
 	})...)
 }
@@ -293,10 +299,6 @@ func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRe
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",
-			},
-			"version": identityschema.Int64Attribute{
-				RequiredForImport: true,
-				Description:       "Fastly service version.",
 			},
 			"name": identityschema.StringAttribute{
 				RequiredForImport: true,

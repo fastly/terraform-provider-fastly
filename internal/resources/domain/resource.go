@@ -102,7 +102,6 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if resp.Identity != nil {
 		resp.Diagnostics.Append(resp.Identity.Set(ctx, &DomainIdentityModel{
 			ServiceID: plan.Service,
-			Version:   plan.Version,
 			Name:      plan.Name,
 		})...)
 	}
@@ -148,7 +147,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	if resp.Identity != nil {
 		resp.Diagnostics.Append(resp.Identity.Set(ctx, &DomainIdentityModel{
 			ServiceID: state.Service,
-			Version:   state.Version,
 			Name:      state.Name,
 		})...)
 	}
@@ -187,6 +185,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	flatten(ctx, d, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	// Update identity to reflect any changes
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &DomainIdentityModel{
+			ServiceID: plan.Service,
+			Name:      plan.Name,
+		})...)
+	}
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -242,7 +248,6 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &DomainIdentityModel{
 		ServiceID: identity.ServiceID,
-		Version:   identity.Version,
 		Name:      identity.Name,
 	})...)
 }
@@ -253,10 +258,6 @@ func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRe
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",
-			},
-			"version": identityschema.Int64Attribute{
-				RequiredForImport: true,
-				Description:       "Fastly service version.",
 			},
 			"name": identityschema.StringAttribute{
 				RequiredForImport: true,

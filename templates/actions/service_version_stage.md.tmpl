@@ -1,0 +1,26 @@
+---
+subcategory: "Service Version Lifecycle"
+---
+
+# fastly_service_version_stage Action
+
+Stages a Fastly service version where staging is supported.
+
+!> **Warning:** Do not attach this action independently to every versioned first-class resource through lifecycle-style automation. The explicit/default resource family expects users to orchestrate service version lifecycle intentionally. If multiple versioned resources, such as `fastly_service_domain`, `fastly_service_backend`, and other service-versioned resources, each trigger their own clone, activate, or stage action during the same Terraform apply, Terraform can create multiple service versions and activate or stage them separately. Instead, clone or select one working service version, apply all intended versioned resource changes to that same version, then run a single activation or staging action for that version.
+
+## Example Usage
+
+```terraform
+action "fastly_service_version_stage" "staging" {
+  service_id = fastly_service_cdn.example.id
+  version    = fastly_service_version_clone.draft.version
+}
+```
+
+## Schema
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Usage Notes
+
+Run this action once after all intended versioned resource changes have been applied to the same service version.

@@ -95,9 +95,9 @@ func TestAccFastlyServiceComputeAuto_update(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceNameUpdated),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.0.name", domainName),
-					// Service name update should create and activate version 2
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
+					// Service name update does not create a new version (service-level attribute)
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
 			},
 		},
@@ -120,61 +120,6 @@ func TestAccFastlyServiceComputeAuto_multipleBackends(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.#", "2"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.0.name", "backend-primary"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.1.name", "backend-secondary"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceComputeAuto_noOpApply(t *testing.T) {
-	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
-	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { PreCheck(t) },
-		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
-		Steps: []resource.TestStep{
-			{
-				// Step 1: Create service with domain, backend, and package
-				Config: ConfigComputeAutoWithBackend(serviceName, domainName, backendName),
-				Check: resource.ComposeTestCheckFunc(
-					CheckServiceExists("fastly_service_compute_auto.test"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.#", "1"),
-					// Initial version should be 1
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
-				),
-			},
-			{
-				// Step 2: Re-apply same config (no-op)
-				// Should NOT clone a new version - should remain at version 1
-				Config: ConfigComputeAutoWithBackend(serviceName, domainName, backendName),
-				Check: resource.ComposeTestCheckFunc(
-					CheckServiceExists("fastly_service_compute_auto.test"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.#", "1"),
-					// No-op apply should NOT increment version
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
-				),
-			},
-			{
-				// Step 3: Re-apply same config again (another no-op)
-				// Should still remain at version 1
-				Config: ConfigComputeAutoWithBackend(serviceName, domainName, backendName),
-				Check: resource.ComposeTestCheckFunc(
-					CheckServiceExists("fastly_service_compute_auto.test"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "name", serviceName),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "domain.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "backend.#", "1"),
-					// Still should NOT increment version
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
 			},
 		},

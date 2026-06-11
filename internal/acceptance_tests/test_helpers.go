@@ -297,3 +297,27 @@ func ConfigServiceCDNWithCloneAndActivate(serviceName, domainName, backendName s
 		"internal/acceptance_tests/blocks/action_version_activate.tf",
 	)
 }
+
+// Configuration helpers for Compute service (explicit version management)
+
+// ConfigServiceComputeBasic returns a basic Compute service config without any nested resources
+func ConfigServiceComputeBasic(serviceName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+		},
+	)
+}
+
+// ConfigServiceComputeWithComment returns a Compute service config with a comment
+func ConfigServiceComputeWithComment(serviceName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "Managed by Terraform",
+		},
+	)
+}

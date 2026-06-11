@@ -1,5 +1,5 @@
   backend {
-    name              = "BACKEND_NAME"
+    name              = "{{.BACKEND_NAME}}"
     address           = "api.example.com"
     port              = 443
     use_ssl           = true

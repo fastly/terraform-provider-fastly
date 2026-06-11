@@ -60,6 +60,8 @@ func NestedBlockSchema() schema.ListNestedBlock {
 
 // Equal reports whether two compute package model slices represent the same package configuration.
 // At most one package block is supported, so only the first element is compared when present.
+// SourceCodeHash is only compared if it's explicitly set (not null/unknown) in BOTH packages,
+// allowing users to optionally use it to detect package changes while ignoring API-populated values.
 func Equal(a, b []Model) bool {
 	if len(a) != len(b) {
 		return false
@@ -69,9 +71,25 @@ func Equal(a, b []Model) bool {
 		return true
 	}
 
-	return stringValuesEqual(a[0].Content, b[0].Content) &&
-		stringValuesEqual(a[0].Filename, b[0].Filename) &&
-		stringValuesEqual(a[0].SourceCodeHash, b[0].SourceCodeHash)
+	aModel := a[0]
+	bModel := b[0]
+
+	// Always compare content and filename
+	if !stringValuesEqual(aModel.Content, bModel.Content) ||
+		!stringValuesEqual(aModel.Filename, bModel.Filename) {
+		return false
+	}
+
+	// Only compare SourceCodeHash if it's explicitly set in BOTH packages
+	// This allows the API to populate the hash without triggering changes
+	aHashSet := !aModel.SourceCodeHash.IsNull() && !aModel.SourceCodeHash.IsUnknown()
+	bHashSet := !bModel.SourceCodeHash.IsNull() && !bModel.SourceCodeHash.IsUnknown()
+
+	if aHashSet && bHashSet {
+		return stringValuesEqual(aModel.SourceCodeHash, bModel.SourceCodeHash)
+	}
+
+	return true
 }
 
 func stringValuesEqual(a, b types.String) bool {

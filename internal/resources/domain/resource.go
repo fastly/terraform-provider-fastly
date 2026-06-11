@@ -36,6 +36,12 @@ type Model struct {
 	Comment types.String `tfsdk:"comment"`
 }
 
+type DomainIdentityModel struct {
+	ServiceID types.String `tfsdk:"service_id"`
+	Version   types.Int64  `tfsdk:"version"`
+	Name      types.String `tfsdk:"name"`
+}
+
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_domain"
 }
@@ -94,7 +100,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), plan.ID)...)
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &DomainIdentityModel{
+			ServiceID: plan.Service,
+			Version:   plan.Version,
+			Name:      plan.Name,
+		})...)
 	}
 }
 
@@ -136,7 +146,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 
 	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), state.ID)...)
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &DomainIdentityModel{
+			ServiceID: state.Service,
+			Version:   state.Version,
+			Name:      state.Name,
+		})...)
 	}
 }
 
@@ -220,12 +234,17 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 		return
 	}
-	var id types.String
-	resp.Diagnostics.Append(req.Identity.GetAttribute(ctx, path.Root("id"), &id)...)
+	var identity DomainIdentityModel
+	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &DomainIdentityModel{
+		ServiceID: identity.ServiceID,
+		Version:   identity.Version,
+		Name:      identity.Name,
+	})...)
 }
 
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {

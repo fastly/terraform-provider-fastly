@@ -1,3 +1,3 @@
   package {
-    filename = "PACKAGE_PATH"
+    filename = "{{.PACKAGE_PATH}}"
   }

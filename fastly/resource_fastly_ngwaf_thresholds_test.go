@@ -71,7 +71,7 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "interval", "600"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "limit", "50"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "name", thresholdName),
-					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "BHH"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "XXE"),
 					resource.TestCheckResourceAttrPair("fastly_ngwaf_thresholds.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
 					testAccNGWAFThresholdsExists("fastly_ngwaf_thresholds.sample"),
 				),
@@ -172,7 +172,7 @@ resource "fastly_ngwaf_thresholds" "sample" {
     interval     = 600
     limit        = 50
     name         = "%s"
-    signal       = "BHH"
+    signal       = "XXE"
     workspace_id = fastly_ngwaf_workspace.example.id
   }
   `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)

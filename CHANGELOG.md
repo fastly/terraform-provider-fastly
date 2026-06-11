@@ -4,7 +4,7 @@
 
 ### ENHANCEMENTS:
 - feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
-- feat(ngwaf_thresholds): added support for 'block_immediately' action ([#XXX](https://github.com/fastly/terraform-provider-fastly/pull/XXX))
+- feat(ngwaf_thresholds): added support for 'block_immediately' action ([#1292](https://github.com/fastly/terraform-provider-fastly/pull/1292))
 
 ### BUG FIXES:
 

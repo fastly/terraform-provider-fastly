@@ -138,10 +138,24 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	domains, err := domain.ReadForVersion(ctx, r.providerData.Client, serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service domains", err.Error())
+		return
+	}
+	plan.Domain = domains
+
 	if err := backend.Reconcile(ctx, r.providerData.Client, serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 		return
 	}
+
+	backends, err := backend.ReadForVersion(ctx, r.providerData.Client, serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service backends", err.Error())
+		return
+	}
+	plan.Backend = backends
 
 	if err := service.ValidateVersion(ctx, r.providerData.Client, serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -289,10 +303,24 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 
+		domains, err := domain.ReadForVersion(ctx, r.providerData.Client, serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service domains", err.Error())
+			return
+		}
+		plan.Domain = domains
+
 		if err := backend.Reconcile(ctx, r.providerData.Client, serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 			return
 		}
+
+		backends, err := backend.ReadForVersion(ctx, r.providerData.Client, serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service backends", err.Error())
+			return
+		}
+		plan.Backend = backends
 
 		if err := service.ValidateVersion(ctx, r.providerData.Client, serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -310,8 +338,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ActiveVersion = types.Int64Value(int64(targetVersion))
 	} else {
+		// No version change needed - preserve version numbers and nested state
 		plan.ManagedVersion = state.ManagedVersion
 		plan.ActiveVersion = state.ActiveVersion
+		plan.Domain = state.Domain
+		plan.Backend = state.Backend
 	}
 
 	plan.ID = state.ID

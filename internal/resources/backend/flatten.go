@@ -27,7 +27,7 @@ func FlattenToNestedModel(b *fastly.Backend) NestedModel {
 	m.ErrorThreshold = service.Int64PointerOrDefault(b.ErrorThreshold, 0)
 	m.FirstByteTimeout = service.Int64PointerOrDefault(b.FirstByteTimeout, 15000)
 	m.HealthCheck = service.StringPointerOrDefault(b.HealthCheck, "")
-	m.KeepaliveTime = service.Int64PointerOrDefault(b.KeepAliveTime, 0)
+	m.KeepaliveTime = service.Int64PointerOrNull(b.KeepAliveTime)
 	m.MaxConn = service.Int64PointerOrDefault(b.MaxConn, 200)
 	m.MaxLifetime = service.Int64PointerOrDefault(b.MaxLifetime, 0)
 	m.MaxTLSVersion = service.StringPointerOrDefault(b.MaxTLSVersion, "")

@@ -290,10 +290,6 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	resp.IdentitySchema = identityschema.Schema{
 		Attributes: map[string]identityschema.Attribute{
-			"backend_id": identityschema.StringAttribute{
-				OptionalForImport: true,
-				Description:       "Backend ID (composite of service_id-version-name).",
-			},
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",

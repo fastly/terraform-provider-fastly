@@ -250,9 +250,17 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	resp.IdentitySchema = identityschema.Schema{
 		Attributes: map[string]identityschema.Attribute{
-			"id": identityschema.StringAttribute{
+			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
-				Description:       "Resource ID in the format: service_id-version-name",
+				Description:       "Fastly service ID.",
+			},
+			"version": identityschema.Int64Attribute{
+				RequiredForImport: true,
+				Description:       "Fastly service version.",
+			},
+			"name": identityschema.StringAttribute{
+				RequiredForImport: true,
+				Description:       "Domain name.",
 			},
 		},
 	}

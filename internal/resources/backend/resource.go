@@ -2,8 +2,10 @@ package backend
 
 import (
 	"context"
+	"strings"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/importutil"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 	"github.com/fastly/terraform-provider-fastly/internal/validation"
 
@@ -66,7 +68,6 @@ type Model struct {
 
 type BackendIdentityModel struct {
 	ServiceID types.String `tfsdk:"service_id"`
-	Version   types.Int64  `tfsdk:"version"`
 	Name      types.String `tfsdk:"name"`
 }
 
@@ -277,10 +278,63 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 }
 
 func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Support legacy composite ID format: service_id/version/name
+	if req.ID != "" && strings.Contains(req.ID, "/") {
+		serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid Import ID",
+				"Expected import ID in format: service_id/version/name\n"+
+					"For example: service123/3/origin\n\n"+
+					"Error: "+err.Error(),
+			)
+			return
+		}
+
+		tflog.Debug(ctx, "Importing backend with legacy composite ID", map[string]any{
+			"service_id": serviceID,
+			"version":    version,
+			"name":       name,
+		})
+
+		// Use the API to read the full backend configuration
+		b, err := r.providerData.Client.GetBackend(ctx, &fastly.GetBackendInput{
+			ServiceID:      serviceID,
+			ServiceVersion: version,
+			Name:           name,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError("Error importing backend", err.Error())
+			return
+		}
+
+		// Populate state with the full backend data
+		var state Model
+		state.Service = types.StringValue(serviceID)
+		state.Version = types.Int64Value(int64(version))
+		flatten(ctx, b, &state)
+
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Set identity using stable identity schema (service_id + name only)
+		if resp.Identity != nil {
+			resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
+				ServiceID: types.StringValue(serviceID),
+				Name:      types.StringValue(name),
+			})...)
+		}
+		return
+	}
+
+	// Support new identity-based import
 	if req.ID != "" {
 		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 		return
 	}
+
 	var identity BackendIdentityModel
 	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
 	if resp.Diagnostics.HasError() {

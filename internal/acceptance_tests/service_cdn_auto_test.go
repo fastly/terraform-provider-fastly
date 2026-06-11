@@ -190,4 +190,3 @@ func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 		},
 	})
 }
-

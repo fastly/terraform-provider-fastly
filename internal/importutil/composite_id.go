@@ -20,11 +20,10 @@ func ParseCompositeID(id string) (serviceID string, version int, name string, er
 		return "", 0, "", fmt.Errorf("service_id cannot be empty in import ID %q", id)
 	}
 
-	version64, err := strconv.ParseInt(parts[1], 10, 64)
+	version, err = strconv.Atoi(parts[1])
 	if err != nil {
 		return "", 0, "", fmt.Errorf("invalid version number in import ID %q: %w", id, err)
 	}
-	version = int(version64)
 
 	name = parts[2]
 	if name == "" {

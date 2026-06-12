@@ -25,6 +25,10 @@ func ParseCompositeID(id string) (serviceID string, version int, name string, er
 		return "", 0, "", fmt.Errorf("invalid version number in import ID %q: %w", id, err)
 	}
 
+	if version < 1 {
+		return "", 0, "", fmt.Errorf("version must be greater than 0 in import ID %q", id)
+	}
+
 	name = parts[2]
 	if name == "" {
 		return "", 0, "", fmt.Errorf("name cannot be empty in import ID %q", id)

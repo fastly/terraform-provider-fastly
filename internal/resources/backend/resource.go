@@ -10,7 +10,6 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/validation"
 
 	"github.com/fastly/go-fastly/v15/fastly"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -329,9 +328,13 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		return
 	}
 
-	// Support new identity-based import
+	// Non-composite req.ID is invalid for explicit backend resources
 	if req.ID != "" {
-		resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			"Expected import ID in format: service_id/version/name.\n"+
+				"For example: service123/3/origin",
+		)
 		return
 	}
 

@@ -30,12 +30,9 @@ func TestParseCompositeID(t *testing.T) {
 			wantErr:       false,
 		},
 		{
-			name:          "version 0",
-			id:            "service123/0/backend1",
-			wantServiceID: "service123",
-			wantVersion:   0,
-			wantName:      "backend1",
-			wantErr:       false,
+			name:    "version 0",
+			id:      "service123/0/backend1",
+			wantErr: true,
 		},
 		{
 			name:          "name with slashes",
@@ -76,12 +73,9 @@ func TestParseCompositeID(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:          "negative version",
-			id:            "service123/-1/backend1",
-			wantServiceID: "service123",
-			wantVersion:   -1,
-			wantName:      "backend1",
-			wantErr:       false, // parsing succeeds, validation should happen elsewhere
+			name:    "negative version",
+			id:      "service123/-1/backend1",
+			wantErr: true,
 		},
 	}
 

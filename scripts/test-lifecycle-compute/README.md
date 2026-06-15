@@ -77,7 +77,6 @@ This test suite specifically validates Compute service functionality:
 
 - **Package Upload Action**: Tests the `fastly_service_compute_package_upload` action which is unique to Compute services
 - **Version Activation Requirements**: Compute versions require a package to be uploaded before they can be activated
-- **Service Type**: All services created use `fastly_service_compute` instead of `fastly_service_cdn`
 
 ## Troubleshooting
 
@@ -95,10 +94,6 @@ Compute versions require a package to be uploaded before activation. The test ha
 ### Version Locked Resources
 
 After cloning versions, backends and domains remain pinned to version 1 in Terraform state, which becomes locked after activation. The script handles this by removing these resources from state before running `terraform destroy`. This allows the service deletion (with `force_destroy = true`) to clean up all versions and child resources automatically.
-
-### Provider Override Warnings
-
-Warnings about "provider development overrides" are expected when testing a locally-built provider. These can be safely ignored.
 
 ### API Rate Limiting
 

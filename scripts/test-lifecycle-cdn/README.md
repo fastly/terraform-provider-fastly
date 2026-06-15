@@ -73,10 +73,6 @@ The test includes robust cleanup logic using Terraform:
 
 After cloning versions, backends and domains remain pinned to version 1 in Terraform state, which becomes locked after activation. The script handles this by removing these resources from state before running `terraform destroy`. This allows the service deletion (with `force_destroy = true`) to clean up all versions and child resources automatically.
 
-### Provider Override Warnings
-
-Warnings about "provider development overrides" are expected when testing a locally-built provider. These can be safely ignored.
-
 ### API Rate Limiting
 
 If tests fail due to rate limiting, wait a few minutes before re-running the test suite.

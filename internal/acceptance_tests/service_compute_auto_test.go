@@ -150,4 +150,3 @@ func TestAccFastlyServiceComputeAuto_import(t *testing.T) {
 		},
 	})
 }
-

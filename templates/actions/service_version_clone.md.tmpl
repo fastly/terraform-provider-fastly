@@ -17,9 +17,9 @@ action "fastly_service_version_clone" "draft" {
 }
 ```
 
-## Schema
-
+{{- if .SchemaMarkdown }}
 {{ .SchemaMarkdown | trimspace }}
+{{- end }}
 
 ## Usage Notes
 

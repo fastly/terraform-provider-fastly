@@ -1,6 +1,6 @@
 module github.com/fastly/terraform-provider-fastly/tools
 
-go 1.25.8
+go 1.26.4
 
 tool github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 

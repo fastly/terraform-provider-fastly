@@ -129,12 +129,16 @@ func TestAccFastlyServiceYourResource_basic(t *testing.T) {
 
 ## Test Configuration Builder
 
-Test configurations are built dynamically using `BuildConfig()` within the `acceptancetests` package:
+Test configurations are built dynamically using `BuildConfig()` within the `acceptancetests` package.
+
+The builder uses Go's `text/template` for safe placeholder replacement. All template files (`.tf` files in the `blocks/` directory) use the `{{.PLACEHOLDER_NAME}}` format.
+
+Example:
 
 ```go
 func configYourServiceBasic(serviceName, domainName string) string {
     return BuildConfig(
-        ServiceCDNAuto,  // or ServiceComputeAuto
+        ServiceCDNAuto,  // or ServiceComputeAuto, ServiceCDN, ServiceCompute
         map[string]string{
             "SERVICE_NAME": serviceName,
             "DOMAIN_NAME":  domainName,
@@ -162,8 +166,10 @@ Check Fastly API status and network connectivity.
 
 ### Available Service Templates
 
-- **`service_cdn_auto.tf`** - CDN service resource
-- **`service_compute_auto.tf`** - Compute service resource
+- **`service_cdn.tf`** - Explicit CDN service resource (manual version management)
+- **`service_cdn_auto.tf`** - Automatic CDN service resource
+- **`service_compute.tf`** - Explicit Compute service resource (manual version management)
+- **`service_compute_auto.tf`** - Automatic Compute service resource
 
 ### Available Configuration Blocks
 
@@ -172,10 +178,15 @@ Check Fastly API status and network connectivity.
 - **`backend_multiple.tf`** - Multiple backend configuration
 - **`package.tf`** - Compute package configuration
 
+### How BuildConfig Works
+
 The `BuildConfig` function:
-1. Loads the service template
-2. Injects the specified blocks into the `RESOURCES` placeholder
-3. Replaces all placeholders (`SERVICE_NAME`, `DOMAIN_NAME`, etc.) with actual values
+1. Loads the service template from `internal/acceptance_tests/blocks/{serviceType}.tf`
+2. Parses and renders nested block templates using `text/template`
+3. Injects the rendered blocks into the `{{.RESOURCES}}` placeholder
+4. Replaces all placeholders (e.g., `{{.SERVICE_NAME}}`, `{{.DOMAIN_NAME}}`) with actual values from the replacements map
+
+All templates use the `{{.PLACEHOLDER_NAME}}` format for safe, explicit substitution.
 
 ## References
 

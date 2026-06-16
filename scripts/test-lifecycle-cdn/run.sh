@@ -302,7 +302,8 @@ test_version_activate_action() {
         log_info "Activating version $svc1_latest for service 1..."
 
         # Update the tfvars to point to the new version
-        sed -i '' "s/service_1_version = [0-9]*/service_1_version = $svc1_latest/" terraform.tfvars
+        sed -i.bak "s/service_1_version = [0-9]*/service_1_version = $svc1_latest/" terraform.tfvars
+        rm -f terraform.tfvars.bak
 
         # Apply the configuration change first
         terraform apply -auto-approve > /dev/null
@@ -373,7 +374,8 @@ test_resource_updates() {
 
     # Update service 1 comment
     log_info "Updating service 1 comment..."
-    sed -i '' 's/comment       = "Test service 1"/comment       = "Updated test service 1"/' main.tf
+    sed -i.bak 's/comment       = "Test service 1"/comment       = "Updated test service 1"/' main.tf
+    rm -f main.tf.bak
 
     terraform plan -out=tfplan
     terraform apply tfplan

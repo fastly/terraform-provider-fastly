@@ -541,6 +541,7 @@ test_resource_updates() {
 
     # Update the service comment in the config
     sed -i.bak 's/Test compute service 1/Test compute service 1 - UPDATED/' main.tf
+    rm -f main.tf.bak
 
     log_info "Running terraform plan..."
     terraform plan -out=tfplan

@@ -124,44 +124,13 @@ func setResourceAttrs(ctx context.Context, result *list.ListResult, b *fastly.Ba
 	var diags diag.Diagnostics
 
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(b.Name)
-	nestedModel := FlattenToNestedModel(b)
 
 	model := Model{
-		ID:                  types.StringValue(id),
-		Service:             types.StringValue(serviceID),
-		Version:             types.Int64Value(int64(version)),
-		Name:                nestedModel.Name,
-		Address:             nestedModel.Address,
-		Port:                nestedModel.Port,
-		Comment:             nestedModel.Comment,
-		AutoLoadbalance:     nestedModel.AutoLoadbalance,
-		BetweenBytesTimeout: nestedModel.BetweenBytesTimeout,
-		ConnectTimeout:      nestedModel.ConnectTimeout,
-		ErrorThreshold:      nestedModel.ErrorThreshold,
-		FirstByteTimeout:    nestedModel.FirstByteTimeout,
-		HealthCheck:         nestedModel.HealthCheck,
-		KeepaliveTime:       nestedModel.KeepaliveTime,
-		MaxConn:             nestedModel.MaxConn,
-		MaxLifetime:         nestedModel.MaxLifetime,
-		MaxTLSVersion:       nestedModel.MaxTLSVersion,
-		MaxUse:              nestedModel.MaxUse,
-		MinTLSVersion:       nestedModel.MinTLSVersion,
-		OverrideHost:        nestedModel.OverrideHost,
-		PreferIPv6:          nestedModel.PreferIPv6,
-		RequestCondition:    nestedModel.RequestCondition,
-		ShareKey:            nestedModel.ShareKey,
-		Shield:              nestedModel.Shield,
-		SSLCACert:           nestedModel.SSLCACert,
-		SSLCertHostname:     nestedModel.SSLCertHostname,
-		SSLCheckCert:        nestedModel.SSLCheckCert,
-		SSLCiphers:          nestedModel.SSLCiphers,
-		SSLClientCert:       nestedModel.SSLClientCert,
-		SSLClientKey:        nestedModel.SSLClientKey,
-		SSLSNIHostname:      nestedModel.SSLSNIHostname,
-		UseSSL:              nestedModel.UseSSL,
-		Weight:              nestedModel.Weight,
+		ID:      types.StringValue(id),
+		Service: types.StringValue(serviceID),
+		Version: types.Int64Value(int64(version)),
 	}
-
+	ApplyNestedToModel(FlattenToNestedModel(b), &model)
 	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags
 }

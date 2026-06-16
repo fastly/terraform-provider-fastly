@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	gofastly "github.com/fastly/go-fastly/v15/fastly"
@@ -46,6 +47,38 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}
+	}
+}
+
+func TestResourceFastlyServiceDictionaryItemsReadSkipsRefreshWhenManageItemsFalse(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceServiceDictionaryItems().Schema, map[string]any{
+		"service_id":    "service-id",
+		"dictionary_id": "dictionary-id",
+		"manage_items":  false,
+	})
+	d.SetId("service-id/dictionary-id")
+
+	diags := resourceServiceDictionaryItemsRead(context.Background(), d, nil)
+	if diags.HasError() {
+		t.Fatalf("expected dictionary items read to be skipped, got diagnostics: %v", diags)
+	}
+}
+
+func TestResourceFastlyServiceDictionaryItemsImportEnablesManageItems(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceServiceDictionaryItems().Schema, map[string]any{})
+	d.SetId("service-id/dictionary-id")
+
+	result, err := resourceServiceDictionaryItemsImport(context.Background(), d, nil)
+	if err != nil {
+		t.Fatalf("unexpected import error: %s", err)
+	}
+
+	if len(result) != 1 {
+		t.Fatalf("expected one imported resource, got %d", len(result))
+	}
+
+	if got := result[0].Get("manage_items").(bool); !got {
+		t.Fatalf("expected manage_items to be true after import")
 	}
 }
 

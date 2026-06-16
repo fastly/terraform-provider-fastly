@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
@@ -314,7 +315,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 				ServiceVersion: version,
 				Name:           name,
 			})
-			if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+			if errors.IsNotFound(err) {
 				continue
 			}
 			if err != nil {

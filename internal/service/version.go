@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
+
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 )
-
-func isNotFound(err error) bool {
-	httpErr, ok := err.(*fastly.HTTPError)
-	return ok && httpErr.StatusCode == 404
-}
 
 // SelectReadVersion selects the service version that should be used for
 // read-only discovery operations such as terraform query and compatibility
@@ -119,7 +116,7 @@ func DeleteWithPolicy(ctx context.Context, client *fastly.Client, serviceID stri
 		service, err := client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 			ServiceID: serviceID,
 		})
-		if isNotFound(err) {
+		if errors.IsNotFound(err) {
 			return nil
 		}
 		if err != nil {
@@ -131,7 +128,7 @@ func DeleteWithPolicy(ctx context.Context, client *fastly.Client, serviceID stri
 				ServiceID:      serviceID,
 				ServiceVersion: *service.ActiveVersion.Number,
 			})
-			if err != nil && !isNotFound(err) {
+			if err != nil && !errors.IsNotFound(err) {
 				return err
 			}
 		}
@@ -144,7 +141,7 @@ func DeleteWithPolicy(ctx context.Context, client *fastly.Client, serviceID stri
 	err := client.DeleteService(ctx, &fastly.DeleteServiceInput{
 		ServiceID: serviceID,
 	})
-	if isNotFound(err) {
+	if errors.IsNotFound(err) {
 		return nil
 	}
 	return err

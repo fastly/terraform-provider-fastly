@@ -20,7 +20,6 @@ action "fastly_service_compute_package_upload" "package" {
 }
 ```
 
-
 ## Usage Notes
 
 Run this action against a single writable service version that is managed by the

@@ -17,7 +17,6 @@ action "fastly_service_version_clone" "draft" {
 }
 ```
 
-
 ## Usage Notes
 
 Use this action once per intended service-version workflow. After cloning, point all related first-class versioned resources at the same cloned version.

@@ -17,7 +17,6 @@ action "fastly_service_version_stage" "staging" {
 }
 ```
 
-
 ## Usage Notes
 
 Run this action once after all intended versioned resource changes have been applied to the same service version.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/fastly/terraform-provider-fastly/internal/apierrors"
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
-	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/importutil"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 	"github.com/fastly/terraform-provider-fastly/internal/validation"
@@ -127,7 +127,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		Name:           state.Name.ValueString(),
 	})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			tflog.Warn(ctx, "Service domain not found, removing from state", map[string]any{
 				"service_id": state.Service.ValueString(),
 				"name":       state.Name.ValueString(),
@@ -210,7 +210,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	})
 
 	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, state.Service.ValueString(), "fastly_service_domain", service.TypeVCL, service.TypeCompute); err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
@@ -229,7 +229,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		Name:           state.Name.ValueString(),
 	})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Error deleting explicit service domain", err.Error())

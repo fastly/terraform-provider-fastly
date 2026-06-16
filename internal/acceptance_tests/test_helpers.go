@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/fastly/go-fastly/v15/fastly"
-	"github.com/fastly/terraform-provider-fastly/internal/errors"
+	"github.com/fastly/terraform-provider-fastly/internal/apierrors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -56,7 +56,7 @@ func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
 				ServiceID: rs.Primary.ID,
 			})
 
-			if errors.IsNotFound(err) {
+			if apierrors.IsNotFound(err) {
 				continue
 			}
 

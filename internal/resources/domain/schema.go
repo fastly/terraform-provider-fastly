@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/fastly/terraform-provider-fastly/internal/errors"
+	"github.com/fastly/terraform-provider-fastly/internal/apierrors"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -124,7 +124,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 				ServiceVersion: version,
 				Name:           name,
 			})
-			if errors.IsNotFound(err) {
+			if apierrors.IsNotFound(err) {
 				continue
 			}
 			if err != nil {

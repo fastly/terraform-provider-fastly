@@ -13,6 +13,7 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -123,41 +124,13 @@ func setResourceAttrs(ctx context.Context, result *list.ListResult, b *fastly.Ba
 	var diags diag.Diagnostics
 
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(b.Name)
-	model := FlattenToNestedModel(b)
 
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("id"), id)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("service_id"), serviceID)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("version"), int64(version))...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("name"), model.Name)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("address"), model.Address)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("port"), model.Port)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("comment"), model.Comment)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("auto_loadbalance"), model.AutoLoadbalance)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("between_bytes_timeout"), model.BetweenBytesTimeout)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("connect_timeout"), model.ConnectTimeout)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("error_threshold"), model.ErrorThreshold)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("first_byte_timeout"), model.FirstByteTimeout)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("healthcheck"), model.HealthCheck)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("keepalive_time"), model.KeepaliveTime)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("max_conn"), model.MaxConn)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("max_lifetime"), model.MaxLifetime)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("max_tls_version"), model.MaxTLSVersion)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("max_use"), model.MaxUse)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("min_tls_version"), model.MinTLSVersion)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("override_host"), model.OverrideHost)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("prefer_ipv6"), model.PreferIPv6)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("request_condition"), model.RequestCondition)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("share_key"), model.ShareKey)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("shield"), model.Shield)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_ca_cert"), model.SSLCACert)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_cert_hostname"), model.SSLCertHostname)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_check_cert"), model.SSLCheckCert)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_ciphers"), model.SSLCiphers)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_client_cert"), model.SSLClientCert)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_client_key"), model.SSLClientKey)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("ssl_sni_hostname"), model.SSLSNIHostname)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("use_ssl"), model.UseSSL)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("weight"), model.Weight)...)
-
+	model := Model{
+		ID:      types.StringValue(id),
+		Service: types.StringValue(serviceID),
+		Version: types.Int64Value(int64(version)),
+	}
+	ApplyNestedToModel(FlattenToNestedModel(b), &model)
+	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags
 }

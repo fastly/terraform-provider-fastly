@@ -124,16 +124,20 @@ func setResourceAttrs(ctx context.Context, result *list.ListResult, d *fastly.Do
 	var diags diag.Diagnostics
 
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(d.Name)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("id"), id)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("service_id"), serviceID)...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("version"), int64(version))...)
-	diags.Append(result.Resource.SetAttribute(ctx, path.Root("name"), fastly.ToValue(d.Name))...)
 
-	if d.Comment != nil && *d.Comment != "" {
-		diags.Append(result.Resource.SetAttribute(ctx, path.Root("comment"), *d.Comment)...)
-	} else {
-		diags.Append(result.Resource.SetAttribute(ctx, path.Root("comment"), types.StringNull())...)
+	model := Model{
+		ID:      types.StringValue(id),
+		Service: types.StringValue(serviceID),
+		Version: types.Int64Value(int64(version)),
+		Name:    types.StringValue(fastly.ToValue(d.Name)),
 	}
 
+	if d.Comment != nil && *d.Comment != "" {
+		model.Comment = types.StringValue(*d.Comment)
+	} else {
+		model.Comment = types.StringNull()
+	}
+
+	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags
 }

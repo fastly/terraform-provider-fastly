@@ -9,6 +9,7 @@
 
 ### BUG FIXES:
 
+- fix(acl-entries): Skip ACL entry refresh when `manage_entries` is false ([#1291](https://github.com/fastly/terraform-provider-fastly/pull/1291))
 - fix(dictionary-items): Skip dictionary item refresh when `manage_items` is false ([#1296](https://github.com/fastly/terraform-provider-fastly/pull/1296))
 
 ### DEPENDENCIES:

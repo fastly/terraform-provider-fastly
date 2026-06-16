@@ -107,10 +107,25 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
-	return resourceServiceACLEntriesRead(ctx, d, meta)
+
+	if entries.Len() == 0 && !d.Get("manage_entries").(bool) {
+		log.Print("[DEBUG] Skipping ACL entries refresh after create: manage_entries is false and no entries were configured")
+		return nil
+	}
+
+	return refreshServiceACLEntries(ctx, d, meta)
 }
 
 func resourceServiceACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if !d.Get("manage_entries").(bool) {
+		log.Print("[DEBUG] Skipping ACL entries refresh: manage_entries is false")
+		return nil
+	}
+
+	return refreshServiceACLEntries(ctx, d, meta)
+}
+
+func refreshServiceACLEntries(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing ACL Entries Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -283,6 +298,11 @@ func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, 
 	}
 
 	err = d.Set("acl_id", aclID)
+	if err != nil {
+		return nil, fmt.Errorf("error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+	}
+
+	err = d.Set("manage_entries", true)
 	if err != nil {
 		return nil, fmt.Errorf("error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}

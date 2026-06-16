@@ -13,6 +13,10 @@ import (
 
 // TestAccProvider_ConfigureWithAPIToken tests provider configuration with explicit api_token
 func TestAccProvider_ConfigureWithAPIToken(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
+	}
+
 	serviceName := fmt.Sprintf("tf-test-provider-token-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("tf-test-%s.example.com", acctest.RandString(10))
 
@@ -34,6 +38,10 @@ func TestAccProvider_ConfigureWithAPIToken(t *testing.T) {
 
 // TestAccProvider_ConfigureWithEnvVar tests provider configuration via FASTLY_API_TOKEN env var
 func TestAccProvider_ConfigureWithEnvVar(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
+	}
+
 	serviceName := fmt.Sprintf("tf-test-provider-env-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("tf-test-%s.example.com", acctest.RandString(10))
 
@@ -60,6 +68,10 @@ func TestAccProvider_ConfigureWithEnvVar(t *testing.T) {
 
 // TestAccProvider_MissingToken tests provider error handling when no token is provided
 func TestAccProvider_MissingToken(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
+	}
+
 	serviceName := fmt.Sprintf("tf-test-provider-missing-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("tf-test-%s.example.com", acctest.RandString(10))
 
@@ -87,6 +99,10 @@ func TestAccProvider_MissingToken(t *testing.T) {
 
 // TestAccProvider_InvalidToken tests provider error handling with an invalid token
 func TestAccProvider_InvalidToken(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
+	}
+
 	serviceName := fmt.Sprintf("tf-test-provider-invalid-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("tf-test-%s.example.com", acctest.RandString(10))
 
@@ -103,23 +119,41 @@ func TestAccProvider_InvalidToken(t *testing.T) {
 
 // TestAccProvider_ExplicitTokenOverridesEnvVar tests that explicit api_token takes precedence over env var
 func TestAccProvider_ExplicitTokenOverridesEnvVar(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
+	}
+
 	serviceName := fmt.Sprintf("tf-test-provider-override-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("tf-test-%s.example.com", acctest.RandString(10))
 
 	// Verify env var is set
-	if os.Getenv("FASTLY_API_TOKEN") == "" {
+	validToken := os.Getenv("FASTLY_API_TOKEN")
+	if validToken == "" {
 		t.Fatal("FASTLY_API_TOKEN must be set for this test")
 	}
 
+	// Save original env var to restore after test
+	defer func() {
+		os.Setenv("FASTLY_API_TOKEN", validToken)
+	}()
+
+	// Set env var to invalid token to prove explicit token takes precedence
+	os.Setenv("FASTLY_API_TOKEN", "invalid-env-token-should-be-ignored")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		// Note: We cannot use CheckServiceDestroy here because it reads from the env var
+		// which we've set to an invalid token. The successful creation and cleanup is
+		// sufficient proof that the explicit token was used.
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfigWithExplicitToken(serviceName, domainName),
+				// This config uses the valid token in the provider block
+				// If the env var (invalid token) was used, the test would fail with auth errors
+				Config: testAccProviderConfigWithExplicitTokenOverride(serviceName, domainName, validToken),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "name", serviceName),
-					CheckServiceExists("fastly_service_cdn_auto.test"),
-					// Verify we can successfully create resources, proving the explicit token worked
+					// Verify the service was created successfully in Terraform state
+					// This proves the explicit token was used (invalid env token would cause auth failure)
 					func(s *terraform.State) error {
 						rs, ok := s.RootModule().Resources["fastly_service_cdn_auto.test"]
 						if !ok {
@@ -144,15 +178,8 @@ provider "fastly" {
   api_token = "%s"
 }
 
-resource "fastly_service_cdn_auto" "test" {
-  name          = "%s"
-  force_destroy = true
-
-  domain {
-    name = "%s"
-  }
-}
-`, apiToken, serviceName, domainName)
+%s
+`, apiToken, ConfigCDNAutoBasic(serviceName, domainName))
 }
 
 // testAccProviderConfigWithEnvVar returns config without explicit api_token (relies on env var)
@@ -162,15 +189,8 @@ provider "fastly" {
   # api_token will be read from FASTLY_API_TOKEN env var
 }
 
-resource "fastly_service_cdn_auto" "test" {
-  name          = "%s"
-  force_destroy = true
-
-  domain {
-    name = "%s"
-  }
-}
-`, serviceName, domainName)
+%s
+`, ConfigCDNAutoBasic(serviceName, domainName))
 }
 
 // testAccProviderConfigWithNoToken returns config with no token configured
@@ -180,15 +200,8 @@ provider "fastly" {
   # No api_token and env var is unset
 }
 
-resource "fastly_service_cdn_auto" "test" {
-  name          = "%s"
-  force_destroy = true
-
-  domain {
-    name = "%s"
-  }
-}
-`, serviceName, domainName)
+%s
+`, ConfigCDNAutoBasic(serviceName, domainName))
 }
 
 // testAccProviderConfigWithInvalidToken returns config with an invalid token
@@ -198,13 +211,17 @@ provider "fastly" {
   api_token = "invalid-token-12345"
 }
 
-resource "fastly_service_cdn_auto" "test" {
-  name          = "%s"
-  force_destroy = true
-
-  domain {
-    name = "%s"
-  }
+%s
+`, ConfigCDNAutoBasic(serviceName, domainName))
 }
-`, serviceName, domainName)
+
+// testAccProviderConfigWithExplicitTokenOverride returns config with a specific token (used for override test)
+func testAccProviderConfigWithExplicitTokenOverride(serviceName, domainName, token string) string {
+	return fmt.Sprintf(`
+provider "fastly" {
+  api_token = "%s"
+}
+
+%s
+`, token, ConfigCDNAutoBasic(serviceName, domainName))
 }

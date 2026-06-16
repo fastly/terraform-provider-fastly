@@ -50,30 +50,58 @@ All acceptance tests are consolidated in `internal/acceptance_tests/`:
 
 ```
 internal/acceptance_tests/
-├── blocks/                          # Terraform config blocks
-│   ├── backend_single.tf
-│   ├── backend_multiple.tf
-│   ├── domain_single.tf
-│   ├── package.tf
-│   ├── service_cdn_auto.tf
-│   └── service_compute_auto.tf
+├── blocks/                          # Terraform config templates
+│   ├── action_version_activate.tf  # Version activation action
+│   ├── action_version_clone.tf     # Version clone action
+│   ├── backend_multiple.tf         # Multiple backend blocks
+│   ├── backend_single.tf           # Single backend block
+│   ├── domain_single.tf            # Single domain block
+│   ├── package.tf                  # Compute package block
+│   ├── service_cdn.tf              # Explicit CDN service template
+│   ├── service_cdn_auto.tf         # Auto CDN service template
+│   ├── service_cdn_backend.tf      # Backend resource for explicit CDN
+│   ├── service_cdn_domain.tf       # Domain resource for explicit CDN
+│   ├── service_compute.tf          # Explicit Compute service template
+│   └── service_compute_auto.tf     # Auto Compute service template
 ├── fixtures/                        # Test fixture files
 │   └── packages/
 │       └── valid.tar.gz            # WebAssembly package for compute tests
 ├── config_builder.go                # Config template builder
-├── test_helpers.go                  # Shared test helpers
+└── test_helpers.go                  # Shared test helpers
 ```
 
 ### Shared Test Helpers
 
 Common functionality is centralized in `test_helpers.go`:
 
+#### Core Test Infrastructure
 - **`ProtoV6ProviderFactories()`** - Provider factories for tests
 - **`PreCheck(t)`** - Validates FASTLY_API_TOKEN is set
 - **`NewFastlyClient()`** - Creates Fastly API client
+- **`GetPackagePath()`** - Returns path to test package
+
+#### Check Functions
 - **`CheckServiceDestroy(resourceType)`** - Verifies service destruction
 - **`CheckServiceExists(resourceName)`** - Verifies service exists
-- **`GetPackagePath()`** - Returns path to test package
+
+#### Configuration Helpers - Auto Services
+- **`ConfigCDNAutoBasic(serviceName, domainName)`** - CDN auto service with domain
+- **`ConfigCDNAutoWithBackend(serviceName, domainName, backendName)`** - CDN auto with backend
+- **`ConfigCDNAutoMultipleBackends(serviceName, domainName)`** - CDN auto with multiple backends
+- **`ConfigComputeAutoBasic(serviceName, domainName)`** - Compute auto service with domain and package
+- **`ConfigComputeAutoWithBackend(serviceName, domainName, backendName)`** - Compute auto with backend
+- **`ConfigComputeAutoMultipleBackends(serviceName, domainName)`** - Compute auto with multiple backends
+
+#### Configuration Helpers - Explicit Services
+- **`ConfigServiceCDNBasic(serviceName)`** - Basic CDN service (no nested resources)
+- **`ConfigServiceCDNWithComment(serviceName)`** - CDN service with comment
+- **`ConfigServiceCDNWithDomain(serviceName, domainName, version)`** - CDN service with domain resource
+- **`ConfigServiceCDNWithBackend(serviceName, domainName, backendName, version)`** - CDN service with backend
+- **`ConfigServiceCDNWithVersionClone(serviceName, domainName)`** - CDN service with clone action
+- **`ConfigServiceCDNWithVersionActivate(serviceName, domainName, version)`** - CDN service with activate action
+- **`ConfigServiceCDNWithCloneAndActivate(serviceName, domainName, backendName)`** - CDN service with both actions
+- **`ConfigServiceComputeBasic(serviceName)`** - Basic Compute service
+- **`ConfigServiceComputeWithComment(serviceName)`** - Compute service with comment
 
 ## Writing New Tests
 
@@ -129,12 +157,16 @@ func TestAccFastlyServiceYourResource_basic(t *testing.T) {
 
 ## Test Configuration Builder
 
-Test configurations are built dynamically using `BuildConfig()` within the `acceptancetests` package:
+Test configurations are built dynamically using `BuildConfig()` within the `acceptancetests` package.
+
+The builder uses Go's `text/template` for safe placeholder replacement. All template files (`.tf` files in the `blocks/` directory) use the `{{.PLACEHOLDER_NAME}}` format.
+
+Example:
 
 ```go
 func configYourServiceBasic(serviceName, domainName string) string {
     return BuildConfig(
-        ServiceCDNAuto,  // or ServiceComputeAuto
+        ServiceCDNAuto,  // or ServiceComputeAuto, ServiceCDN, ServiceCompute
         map[string]string{
             "SERVICE_NAME": serviceName,
             "DOMAIN_NAME":  domainName,
@@ -159,23 +191,60 @@ Manually delete via Fastly dashboard/CLI or verify `force_destroy = true` is set
 ### Tests timeout
 Check Fastly API status and network connectivity.
 
+## Lifecycle Tests
+
+End-to-end lifecycle tests are located in `scripts/test-lifecycle-cdn/` and `scripts/test-lifecycle-compute/`. These test the full provider workflow including version cloning, activation, and resource management.
+
+### Running Lifecycle Tests
+
+```bash
+# CDN service lifecycle test
+./scripts/test-lifecycle-cdn/run.sh
+
+# Compute service lifecycle test
+./scripts/test-lifecycle-compute/run.sh
+```
+
+Both scripts:
+- Build the provider from source
+- Create test services with domains and backends
+- Test version clone and activate actions
+- Test version-locked resource writes
+- Clean up all resources after completion
+
+See the README in each script directory for details.
+
+## Test Templates Reference
 
 ### Available Service Templates
 
-- **`service_cdn_auto.tf`** - CDN service resource
-- **`service_compute_auto.tf`** - Compute service resource
+- **`service_cdn.tf`** - Explicit CDN service resource (manual version management)
+- **`service_cdn_auto.tf`** - Automatic CDN service resource
+- **`service_compute.tf`** - Explicit Compute service resource (manual version management)
+- **`service_compute_auto.tf`** - Automatic Compute service resource
 
 ### Available Configuration Blocks
 
+Blocks can be combined with service templates via `BuildConfig()`:
+
 - **`domain_single.tf`** - Single domain configuration
 - **`backend_single.tf`** - Single backend configuration
-- **`backend_multiple.tf`** - Multiple backend configuration
+- **`backend_multiple.tf`** - Multiple backend configuration (3 backends)
 - **`package.tf`** - Compute package configuration
+- **`action_version_clone.tf`** - Version clone action
+- **`action_version_activate.tf`** - Version activate action
+- **`service_cdn_domain.tf`** - Domain resource for explicit CDN services
+- **`service_cdn_backend.tf`** - Backend resource for explicit CDN services
+
+### How BuildConfig Works
 
 The `BuildConfig` function:
-1. Loads the service template
-2. Injects the specified blocks into the `RESOURCES` placeholder
-3. Replaces all placeholders (`SERVICE_NAME`, `DOMAIN_NAME`, etc.) with actual values
+1. Loads the service template from `internal/acceptance_tests/blocks/{serviceType}.tf`
+2. Parses and renders nested block templates using `text/template`
+3. Injects the rendered blocks into the `{{.RESOURCES}}` placeholder
+4. Replaces all placeholders (e.g., `{{.SERVICE_NAME}}`, `{{.DOMAIN_NAME}}`) with actual values from the replacements map
+
+All templates use the `{{.PLACEHOLDER_NAME}}` format for safe, explicit substitution.
 
 ## References
 

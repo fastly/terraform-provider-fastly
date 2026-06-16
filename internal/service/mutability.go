@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
+
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
@@ -111,7 +113,7 @@ func (c *VersionChecker) EnsureMutableForDelete(
 
 	mutability, err := c.GetMutability(ctx, serviceID, version)
 	if err != nil {
-		if isNotFound(err) {
+		if errors.IsNotFound(err) {
 			return true, diags
 		}
 

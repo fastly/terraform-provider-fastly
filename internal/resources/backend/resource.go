@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/importutil"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 	"github.com/fastly/terraform-provider-fastly/internal/validation"
@@ -155,7 +156,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		Name:           state.Name.ValueString(),
 	})
 	if err != nil {
-		if fastlyErr, ok := err.(*fastly.HTTPError); ok && fastlyErr.StatusCode == 404 {
+		if errors.IsNotFound(err) {
 			tflog.Warn(ctx, "Service backend not found, removing from state", map[string]any{
 				"service_id": state.Service.ValueString(),
 				"name":       state.Name.ValueString(),
@@ -250,7 +251,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	})
 
 	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, state.Service.ValueString(), "fastly_service_backend", service.TypeVCL, service.TypeCompute); err != nil {
-		if fastlyclient.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
@@ -269,7 +270,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		Name:           state.Name.ValueString(),
 	})
 	if err != nil {
-		if fastlyclient.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Error deleting explicit service backend", err.Error())

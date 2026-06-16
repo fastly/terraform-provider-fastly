@@ -3,10 +3,13 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+
 - feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
 - feat(ngwaf_thresholds): added support for 'block_immediately' action ([#1292](https://github.com/fastly/terraform-provider-fastly/pull/1292))
 
 ### BUG FIXES:
+
+- fix(dictionary-items): Skip dictionary item refresh when `manage_items` is false ([#1296](https://github.com/fastly/terraform-provider-fastly/pull/1296))
 
 ### DEPENDENCIES:
 
@@ -15,9 +18,11 @@
 ## 9.2.1 (June 05, 2026)
 
 ### BUG FIXES:
+
 - fix(product_enablement/ngwaf): Restrict `traffic_ramp` field in `ngwaf` block to VCL services only ([#1282](https://github.com/fastly/terraform-provider-fastly/pull/1282))
 
 ### DEPENDENCIES:
+
 - build(deps): `golang.org/x/net` from 0.54.0 to 0.55.0 ([#1276](https://github.com/fastly/terraform-provider-fastly/pull/1276))
 - build(deps): `github.com/fastly/go-fastly/v15` from 15.0.1 to 15.0.2 ([#1280](https://github.com/fastly/terraform-provider-fastly/pull/1280))
 

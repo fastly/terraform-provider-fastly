@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fastly/terraform-provider-fastly/internal/apierrors"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 )
@@ -116,7 +116,7 @@ func DeleteWithPolicy(ctx context.Context, client *fastly.Client, serviceID stri
 		service, err := client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 			ServiceID: serviceID,
 		})
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			return nil
 		}
 		if err != nil {
@@ -128,7 +128,7 @@ func DeleteWithPolicy(ctx context.Context, client *fastly.Client, serviceID stri
 				ServiceID:      serviceID,
 				ServiceVersion: *service.ActiveVersion.Number,
 			})
-			if err != nil && !apierrors.IsNotFound(err) {
+			if err != nil && !errors.IsNotFound(err) {
 				return err
 			}
 		}
@@ -141,7 +141,7 @@ func DeleteWithPolicy(ctx context.Context, client *fastly.Client, serviceID stri
 	err := client.DeleteService(ctx, &fastly.DeleteServiceInput{
 		ServiceID: serviceID,
 	})
-	if apierrors.IsNotFound(err) {
+	if errors.IsNotFound(err) {
 		return nil
 	}
 	return err

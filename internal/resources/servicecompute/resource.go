@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fastly/terraform-provider-fastly/internal/apierrors"
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	"github.com/fastly/go-fastly/v15/fastly"
@@ -137,7 +137,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

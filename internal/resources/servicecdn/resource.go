@@ -19,10 +19,11 @@ import (
 )
 
 type Resource struct {
-	client *fastly.Client
+	providerData *fastlyclient.Data
 }
 
 var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithConfigure = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
 var _ resource.ResourceWithIdentity = &Resource{}
 
@@ -83,7 +84,7 @@ func (r *Resource) Configure(_ context.Context, req resource.ConfigureRequest, r
 		return
 	}
 
-	r.client = data.Client
+	r.providerData = data
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -98,7 +99,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		"comment": plan.Comment.ValueString(),
 	})
 
-	created, err := r.client.CreateService(ctx, &fastly.CreateServiceInput{
+	created, err := r.providerData.Client.CreateService(ctx, &fastly.CreateServiceInput{
 		Name:    fastly.ToPointer(plan.Name.ValueString()),
 		Comment: fastly.ToPointer(plan.Comment.ValueString()),
 		Type:    fastly.ToPointer(service.TypeVCL),
@@ -132,7 +133,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	details, err := r.client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
+	details, err := r.providerData.Client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -185,7 +186,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	_, err := r.client.UpdateService(ctx, &fastly.UpdateServiceInput{
+	_, err := r.providerData.Client.UpdateService(ctx, &fastly.UpdateServiceInput{
 		ServiceID: state.ID.ValueString(),
 		Name:      fastly.ToPointer(plan.Name.ValueString()),
 		Comment:   fastly.ToPointer(plan.Comment.ValueString()),
@@ -206,7 +207,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		return
 	}
 
-	if err := service.DeleteWithPolicy(ctx, r.client, state.ID.ValueString(), service.BoolValue(state.ForceDestroy), service.BoolValue(state.Reuse)); err != nil {
+	if err := service.DeleteWithPolicy(ctx, r.providerData.Client, state.ID.ValueString(), service.BoolValue(state.ForceDestroy), service.BoolValue(state.Reuse)); err != nil {
 		resp.Diagnostics.AddError("Error deleting Fastly CDN service", err.Error())
 	}
 }

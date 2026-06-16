@@ -8,7 +8,18 @@ BIN_DIR := $(CURDIR)/bin
 BINARY := $(BIN_DIR)/terraform-provider-$(PKG_NAME)_$(VERSION)
 OVERRIDES_FILE := $(BIN_DIR)/developer_overrides.tfrc
 
-.PHONY: fmt build dev-overrides clean test-unit test-acc generate-docs validate-docs docs
+.PHONY: fmt build dev-overrides clean test-unit test-acc generate-docs validate-docs docs test-lifecycle-cdn test-lifecycle-compute test-lifecycle help
+
+help:
+	@echo "Available targets:"
+	@echo "  make build                  - Format code and build provider binary"
+	@echo "  make fmt                    - Format Go code"
+	@echo "  make clean                  - Remove build artifacts"
+	@echo "  make test-unit              - Run unit tests"
+	@echo "  make test-acc               - Run acceptance tests (requires FASTLY_API_TOKEN)"
+	@echo "  make test-lifecycle-cdn     - Run CDN lifecycle tests (requires FASTLY_API_TOKEN)"
+	@echo "  make test-lifecycle-compute - Run Compute lifecycle tests (requires FASTLY_API_TOKEN)"
+	@echo "  make test-lifecycle         - Run all lifecycle tests (requires FASTLY_API_TOKEN)"
 
 fmt:
 	@echo "==> Formatting Go code..."
@@ -48,3 +59,16 @@ validate-docs:
 	@$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs validate --provider-name $(PKG_NAME)
 
 docs: generate-docs validate-docs
+
+test-lifecycle-cdn:
+	@echo "==> Running CDN lifecycle tests..."
+	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
+	@./scripts/test-lifecycle-cdn/run.sh
+
+test-lifecycle-compute:
+	@echo "==> Running Compute lifecycle tests..."
+	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
+	@./scripts/test-lifecycle-compute/run.sh
+
+test-lifecycle: test-lifecycle-cdn test-lifecycle-compute
+	@echo "==> All lifecycle tests completed"

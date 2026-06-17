@@ -125,12 +125,42 @@ func setResourceAttrs(ctx context.Context, result *list.ListResult, b *fastly.Ba
 
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(b.Name)
 
+	nested := FlattenToNestedModel(b)
 	model := Model{
-		ID:      types.StringValue(id),
-		Service: types.StringValue(serviceID),
-		Version: types.Int64Value(int64(version)),
+		ID:                  types.StringValue(id),
+		Service:             types.StringValue(serviceID),
+		Version:             types.Int64Value(int64(version)),
+		Name:                nested.Name,
+		Address:             nested.Address,
+		Port:                nested.Port,
+		Comment:             nested.Comment,
+		AutoLoadbalance:     nested.AutoLoadbalance,
+		BetweenBytesTimeout: nested.BetweenBytesTimeout,
+		ConnectTimeout:      nested.ConnectTimeout,
+		ErrorThreshold:      nested.ErrorThreshold,
+		FirstByteTimeout:    nested.FirstByteTimeout,
+		HealthCheck:         nested.HealthCheck,
+		KeepaliveTime:       nested.KeepaliveTime,
+		MaxConn:             nested.MaxConn,
+		MaxLifetime:         nested.MaxLifetime,
+		MaxTLSVersion:       nested.MaxTLSVersion,
+		MaxUse:              nested.MaxUse,
+		MinTLSVersion:       nested.MinTLSVersion,
+		OverrideHost:        nested.OverrideHost,
+		PreferIPv6:          nested.PreferIPv6,
+		RequestCondition:    nested.RequestCondition,
+		ShareKey:            nested.ShareKey,
+		Shield:              nested.Shield,
+		SSLCACert:           nested.SSLCACert,
+		SSLCertHostname:     nested.SSLCertHostname,
+		SSLCheckCert:        nested.SSLCheckCert,
+		SSLCiphers:          nested.SSLCiphers,
+		SSLClientCert:       nested.SSLClientCert,
+		SSLClientKey:        nested.SSLClientKey,
+		SSLSNIHostname:      nested.SSLSNIHostname,
+		UseSSL:              nested.UseSSL,
+		Weight:              nested.Weight,
 	}
-	ApplyNestedToModel(FlattenToNestedModel(b), &model)
 	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags
 }

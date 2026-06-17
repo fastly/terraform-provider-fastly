@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -21,6 +22,43 @@ func NewData(client *fastly.Client) *Data {
 		VersionChecker:     service.NewVersionChecker(client),
 		ServiceTypeChecker: service.NewServiceTypeChecker(client),
 	}
+}
+
+type userAgentTransport struct {
+	base   http.RoundTripper
+	suffix string
+}
+
+func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	ua := req.Header.Get("User-Agent")
+	if ua == "" {
+		ua = fastly.UserAgent
+	}
+	req.Header.Set("User-Agent", ua+" "+t.suffix)
+	return t.base.RoundTrip(req)
+}
+
+func (d *Data) AutoClient() *fastly.Client {
+	client := d.Client
+	if client.HTTPClient == nil {
+		client.HTTPClient = &http.Client{Transport: http.DefaultTransport}
+	}
+
+	baseTransport := client.HTTPClient.Transport
+	if baseTransport == nil {
+		baseTransport = http.DefaultTransport
+	}
+
+	wrapped := *client
+	wrapped.HTTPClient = &http.Client{
+		Transport: &userAgentTransport{
+			base:   baseTransport,
+			suffix: "mode=auto",
+		},
+		Timeout: client.HTTPClient.Timeout,
+	}
+
+	return &wrapped
 }
 
 func FromProviderData(raw any) (*Data, diag.Diagnostics) {

@@ -1,15 +1,17 @@
 package domain
 
-import fastly "github.com/fastly/go-fastly/v15/fastly"
+import (
+	fastly "github.com/fastly/go-fastly/v15/fastly"
+)
 
 func expandCreate(m Model) *fastly.CreateDomainInput {
 	opts := &fastly.CreateDomainInput{
 		ServiceID:      m.Service.ValueString(),
 		ServiceVersion: int(m.Version.ValueInt64()),
-		Name:           fastly.ToPointer(m.Name.ValueString()),
+		Name:           new(m.Name.ValueString()),
 	}
 	if !m.Comment.IsNull() && m.Comment.ValueString() != "" {
-		opts.Comment = fastly.ToPointer(m.Comment.ValueString())
+		opts.Comment = new(m.Comment.ValueString())
 	}
 	return opts
 }
@@ -21,7 +23,7 @@ func expandUpdate(m Model) *fastly.UpdateDomainInput {
 		Name:           m.Name.ValueString(),
 	}
 	if !m.Comment.IsNull() && m.Comment.ValueString() != "" {
-		opts.Comment = fastly.ToPointer(m.Comment.ValueString())
+		opts.Comment = new(m.Comment.ValueString())
 	}
 	return opts
 }

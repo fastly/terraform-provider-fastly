@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/fastly/go-fastly/v15/fastly"
@@ -25,6 +26,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecompute"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecomputeauto"
+	"github.com/fastly/terraform-provider-fastly/internal/version"
 )
 
 type fastlyProvider struct{}
@@ -78,6 +80,9 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		resp.Diagnostics.AddError("Unable to create Fastly client", err.Error())
 		return
 	}
+
+	defaultUserAgent := fastly.UserAgent
+	fastly.UserAgent = fmt.Sprintf("terraform-provider-fastly/%s %s", version.Version, defaultUserAgent)
 
 	data := fastlyclient.NewData(client)
 

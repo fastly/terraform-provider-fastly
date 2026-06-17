@@ -15,6 +15,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const (
+	DefaultPort                = 80
+	DefaultAutoLoadbalance     = false
+	DefaultBetweenBytesTimeout = 10000
+	DefaultConnectTimeout      = 1000
+	DefaultErrorThreshold      = 0
+	DefaultFirstByteTimeout    = 15000
+	DefaultHealthCheck         = ""
+	DefaultMaxConn             = 200
+	DefaultMaxLifetime         = 0
+	DefaultMaxTLSVersion       = ""
+	DefaultMaxUse              = 0
+	DefaultMinTLSVersion       = ""
+	DefaultOverrideHost        = ""
+	DefaultPreferIPv6          = false
+	DefaultRequestCondition    = ""
+	DefaultShareKey            = ""
+	DefaultShield              = ""
+	DefaultSSLCACert           = ""
+	DefaultSSLCertHostname     = ""
+	DefaultSSLCheckCert        = true
+	DefaultSSLCiphers          = ""
+	DefaultSSLClientCert       = ""
+	DefaultSSLClientKey        = ""
+	DefaultSSLSNIHostname      = ""
+	DefaultUseSSL              = false
+	DefaultWeight              = 100
+)
+
 type NestedModel struct {
 	Name                types.String `tfsdk:"name"`
 	Address             types.String `tfsdk:"address"`
@@ -61,7 +90,7 @@ func CommonAttributes() map[string]schema.Attribute {
 		"port": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(80),
+			Default:     int64default.StaticInt64(DefaultPort),
 			Description: "The port number on which the backend responds. Default `80`.",
 		},
 		"comment": schema.StringAttribute{
@@ -71,37 +100,37 @@ func CommonAttributes() map[string]schema.Attribute {
 		"auto_loadbalance": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
+			Default:     booldefault.StaticBool(DefaultAutoLoadbalance),
 			Description: "Whether this backend should be included in automatic load balancing. CDN services only. Default `false`.",
 		},
 		"between_bytes_timeout": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(10000),
+			Default:     int64default.StaticInt64(DefaultBetweenBytesTimeout),
 			Description: "How long to wait between bytes in milliseconds. Default `10000`.",
 		},
 		"connect_timeout": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(1000),
+			Default:     int64default.StaticInt64(DefaultConnectTimeout),
 			Description: "How long to wait for a timeout in milliseconds. Default `1000`.",
 		},
 		"error_threshold": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(0),
+			Default:     int64default.StaticInt64(DefaultErrorThreshold),
 			Description: "Number of errors to allow before the backend is marked as down. Default `0`.",
 		},
 		"first_byte_timeout": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(15000),
+			Default:     int64default.StaticInt64(DefaultFirstByteTimeout),
 			Description: "How long to wait for the first byte in milliseconds. Default `15000`.",
 		},
 		"healthcheck": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultHealthCheck),
 			Description: "Name of a defined healthcheck to assign to this backend.",
 		},
 		"keepalive_time": schema.Int64Attribute{
@@ -112,117 +141,117 @@ func CommonAttributes() map[string]schema.Attribute {
 		"max_conn": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(200),
+			Default:     int64default.StaticInt64(DefaultMaxConn),
 			Description: "Maximum number of connections for this backend. Default `200`.",
 		},
 		"max_lifetime": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(0),
+			Default:     int64default.StaticInt64(DefaultMaxLifetime),
 			Description: "Maximum time from creation, in milliseconds, that a pooled HTTP keepalive connection is eligible for reuse. `0` is treated as unlimited.",
 		},
 		"max_tls_version": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultMaxTLSVersion),
 			Description: "Maximum allowed TLS version on SSL connections to this backend.",
 		},
 		"max_use": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(0),
+			Default:     int64default.StaticInt64(DefaultMaxUse),
 			Description: "Maximum number of requests allowed over a single pooled HTTP keepalive connection. `0` is treated as unlimited.",
 		},
 		"min_tls_version": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultMinTLSVersion),
 			Description: "Minimum allowed TLS version on SSL connections to this backend.",
 		},
 		"override_host": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultOverrideHost),
 			Description: "Hostname to override the Host header.",
 		},
 		"prefer_ipv6": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
+			Default:     booldefault.StaticBool(DefaultPreferIPv6),
 			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false` for CDN services.",
 		},
 		"request_condition": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultRequestCondition),
 			Description: "Name of a request condition which, if met, selects this backend.",
 		},
 		"share_key": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultShareKey),
 			Description: "Value that, when shared across backends, enables those backends to share the same health check.",
 		},
 		"shield": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultShield),
 			Description: "POP of the shield designated to reduce inbound load.",
 		},
 		"ssl_ca_cert": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLCACert),
 			Description: "CA certificate attached to origin.",
 		},
 		"ssl_cert_hostname": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLCertHostname),
 			Description: "Hostname used for certificate validation. Does not affect SNI.",
 		},
 		"ssl_check_cert": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(true),
+			Default:     booldefault.StaticBool(DefaultSSLCheckCert),
 			Description: "Whether to strictly check SSL certificates. Default `true`.",
 		},
 		"ssl_ciphers": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLCiphers),
 			Description: "Cipher list for TLS connections to this backend.",
 		},
 		"ssl_client_cert": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
 			Sensitive:   true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLClientCert),
 			Description: "Client certificate used when connecting to the backend.",
 		},
 		"ssl_client_key": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
 			Sensitive:   true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLClientKey),
 			Description: "Client key used when connecting to the backend.",
 		},
 		"ssl_sni_hostname": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLSNIHostname),
 			Description: "Hostname used for SNI in the TLS handshake.",
 		},
 		"use_ssl": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
+			Default:     booldefault.StaticBool(DefaultUseSSL),
 			Description: "Whether to use SSL to reach the backend. Default `false`.",
 		},
 		"weight": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(100),
+			Default:     int64default.StaticInt64(DefaultWeight),
 			Description: "Portion of traffic to send to this backend. Default `100`.",
 		},
 	}

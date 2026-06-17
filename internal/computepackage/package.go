@@ -156,7 +156,7 @@ func Update(ctx context.Context, client *fastly.Client, serviceID string, versio
 	}
 
 	if !pkg.Filename.IsNull() && !pkg.Filename.IsUnknown() && pkg.Filename.ValueString() != "" {
-		input.PackagePath = fastly.ToPointer(pkg.Filename.ValueString())
+		input.PackagePath = new(pkg.Filename.ValueString())
 	}
 
 	_, err := client.UpdatePackage(ctx, input)

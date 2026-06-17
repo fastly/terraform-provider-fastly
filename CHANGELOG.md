@@ -6,7 +6,7 @@
 
 ### BUG FIXES:
 
-## 9.3.0 (June 05, 2026)
+## 9.3.0 (June 17, 2026)
 
 ### ENHANCEMENTS:
 

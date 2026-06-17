@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
+
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -108,7 +110,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 				ServiceVersion: version,
 				Name:           name,
 			})
-			if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+			if errors.IsNotFound(err) {
 				continue
 			}
 			if err != nil {

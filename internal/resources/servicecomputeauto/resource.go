@@ -6,6 +6,7 @@ import (
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/computepackage"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -216,7 +217,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
-		if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+		if errors.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

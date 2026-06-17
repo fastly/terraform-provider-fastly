@@ -34,6 +34,7 @@ func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	if ua == "" {
 		ua = fastly.UserAgent
 	}
+	req = req.Clone(req.Context())
 	req.Header.Set("User-Agent", ua+" "+t.suffix)
 	return t.base.RoundTrip(req)
 }

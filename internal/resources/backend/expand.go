@@ -111,3 +111,38 @@ func setCreateOnlyNonEmptyStrings(input *fastly.CreateBackendInput, m NestedMode
 	input.SSLClientKey = fastly.NullString(service.StringValue(m.SSLClientKey))
 	input.SSLSNIHostname = fastly.NullString(service.StringValue(m.SSLSNIHostname))
 }
+
+func ModelToNested(m Model) NestedModel {
+	return NestedModel{
+		Name:                m.Name,
+		Address:             m.Address,
+		Port:                m.Port,
+		Comment:             m.Comment,
+		AutoLoadbalance:     m.AutoLoadbalance,
+		BetweenBytesTimeout: m.BetweenBytesTimeout,
+		ConnectTimeout:      m.ConnectTimeout,
+		ErrorThreshold:      m.ErrorThreshold,
+		FirstByteTimeout:    m.FirstByteTimeout,
+		HealthCheck:         m.HealthCheck,
+		KeepaliveTime:       m.KeepaliveTime,
+		MaxConn:             m.MaxConn,
+		MaxLifetime:         m.MaxLifetime,
+		MaxTLSVersion:       m.MaxTLSVersion,
+		MaxUse:              m.MaxUse,
+		MinTLSVersion:       m.MinTLSVersion,
+		OverrideHost:        m.OverrideHost,
+		PreferIPv6:          m.PreferIPv6,
+		RequestCondition:    m.RequestCondition,
+		ShareKey:            m.ShareKey,
+		Shield:              m.Shield,
+		SSLCACert:           m.SSLCACert,
+		SSLCertHostname:     m.SSLCertHostname,
+		SSLCheckCert:        m.SSLCheckCert,
+		SSLCiphers:          m.SSLCiphers,
+		SSLClientCert:       m.SSLClientCert,
+		SSLClientKey:        m.SSLClientKey,
+		SSLSNIHostname:      m.SSLSNIHostname,
+		UseSSL:              m.UseSSL,
+		Weight:              m.Weight,
+	}
+}

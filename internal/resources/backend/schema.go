@@ -2,7 +2,6 @@ package backend
 
 import (
 	"context"
-	"sort"
 
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
@@ -248,24 +247,13 @@ func ResourceAttributes() map[string]schema.Attribute {
 	return attrs
 }
 
-func NestedBlockSchema() schema.ListNestedBlock {
-	return schema.ListNestedBlock{
+func NestedBlockSchema() schema.SetNestedBlock {
+	return schema.SetNestedBlock{
 		Description: "Backends attached to this service.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: CommonAttributes(),
 		},
 	}
-}
-
-func Normalize(input []NestedModel) []NestedModel {
-	out := make([]NestedModel, len(input))
-	copy(out, input)
-
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].Name.ValueString() < out[j].Name.ValueString()
-	})
-
-	return out
 }
 
 func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
@@ -282,7 +270,7 @@ func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string
 		result = append(result, FlattenToNestedModel(b))
 	}
 
-	return Normalize(result), nil
+	return result, nil
 }
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
@@ -293,8 +281,6 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 	if err != nil {
 		return err
 	}
-
-	desired = Normalize(desired)
 
 	remoteByName := make(map[string]*fastly.Backend, len(remote))
 	for _, b := range remote {
@@ -349,15 +335,18 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 }
 
 func Equal(a, b []NestedModel) bool {
-	a = Normalize(a)
-	b = Normalize(b)
-
 	if len(a) != len(b) {
 		return false
 	}
 
-	for i := range a {
-		if !ModelsEqual(a[i], b[i]) {
+	byName := make(map[string]NestedModel, len(a))
+	for _, m := range a {
+		byName[m.Name.ValueString()] = m
+	}
+
+	for _, mb := range b {
+		ma, ok := byName[mb.Name.ValueString()]
+		if !ok || !ModelsEqual(ma, mb) {
 			return false
 		}
 	}

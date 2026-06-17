@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"sort"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -48,24 +47,13 @@ func ResourceAttributes() map[string]schema.Attribute {
 	return attrs
 }
 
-func NestedBlockSchema() schema.ListNestedBlock {
-	return schema.ListNestedBlock{
+func NestedBlockSchema() schema.SetNestedBlock {
+	return schema.SetNestedBlock{
 		Description: "Domains attached to this service.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: CommonAttributes(),
 		},
 	}
-}
-
-func Normalize(input []NestedModel) []NestedModel {
-	out := make([]NestedModel, len(input))
-	copy(out, input)
-
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].Name.ValueString() < out[j].Name.ValueString()
-	})
-
-	return out
 }
 
 func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
@@ -90,7 +78,7 @@ func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string
 		result = append(result, model)
 	}
 
-	return Normalize(result), nil
+	return result, nil
 }
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
@@ -101,8 +89,6 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 	if err != nil {
 		return err
 	}
-
-	desired = Normalize(desired)
 
 	remoteByName := make(map[string]*fastly.Domain, len(remote))
 	for _, d := range remote {
@@ -178,26 +164,29 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 }
 
 func Equal(a, b []NestedModel) bool {
-	a = Normalize(a)
-	b = Normalize(b)
-
 	if len(a) != len(b) {
 		return false
 	}
 
-	for i := range a {
-		if a[i].Name.ValueString() != b[i].Name.ValueString() {
+	byName := make(map[string]NestedModel, len(a))
+	for _, m := range a {
+		byName[m.Name.ValueString()] = m
+	}
+
+	for _, mb := range b {
+		ma, ok := byName[mb.Name.ValueString()]
+		if !ok {
 			return false
 		}
 
 		ac := ""
-		if !a[i].Comment.IsNull() && !a[i].Comment.IsUnknown() {
-			ac = a[i].Comment.ValueString()
+		if !ma.Comment.IsNull() && !ma.Comment.IsUnknown() {
+			ac = ma.Comment.ValueString()
 		}
 
 		bc := ""
-		if !b[i].Comment.IsNull() && !b[i].Comment.IsUnknown() {
-			bc = b[i].Comment.ValueString()
+		if !mb.Comment.IsNull() && !mb.Comment.IsUnknown() {
+			bc = mb.Comment.ValueString()
 		}
 
 		if ac != bc {

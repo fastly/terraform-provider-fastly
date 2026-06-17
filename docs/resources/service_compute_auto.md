@@ -20,9 +20,9 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 
 ### Optional
 
-- `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
+- `backend` (Block Set) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Optional service comment.
-- `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
+- `domain` (Block Set) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `package` (Block List) Compute package attached to this service version. At most one package block is supported. (see [below for nested schema](#nestedblock--package))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.

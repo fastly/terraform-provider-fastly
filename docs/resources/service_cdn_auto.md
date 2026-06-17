@@ -20,9 +20,9 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 
 ### Optional
 
-- `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
+- `backend` (Block Set) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Optional service comment.
-- `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
+- `domain` (Block Set) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 

@@ -4,6 +4,12 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+## 9.3.0 (June 05, 2026)
+
+### ENHANCEMENTS:
+
 - feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
 - feat(ngwaf_thresholds): added support for 'block_immediately' action ([#1292](https://github.com/fastly/terraform-provider-fastly/pull/1292))
 
@@ -11,10 +17,6 @@
 
 - fix(acl-entries): Skip ACL entry refresh when `manage_entries` is false ([#1291](https://github.com/fastly/terraform-provider-fastly/pull/1291))
 - fix(dictionary-items): Skip dictionary item refresh when `manage_items` is false ([#1296](https://github.com/fastly/terraform-provider-fastly/pull/1296))
-
-### DEPENDENCIES:
-
-### DOCUMENTATION:
 
 ## 9.2.1 (June 05, 2026)
 

@@ -81,10 +81,8 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	defaultUserAgent := fastly.UserAgent
-	fastly.UserAgent = fmt.Sprintf("terraform-provider-fastly/%s %s", version.Version, defaultUserAgent)
-
-	data := fastlyclient.NewData(client)
+	userAgentPrefix := fmt.Sprintf("terraform-provider-fastly/%s", version.Version)
+	data := fastlyclient.NewData(client, userAgentPrefix)
 
 	resp.ResourceData = data
 	resp.DataSourceData = data

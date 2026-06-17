@@ -16,16 +16,36 @@ type Data struct {
 	ServiceTypeChecker *service.ServiceTypeChecker
 }
 
-func NewData(client *fastly.Client) *Data {
+func NewData(client *fastly.Client, userAgentPrefix string) *Data {
+	baseHTTPClient := client.HTTPClient
+	if baseHTTPClient == nil {
+		baseHTTPClient = http.DefaultClient
+	}
+
+	baseTransport := baseHTTPClient.Transport
+	if baseTransport == nil {
+		baseTransport = http.DefaultTransport
+	}
+
+	wrapped := *client
+	wrapped.HTTPClient = &http.Client{
+		Transport: &userAgentTransport{
+			base:   baseTransport,
+			prefix: userAgentPrefix,
+		},
+		Timeout: baseHTTPClient.Timeout,
+	}
+
 	return &Data{
-		Client:             client,
-		VersionChecker:     service.NewVersionChecker(client),
-		ServiceTypeChecker: service.NewServiceTypeChecker(client),
+		Client:             &wrapped,
+		VersionChecker:     service.NewVersionChecker(&wrapped),
+		ServiceTypeChecker: service.NewServiceTypeChecker(&wrapped),
 	}
 }
 
 type userAgentTransport struct {
 	base   http.RoundTripper
+	prefix string
 	suffix string
 }
 
@@ -34,8 +54,14 @@ func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	if ua == "" {
 		ua = fastly.UserAgent
 	}
+	if t.prefix != "" {
+		ua = t.prefix + " " + ua
+	}
+	if t.suffix != "" {
+		ua = ua + " " + t.suffix
+	}
 	req = req.Clone(req.Context())
-	req.Header.Set("User-Agent", ua+" "+t.suffix)
+	req.Header.Set("User-Agent", ua)
 	return t.base.RoundTrip(req)
 }
 
@@ -52,10 +78,18 @@ func (d *Data) AutoClient() *fastly.Client {
 		baseTransport = http.DefaultTransport
 	}
 
+	existingTransport, ok := baseTransport.(*userAgentTransport)
+	prefix := ""
+	if ok {
+		prefix = existingTransport.prefix
+		baseTransport = existingTransport.base
+	}
+
 	wrapped := *base
 	wrapped.HTTPClient = &http.Client{
 		Transport: &userAgentTransport{
 			base:   baseTransport,
+			prefix: prefix,
 			suffix: "mode=auto",
 		},
 		Timeout: baseHTTPClient.Timeout,

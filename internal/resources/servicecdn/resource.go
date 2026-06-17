@@ -24,6 +24,7 @@ type Resource struct {
 }
 
 var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithConfigure = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
 var _ resource.ResourceWithIdentity = &Resource{}
 
@@ -100,9 +101,9 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	})
 
 	created, err := r.client.CreateService(ctx, &fastly.CreateServiceInput{
-		Name:    fastly.ToPointer(plan.Name.ValueString()),
-		Comment: fastly.ToPointer(plan.Comment.ValueString()),
-		Type:    fastly.ToPointer(service.TypeVCL),
+		Name:    new(plan.Name.ValueString()),
+		Comment: new(plan.Comment.ValueString()),
+		Type:    new(service.TypeVCL),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Fastly CDN service", err.Error())
@@ -188,8 +189,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	_, err := r.client.UpdateService(ctx, &fastly.UpdateServiceInput{
 		ServiceID: state.ID.ValueString(),
-		Name:      fastly.ToPointer(plan.Name.ValueString()),
-		Comment:   fastly.ToPointer(plan.Comment.ValueString()),
+		Name:      new(plan.Name.ValueString()),
+		Comment:   new(plan.Comment.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating Fastly CDN service", err.Error())

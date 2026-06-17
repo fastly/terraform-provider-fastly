@@ -28,7 +28,7 @@ fmt:
 build: fmt
 	@echo "==> Building provider binary..."
 	@mkdir -p $(BIN_DIR)
-	@$(GO_BIN) build -o $(BINARY)
+	@$(GO_BIN) build -ldflags="-X 'github.com/fastly/terraform-provider-fastly/internal/version.Version=$(VERSION)'" -o $(BINARY)
 	@$(MAKE) --no-print-directory dev-overrides
 
 dev-overrides:

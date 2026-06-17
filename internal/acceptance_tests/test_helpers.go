@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -51,11 +52,11 @@ func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
 				continue
 			}
 
-			service, err := client.GetService(context.Background(), &fastly.GetServiceInput{
+			svc, err := client.GetService(context.Background(), &fastly.GetServiceInput{
 				ServiceID: rs.Primary.ID,
 			})
 
-			if fastlyErr, ok := err.(*fastly.HTTPError); ok && fastlyErr.StatusCode == 404 {
+			if errors.IsNotFound(err) {
 				continue
 			}
 
@@ -64,7 +65,7 @@ func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
 			}
 
 			// Service exists - check if it's soft-deleted
-			if service != nil && service.DeletedAt != nil {
+			if svc != nil && svc.DeletedAt != nil {
 				continue
 			}
 

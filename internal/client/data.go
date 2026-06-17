@@ -40,23 +40,25 @@ func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 }
 
 func (d *Data) AutoClient() *fastly.Client {
-	client := d.Client
-	if client.HTTPClient == nil {
-		client.HTTPClient = &http.Client{Transport: http.DefaultTransport}
+	base := d.Client
+
+	baseHTTPClient := base.HTTPClient
+	if baseHTTPClient == nil {
+		baseHTTPClient = http.DefaultClient
 	}
 
-	baseTransport := client.HTTPClient.Transport
+	baseTransport := baseHTTPClient.Transport
 	if baseTransport == nil {
 		baseTransport = http.DefaultTransport
 	}
 
-	wrapped := *client
+	wrapped := *base
 	wrapped.HTTPClient = &http.Client{
 		Transport: &userAgentTransport{
 			base:   baseTransport,
 			suffix: "mode=auto",
 		},
-		Timeout: client.HTTPClient.Timeout,
+		Timeout: baseHTTPClient.Timeout,
 	}
 
 	return &wrapped

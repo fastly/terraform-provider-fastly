@@ -13,6 +13,7 @@ import (
 
 // TestAccProvider_ConfigureWithAPIToken tests provider configuration with explicit api_token
 func TestAccProvider_ConfigureWithAPIToken(t *testing.T) {
+	t.Parallel()
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
 	}
@@ -38,6 +39,7 @@ func TestAccProvider_ConfigureWithAPIToken(t *testing.T) {
 
 // TestAccProvider_ConfigureWithEnvVar tests provider configuration via FASTLY_API_TOKEN env var
 func TestAccProvider_ConfigureWithEnvVar(t *testing.T) {
+	t.Parallel()
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
 	}
@@ -67,6 +69,7 @@ func TestAccProvider_ConfigureWithEnvVar(t *testing.T) {
 }
 
 // TestAccProvider_MissingToken tests provider error handling when no token is provided
+// NOTE: This test modifies the FASTLY_API_TOKEN environment variable, so it cannot run in parallel
 func TestAccProvider_MissingToken(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
@@ -99,6 +102,7 @@ func TestAccProvider_MissingToken(t *testing.T) {
 
 // TestAccProvider_InvalidToken tests provider error handling with an invalid token
 func TestAccProvider_InvalidToken(t *testing.T) {
+	t.Parallel()
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")
 	}
@@ -118,6 +122,7 @@ func TestAccProvider_InvalidToken(t *testing.T) {
 }
 
 // TestAccProvider_ExplicitTokenOverridesEnvVar tests that explicit api_token takes precedence over env var
+// NOTE: This test modifies the FASTLY_API_TOKEN environment variable, so it cannot run in parallel
 func TestAccProvider_ExplicitTokenOverridesEnvVar(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' is set")

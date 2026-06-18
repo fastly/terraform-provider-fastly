@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccFastlyServiceDomain_importBasic(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	additionalDomainName := fmt.Sprintf("www.%s.example.com", acctest.RandString(10))
@@ -54,6 +55,7 @@ func TestAccFastlyServiceDomain_importBasic(t *testing.T) {
 }
 
 func TestAccFastlyServiceDomain_importWithSubdomain(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	// Domain with multiple levels to ensure proper parsing

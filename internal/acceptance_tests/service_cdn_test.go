@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccFastlyServiceCDN_basic(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
@@ -32,6 +33,7 @@ func TestAccFastlyServiceCDN_basic(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDN_withComment(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
@@ -52,6 +54,7 @@ func TestAccFastlyServiceCDN_withComment(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDN_update(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	serviceNameUpdated := fmt.Sprintf("tf-test-updated-%s", acctest.RandString(10))
 
@@ -79,6 +82,7 @@ func TestAccFastlyServiceCDN_update(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDN_withDomain(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
@@ -101,6 +105,7 @@ func TestAccFastlyServiceCDN_withDomain(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDN_withBackend(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
@@ -126,6 +131,7 @@ func TestAccFastlyServiceCDN_withBackend(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDN_import(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{

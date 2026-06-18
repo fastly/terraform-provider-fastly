@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccFastlyServiceCompute_basic(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
@@ -32,6 +33,7 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 }
 
 func TestAccFastlyServiceCompute_withComment(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
@@ -52,6 +54,7 @@ func TestAccFastlyServiceCompute_withComment(t *testing.T) {
 }
 
 func TestAccFastlyServiceCompute_update(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	serviceNameUpdated := fmt.Sprintf("tf-test-updated-%s", acctest.RandString(10))
 
@@ -79,6 +82,7 @@ func TestAccFastlyServiceCompute_update(t *testing.T) {
 }
 
 func TestAccFastlyServiceCompute_import(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{

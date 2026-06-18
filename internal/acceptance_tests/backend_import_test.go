@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccFastlyServiceBackend_importBasic(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
@@ -56,6 +57,7 @@ func TestAccFastlyServiceBackend_importBasic(t *testing.T) {
 }
 
 func TestAccFastlyServiceBackend_importWithNameSlashes(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	// Backend name with slashes to test SplitN behavior

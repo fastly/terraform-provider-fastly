@@ -126,11 +126,11 @@ func setResourceAttrs(ctx context.Context, result *list.ListResult, b *fastly.Ba
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(b.Name)
 
 	model := Model{
-		ID:      types.StringValue(id),
-		Service: types.StringValue(serviceID),
-		Version: types.Int64Value(int64(version)),
+		NestedModel: FlattenToNestedModel(b),
+		ID:          types.StringValue(id),
+		Service:     types.StringValue(serviceID),
+		Version:     types.Int64Value(int64(version)),
 	}
-	ApplyNestedToModel(FlattenToNestedModel(b), &model)
 	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags
 }

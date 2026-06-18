@@ -57,39 +57,6 @@ func FlattenToNestedModel(b *fastly.Backend) NestedModel {
 	return m
 }
 
-func ApplyNestedToModel(src NestedModel, dst *Model) {
-	dst.Name = src.Name
-	dst.Address = src.Address
-	dst.Port = src.Port
-	dst.Comment = src.Comment
-	dst.AutoLoadbalance = src.AutoLoadbalance
-	dst.BetweenBytesTimeout = src.BetweenBytesTimeout
-	dst.ConnectTimeout = src.ConnectTimeout
-	dst.ErrorThreshold = src.ErrorThreshold
-	dst.FirstByteTimeout = src.FirstByteTimeout
-	dst.HealthCheck = src.HealthCheck
-	dst.KeepaliveTime = src.KeepaliveTime
-	dst.MaxConn = src.MaxConn
-	dst.MaxLifetime = src.MaxLifetime
-	dst.MaxTLSVersion = src.MaxTLSVersion
-	dst.MaxUse = src.MaxUse
-	dst.MinTLSVersion = src.MinTLSVersion
-	dst.OverrideHost = src.OverrideHost
-	dst.PreferIPv6 = src.PreferIPv6
-	dst.RequestCondition = src.RequestCondition
-	dst.ShareKey = src.ShareKey
-	dst.Shield = src.Shield
-	dst.SSLCACert = src.SSLCACert
-	dst.SSLCertHostname = src.SSLCertHostname
-	dst.SSLCheckCert = src.SSLCheckCert
-	dst.SSLCiphers = src.SSLCiphers
-	dst.SSLClientCert = src.SSLClientCert
-	dst.SSLClientKey = src.SSLClientKey
-	dst.SSLSNIHostname = src.SSLSNIHostname
-	dst.UseSSL = src.UseSSL
-	dst.Weight = src.Weight
-}
-
 func flatten(ctx context.Context, b *fastly.Backend, m *Model) {
 	if b == nil {
 		tflog.Warn(ctx, "flatten called with nil backend")
@@ -101,8 +68,7 @@ func flatten(ctx context.Context, b *fastly.Backend, m *Model) {
 	m.Service = types.StringValue(fastly.ToValue(b.ServiceID))
 	m.Version = types.Int64Value(int64(fastly.ToValue(b.ServiceVersion)))
 
-	backendModel := FlattenToNestedModel(b)
-	ApplyNestedToModel(backendModel, m)
+	m.NestedModel = FlattenToNestedModel(b)
 
 	tflog.Debug(ctx, "Flattened service backend state", map[string]any{
 		"id":      id,

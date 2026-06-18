@@ -77,6 +77,39 @@ type NestedModel struct {
 	Weight              types.Int64  `tfsdk:"weight"`
 }
 
+func (n NestedModel) ModelsEqual(other NestedModel) bool {
+	return service.StringValue(n.Name) == service.StringValue(other.Name) &&
+		service.StringValue(n.Address) == service.StringValue(other.Address) &&
+		service.Int64Value(n.Port) == service.Int64Value(other.Port) &&
+		service.StringValue(n.Comment) == service.StringValue(other.Comment) &&
+		service.BoolValue(n.AutoLoadbalance) == service.BoolValue(other.AutoLoadbalance) &&
+		service.Int64Value(n.BetweenBytesTimeout) == service.Int64Value(other.BetweenBytesTimeout) &&
+		service.Int64Value(n.ConnectTimeout) == service.Int64Value(other.ConnectTimeout) &&
+		service.Int64Value(n.ErrorThreshold) == service.Int64Value(other.ErrorThreshold) &&
+		service.Int64Value(n.FirstByteTimeout) == service.Int64Value(other.FirstByteTimeout) &&
+		service.StringValue(n.HealthCheck) == service.StringValue(other.HealthCheck) &&
+		service.Int64Value(n.KeepaliveTime) == service.Int64Value(other.KeepaliveTime) &&
+		service.Int64Value(n.MaxConn) == service.Int64Value(other.MaxConn) &&
+		service.Int64Value(n.MaxLifetime) == service.Int64Value(other.MaxLifetime) &&
+		service.StringValue(n.MaxTLSVersion) == service.StringValue(other.MaxTLSVersion) &&
+		service.Int64Value(n.MaxUse) == service.Int64Value(other.MaxUse) &&
+		service.StringValue(n.MinTLSVersion) == service.StringValue(other.MinTLSVersion) &&
+		service.StringValue(n.OverrideHost) == service.StringValue(other.OverrideHost) &&
+		service.BoolValue(n.PreferIPv6) == service.BoolValue(other.PreferIPv6) &&
+		service.StringValue(n.RequestCondition) == service.StringValue(other.RequestCondition) &&
+		service.StringValue(n.ShareKey) == service.StringValue(other.ShareKey) &&
+		service.StringValue(n.Shield) == service.StringValue(other.Shield) &&
+		service.StringValue(n.SSLCACert) == service.StringValue(other.SSLCACert) &&
+		service.StringValue(n.SSLCertHostname) == service.StringValue(other.SSLCertHostname) &&
+		service.BoolValue(n.SSLCheckCert) == service.BoolValue(other.SSLCheckCert) &&
+		service.StringValue(n.SSLCiphers) == service.StringValue(other.SSLCiphers) &&
+		service.StringValue(n.SSLClientCert) == service.StringValue(other.SSLClientCert) &&
+		service.StringValue(n.SSLClientKey) == service.StringValue(other.SSLClientKey) &&
+		service.StringValue(n.SSLSNIHostname) == service.StringValue(other.SSLSNIHostname) &&
+		service.BoolValue(n.UseSSL) == service.BoolValue(other.UseSSL) &&
+		service.Int64Value(n.Weight) == service.Int64Value(other.Weight)
+}
+
 func CommonAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"name": schema.StringAttribute{
@@ -367,7 +400,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 		}
 
 		remoteModel := FlattenToNestedModel(remoteBackend)
-		if !ModelsEqual(desiredBackend, remoteModel) {
+		if !desiredBackend.ModelsEqual(remoteModel) {
 			input := BuildUpdateInput(serviceID, version, desiredBackend, &remoteModel, false)
 			if _, err := client.UpdateBackend(ctx, input); err != nil {
 				return err
@@ -387,43 +420,10 @@ func Equal(a, b []NestedModel) bool {
 	}
 
 	for i := range a {
-		if !ModelsEqual(a[i], b[i]) {
+		if !a[i].ModelsEqual(b[i]) {
 			return false
 		}
 	}
 
 	return true
-}
-
-func ModelsEqual(a, b NestedModel) bool {
-	return service.StringValue(a.Name) == service.StringValue(b.Name) &&
-		service.StringValue(a.Address) == service.StringValue(b.Address) &&
-		service.Int64Value(a.Port) == service.Int64Value(b.Port) &&
-		service.StringValue(a.Comment) == service.StringValue(b.Comment) &&
-		service.BoolValue(a.AutoLoadbalance) == service.BoolValue(b.AutoLoadbalance) &&
-		service.Int64Value(a.BetweenBytesTimeout) == service.Int64Value(b.BetweenBytesTimeout) &&
-		service.Int64Value(a.ConnectTimeout) == service.Int64Value(b.ConnectTimeout) &&
-		service.Int64Value(a.ErrorThreshold) == service.Int64Value(b.ErrorThreshold) &&
-		service.Int64Value(a.FirstByteTimeout) == service.Int64Value(b.FirstByteTimeout) &&
-		service.StringValue(a.HealthCheck) == service.StringValue(b.HealthCheck) &&
-		service.Int64Value(a.KeepaliveTime) == service.Int64Value(b.KeepaliveTime) &&
-		service.Int64Value(a.MaxConn) == service.Int64Value(b.MaxConn) &&
-		service.Int64Value(a.MaxLifetime) == service.Int64Value(b.MaxLifetime) &&
-		service.StringValue(a.MaxTLSVersion) == service.StringValue(b.MaxTLSVersion) &&
-		service.Int64Value(a.MaxUse) == service.Int64Value(b.MaxUse) &&
-		service.StringValue(a.MinTLSVersion) == service.StringValue(b.MinTLSVersion) &&
-		service.StringValue(a.OverrideHost) == service.StringValue(b.OverrideHost) &&
-		service.BoolValue(a.PreferIPv6) == service.BoolValue(b.PreferIPv6) &&
-		service.StringValue(a.RequestCondition) == service.StringValue(b.RequestCondition) &&
-		service.StringValue(a.ShareKey) == service.StringValue(b.ShareKey) &&
-		service.StringValue(a.Shield) == service.StringValue(b.Shield) &&
-		service.StringValue(a.SSLCACert) == service.StringValue(b.SSLCACert) &&
-		service.StringValue(a.SSLCertHostname) == service.StringValue(b.SSLCertHostname) &&
-		service.BoolValue(a.SSLCheckCert) == service.BoolValue(b.SSLCheckCert) &&
-		service.StringValue(a.SSLCiphers) == service.StringValue(b.SSLCiphers) &&
-		service.StringValue(a.SSLClientCert) == service.StringValue(b.SSLClientCert) &&
-		service.StringValue(a.SSLClientKey) == service.StringValue(b.SSLClientKey) &&
-		service.StringValue(a.SSLSNIHostname) == service.StringValue(b.SSLSNIHostname) &&
-		service.BoolValue(a.UseSSL) == service.BoolValue(b.UseSSL) &&
-		service.Int64Value(a.Weight) == service.Int64Value(b.Weight)
 }

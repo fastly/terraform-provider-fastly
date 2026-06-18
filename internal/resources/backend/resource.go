@@ -31,39 +31,10 @@ func NewResource() resource.Resource {
 }
 
 type Model struct {
-	ID                  types.String `tfsdk:"id"`
-	Service             types.String `tfsdk:"service_id"`
-	Version             types.Int64  `tfsdk:"version"`
-	Name                types.String `tfsdk:"name"`
-	Address             types.String `tfsdk:"address"`
-	Port                types.Int64  `tfsdk:"port"`
-	Comment             types.String `tfsdk:"comment"`
-	AutoLoadbalance     types.Bool   `tfsdk:"auto_loadbalance"`
-	BetweenBytesTimeout types.Int64  `tfsdk:"between_bytes_timeout"`
-	ConnectTimeout      types.Int64  `tfsdk:"connect_timeout"`
-	ErrorThreshold      types.Int64  `tfsdk:"error_threshold"`
-	FirstByteTimeout    types.Int64  `tfsdk:"first_byte_timeout"`
-	HealthCheck         types.String `tfsdk:"healthcheck"`
-	KeepaliveTime       types.Int64  `tfsdk:"keepalive_time"`
-	MaxConn             types.Int64  `tfsdk:"max_conn"`
-	MaxLifetime         types.Int64  `tfsdk:"max_lifetime"`
-	MaxTLSVersion       types.String `tfsdk:"max_tls_version"`
-	MaxUse              types.Int64  `tfsdk:"max_use"`
-	MinTLSVersion       types.String `tfsdk:"min_tls_version"`
-	OverrideHost        types.String `tfsdk:"override_host"`
-	PreferIPv6          types.Bool   `tfsdk:"prefer_ipv6"`
-	RequestCondition    types.String `tfsdk:"request_condition"`
-	ShareKey            types.String `tfsdk:"share_key"`
-	Shield              types.String `tfsdk:"shield"`
-	SSLCACert           types.String `tfsdk:"ssl_ca_cert"`
-	SSLCertHostname     types.String `tfsdk:"ssl_cert_hostname"`
-	SSLCheckCert        types.Bool   `tfsdk:"ssl_check_cert"`
-	SSLCiphers          types.String `tfsdk:"ssl_ciphers"`
-	SSLClientCert       types.String `tfsdk:"ssl_client_cert"`
-	SSLClientKey        types.String `tfsdk:"ssl_client_key"`
-	SSLSNIHostname      types.String `tfsdk:"ssl_sni_hostname"`
-	UseSSL              types.Bool   `tfsdk:"use_ssl"`
-	Weight              types.Int64  `tfsdk:"weight"`
+	NestedModel
+	ID      types.String `tfsdk:"id"`
+	Service types.String `tfsdk:"service_id"`
+	Version types.Int64  `tfsdk:"version"`
 }
 
 type BackendIdentityModel struct {
@@ -115,7 +86,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	opts := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), ModelToNested(plan))
+	opts := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel)
 
 	b, err := r.providerData.Client.CreateBackend(ctx, opts)
 	if err != nil {
@@ -203,12 +174,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	forceAll := plan.Version.ValueInt64() != state.Version.ValueInt64()
-	stateBackend := ModelToNested(state)
 	opts := BuildUpdateInput(
 		plan.Service.ValueString(),
 		int(plan.Version.ValueInt64()),
-		ModelToNested(plan),
-		&stateBackend,
+		plan.NestedModel,
+		&state.NestedModel,
 		forceAll,
 	)
 

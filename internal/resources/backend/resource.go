@@ -173,20 +173,16 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	forceAll := plan.Version.ValueInt64() != state.Version.ValueInt64()
 	opts := BuildUpdateInput(
 		plan.Service.ValueString(),
 		int(plan.Version.ValueInt64()),
 		plan.NestedModel,
-		&state.NestedModel,
-		forceAll,
 	)
 
 	tflog.Debug(ctx, "Updating Fastly service backend", map[string]any{
 		"service_id": opts.ServiceID,
 		"version":    opts.ServiceVersion,
 		"name":       opts.Name,
-		"force_all":  forceAll,
 	})
 
 	b, err := r.providerData.Client.UpdateBackend(ctx, opts)

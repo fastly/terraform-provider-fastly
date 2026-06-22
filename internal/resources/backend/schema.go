@@ -401,7 +401,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 
 		remoteModel := FlattenToNestedModel(remoteBackend)
 		if !desiredBackend.ModelsEqual(remoteModel) {
-			input := BuildUpdateInput(serviceID, version, desiredBackend, &remoteModel, false)
+			input := BuildUpdateInput(serviceID, version, desiredBackend)
 			if _, err := client.UpdateBackend(ctx, input); err != nil {
 				return err
 			}

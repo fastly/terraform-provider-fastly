@@ -10,9 +10,7 @@ func expandCreate(m Model) *fastly.CreateDomainInput {
 		ServiceVersion: int(m.Version.ValueInt64()),
 		Name:           new(m.Name.ValueString()),
 	}
-	if !m.Comment.IsNull() && m.Comment.ValueString() != "" {
-		opts.Comment = new(m.Comment.ValueString())
-	}
+	opts.Comment = fastly.NullString(m.Comment.ValueString())
 	return opts
 }
 
@@ -22,8 +20,6 @@ func expandUpdate(m Model) *fastly.UpdateDomainInput {
 		ServiceVersion: int(m.Version.ValueInt64()),
 		Name:           m.Name.ValueString(),
 	}
-	if !m.Comment.IsNull() && m.Comment.ValueString() != "" {
-		opts.Comment = new(m.Comment.ValueString())
-	}
+	opts.Comment = fastly.NullString(m.Comment.ValueString())
 	return opts
 }

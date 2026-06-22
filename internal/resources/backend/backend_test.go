@@ -421,12 +421,10 @@ func TestBuildUpdateInput(t *testing.T) {
 		serviceID string
 		version   int
 		plan      NestedModel
-		state     *NestedModel
-		forceAll  bool
 		validate  func(t *testing.T, input *fastly.UpdateBackendInput)
 	}{
 		{
-			name:      "update with forceAll true",
+			name:      "update with all fields",
 			serviceID: "service-123",
 			version:   6,
 			plan: func() NestedModel {
@@ -439,13 +437,6 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.ConnectTimeout = types.Int64Value(2000)
 				return m
 			}(),
-			state: func() *NestedModel {
-				m := defaultNestedModel()
-				m.Name = types.StringValue("test-backend")
-				m.Address = types.StringValue("api.example.com")
-				return &m
-			}(),
-			forceAll: true,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.Equal(t, "service-123", input.ServiceID)
 				assert.Equal(t, 6, input.ServiceVersion)
@@ -459,7 +450,7 @@ func TestBuildUpdateInput(t *testing.T) {
 			},
 		},
 		{
-			name:      "update only changed fields",
+			name:      "update with changed address",
 			serviceID: "service-456",
 			version:   10,
 			plan: func() NestedModel {
@@ -469,36 +460,20 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.Port = types.Int64Value(8080)
 				return m
 			}(),
-			state: func() *NestedModel {
-				m := defaultNestedModel()
-				m.Name = types.StringValue("backend-2")
-				m.Address = types.StringValue("api.original.com")
-				return &m
-			}(),
-			forceAll: false,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.Equal(t, "service-456", input.ServiceID)
 				assert.Equal(t, 10, input.ServiceVersion)
 				assert.Equal(t, "backend-2", input.Name)
-
-				// Changed fields should be present
 				assert.NotNil(t, input.Address)
 				assert.Equal(t, "api.changed.com", *input.Address)
 				assert.NotNil(t, input.Port)
 				assert.Equal(t, 8080, *input.Port)
-
-				// Unchanged fields should be nil (not sent in update payload)
-				assert.Nil(t, input.UseSSL)
-				assert.Nil(t, input.Weight)
-				assert.Nil(t, input.ConnectTimeout)
-				assert.Nil(t, input.BetweenBytesTimeout)
-				assert.Nil(t, input.MaxConn)
-				assert.Nil(t, input.AutoLoadbalance)
-				assert.Nil(t, input.SSLCheckCert)
+				assert.NotNil(t, input.UseSSL)
+				assert.NotNil(t, input.Weight)
 			},
 		},
 		{
-			name:      "update with nil state forces all fields",
+			name:      "update with new backend",
 			serviceID: "service-789",
 			version:   1,
 			plan: func() NestedModel {
@@ -508,8 +483,6 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.Port = types.Int64Value(443)
 				return m
 			}(),
-			state:    nil,
-			forceAll: false,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.Equal(t, "service-789", input.ServiceID)
 				assert.Equal(t, 1, input.ServiceVersion)
@@ -530,14 +503,6 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.Comment = types.StringValue("New comment")
 				return m
 			}(),
-			state: func() *NestedModel {
-				m := defaultNestedModel()
-				m.Name = types.StringValue("commented-backend")
-				m.Address = types.StringValue("api.test.com")
-				m.Comment = types.StringValue("Old comment")
-				return &m
-			}(),
-			forceAll: false,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.NotNil(t, input.Comment)
 				assert.Equal(t, "New comment", *input.Comment)
@@ -547,7 +512,7 @@ func TestBuildUpdateInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			input := BuildUpdateInput(tt.serviceID, tt.version, tt.plan, tt.state, tt.forceAll)
+			input := BuildUpdateInput(tt.serviceID, tt.version, tt.plan)
 			tt.validate(t, input)
 		})
 	}

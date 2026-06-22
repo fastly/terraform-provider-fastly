@@ -735,3 +735,272 @@ func TestModelToNested(t *testing.T) {
 		})
 	}
 }
+
+// Tests for schema.go
+
+func TestModelsEqual(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        NestedModel
+		b        NestedModel
+		expected bool
+	}{
+		{
+			name:     "identical models",
+			a:        fullNestedModel(),
+			b:        fullNestedModel(),
+			expected: true,
+		},
+		{
+			name:     "default models",
+			a:        defaultNestedModel(),
+			b:        defaultNestedModel(),
+			expected: true,
+		},
+		{
+			name: "different name",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.Name = types.StringValue("backend-1")
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.Name = types.StringValue("backend-2")
+				return m
+			}(),
+			expected: false,
+		},
+		{
+			name: "different address",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.Address = types.StringValue("api1.example.com")
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.Address = types.StringValue("api2.example.com")
+				return m
+			}(),
+			expected: false,
+		},
+		{
+			name: "different port",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.Port = types.Int64Value(80)
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.Port = types.Int64Value(443)
+				return m
+			}(),
+			expected: false,
+		},
+		{
+			name: "different ssl settings",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.UseSSL = types.BoolValue(true)
+				m.SSLCheckCert = types.BoolValue(false)
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.UseSSL = types.BoolValue(true)
+				m.SSLCheckCert = types.BoolValue(true)
+				return m
+			}(),
+			expected: false,
+		},
+		{
+			name: "null vs empty string comment",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.Comment = types.StringNull()
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.Comment = types.StringValue("")
+				return m
+			}(),
+			expected: true,
+		},
+		{
+			name: "different weight",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.Weight = types.Int64Value(100)
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.Weight = types.Int64Value(50)
+				return m
+			}(),
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.a.ModelsEqual(tt.b)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestNormalize(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []NestedModel
+		expected []NestedModel
+	}{
+		{
+			name:     "empty slice",
+			input:    []NestedModel{},
+			expected: []NestedModel{},
+		},
+		{
+			name: "single backend",
+			input: []NestedModel{
+				{Name: types.StringValue("backend-1")},
+			},
+			expected: []NestedModel{
+				{Name: types.StringValue("backend-1")},
+			},
+		},
+		{
+			name: "already sorted",
+			input: []NestedModel{
+				{Name: types.StringValue("backend-a")},
+				{Name: types.StringValue("backend-b")},
+				{Name: types.StringValue("backend-c")},
+			},
+			expected: []NestedModel{
+				{Name: types.StringValue("backend-a")},
+				{Name: types.StringValue("backend-b")},
+				{Name: types.StringValue("backend-c")},
+			},
+		},
+		{
+			name: "reverse sorted",
+			input: []NestedModel{
+				{Name: types.StringValue("backend-c")},
+				{Name: types.StringValue("backend-b")},
+				{Name: types.StringValue("backend-a")},
+			},
+			expected: []NestedModel{
+				{Name: types.StringValue("backend-a")},
+				{Name: types.StringValue("backend-b")},
+				{Name: types.StringValue("backend-c")},
+			},
+		},
+		{
+			name: "unsorted",
+			input: []NestedModel{
+				{Name: types.StringValue("zebra")},
+				{Name: types.StringValue("apple")},
+				{Name: types.StringValue("mango")},
+				{Name: types.StringValue("banana")},
+			},
+			expected: []NestedModel{
+				{Name: types.StringValue("apple")},
+				{Name: types.StringValue("banana")},
+				{Name: types.StringValue("mango")},
+				{Name: types.StringValue("zebra")},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Normalize(tt.input)
+			assert.Equal(t, len(tt.expected), len(result))
+			for i := range tt.expected {
+				assert.Equal(t, tt.expected[i].Name.ValueString(), result[i].Name.ValueString())
+			}
+		})
+	}
+}
+
+func TestEqual(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        []NestedModel
+		b        []NestedModel
+		expected bool
+	}{
+		{
+			name:     "both empty",
+			a:        []NestedModel{},
+			b:        []NestedModel{},
+			expected: true,
+		},
+		{
+			name: "identical single element",
+			a: []NestedModel{
+				minimalNestedModel(),
+			},
+			b: []NestedModel{
+				minimalNestedModel(),
+			},
+			expected: true,
+		},
+		{
+			name: "identical multiple elements",
+			a: []NestedModel{
+				{Name: types.StringValue("backend-a"), Address: types.StringValue("api.a.com")},
+				{Name: types.StringValue("backend-b"), Address: types.StringValue("api.b.com")},
+			},
+			b: []NestedModel{
+				{Name: types.StringValue("backend-a"), Address: types.StringValue("api.a.com")},
+				{Name: types.StringValue("backend-b"), Address: types.StringValue("api.b.com")},
+			},
+			expected: true,
+		},
+		{
+			name: "different order but same content",
+			a: []NestedModel{
+				{Name: types.StringValue("backend-b"), Address: types.StringValue("api.b.com")},
+				{Name: types.StringValue("backend-a"), Address: types.StringValue("api.a.com")},
+			},
+			b: []NestedModel{
+				{Name: types.StringValue("backend-a"), Address: types.StringValue("api.a.com")},
+				{Name: types.StringValue("backend-b"), Address: types.StringValue("api.b.com")},
+			},
+			expected: true,
+		},
+		{
+			name: "different lengths",
+			a: []NestedModel{
+				{Name: types.StringValue("backend-a")},
+			},
+			b: []NestedModel{
+				{Name: types.StringValue("backend-a")},
+				{Name: types.StringValue("backend-b")},
+			},
+			expected: false,
+		},
+		{
+			name: "different content",
+			a: []NestedModel{
+				{Name: types.StringValue("backend-a"), Address: types.StringValue("api.a.com")},
+			},
+			b: []NestedModel{
+				{Name: types.StringValue("backend-a"), Address: types.StringValue("api.different.com")},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Equal(tt.a, tt.b)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

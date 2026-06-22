@@ -28,14 +28,14 @@ export FASTLY_API_TOKEN="your-token-here"
 
 ```bash
 # Unit tests (no API token needed)
-go test ./internal/resources/... -v
+make test-unit
 
 # Acceptance tests (requires API token)
-go test ./internal/acceptance_tests/... -v -timeout 30m TF_ACC="1"
+make test-acc
 
 # Run specific resource tests
 go test ./internal/resources/backend -v
-go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend TF_ACC="1"
+TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend
 
 # Run with coverage
 go test ./internal/resources/backend -v -coverprofile=coverage.out
@@ -230,16 +230,16 @@ func TestAccFastlyServiceBackend_basic(t *testing.T) {
 
 ```bash
 # All acceptance tests
-go test ./internal/acceptance_tests/... -v -timeout 30m
+make test-acc
 
 # Specific resource tests
-go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend
+TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend
 
 # Specific test
-go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend_basic
+TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend_basic
 
 # With parallelism
-go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend -parallel 4 -timeout 30m
+TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend -parallel 4 -timeout 30m
 ```
 
 ### Best Practices
@@ -373,14 +373,14 @@ func ConfigBackendBasic(serviceName, domainName, backendName string) string {
 ```bash
 export TF_LOG=DEBUG
 export TF_LOG_PATH=./terraform.log
-go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend_basic
+TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend_basic
 cat terraform.log
 ```
 
 ### Run Single Test
 
 ```bash
-go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend_basic
+TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend_basic
 ```
 
 ### Inspect API State
@@ -420,14 +420,14 @@ fastly whoami
 
 Increase timeout:
 ```bash
-go test ./internal/acceptance_tests -v -timeout 60m
+TF_ACC=1 go test ./internal/acceptance_tests -v -timeout 60m
 ```
 
 ### Rate Limiting
 
 Reduce parallel execution:
 ```bash
-go test ./internal/acceptance_tests -v -parallel 2
+TF_ACC=1 go test ./internal/acceptance_tests -v -parallel 2
 ```
 
 Or add delays between test runs.
@@ -484,10 +484,13 @@ End-to-end lifecycle tests in `scripts/test-lifecycle-{cdn,compute}/`:
 
 ```bash
 # CDN service lifecycle test
-./scripts/test-lifecycle-cdn/run.sh
+make test-lifecycle-cdn
 
 # Compute service lifecycle test
-./scripts/test-lifecycle-compute/run.sh
+make test-lifecycle-compute
+
+# All lifecycle tests
+make test-lifecycle
 ```
 
 These test full workflows including version cloning, activation, and resource management.

@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccFastlyServiceCDNAuto_basic(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
@@ -38,6 +39,7 @@ func TestAccFastlyServiceCDNAuto_basic(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDNAuto_withBackend(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
@@ -79,6 +81,7 @@ func TestAccFastlyServiceCDNAuto_withBackend(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDNAuto_update(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	serviceNameUpdated := fmt.Sprintf("tf-test-updated-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -130,6 +133,7 @@ func TestAccFastlyServiceCDNAuto_update(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 
@@ -167,6 +171,7 @@ func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
 }
 
 func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
+	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 

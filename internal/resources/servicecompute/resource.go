@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	"github.com/fastly/go-fastly/v15/fastly"
@@ -137,7 +138,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
-		if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+		if errors.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -188,8 +189,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	_, err := r.providerData.Client.UpdateService(ctx, &fastly.UpdateServiceInput{
 		ServiceID: state.ID.ValueString(),
-		Name:      fastly.ToPointer(plan.Name.ValueString()),
-		Comment:   fastly.ToPointer(plan.Comment.ValueString()),
+		Name:      new(plan.Name.ValueString()),
+		Comment:   new(plan.Comment.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating Fastly Compute service", err.Error())

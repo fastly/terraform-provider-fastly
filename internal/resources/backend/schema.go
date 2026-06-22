@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
@@ -12,6 +13,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+)
+
+const (
+	DefaultPort                = 80
+	DefaultAutoLoadbalance     = false
+	DefaultBetweenBytesTimeout = 10000
+	DefaultConnectTimeout      = 1000
+	DefaultErrorThreshold      = 0
+	DefaultFirstByteTimeout    = 15000
+	DefaultHealthCheck         = ""
+	DefaultMaxConn             = 200
+	DefaultMaxLifetime         = 0
+	DefaultMaxTLSVersion       = ""
+	DefaultMaxUse              = 0
+	DefaultMinTLSVersion       = ""
+	DefaultOverrideHost        = ""
+	DefaultPreferIPv6          = false
+	DefaultRequestCondition    = ""
+	DefaultShareKey            = ""
+	DefaultShield              = ""
+	DefaultSSLCACert           = ""
+	DefaultSSLCertHostname     = ""
+	DefaultSSLCheckCert        = true
+	DefaultSSLCiphers          = ""
+	DefaultSSLClientCert       = ""
+	DefaultSSLClientKey        = ""
+	DefaultSSLSNIHostname      = ""
+	DefaultUseSSL              = false
+	DefaultWeight              = 100
 )
 
 type NestedModel struct {
@@ -47,6 +77,39 @@ type NestedModel struct {
 	Weight              types.Int64  `tfsdk:"weight"`
 }
 
+func (n NestedModel) ModelsEqual(other NestedModel) bool {
+	return service.StringValue(n.Name) == service.StringValue(other.Name) &&
+		service.StringValue(n.Address) == service.StringValue(other.Address) &&
+		service.Int64Value(n.Port) == service.Int64Value(other.Port) &&
+		service.StringValue(n.Comment) == service.StringValue(other.Comment) &&
+		service.BoolValue(n.AutoLoadbalance) == service.BoolValue(other.AutoLoadbalance) &&
+		service.Int64Value(n.BetweenBytesTimeout) == service.Int64Value(other.BetweenBytesTimeout) &&
+		service.Int64Value(n.ConnectTimeout) == service.Int64Value(other.ConnectTimeout) &&
+		service.Int64Value(n.ErrorThreshold) == service.Int64Value(other.ErrorThreshold) &&
+		service.Int64Value(n.FirstByteTimeout) == service.Int64Value(other.FirstByteTimeout) &&
+		service.StringValue(n.HealthCheck) == service.StringValue(other.HealthCheck) &&
+		service.Int64Value(n.KeepaliveTime) == service.Int64Value(other.KeepaliveTime) &&
+		service.Int64Value(n.MaxConn) == service.Int64Value(other.MaxConn) &&
+		service.Int64Value(n.MaxLifetime) == service.Int64Value(other.MaxLifetime) &&
+		service.StringValue(n.MaxTLSVersion) == service.StringValue(other.MaxTLSVersion) &&
+		service.Int64Value(n.MaxUse) == service.Int64Value(other.MaxUse) &&
+		service.StringValue(n.MinTLSVersion) == service.StringValue(other.MinTLSVersion) &&
+		service.StringValue(n.OverrideHost) == service.StringValue(other.OverrideHost) &&
+		service.BoolValue(n.PreferIPv6) == service.BoolValue(other.PreferIPv6) &&
+		service.StringValue(n.RequestCondition) == service.StringValue(other.RequestCondition) &&
+		service.StringValue(n.ShareKey) == service.StringValue(other.ShareKey) &&
+		service.StringValue(n.Shield) == service.StringValue(other.Shield) &&
+		service.StringValue(n.SSLCACert) == service.StringValue(other.SSLCACert) &&
+		service.StringValue(n.SSLCertHostname) == service.StringValue(other.SSLCertHostname) &&
+		service.BoolValue(n.SSLCheckCert) == service.BoolValue(other.SSLCheckCert) &&
+		service.StringValue(n.SSLCiphers) == service.StringValue(other.SSLCiphers) &&
+		service.StringValue(n.SSLClientCert) == service.StringValue(other.SSLClientCert) &&
+		service.StringValue(n.SSLClientKey) == service.StringValue(other.SSLClientKey) &&
+		service.StringValue(n.SSLSNIHostname) == service.StringValue(other.SSLSNIHostname) &&
+		service.BoolValue(n.UseSSL) == service.BoolValue(other.UseSSL) &&
+		service.Int64Value(n.Weight) == service.Int64Value(other.Weight)
+}
+
 func CommonAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"name": schema.StringAttribute{
@@ -60,7 +123,7 @@ func CommonAttributes() map[string]schema.Attribute {
 		"port": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(80),
+			Default:     int64default.StaticInt64(DefaultPort),
 			Description: "The port number on which the backend responds. Default `80`.",
 		},
 		"comment": schema.StringAttribute{
@@ -70,37 +133,37 @@ func CommonAttributes() map[string]schema.Attribute {
 		"auto_loadbalance": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
+			Default:     booldefault.StaticBool(DefaultAutoLoadbalance),
 			Description: "Whether this backend should be included in automatic load balancing. CDN services only. Default `false`.",
 		},
 		"between_bytes_timeout": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(10000),
+			Default:     int64default.StaticInt64(DefaultBetweenBytesTimeout),
 			Description: "How long to wait between bytes in milliseconds. Default `10000`.",
 		},
 		"connect_timeout": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(1000),
+			Default:     int64default.StaticInt64(DefaultConnectTimeout),
 			Description: "How long to wait for a timeout in milliseconds. Default `1000`.",
 		},
 		"error_threshold": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(0),
+			Default:     int64default.StaticInt64(DefaultErrorThreshold),
 			Description: "Number of errors to allow before the backend is marked as down. Default `0`.",
 		},
 		"first_byte_timeout": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(15000),
+			Default:     int64default.StaticInt64(DefaultFirstByteTimeout),
 			Description: "How long to wait for the first byte in milliseconds. Default `15000`.",
 		},
 		"healthcheck": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultHealthCheck),
 			Description: "Name of a defined healthcheck to assign to this backend.",
 		},
 		"keepalive_time": schema.Int64Attribute{
@@ -111,117 +174,117 @@ func CommonAttributes() map[string]schema.Attribute {
 		"max_conn": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(200),
+			Default:     int64default.StaticInt64(DefaultMaxConn),
 			Description: "Maximum number of connections for this backend. Default `200`.",
 		},
 		"max_lifetime": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(0),
+			Default:     int64default.StaticInt64(DefaultMaxLifetime),
 			Description: "Maximum time from creation, in milliseconds, that a pooled HTTP keepalive connection is eligible for reuse. `0` is treated as unlimited.",
 		},
 		"max_tls_version": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultMaxTLSVersion),
 			Description: "Maximum allowed TLS version on SSL connections to this backend.",
 		},
 		"max_use": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(0),
+			Default:     int64default.StaticInt64(DefaultMaxUse),
 			Description: "Maximum number of requests allowed over a single pooled HTTP keepalive connection. `0` is treated as unlimited.",
 		},
 		"min_tls_version": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultMinTLSVersion),
 			Description: "Minimum allowed TLS version on SSL connections to this backend.",
 		},
 		"override_host": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultOverrideHost),
 			Description: "Hostname to override the Host header.",
 		},
 		"prefer_ipv6": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
+			Default:     booldefault.StaticBool(DefaultPreferIPv6),
 			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false` for CDN services.",
 		},
 		"request_condition": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultRequestCondition),
 			Description: "Name of a request condition which, if met, selects this backend.",
 		},
 		"share_key": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultShareKey),
 			Description: "Value that, when shared across backends, enables those backends to share the same health check.",
 		},
 		"shield": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultShield),
 			Description: "POP of the shield designated to reduce inbound load.",
 		},
 		"ssl_ca_cert": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLCACert),
 			Description: "CA certificate attached to origin.",
 		},
 		"ssl_cert_hostname": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLCertHostname),
 			Description: "Hostname used for certificate validation. Does not affect SNI.",
 		},
 		"ssl_check_cert": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(true),
+			Default:     booldefault.StaticBool(DefaultSSLCheckCert),
 			Description: "Whether to strictly check SSL certificates. Default `true`.",
 		},
 		"ssl_ciphers": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLCiphers),
 			Description: "Cipher list for TLS connections to this backend.",
 		},
 		"ssl_client_cert": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
 			Sensitive:   true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLClientCert),
 			Description: "Client certificate used when connecting to the backend.",
 		},
 		"ssl_client_key": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
 			Sensitive:   true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLClientKey),
 			Description: "Client key used when connecting to the backend.",
 		},
 		"ssl_sni_hostname": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     stringdefault.StaticString(""),
+			Default:     stringdefault.StaticString(DefaultSSLSNIHostname),
 			Description: "Hostname used for SNI in the TLS handshake.",
 		},
 		"use_ssl": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     booldefault.StaticBool(false),
+			Default:     booldefault.StaticBool(DefaultUseSSL),
 			Description: "Whether to use SSL to reach the backend. Default `false`.",
 		},
 		"weight": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Default:     int64default.StaticInt64(100),
+			Default:     int64default.StaticInt64(DefaultWeight),
 			Description: "Portion of traffic to send to this backend. Default `100`.",
 		},
 	}
@@ -314,7 +377,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 				ServiceVersion: version,
 				Name:           name,
 			})
-			if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+			if errors.IsNotFound(err) {
 				continue
 			}
 			if err != nil {
@@ -337,8 +400,8 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 		}
 
 		remoteModel := FlattenToNestedModel(remoteBackend)
-		if !ModelsEqual(desiredBackend, remoteModel) {
-			input := BuildUpdateInput(serviceID, version, desiredBackend, &remoteModel, false)
+		if !desiredBackend.ModelsEqual(remoteModel) {
+			input := BuildUpdateInput(serviceID, version, desiredBackend)
 			if _, err := client.UpdateBackend(ctx, input); err != nil {
 				return err
 			}
@@ -357,43 +420,10 @@ func Equal(a, b []NestedModel) bool {
 	}
 
 	for i := range a {
-		if !ModelsEqual(a[i], b[i]) {
+		if !a[i].ModelsEqual(b[i]) {
 			return false
 		}
 	}
 
 	return true
-}
-
-func ModelsEqual(a, b NestedModel) bool {
-	return service.StringValue(a.Name) == service.StringValue(b.Name) &&
-		service.StringValue(a.Address) == service.StringValue(b.Address) &&
-		service.Int64Value(a.Port) == service.Int64Value(b.Port) &&
-		service.StringValue(a.Comment) == service.StringValue(b.Comment) &&
-		service.BoolValue(a.AutoLoadbalance) == service.BoolValue(b.AutoLoadbalance) &&
-		service.Int64Value(a.BetweenBytesTimeout) == service.Int64Value(b.BetweenBytesTimeout) &&
-		service.Int64Value(a.ConnectTimeout) == service.Int64Value(b.ConnectTimeout) &&
-		service.Int64Value(a.ErrorThreshold) == service.Int64Value(b.ErrorThreshold) &&
-		service.Int64Value(a.FirstByteTimeout) == service.Int64Value(b.FirstByteTimeout) &&
-		service.StringValue(a.HealthCheck) == service.StringValue(b.HealthCheck) &&
-		service.Int64Value(a.KeepaliveTime) == service.Int64Value(b.KeepaliveTime) &&
-		service.Int64Value(a.MaxConn) == service.Int64Value(b.MaxConn) &&
-		service.Int64Value(a.MaxLifetime) == service.Int64Value(b.MaxLifetime) &&
-		service.StringValue(a.MaxTLSVersion) == service.StringValue(b.MaxTLSVersion) &&
-		service.Int64Value(a.MaxUse) == service.Int64Value(b.MaxUse) &&
-		service.StringValue(a.MinTLSVersion) == service.StringValue(b.MinTLSVersion) &&
-		service.StringValue(a.OverrideHost) == service.StringValue(b.OverrideHost) &&
-		service.BoolValue(a.PreferIPv6) == service.BoolValue(b.PreferIPv6) &&
-		service.StringValue(a.RequestCondition) == service.StringValue(b.RequestCondition) &&
-		service.StringValue(a.ShareKey) == service.StringValue(b.ShareKey) &&
-		service.StringValue(a.Shield) == service.StringValue(b.Shield) &&
-		service.StringValue(a.SSLCACert) == service.StringValue(b.SSLCACert) &&
-		service.StringValue(a.SSLCertHostname) == service.StringValue(b.SSLCertHostname) &&
-		service.BoolValue(a.SSLCheckCert) == service.BoolValue(b.SSLCheckCert) &&
-		service.StringValue(a.SSLCiphers) == service.StringValue(b.SSLCiphers) &&
-		service.StringValue(a.SSLClientCert) == service.StringValue(b.SSLClientCert) &&
-		service.StringValue(a.SSLClientKey) == service.StringValue(b.SSLClientKey) &&
-		service.StringValue(a.SSLSNIHostname) == service.StringValue(b.SSLSNIHostname) &&
-		service.BoolValue(a.UseSSL) == service.BoolValue(b.UseSSL) &&
-		service.Int64Value(a.Weight) == service.Int64Value(b.Weight)
 }

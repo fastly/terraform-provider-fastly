@@ -191,52 +191,28 @@ func TestFlattenToNestedModel(t *testing.T) {
 	}
 }
 
-func TestApplyNestedToModel(t *testing.T) {
-	src := fullNestedModel()
-	dst := &Model{
-		ID:      types.StringValue("existing-id"),
-		Service: types.StringValue("existing-service"),
-		Version: types.Int64Value(1),
+func TestModelEmbedding(t *testing.T) {
+	nested := fullNestedModel()
+	m := Model{
+		NestedModel: nested,
+		ID:          types.StringValue("test-id"),
+		Service:     types.StringValue("test-service"),
+		Version:     types.Int64Value(1),
 	}
 
-	ApplyNestedToModel(src, dst)
+	// Verify embedded fields are accessible
+	assert.Equal(t, nested.Name, m.Name)
+	assert.Equal(t, nested.Address, m.Address)
+	assert.Equal(t, nested.Port, m.Port)
 
-	// Verify ID/Service/Version are preserved
-	assert.Equal(t, types.StringValue("existing-id"), dst.ID)
-	assert.Equal(t, types.StringValue("existing-service"), dst.Service)
-	assert.Equal(t, types.Int64Value(1), dst.Version)
+	// Verify Model-specific fields
+	assert.Equal(t, types.StringValue("test-id"), m.ID)
+	assert.Equal(t, types.StringValue("test-service"), m.Service)
+	assert.Equal(t, types.Int64Value(1), m.Version)
 
-	// Verify all other fields are copied
-	assert.Equal(t, src.Name, dst.Name)
-	assert.Equal(t, src.Address, dst.Address)
-	assert.Equal(t, src.Port, dst.Port)
-	assert.Equal(t, src.Comment, dst.Comment)
-	assert.Equal(t, src.AutoLoadbalance, dst.AutoLoadbalance)
-	assert.Equal(t, src.BetweenBytesTimeout, dst.BetweenBytesTimeout)
-	assert.Equal(t, src.ConnectTimeout, dst.ConnectTimeout)
-	assert.Equal(t, src.ErrorThreshold, dst.ErrorThreshold)
-	assert.Equal(t, src.FirstByteTimeout, dst.FirstByteTimeout)
-	assert.Equal(t, src.HealthCheck, dst.HealthCheck)
-	assert.Equal(t, src.KeepaliveTime, dst.KeepaliveTime)
-	assert.Equal(t, src.MaxConn, dst.MaxConn)
-	assert.Equal(t, src.MaxLifetime, dst.MaxLifetime)
-	assert.Equal(t, src.MaxTLSVersion, dst.MaxTLSVersion)
-	assert.Equal(t, src.MaxUse, dst.MaxUse)
-	assert.Equal(t, src.MinTLSVersion, dst.MinTLSVersion)
-	assert.Equal(t, src.OverrideHost, dst.OverrideHost)
-	assert.Equal(t, src.PreferIPv6, dst.PreferIPv6)
-	assert.Equal(t, src.RequestCondition, dst.RequestCondition)
-	assert.Equal(t, src.ShareKey, dst.ShareKey)
-	assert.Equal(t, src.Shield, dst.Shield)
-	assert.Equal(t, src.SSLCACert, dst.SSLCACert)
-	assert.Equal(t, src.SSLCertHostname, dst.SSLCertHostname)
-	assert.Equal(t, src.SSLCheckCert, dst.SSLCheckCert)
-	assert.Equal(t, src.SSLCiphers, dst.SSLCiphers)
-	assert.Equal(t, src.SSLClientCert, dst.SSLClientCert)
-	assert.Equal(t, src.SSLClientKey, dst.SSLClientKey)
-	assert.Equal(t, src.SSLSNIHostname, dst.SSLSNIHostname)
-	assert.Equal(t, src.UseSSL, dst.UseSSL)
-	assert.Equal(t, src.Weight, dst.Weight)
+	// Verify NestedModel can be extracted
+	extracted := m.NestedModel
+	assert.Equal(t, nested, extracted)
 }
 
 func TestFlatten(t *testing.T) {
@@ -445,12 +421,10 @@ func TestBuildUpdateInput(t *testing.T) {
 		serviceID string
 		version   int
 		plan      NestedModel
-		state     *NestedModel
-		forceAll  bool
 		validate  func(t *testing.T, input *fastly.UpdateBackendInput)
 	}{
 		{
-			name:      "update with forceAll true",
+			name:      "update with all fields",
 			serviceID: "service-123",
 			version:   6,
 			plan: func() NestedModel {
@@ -463,13 +437,6 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.ConnectTimeout = types.Int64Value(2000)
 				return m
 			}(),
-			state: func() *NestedModel {
-				m := defaultNestedModel()
-				m.Name = types.StringValue("test-backend")
-				m.Address = types.StringValue("api.example.com")
-				return &m
-			}(),
-			forceAll: true,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.Equal(t, "service-123", input.ServiceID)
 				assert.Equal(t, 6, input.ServiceVersion)
@@ -483,7 +450,7 @@ func TestBuildUpdateInput(t *testing.T) {
 			},
 		},
 		{
-			name:      "update only changed fields",
+			name:      "update with changed address",
 			serviceID: "service-456",
 			version:   10,
 			plan: func() NestedModel {
@@ -493,36 +460,20 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.Port = types.Int64Value(8080)
 				return m
 			}(),
-			state: func() *NestedModel {
-				m := defaultNestedModel()
-				m.Name = types.StringValue("backend-2")
-				m.Address = types.StringValue("api.original.com")
-				return &m
-			}(),
-			forceAll: false,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.Equal(t, "service-456", input.ServiceID)
 				assert.Equal(t, 10, input.ServiceVersion)
 				assert.Equal(t, "backend-2", input.Name)
-
-				// Changed fields should be present
 				assert.NotNil(t, input.Address)
 				assert.Equal(t, "api.changed.com", *input.Address)
 				assert.NotNil(t, input.Port)
 				assert.Equal(t, 8080, *input.Port)
-
-				// Unchanged fields should be nil (not sent in update payload)
-				assert.Nil(t, input.UseSSL)
-				assert.Nil(t, input.Weight)
-				assert.Nil(t, input.ConnectTimeout)
-				assert.Nil(t, input.BetweenBytesTimeout)
-				assert.Nil(t, input.MaxConn)
-				assert.Nil(t, input.AutoLoadbalance)
-				assert.Nil(t, input.SSLCheckCert)
+				assert.NotNil(t, input.UseSSL)
+				assert.NotNil(t, input.Weight)
 			},
 		},
 		{
-			name:      "update with nil state forces all fields",
+			name:      "update with new backend",
 			serviceID: "service-789",
 			version:   1,
 			plan: func() NestedModel {
@@ -532,8 +483,6 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.Port = types.Int64Value(443)
 				return m
 			}(),
-			state:    nil,
-			forceAll: false,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.Equal(t, "service-789", input.ServiceID)
 				assert.Equal(t, 1, input.ServiceVersion)
@@ -554,14 +503,6 @@ func TestBuildUpdateInput(t *testing.T) {
 				m.Comment = types.StringValue("New comment")
 				return m
 			}(),
-			state: func() *NestedModel {
-				m := defaultNestedModel()
-				m.Name = types.StringValue("commented-backend")
-				m.Address = types.StringValue("api.test.com")
-				m.Comment = types.StringValue("Old comment")
-				return &m
-			}(),
-			forceAll: false,
 			validate: func(t *testing.T, input *fastly.UpdateBackendInput) {
 				assert.NotNil(t, input.Comment)
 				assert.Equal(t, "New comment", *input.Comment)
@@ -571,7 +512,7 @@ func TestBuildUpdateInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			input := BuildUpdateInput(tt.serviceID, tt.version, tt.plan, tt.state, tt.forceAll)
+			input := BuildUpdateInput(tt.serviceID, tt.version, tt.plan)
 			tt.validate(t, input)
 		})
 	}
@@ -687,55 +628,25 @@ func TestModelToNested(t *testing.T) {
 	}{
 		{
 			name: "all fields populated",
-			model: func() Model {
-				nested := fullNestedModel()
-				return Model{
-					ID:                  types.StringValue("service-123-5-test"),
-					Service:             types.StringValue("service-123"),
-					Version:             types.Int64Value(5),
-					Name:                nested.Name,
-					Address:             nested.Address,
-					Port:                nested.Port,
-					Comment:             nested.Comment,
-					AutoLoadbalance:     nested.AutoLoadbalance,
-					BetweenBytesTimeout: nested.BetweenBytesTimeout,
-					ConnectTimeout:      nested.ConnectTimeout,
-					ErrorThreshold:      nested.ErrorThreshold,
-					FirstByteTimeout:    nested.FirstByteTimeout,
-					HealthCheck:         nested.HealthCheck,
-					KeepaliveTime:       nested.KeepaliveTime,
-					MaxConn:             nested.MaxConn,
-					MaxLifetime:         nested.MaxLifetime,
-					MaxTLSVersion:       nested.MaxTLSVersion,
-					MaxUse:              nested.MaxUse,
-					MinTLSVersion:       nested.MinTLSVersion,
-					OverrideHost:        nested.OverrideHost,
-					PreferIPv6:          nested.PreferIPv6,
-					RequestCondition:    nested.RequestCondition,
-					ShareKey:            nested.ShareKey,
-					Shield:              nested.Shield,
-					SSLCACert:           nested.SSLCACert,
-					SSLCertHostname:     nested.SSLCertHostname,
-					SSLCheckCert:        nested.SSLCheckCert,
-					SSLCiphers:          nested.SSLCiphers,
-					SSLClientCert:       nested.SSLClientCert,
-					SSLClientKey:        nested.SSLClientKey,
-					SSLSNIHostname:      nested.SSLSNIHostname,
-					UseSSL:              nested.UseSSL,
-					Weight:              nested.Weight,
-				}
-			}(),
+			model: Model{
+				NestedModel: fullNestedModel(),
+				ID:          types.StringValue("service-123-5-test"),
+				Service:     types.StringValue("service-123"),
+				Version:     types.Int64Value(5),
+			},
 			expected: fullNestedModel(),
 		},
 		{
 			name: "minimal fields only",
 			model: Model{
+				NestedModel: NestedModel{
+					Name:    types.StringValue("minimal-backend"),
+					Address: types.StringValue("api.minimal.com"),
+					Port:    types.Int64Value(80),
+				},
 				ID:      types.StringValue("service-456-1-minimal"),
 				Service: types.StringValue("service-456"),
 				Version: types.Int64Value(1),
-				Name:    types.StringValue("minimal-backend"),
-				Address: types.StringValue("api.minimal.com"),
-				Port:    types.Int64Value(80),
 			},
 			expected: NestedModel{
 				Name:    types.StringValue("minimal-backend"),
@@ -746,39 +657,41 @@ func TestModelToNested(t *testing.T) {
 		{
 			name: "null and empty values",
 			model: Model{
-				ID:                  types.StringValue("service-789-2-empty"),
-				Service:             types.StringValue("service-789"),
-				Version:             types.Int64Value(2),
-				Name:                types.StringValue("empty-backend"),
-				Address:             types.StringValue("api.empty.com"),
-				Port:                types.Int64Value(443),
-				Comment:             types.StringNull(),
-				KeepaliveTime:       types.Int64Value(0),
-				MaxTLSVersion:       types.StringValue(""),
-				MinTLSVersion:       types.StringValue(""),
-				OverrideHost:        types.StringValue(""),
-				AutoLoadbalance:     types.BoolValue(false),
-				BetweenBytesTimeout: types.Int64Value(10000),
-				ConnectTimeout:      types.Int64Value(1000),
-				ErrorThreshold:      types.Int64Value(0),
-				FirstByteTimeout:    types.Int64Value(15000),
-				HealthCheck:         types.StringValue(""),
-				MaxConn:             types.Int64Value(200),
-				MaxLifetime:         types.Int64Value(0),
-				MaxUse:              types.Int64Value(0),
-				PreferIPv6:          types.BoolValue(false),
-				RequestCondition:    types.StringValue(""),
-				ShareKey:            types.StringValue(""),
-				Shield:              types.StringValue(""),
-				SSLCACert:           types.StringValue(""),
-				SSLCertHostname:     types.StringValue(""),
-				SSLCheckCert:        types.BoolValue(true),
-				SSLCiphers:          types.StringValue(""),
-				SSLClientCert:       types.StringValue(""),
-				SSLClientKey:        types.StringValue(""),
-				SSLSNIHostname:      types.StringValue(""),
-				UseSSL:              types.BoolValue(false),
-				Weight:              types.Int64Value(100),
+				NestedModel: NestedModel{
+					Name:                types.StringValue("empty-backend"),
+					Address:             types.StringValue("api.empty.com"),
+					Port:                types.Int64Value(443),
+					Comment:             types.StringNull(),
+					KeepaliveTime:       types.Int64Value(0),
+					MaxTLSVersion:       types.StringValue(""),
+					MinTLSVersion:       types.StringValue(""),
+					OverrideHost:        types.StringValue(""),
+					AutoLoadbalance:     types.BoolValue(false),
+					BetweenBytesTimeout: types.Int64Value(10000),
+					ConnectTimeout:      types.Int64Value(1000),
+					ErrorThreshold:      types.Int64Value(0),
+					FirstByteTimeout:    types.Int64Value(15000),
+					HealthCheck:         types.StringValue(""),
+					MaxConn:             types.Int64Value(200),
+					MaxLifetime:         types.Int64Value(0),
+					MaxUse:              types.Int64Value(0),
+					PreferIPv6:          types.BoolValue(false),
+					RequestCondition:    types.StringValue(""),
+					ShareKey:            types.StringValue(""),
+					Shield:              types.StringValue(""),
+					SSLCACert:           types.StringValue(""),
+					SSLCertHostname:     types.StringValue(""),
+					SSLCheckCert:        types.BoolValue(true),
+					SSLCiphers:          types.StringValue(""),
+					SSLClientCert:       types.StringValue(""),
+					SSLClientKey:        types.StringValue(""),
+					SSLSNIHostname:      types.StringValue(""),
+					UseSSL:              types.BoolValue(false),
+					Weight:              types.Int64Value(100),
+				},
+				ID:      types.StringValue("service-789-2-empty"),
+				Service: types.StringValue("service-789"),
+				Version: types.Int64Value(2),
 			},
 			expected: NestedModel{
 				Name:                types.StringValue("empty-backend"),
@@ -817,7 +730,7 @@ func TestModelToNested(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ModelToNested(tt.model)
+			result := tt.model.NestedModel
 			assert.Equal(t, tt.expected, result)
 		})
 	}

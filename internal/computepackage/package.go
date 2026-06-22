@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -156,7 +156,7 @@ func Update(ctx context.Context, client *fastly.Client, serviceID string, versio
 	}
 
 	if !pkg.Filename.IsNull() && !pkg.Filename.IsUnknown() && pkg.Filename.ValueString() != "" {
-		input.PackagePath = fastly.ToPointer(pkg.Filename.ValueString())
+		input.PackagePath = new(pkg.Filename.ValueString())
 	}
 
 	_, err := client.UpdatePackage(ctx, input)
@@ -177,7 +177,7 @@ func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string
 		ServiceVersion: version,
 	})
 	if err != nil {
-		if fastlyclient.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			return nil, nil
 		}
 		return nil, err

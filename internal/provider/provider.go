@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/fastly/go-fastly/v15/fastly"
@@ -25,6 +26,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecompute"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecomputeauto"
+	"github.com/fastly/terraform-provider-fastly/internal/version"
 )
 
 type fastlyProvider struct{}
@@ -79,7 +81,8 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	data := fastlyclient.NewData(client)
+	userAgentPrefix := fmt.Sprintf("terraform-provider-fastly/%s", version.Version)
+	data := fastlyclient.NewData(client, userAgentPrefix)
 
 	resp.ResourceData = data
 	resp.DataSourceData = data

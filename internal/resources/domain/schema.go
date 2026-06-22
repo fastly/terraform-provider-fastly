@@ -4,6 +4,8 @@ import (
 	"context"
 	"sort"
 
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
+
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -122,7 +124,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 				ServiceVersion: version,
 				Name:           name,
 			})
-			if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+			if errors.IsNotFound(err) {
 				continue
 			}
 			if err != nil {
@@ -145,10 +147,10 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 			input := &fastly.CreateDomainInput{
 				ServiceID:      serviceID,
 				ServiceVersion: version,
-				Name:           fastly.ToPointer(name),
+				Name:           new(name),
 			}
 			if !desiredDomain.Comment.IsUnknown() {
-				input.Comment = fastly.ToPointer(comment)
+				input.Comment = new(comment)
 			}
 			if _, err := client.CreateDomain(ctx, input); err != nil {
 				return err
@@ -166,7 +168,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 				ServiceID:      serviceID,
 				ServiceVersion: version,
 				Name:           name,
-				Comment:        fastly.ToPointer(comment),
+				Comment:        new(comment),
 			}
 			if _, err := client.UpdateDomain(ctx, input); err != nil {
 				return err

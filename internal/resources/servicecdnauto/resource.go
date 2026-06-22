@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -115,10 +116,10 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	created, err := r.providerData.Client.CreateService(ctx, &fastly.CreateServiceInput{
-		Name:    fastly.ToPointer(plan.Name.ValueString()),
-		Comment: fastly.ToPointer(plan.Comment.ValueString()),
-		Type:    fastly.ToPointer(service.TypeVCL),
+	created, err := r.providerData.AutoClient().CreateService(ctx, &fastly.CreateServiceInput{
+		Name:    new(plan.Name.ValueString()),
+		Comment: new(plan.Comment.ValueString()),
+		Type:    new(service.TypeVCL),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Fastly CDN service", err.Error())
@@ -133,31 +134,31 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		"version":    version,
 	})
 
-	if err := domain.Reconcile(ctx, r.providerData.Client, serviceID, version, plan.Domain); err != nil {
+	if err := domain.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Domain); err != nil {
 		resp.Diagnostics.AddError("Error reconciling domains", err.Error())
 		return
 	}
 
-	domains, err := domain.ReadForVersion(ctx, r.providerData.Client, serviceID, version)
+	domains, err := domain.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service domains", err.Error())
 		return
 	}
 	plan.Domain = domains
 
-	if err := backend.Reconcile(ctx, r.providerData.Client, serviceID, version, plan.Backend); err != nil {
+	if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 		return
 	}
 
-	backends, err := backend.ReadForVersion(ctx, r.providerData.Client, serviceID, version)
+	backends, err := backend.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
 	plan.Backend = backends
 
-	if err := service.ValidateVersion(ctx, r.providerData.Client, serviceID, version); err != nil {
+	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
 		return
 	}
@@ -165,7 +166,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	plan.ID = types.StringValue(serviceID)
 	plan.ManagedVersion = types.Int64Value(int64(version))
 
-	if _, err := r.providerData.Client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
+	if _, err := r.providerData.AutoClient().ActivateVersion(ctx, &fastly.ActivateVersionInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
 	}); err != nil {
@@ -184,11 +185,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	details, err := r.providerData.Client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
+	details, err := r.providerData.AutoClient().GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 		ServiceID: state.ID.ValueString(),
 	})
 	if err != nil {
-		if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.StatusCode == 404 {
+		if errors.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -225,12 +226,12 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 	state.ManagedVersion = types.Int64Value(int64(readVersion))
 
-	domains, err := domain.ReadForVersion(ctx, r.providerData.Client, state.ID.ValueString(), readVersion)
+	domains, err := domain.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service domains", err.Error())
 		return
 	}
-	backends, err := backend.ReadForVersion(ctx, r.providerData.Client, state.ID.ValueString(), readVersion)
+	backends, err := backend.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
@@ -254,10 +255,10 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	serviceID := state.ID.ValueString()
 
 	// Update service metadata in place. Name and comment are versionless service fields.
-	_, err := r.providerData.Client.UpdateService(ctx, &fastly.UpdateServiceInput{
+	_, err := r.providerData.AutoClient().UpdateService(ctx, &fastly.UpdateServiceInput{
 		ServiceID: serviceID,
-		Name:      fastly.ToPointer(plan.Name.ValueString()),
-		Comment:   fastly.ToPointer(plan.Comment.ValueString()),
+		Name:      new(plan.Name.ValueString()),
+		Comment:   new(plan.Comment.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating Fastly CDN service", err.Error())
@@ -277,7 +278,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 
 		if shouldClone {
-			cloned, err := r.providerData.Client.CloneVersion(ctx, &fastly.CloneVersionInput{
+			cloned, err := r.providerData.AutoClient().CloneVersion(ctx, &fastly.CloneVersionInput{
 				ServiceID:      serviceID,
 				ServiceVersion: sourceVersion,
 			})
@@ -298,38 +299,38 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			"nested_changed": nestedChanged,
 		})
 
-		if err := domain.Reconcile(ctx, r.providerData.Client, serviceID, targetVersion, plan.Domain); err != nil {
+		if err := domain.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Domain); err != nil {
 			resp.Diagnostics.AddError("Error reconciling domains", err.Error())
 			return
 		}
 
-		domains, err := domain.ReadForVersion(ctx, r.providerData.Client, serviceID, targetVersion)
+		domains, err := domain.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
 		if err != nil {
 			resp.Diagnostics.AddError("Error reading service domains", err.Error())
 			return
 		}
 		plan.Domain = domains
 
-		if err := backend.Reconcile(ctx, r.providerData.Client, serviceID, targetVersion, plan.Backend); err != nil {
+		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 			return
 		}
 
-		backends, err := backend.ReadForVersion(ctx, r.providerData.Client, serviceID, targetVersion)
+		backends, err := backend.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
 		if err != nil {
 			resp.Diagnostics.AddError("Error reading service backends", err.Error())
 			return
 		}
 		plan.Backend = backends
 
-		if err := service.ValidateVersion(ctx, r.providerData.Client, serviceID, targetVersion); err != nil {
+		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
 		}
 
 		plan.ManagedVersion = types.Int64Value(int64(targetVersion))
 
-		if _, err := r.providerData.Client.ActivateVersion(ctx, &fastly.ActivateVersionInput{
+		if _, err := r.providerData.AutoClient().ActivateVersion(ctx, &fastly.ActivateVersionInput{
 			ServiceID:      serviceID,
 			ServiceVersion: targetVersion,
 		}); err != nil {
@@ -358,7 +359,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := service.DeleteWithPolicy(
 		ctx,
-		r.providerData.Client,
+		r.providerData.AutoClient(),
 		state.ID.ValueString(),
 		service.BoolValue(state.ForceDestroy),
 		service.BoolValue(state.Reuse),
@@ -373,7 +374,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 }
 
 func (r *Resource) selectWorkingVersion(ctx context.Context, serviceID string) (version int, shouldClone bool, err error) {
-	details, err := r.providerData.Client.GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
+	details, err := r.providerData.AutoClient().GetServiceDetails(ctx, &fastly.GetServiceDetailsInput{
 		ServiceID: serviceID,
 	})
 	if err != nil {

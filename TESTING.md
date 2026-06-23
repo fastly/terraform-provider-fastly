@@ -11,7 +11,6 @@ This comprehensive guide covers all aspects of testing the Fastly Terraform Prov
 - [Template-Based Configuration](#template-based-configuration)
 - [Writing New Tests](#writing-new-tests)
 - [Debugging Tests](#debugging-tests)
-- [CI/CD Integration](#cicd-integration)
 - [Troubleshooting](#troubleshooting)
 - [Reference](#reference)
 
@@ -54,14 +53,14 @@ internal/
 │   │   ├── backend_updated.tf   # Updated backend template
 │   │   ├── backend_full.tf      # Full backend config
 │   │   ├── backend_multi.tf     # Multiple backends
-│   │   ├── domain_single.tf     # Domain template
+│   │   ├── domain_basic.tf      # Domain template
 │   │   ├── service_cdn.tf       # CDN service template
 │   │   └── ...                  # Other templates
 │   ├── fixtures/                # Test fixture files
 │   │   └── packages/
 │   │       └── valid.tar.gz     # Compute package
-│   ├── backend_test.go          # Backend acceptance tests
-│   ├── backend_import_test.go   # Backend import tests
+│   ├── backend_test.go          # Backend acceptance and import tests
+│   ├── domain_test.go           # Domain acceptance and import tests
 │   ├── config_builder.go        # Template builder
 │   └── test_helpers.go          # Shared infrastructure
 └── resources/
@@ -318,7 +317,7 @@ func ConfigBackendBasic(serviceName, domainName, backendName string) string {
 - `backend_updated.tf` - Updated backend
 - `backend_full.tf` - All optional fields
 - `backend_multi.tf` - Multiple backends
-- `domain_single.tf` - Single domain
+- `domain_basic.tf` - Single domain
 - `service_cdn_domain.tf` - Domain resource (explicit)
 - `service_cdn_backend.tf` - Backend resource (explicit)
 
@@ -354,10 +353,8 @@ func ConfigBackendBasic(serviceName, domainName, backendName string) string {
    - TestAcc<Resource>_update
    - TestAcc<Resource>_fullConfig
    - TestAcc<Resource>_multiple (if applicable)
-
-5. **Create import tests** in `internal/acceptance_tests/<name>_import_test.go`:
-   - TestAcc<Resource>_importBasic
-   - TestAcc<Resource>_importWithEdgeCases
+   - TestAcc<Resource>_importBasic (import scenarios in same file)
+   - TestAcc<Resource>_importWithEdgeCases (if needed)
 
 ### Test Naming Conventions
 

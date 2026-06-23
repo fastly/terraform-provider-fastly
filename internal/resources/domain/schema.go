@@ -2,9 +2,9 @@ package domain
 
 import (
 	"context"
-	"sort"
+	"maps"
 
-	"github.com/fastly/terraform-provider-fastly/internal/errors"
+	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -44,9 +44,7 @@ func ResourceAttributes() map[string]schema.Attribute {
 			Description: "Writable Fastly service version to modify.",
 		},
 	}
-	for k, v := range CommonAttributes() {
-		attrs[k] = v
-	}
+	maps.Copy(attrs, CommonAttributes())
 	return attrs
 }
 
@@ -59,153 +57,125 @@ func NestedBlockSchema() schema.ListNestedBlock {
 	}
 }
 
-func Normalize(input []NestedModel) []NestedModel {
-	out := make([]NestedModel, len(input))
-	copy(out, input)
+type ops struct{}
 
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].Name.ValueString() < out[j].Name.ValueString()
-	})
-
-	return out
-}
-
-func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
-	remote, err := client.ListDomains(ctx, &fastly.ListDomainsInput{
+func (o ops) List(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]*fastly.Domain, error) {
+	return client.ListDomains(ctx, &fastly.ListDomainsInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]NestedModel, 0, len(remote))
-	for _, d := range remote {
-		model := NestedModel{
-			Name: types.StringValue(fastly.ToValue(d.Name)),
-		}
-		if d.Comment != nil && *d.Comment != "" {
-			model.Comment = types.StringValue(*d.Comment)
-		} else {
-			model.Comment = types.StringNull()
-		}
-		result = append(result, model)
-	}
-
-	return Normalize(result), nil
 }
 
-func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
-	remote, err := client.ListDomains(ctx, &fastly.ListDomainsInput{
+func (o ops) GetName(api *fastly.Domain) string {
+	return fastly.ToValue(api.Name)
+}
+
+func (o ops) Delete(ctx context.Context, client *fastly.Client, serviceID string, version int, name string) error {
+	return client.DeleteDomain(ctx, &fastly.DeleteDomainInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
+		Name:           name,
 	})
-	if err != nil {
-		return err
-	}
-
-	desired = Normalize(desired)
-
-	remoteByName := make(map[string]*fastly.Domain, len(remote))
-	for _, d := range remote {
-		remoteByName[fastly.ToValue(d.Name)] = d
-	}
-
-	desiredByName := make(map[string]NestedModel, len(desired))
-	for _, d := range desired {
-		desiredByName[d.Name.ValueString()] = d
-	}
-
-	// Delete domains no longer present.
-	for name := range remoteByName {
-		if _, ok := desiredByName[name]; !ok {
-			err := client.DeleteDomain(ctx, &fastly.DeleteDomainInput{
-				ServiceID:      serviceID,
-				ServiceVersion: version,
-				Name:           name,
-			})
-			if errors.IsNotFound(err) {
-				continue
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// Create or update desired domains.
-	for _, desiredDomain := range desired {
-		name := desiredDomain.Name.ValueString()
-		remoteDomain, exists := remoteByName[name]
-
-		comment := ""
-		if !desiredDomain.Comment.IsNull() && !desiredDomain.Comment.IsUnknown() {
-			comment = desiredDomain.Comment.ValueString()
-		}
-
-		if !exists {
-			input := &fastly.CreateDomainInput{
-				ServiceID:      serviceID,
-				ServiceVersion: version,
-				Name:           new(name),
-			}
-			if !desiredDomain.Comment.IsUnknown() {
-				input.Comment = new(comment)
-			}
-			if _, err := client.CreateDomain(ctx, input); err != nil {
-				return err
-			}
-			continue
-		}
-
-		remoteComment := ""
-		if remoteDomain.Comment != nil {
-			remoteComment = *remoteDomain.Comment
-		}
-
-		if remoteComment != comment {
-			input := &fastly.UpdateDomainInput{
-				ServiceID:      serviceID,
-				ServiceVersion: version,
-				Name:           name,
-				Comment:        new(comment),
-			}
-			if _, err := client.UpdateDomain(ctx, input); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
-func Equal(a, b []NestedModel) bool {
-	a = Normalize(a)
-	b = Normalize(b)
+func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Domain, error) {
+	comment := ""
+	if !desired.Comment.IsNull() && !desired.Comment.IsUnknown() {
+		comment = desired.Comment.ValueString()
+	}
 
-	if len(a) != len(b) {
+	name := desired.Name.ValueString()
+	input := &fastly.CreateDomainInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           &name,
+	}
+	if !desired.Comment.IsUnknown() {
+		input.Comment = &comment
+	}
+
+	return client.CreateDomain(ctx, input)
+}
+
+func (o ops) Equal(desired NestedModel, remote *fastly.Domain) bool {
+	if desired.Name.ValueString() != fastly.ToValue(remote.Name) {
 		return false
 	}
 
-	for i := range a {
-		if a[i].Name.ValueString() != b[i].Name.ValueString() {
-			return false
-		}
-
-		ac := ""
-		if !a[i].Comment.IsNull() && !a[i].Comment.IsUnknown() {
-			ac = a[i].Comment.ValueString()
-		}
-
-		bc := ""
-		if !b[i].Comment.IsNull() && !b[i].Comment.IsUnknown() {
-			bc = b[i].Comment.ValueString()
-		}
-
-		if ac != bc {
-			return false
-		}
+	desiredComment := ""
+	if !desired.Comment.IsNull() && !desired.Comment.IsUnknown() {
+		desiredComment = desired.Comment.ValueString()
 	}
 
-	return true
+	remoteComment := ""
+	if remote.Comment != nil {
+		remoteComment = *remote.Comment
+	}
+
+	return desiredComment == remoteComment
+}
+
+func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Domain, error) {
+	comment := ""
+	if !desired.Comment.IsNull() && !desired.Comment.IsUnknown() {
+		comment = desired.Comment.ValueString()
+	}
+
+	name := desired.Name.ValueString()
+	return client.UpdateDomain(ctx, &fastly.UpdateDomainInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           name,
+		Comment:        &comment,
+	})
+}
+
+func (o ops) ToModel(api *fastly.Domain) NestedModel {
+	model := NestedModel{
+		Name: types.StringValue(fastly.ToValue(api.Name)),
+	}
+	if api.Comment != nil && *api.Comment != "" {
+		model.Comment = types.StringValue(*api.Comment)
+	} else {
+		model.Comment = types.StringNull()
+	}
+	return model
+}
+
+var reconciler = &reconcile.Resource[NestedModel, fastly.Domain]{
+	Ops: ops{},
+	GetName: func(m NestedModel) string {
+		return m.Name.ValueString()
+	},
+	Sortable: true,
+}
+
+func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
+	return reconciler.ReadForVersion(ctx, client, serviceID, version)
+}
+
+func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
+	return reconciler.Run(ctx, client, serviceID, version, desired)
+}
+
+func Equal(a, b []NestedModel) bool {
+	return reconcile.ModelsEqual(a, b, func(m NestedModel) string { return m.Name.ValueString() }, modelsEqual, true)
+}
+
+func modelsEqual(a, b NestedModel) bool {
+	if a.Name.ValueString() != b.Name.ValueString() {
+		return false
+	}
+
+	ac := ""
+	if !a.Comment.IsNull() && !a.Comment.IsUnknown() {
+		ac = a.Comment.ValueString()
+	}
+
+	bc := ""
+	if !b.Comment.IsNull() && !b.Comment.IsUnknown() {
+		bc = b.Comment.ValueString()
+	}
+
+	return ac == bc
 }

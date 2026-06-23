@@ -32,9 +32,12 @@ func (r *Resource[T, API]) Run(ctx context.Context, client *fastly.Client, servi
 	}
 
 	if r.Sortable {
-		sort.Slice(desired, func(i, j int) bool {
-			return r.GetName(desired[i]) < r.GetName(desired[j])
+		sorted := make([]T, len(desired))
+		copy(sorted, desired)
+		sort.Slice(sorted, func(i, j int) bool {
+			return r.GetName(sorted[i]) < r.GetName(sorted[j])
 		})
+		desired = sorted
 	}
 
 	remoteByName := make(map[string]*API, len(remote))

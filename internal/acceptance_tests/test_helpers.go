@@ -322,3 +322,147 @@ func ConfigServiceComputeWithComment(serviceName string) string {
 		},
 	)
 }
+
+// Configuration helpers for backend resources (explicit version management)
+
+// ConfigBackendBasic returns a basic backend resource config
+func ConfigBackendBasic(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_NAME":    backendName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_basic.tf",
+	)
+}
+
+// ConfigBackendUpdated returns a backend resource config with updated values
+func ConfigBackendUpdated(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_NAME":    backendName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_updated.tf",
+	)
+}
+
+// ConfigBackendFull returns a backend resource config with all optional fields
+func ConfigBackendFull(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_NAME":    backendName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_full.tf",
+	)
+}
+
+// ConfigBackendMultiple returns a config with multiple backend resources
+func ConfigBackendMultiple(serviceName, domainName, backend1Name, backend2Name string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_1_NAME":  backend1Name,
+			"BACKEND_2_NAME":  backend2Name,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_multi.tf",
+	)
+}
+
+// ConfigBackendForImport returns a test configuration for importing a backend
+func ConfigBackendForImport(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_NAME":    backendName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_basic.tf",
+	)
+}
+
+// Configuration helpers for domain resources (explicit version management)
+
+// ConfigDomainBasic returns a basic domain resource config
+func ConfigDomainBasic(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"DOMAIN_NAME":     domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_basic.tf",
+	)
+}
+
+// ConfigDomainWithComment returns a domain resource config with a comment
+func ConfigDomainWithComment(serviceName, domainName, comment string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"DOMAIN_NAME":     domainName,
+			"DOMAIN_COMMENT":  comment,
+		},
+		"internal/acceptance_tests/blocks/domain_with_comment.tf",
+	)
+}
+
+// ConfigDomainMultiple returns a config with multiple domain resources
+func ConfigDomainMultiple(serviceName, domain1Name, domain2Name string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"DOMAIN_1_NAME":   domain1Name,
+			"DOMAIN_2_NAME":   domain2Name,
+		},
+		"internal/acceptance_tests/blocks/domain_multi.tf",
+	)
+}
+
+// ConfigDomainForImport returns a test configuration for importing a domain
+func ConfigDomainForImport(serviceName, domainName, additionalDomainName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"DOMAIN_1_NAME":   domainName,
+			"DOMAIN_2_NAME":   additionalDomainName,
+		},
+		"internal/acceptance_tests/blocks/domain_multi.tf",
+	)
+}

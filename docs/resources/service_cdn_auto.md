@@ -20,6 +20,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 
 ### Optional
 
+- `acl` (Block List) ACLs attached to this service. (see [below for nested schema](#nestedblock--acl))
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Optional service comment.
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
@@ -31,6 +32,22 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `active_version` (Number) The currently active service version.
 - `id` (String) The Fastly service ID.
 - `managed_version` (Number) The latest service version selected and managed by this resource.
+
+<a id="nestedblock--acl"></a>
+### Nested Schema for `acl`
+
+Required:
+
+- `name` (String) A unique name to identify this ACL. Must be unique within the service.
+
+Optional:
+
+- `force_destroy` (Boolean) Allow the ACL to be deleted, even if it contains entries. Default `false`.
+
+Read-Only:
+
+- `acl_id` (String) The ID of the ACL.
+
 
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`

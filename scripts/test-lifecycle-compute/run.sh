@@ -567,6 +567,8 @@ test_resource_destruction() {
     terraform state rm 'fastly_service_backend.service_1_new_backend[0]' 2>/dev/null || true
     terraform state rm fastly_service_domain.service_2_domain 2>/dev/null || true
     terraform state rm fastly_service_backend.service_2_backend_shared 2>/dev/null || true
+    terraform state rm fastly_service_acl.service_1_acl 2>/dev/null || true
+    terraform state rm fastly_service_acl.service_2_acl 2>/dev/null || true
 
     log_info "Running terraform destroy..."
     terraform destroy -auto-approve

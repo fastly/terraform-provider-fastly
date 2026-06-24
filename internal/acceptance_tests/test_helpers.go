@@ -186,6 +186,51 @@ func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domai
 	)
 }
 
+// ConfigCDNAutoWithACL returns a CDN auto service config with a domain and ACL
+func ConfigCDNAutoWithACL(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME":     aclName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackendAndACL returns a CDN auto service config with domain, backend, and ACL
+func ConfigCDNAutoWithBackendAndACL(serviceName, domainName, backendName, aclName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+			"ACL_NAME":     aclName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleACLs returns a CDN auto service config with multiple ACLs
+func ConfigCDNAutoWithMultipleACLs(serviceName, domainName, aclName1, aclName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME_1":   aclName1,
+			"ACL_NAME_2":   aclName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_multi.tf",
+	)
+}
+
 // Configuration helpers for Compute Auto service
 
 // ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package
@@ -250,6 +295,22 @@ func ConfigComputeAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, d
 	)
 }
 
+// ConfigComputeAutoWithACL returns a Compute auto service config with a domain, ACL, and package
+func ConfigComputeAutoWithACL(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME":     aclName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 // ConfigComputeAutoReversedBackendAndDomainBlocks returns a Compute auto service config
 // with the same backend and domain blocks as ConfigComputeAutoUnsortedBackendAndDomainBlocks,
 // but declared in the reverse order.
@@ -264,6 +325,41 @@ func ConfigComputeAutoReversedBackendAndDomainBlocks(serviceName, domainBName, d
 		},
 		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithBackendAndACL returns a Compute auto service config with domain, backend, ACL, and package
+func ConfigComputeAutoWithBackendAndACL(serviceName, domainName, backendName, aclName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+			"ACL_NAME":     aclName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithMultipleACLs returns a Compute auto service config with multiple ACLs and a package
+func ConfigComputeAutoWithMultipleACLs(serviceName, domainName, aclName1, aclName2 string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME_1":   aclName1,
+			"ACL_NAME_2":   aclName2,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_multi.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

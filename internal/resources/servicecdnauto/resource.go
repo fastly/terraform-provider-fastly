@@ -6,6 +6,7 @@ import (
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/acl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -44,6 +45,7 @@ type Model struct {
 	ManagedVersion types.Int64           `tfsdk:"managed_version"`
 	Domain         []domain.NestedModel  `tfsdk:"domain"`
 	Backend        []backend.NestedModel `tfsdk:"backend"`
+	ACL            []acl.NestedModel     `tfsdk:"acl"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -95,6 +97,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 		Blocks: map[string]schema.Block{
 			"domain":  domain.NestedBlockSchema(),
 			"backend": backend.NestedBlockSchema(),
+			"acl":     acl.NestedBlockSchema(),
 		},
 	}
 }
@@ -157,6 +160,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+	if err := acl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.ACL); err != nil {
+		resp.Diagnostics.AddError("Error reconciling ACLs", err.Error())
+		return
+	}
+
+	acls, err := acl.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, version, plan.ACL)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
+		return
+	}
+	plan.ACL = acls
 
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -236,8 +251,14 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
+	acls, err := acl.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.ACL)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
+	state.ACL = acl.MatchOrder(acls, state.ACL)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -265,7 +286,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !acl.Equal(plan.ACL, state.ACL)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -323,6 +344,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
+		if err := acl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.ACL); err != nil {
+			resp.Diagnostics.AddError("Error reconciling ACLs", err.Error())
+			return
+		}
+
+		acls, err := acl.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.ACL)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
+			return
+		}
+		plan.ACL = acls
+
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
@@ -342,8 +375,10 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		// No version change needed - preserve version numbers and order nested state to match the plan
 		plan.ManagedVersion = state.ManagedVersion
 		plan.ActiveVersion = state.ActiveVersion
+
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
+		plan.ACL = acl.MatchOrder(state.ACL, plan.ACL)
 	}
 
 	plan.ID = state.ID

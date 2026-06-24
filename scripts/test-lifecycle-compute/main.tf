@@ -45,6 +45,13 @@ resource "fastly_service_backend" "service_1_backend_unique" {
   ssl_sni_hostname  = "unique1.origin.example.com"
 }
 
+resource "fastly_service_acl" "service_1_acl" {
+  service_id    = fastly_service_compute.service_1.id
+  version       = var.service_1_version
+  name          = "test_acl_1"
+  force_destroy = true
+}
+
 # Optional domain and backend for testing version writes
 resource "fastly_service_domain" "service_1_new_domain" {
   count      = var.service_1_new_domain != "" ? 1 : 0
@@ -89,13 +96,21 @@ resource "fastly_service_backend" "service_2_backend_shared" {
   ssl_sni_hostname  = "shared.origin.example.com"
 }
 
+resource "fastly_service_acl" "service_2_acl" {
+  service_id    = fastly_service_compute.service_2.id
+  version       = var.service_2_version
+  name          = "test_acl_2"
+  force_destroy = true
+}
+
 # Data sources to check version state
 data "fastly_service_version" "service_1" {
   service_id = fastly_service_compute.service_1.id
   depends_on = [
     fastly_service_domain.service_1_domain,
     fastly_service_backend.service_1_backend_shared,
-    fastly_service_backend.service_1_backend_unique
+    fastly_service_backend.service_1_backend_unique,
+    fastly_service_acl.service_1_acl
   ]
 }
 
@@ -103,7 +118,8 @@ data "fastly_service_version" "service_2" {
   service_id = fastly_service_compute.service_2.id
   depends_on = [
     fastly_service_domain.service_2_domain,
-    fastly_service_backend.service_2_backend_shared
+    fastly_service_backend.service_2_backend_shared,
+    fastly_service_acl.service_2_acl
   ]
 }
 

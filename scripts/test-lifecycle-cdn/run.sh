@@ -523,7 +523,7 @@ test_resource_destruction() {
     log_info "Service 1: $SERVICE_1_ID (latest version: $svc1_latest)"
     log_info "Service 2: $SERVICE_2_ID (latest version: $svc2_latest)"
 
-    # The issue with terraform destroy is that after cloning versions, the backends/domains
+    # The issue with terraform destroy is that after cloning versions, the backends/domains/ACLs
     # are pinned to version 1 (in state) which becomes locked after activation.
     # We need to remove those resources from state first, then let Terraform destroy the services.
 
@@ -535,6 +535,8 @@ test_resource_destruction() {
     terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
     terraform state rm 'fastly_service_domain.service_1_new_domain[0]' > /dev/null 2>&1 || true
     terraform state rm 'fastly_service_backend.service_1_new_backend[0]' > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl.service_1_acl > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl.service_2_acl > /dev/null 2>&1 || true
     log_success "Version-locked resources removed from state"
 
     # Now run terraform destroy to delete the services

@@ -19,6 +19,7 @@ package acceptancetests
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -67,9 +68,7 @@ func BuildConfig(serviceType ServiceType, replacements map[string]string, blockP
 
 	// Build template data with all replacements
 	templateData := make(map[string]string)
-	for k, v := range replacements {
-		templateData[k] = v
-	}
+	maps.Copy(templateData, replacements)
 
 	// Load and parse nested blocks as templates
 	var resourcesBuilder strings.Builder

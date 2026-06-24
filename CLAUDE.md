@@ -60,7 +60,7 @@ Per-object docs in `docs/` are **generated** by `tfplugindocs` — do not hand-e
 
 ## Code style
 
-- Go 1.25; formatted with `gofmt` (enforced via `make fmt` / `make build`)  
+- Go 1.26; formatted with `gofmt` (enforced via `make fmt` / `make build`)  
 - No comments explaining *what* code does — only *why* when non-obvious  
 - `StringValue`, `Int64Value`, `BoolValue` unwrap `types.*` safely; prefer these over direct field access  
 - `ToGeneratedResourceName(parts...)` builds HCL identifiers from API names (used in list resources)

@@ -2,9 +2,9 @@ package backend
 
 import (
 	"context"
-	"sort"
+	"maps"
 
-	"github.com/fastly/terraform-provider-fastly/internal/errors"
+	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
@@ -305,9 +305,7 @@ func ResourceAttributes() map[string]schema.Attribute {
 			Description: "Writable Fastly service version to modify.",
 		},
 	}
-	for k, v := range CommonAttributes() {
-		attrs[k] = v
-	}
+	maps.Copy(attrs, CommonAttributes())
 	return attrs
 }
 
@@ -320,110 +318,62 @@ func NestedBlockSchema() schema.ListNestedBlock {
 	}
 }
 
-func Normalize(input []NestedModel) []NestedModel {
-	out := make([]NestedModel, len(input))
-	copy(out, input)
+type ops struct{}
 
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].Name.ValueString() < out[j].Name.ValueString()
+func (o ops) List(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]*fastly.Backend, error) {
+	return client.ListBackends(ctx, &fastly.ListBackendsInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
 	})
+}
 
-	return out
+func (o ops) GetName(api *fastly.Backend) string {
+	return fastly.ToValue(api.Name)
+}
+
+func (o ops) Delete(ctx context.Context, client *fastly.Client, serviceID string, version int, name string) error {
+	return client.DeleteBackend(ctx, &fastly.DeleteBackendInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           name,
+	})
+}
+
+func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Backend, error) {
+	input := BuildCreateInput(serviceID, version, desired)
+	return client.CreateBackend(ctx, input)
+}
+
+func (o ops) Equal(desired NestedModel, remote *fastly.Backend) bool {
+	remoteModel := FlattenToNestedModel(remote)
+	return desired.ModelsEqual(remoteModel)
+}
+
+func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Backend, error) {
+	input := BuildUpdateInput(serviceID, version, desired)
+	return client.UpdateBackend(ctx, input)
+}
+
+func (o ops) ToModel(api *fastly.Backend) NestedModel {
+	return FlattenToNestedModel(api)
+}
+
+var reconciler = &reconcile.Resource[NestedModel, fastly.Backend]{
+	Ops: ops{},
+	GetName: func(m NestedModel) string {
+		return service.StringValue(m.Name)
+	},
+	Sortable: true,
 }
 
 func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
-	remote, err := client.ListBackends(ctx, &fastly.ListBackendsInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]NestedModel, 0, len(remote))
-	for _, b := range remote {
-		result = append(result, FlattenToNestedModel(b))
-	}
-
-	return Normalize(result), nil
+	return reconciler.ReadForVersion(ctx, client, serviceID, version)
 }
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
-	remote, err := client.ListBackends(ctx, &fastly.ListBackendsInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-	})
-	if err != nil {
-		return err
-	}
-
-	desired = Normalize(desired)
-
-	remoteByName := make(map[string]*fastly.Backend, len(remote))
-	for _, b := range remote {
-		remoteByName[fastly.ToValue(b.Name)] = b
-	}
-
-	desiredByName := make(map[string]NestedModel, len(desired))
-	for _, b := range desired {
-		desiredByName[b.Name.ValueString()] = b
-	}
-
-	// Delete backends no longer present.
-	for name := range remoteByName {
-		if _, ok := desiredByName[name]; !ok {
-			err := client.DeleteBackend(ctx, &fastly.DeleteBackendInput{
-				ServiceID:      serviceID,
-				ServiceVersion: version,
-				Name:           name,
-			})
-			if errors.IsNotFound(err) {
-				continue
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// Create or update desired backends.
-	for _, desiredBackend := range desired {
-		name := desiredBackend.Name.ValueString()
-		remoteBackend, exists := remoteByName[name]
-
-		if !exists {
-			input := BuildCreateInput(serviceID, version, desiredBackend)
-			if _, err := client.CreateBackend(ctx, input); err != nil {
-				return err
-			}
-			continue
-		}
-
-		remoteModel := FlattenToNestedModel(remoteBackend)
-		if !desiredBackend.ModelsEqual(remoteModel) {
-			input := BuildUpdateInput(serviceID, version, desiredBackend)
-			if _, err := client.UpdateBackend(ctx, input); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	return reconciler.Run(ctx, client, serviceID, version, desired)
 }
 
 func Equal(a, b []NestedModel) bool {
-	a = Normalize(a)
-	b = Normalize(b)
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if !a[i].ModelsEqual(b[i]) {
-			return false
-		}
-	}
-
-	return true
+	return reconcile.ModelsEqual(a, b, func(m NestedModel) string { return service.StringValue(m.Name) }, NestedModel.ModelsEqual, true)
 }

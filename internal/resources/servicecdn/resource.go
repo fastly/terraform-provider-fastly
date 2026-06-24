@@ -101,9 +101,9 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	})
 
 	created, err := r.providerData.Client.CreateService(ctx, &fastly.CreateServiceInput{
-		Name:    fastly.ToPointer(plan.Name.ValueString()),
-		Comment: fastly.ToPointer(plan.Comment.ValueString()),
-		Type:    fastly.ToPointer(service.TypeVCL),
+		Name:    new(plan.Name.ValueString()),
+		Comment: new(plan.Comment.ValueString()),
+		Type:    new(service.TypeVCL),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Fastly CDN service", err.Error())

@@ -101,9 +101,9 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	})
 
 	created, err := r.providerData.Client.CreateService(ctx, &fastly.CreateServiceInput{
-		Name:    fastly.ToPointer(plan.Name.ValueString()),
-		Comment: fastly.ToPointer(plan.Comment.ValueString()),
-		Type:    fastly.ToPointer(service.TypeCompute),
+		Name:    new(plan.Name.ValueString()),
+		Comment: new(plan.Comment.ValueString()),
+		Type:    new(service.TypeCompute),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Fastly Compute service", err.Error())

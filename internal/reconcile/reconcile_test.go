@@ -181,6 +181,66 @@ func TestResource_Run(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "list failed")
 	})
+
+	t.Run("handles delete error", func(t *testing.T) {
+		ops := &testOps{
+			listResult: []*testAPI{
+				{Name: "item1", Value: "value1"},
+			},
+			deleteError: errors.New("delete failed"),
+		}
+		r := &Resource[testModel, testAPI]{
+			Ops:      ops,
+			GetName:  func(m testModel) string { return m.Name },
+			Sortable: true,
+		}
+
+		err := r.Run(ctx, nil, "service123", 1, []testModel{})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "delete failed")
+	})
+
+	t.Run("handles create error", func(t *testing.T) {
+		ops := &testOps{
+			listResult:  []*testAPI{},
+			createError: errors.New("create failed"),
+		}
+		r := &Resource[testModel, testAPI]{
+			Ops:      ops,
+			GetName:  func(m testModel) string { return m.Name },
+			Sortable: true,
+		}
+
+		desired := []testModel{
+			{Name: "item1", Value: "value1"},
+		}
+
+		err := r.Run(ctx, nil, "service123", 1, desired)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "create failed")
+	})
+
+	t.Run("handles update error", func(t *testing.T) {
+		ops := &testOps{
+			listResult: []*testAPI{
+				{Name: "item1", Value: "oldvalue"},
+			},
+			updateError: errors.New("update failed"),
+		}
+		r := &Resource[testModel, testAPI]{
+			Ops:      ops,
+			GetName:  func(m testModel) string { return m.Name },
+			Sortable: true,
+		}
+
+		desired := []testModel{
+			{Name: "item1", Value: "newvalue"},
+		}
+
+		err := r.Run(ctx, nil, "service123", 1, desired)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "update failed")
+	})
 }
 
 func TestResource_ReadForVersion(t *testing.T) {

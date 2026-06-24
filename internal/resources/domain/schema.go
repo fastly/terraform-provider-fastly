@@ -90,7 +90,7 @@ func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string
 		ServiceVersion: version,
 		Name:           &name,
 	}
-	if !desired.Comment.IsUnknown() {
+	if !desired.Comment.IsNull() && !desired.Comment.IsUnknown() {
 		input.Comment = &comment
 	}
 

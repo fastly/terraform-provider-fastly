@@ -63,10 +63,10 @@ func TestFlatten(t *testing.T) {
 	t.Run("full domain with comment", func(t *testing.T) {
 		ctx := context.Background()
 		domain := &fastly.Domain{
-			ServiceID:      fastly.ToPointer("svc-123"),
-			ServiceVersion: fastly.ToPointer(5),
-			Name:           fastly.ToPointer("example.com"),
-			Comment:        fastly.ToPointer("Test comment"),
+			ServiceID:      new("svc-123"),
+			ServiceVersion: new(5),
+			Name:           new("example.com"),
+			Comment:        new("Test comment"),
 		}
 		m := &Model{}
 		flatten(ctx, domain, m)
@@ -81,9 +81,9 @@ func TestFlatten(t *testing.T) {
 	t.Run("minimal domain without comment", func(t *testing.T) {
 		ctx := context.Background()
 		domain := &fastly.Domain{
-			ServiceID:      fastly.ToPointer("svc-456"),
-			ServiceVersion: fastly.ToPointer(1),
-			Name:           fastly.ToPointer("minimal.com"),
+			ServiceID:      new("svc-456"),
+			ServiceVersion: new(1),
+			Name:           new("minimal.com"),
 		}
 		m := &Model{}
 		flatten(ctx, domain, m)
@@ -99,20 +99,20 @@ func TestFlatten(t *testing.T) {
 		ctx := context.Background()
 
 		emptyDomain := &fastly.Domain{
-			ServiceID:      fastly.ToPointer("svc-1"),
-			ServiceVersion: fastly.ToPointer(1),
-			Name:           fastly.ToPointer("empty.com"),
-			Comment:        fastly.ToPointer(""),
+			ServiceID:      new("svc-1"),
+			ServiceVersion: new(1),
+			Name:           new("empty.com"),
+			Comment:        new(""),
 		}
 		m1 := &Model{}
 		flatten(ctx, emptyDomain, m1)
 		assert.True(t, m1.Comment.IsNull())
 
 		whitespaceDomain := &fastly.Domain{
-			ServiceID:      fastly.ToPointer("svc-2"),
-			ServiceVersion: fastly.ToPointer(2),
-			Name:           fastly.ToPointer("whitespace.com"),
-			Comment:        fastly.ToPointer("   "),
+			ServiceID:      new("svc-2"),
+			ServiceVersion: new(2),
+			Name:           new("whitespace.com"),
+			Comment:        new("   "),
 		}
 		m2 := &Model{}
 		flatten(ctx, whitespaceDomain, m2)
@@ -225,9 +225,9 @@ func TestIDGeneration(t *testing.T) {
 
 	for _, c := range cases {
 		domain := &fastly.Domain{
-			ServiceID:      fastly.ToPointer(c.svc),
-			ServiceVersion: fastly.ToPointer(c.ver),
-			Name:           fastly.ToPointer(c.name),
+			ServiceID:      new(c.svc),
+			ServiceVersion: new(c.ver),
+			Name:           new(c.name),
 		}
 		m := &Model{}
 		flatten(ctx, domain, m)

@@ -6,6 +6,10 @@
 
 ### BUG FIXES:
 
+### Dependencies
+
+- build(deps): `go.mongodb.org/mongo-driver` from 1.17.4 to 1.17.7 ([#1309](https://github.com/fastly/terraform-provider-fastly/pull/1309))
+
 ## 9.3.0 (June 17, 2026)
 
 ### ENHANCEMENTS:

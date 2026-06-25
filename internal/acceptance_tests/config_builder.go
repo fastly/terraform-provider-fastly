@@ -90,12 +90,15 @@ func BuildConfig(serviceType ServiceType, replacements map[string]string, blockP
 			panic(fmt.Sprintf("failed to execute block template %s: %v", blockPath, err))
 		}
 
-		resourcesBuilder.WriteString(blockBuf.String())
+		block := normalizeNestedBlockIndent(blockBuf.String())
+		if resourcesBuilder.Len() > 0 {
+			resourcesBuilder.WriteString("\n")
+		}
+		resourcesBuilder.WriteString(block)
 	}
 
 	// Add the rendered resources to template data
-	resources := strings.TrimSuffix(resourcesBuilder.String(), "\n")
-	templateData["RESOURCES"] = resources
+	templateData["RESOURCES"] = resourcesBuilder.String()
 
 	// Load service template
 	templatePath := filepath.Join(repoRoot, "internal/acceptance_tests/blocks", string(serviceType)+".tf")
@@ -116,4 +119,36 @@ func BuildConfig(serviceType ServiceType, replacements map[string]string, blockP
 	}
 
 	return buf.String()
+}
+
+func normalizeNestedBlockIndent(block string) string {
+	block = strings.Trim(block, "\n")
+	if block == "" {
+		return ""
+	}
+
+	lines := strings.Split(block, "\n")
+	minIndent := -1
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		indent := len(line) - len(strings.TrimLeft(line, " \t"))
+		if minIndent == -1 || indent < minIndent {
+			minIndent = indent
+		}
+	}
+
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		if minIndent > 0 && len(line) >= minIndent {
+			line = line[minIndent:]
+		}
+		lines[i] = "  " + line
+	}
+
+	return strings.Join(lines, "\n")
 }

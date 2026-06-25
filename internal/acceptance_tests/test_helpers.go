@@ -155,6 +155,37 @@ func ConfigCDNAutoMultipleBackends(serviceName, domainName string) string {
 	)
 }
 
+// ConfigCDNAutoUnsortedBackendAndDomainBlocks returns a CDN auto service config
+// with backend and domain blocks declared in non-sorted order.
+func ConfigCDNAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_unsorted.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_unsorted.tf",
+	)
+}
+
+// ConfigCDNAutoReversedBackendAndDomainBlocks returns a CDN auto service config
+// with the same backend and domain blocks as ConfigCDNAutoUnsortedBackendAndDomainBlocks,
+// but declared in the reverse order.
+func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
+	)
+}
+
 // Configuration helpers for Compute Auto service
 
 // ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package
@@ -198,6 +229,41 @@ func ConfigComputeAutoMultipleBackends(serviceName, domainName string) string {
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/backend_multiple.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoUnsortedBackendAndDomainBlocks returns a Compute auto service config
+// with backend and domain blocks declared in non-sorted order.
+func ConfigComputeAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+			"PACKAGE_PATH":  GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_unsorted.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_unsorted.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoReversedBackendAndDomainBlocks returns a Compute auto service config
+// with the same backend and domain blocks as ConfigComputeAutoUnsortedBackendAndDomainBlocks,
+// but declared in the reverse order.
+func ConfigComputeAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+			"PACKAGE_PATH":  GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

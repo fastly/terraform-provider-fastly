@@ -179,3 +179,7 @@ func modelsEqual(a, b NestedModel) bool {
 
 	return ac == bc
 }
+
+func MatchOrder(items, order []NestedModel) []NestedModel {
+	return reconcile.MatchOrder(items, order, func(m NestedModel) string { return m.Name.ValueString() })
+}

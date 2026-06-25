@@ -144,7 +144,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		resp.Diagnostics.AddError("Error reading service domains", err.Error())
 		return
 	}
-	plan.Domain = domains
+	plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
 	if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -156,7 +156,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
-	plan.Backend = backends
+	plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -236,8 +236,8 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
-	state.Domain = domains
-	state.Backend = backends
+	state.Domain = domain.MatchOrder(domains, state.Domain)
+	state.Backend = backend.MatchOrder(backends, state.Backend)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -309,7 +309,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			resp.Diagnostics.AddError("Error reading service domains", err.Error())
 			return
 		}
-		plan.Domain = domains
+		plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
 		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -321,7 +321,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			resp.Diagnostics.AddError("Error reading service backends", err.Error())
 			return
 		}
-		plan.Backend = backends
+		plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -339,11 +339,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ActiveVersion = types.Int64Value(int64(targetVersion))
 	} else {
-		// No version change needed - preserve version numbers and nested state
+		// No version change needed - preserve version numbers and order nested state to match the plan
 		plan.ManagedVersion = state.ManagedVersion
 		plan.ActiveVersion = state.ActiveVersion
-		plan.Domain = state.Domain
-		plan.Backend = state.Backend
+		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
+		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
 	}
 
 	plan.ID = state.ID

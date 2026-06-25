@@ -103,6 +103,43 @@ func (r *Resource[T, API]) ReadForVersion(ctx context.Context, client *fastly.Cl
 	return result, nil
 }
 
+// MatchOrder returns items ordered to match the names in order.
+// Items with names not present in order are appended in stable name order.
+func MatchOrder[T any](items []T, order []T, getName func(T) string) []T {
+	itemsByName := make(map[string]T, len(items))
+	for _, item := range items {
+		itemsByName[getName(item)] = item
+	}
+
+	result := make([]T, 0, len(items))
+	seen := make(map[string]struct{}, len(items))
+
+	for _, orderedItem := range order {
+		name := getName(orderedItem)
+		item, ok := itemsByName[name]
+		if !ok {
+			continue
+		}
+		result = append(result, item)
+		seen[name] = struct{}{}
+	}
+
+	unmatched := make([]T, 0, len(items))
+	for _, item := range items {
+		if _, ok := seen[getName(item)]; ok {
+			continue
+		}
+		unmatched = append(unmatched, item)
+	}
+
+	sort.Slice(unmatched, func(i, j int) bool {
+		return getName(unmatched[i]) < getName(unmatched[j])
+	})
+
+	result = append(result, unmatched...)
+	return result
+}
+
 func ModelsEqual[T any](a, b []T, getName func(T) string, equals func(T, T) bool, sortable bool) bool {
 	if sortable {
 		sortedA := make([]T, len(a))

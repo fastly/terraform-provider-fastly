@@ -176,6 +176,7 @@ func TestAccFastlyServiceCDNAuto_preservesBackendAndDomainOrder(t *testing.T) {
 	domainBName := fmt.Sprintf("b-%s.example.com", acctest.RandString(10))
 	domainAName := fmt.Sprintf("a-%s.example.com", acctest.RandString(10))
 	config := ConfigCDNAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, domainAName)
+	reversedConfig := ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domainAName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
@@ -194,10 +195,32 @@ func TestAccFastlyServiceCDNAuto_preservesBackendAndDomainOrder(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "2"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.0.name", domainBName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.1.name", domainAName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
 				),
 			},
 			{
 				Config:   config,
+				PlanOnly: true,
+			},
+			{
+				Config: reversedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", "a"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.address", "a.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.1.name", "b"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.1.address", "b.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.0.name", domainAName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.1.name", domainBName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				Config:   reversedConfig,
 				PlanOnly: true,
 			},
 		},

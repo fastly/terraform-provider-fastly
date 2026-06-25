@@ -170,6 +170,40 @@ func TestAccFastlyServiceCDNAuto_multipleBackends(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_preservesBackendAndDomainOrder(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainBName := fmt.Sprintf("b-%s.example.com", acctest.RandString(10))
+	domainAName := fmt.Sprintf("a-%s.example.com", acctest.RandString(10))
+	config := ConfigCDNAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, domainAName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", "b"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.address", "b.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.1.name", "a"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.1.address", "a.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.0.name", domainBName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "domain.1.name", domainAName),
+				),
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

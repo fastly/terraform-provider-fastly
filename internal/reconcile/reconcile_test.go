@@ -282,6 +282,61 @@ func TestResource_ReadForVersion(t *testing.T) {
 	})
 }
 
+func TestMatchOrder(t *testing.T) {
+	t.Run("orders items to match reference order", func(t *testing.T) {
+		items := []testModel{
+			{Name: "a", Value: "remote-a"},
+			{Name: "b", Value: "remote-b"},
+		}
+		order := []testModel{
+			{Name: "b"},
+			{Name: "a"},
+		}
+
+		result := MatchOrder(items, order, func(m testModel) string { return m.Name })
+
+		assert.Equal(t, []testModel{
+			{Name: "b", Value: "remote-b"},
+			{Name: "a", Value: "remote-a"},
+		}, result)
+	})
+
+	t.Run("appends unmatched items in stable name order", func(t *testing.T) {
+		items := []testModel{
+			{Name: "c", Value: "remote-c"},
+			{Name: "a", Value: "remote-a"},
+			{Name: "b", Value: "remote-b"},
+		}
+		order := []testModel{
+			{Name: "b"},
+		}
+
+		result := MatchOrder(items, order, func(m testModel) string { return m.Name })
+
+		assert.Equal(t, []testModel{
+			{Name: "b", Value: "remote-b"},
+			{Name: "a", Value: "remote-a"},
+			{Name: "c", Value: "remote-c"},
+		}, result)
+	})
+
+	t.Run("skips ordered items not present in result", func(t *testing.T) {
+		items := []testModel{
+			{Name: "b", Value: "remote-b"},
+		}
+		order := []testModel{
+			{Name: "missing"},
+			{Name: "b"},
+		}
+
+		result := MatchOrder(items, order, func(m testModel) string { return m.Name })
+
+		assert.Equal(t, []testModel{
+			{Name: "b", Value: "remote-b"},
+		}, result)
+	})
+}
+
 func TestModelsEqual(t *testing.T) {
 	t.Run("equal when same", func(t *testing.T) {
 		a := []testModel{{Name: "item1", Value: "value1"}}

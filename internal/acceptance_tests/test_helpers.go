@@ -155,6 +155,21 @@ func ConfigCDNAutoMultipleBackends(serviceName, domainName string) string {
 	)
 }
 
+// ConfigCDNAutoUnsortedBackendAndDomainBlocks returns a CDN auto service config
+// with backend and domain blocks declared in non-sorted order.
+func ConfigCDNAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_unsorted.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_unsorted.tf",
+	)
+}
+
 // Configuration helpers for Compute Auto service
 
 // ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package

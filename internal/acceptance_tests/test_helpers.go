@@ -233,6 +233,41 @@ func ConfigComputeAutoMultipleBackends(serviceName, domainName string) string {
 	)
 }
 
+// ConfigComputeAutoUnsortedBackendAndDomainBlocks returns a Compute auto service config
+// with backend and domain blocks declared in non-sorted order.
+func ConfigComputeAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+			"PACKAGE_PATH":  GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_unsorted.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_unsorted.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoReversedBackendAndDomainBlocks returns a Compute auto service config
+// with the same backend and domain blocks as ConfigComputeAutoUnsortedBackendAndDomainBlocks,
+// but declared in the reverse order.
+func ConfigComputeAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domainAName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_B_NAME": domainBName,
+			"DOMAIN_A_NAME": domainAName,
+			"PACKAGE_PATH":  GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
+		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 // Configuration helpers for CDN service (explicit version management)
 
 // ConfigServiceCDNBasic returns a basic CDN service config without any nested resources

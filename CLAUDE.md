@@ -63,7 +63,8 @@ Per-object docs in `docs/` are **generated** by `tfplugindocs` — do not hand-e
 - Go 1.26; formatted with `gofmt` (enforced via `make fmt` / `make build`)  
 - No comments explaining *what* code does — only *why* when non-obvious  
 - `StringValue`, `Int64Value`, `BoolValue` unwrap `types.*` safely; prefer these over direct field access  
-- `ToGeneratedResourceName(parts...)` builds HCL identifiers from API names (used in list resources)
+- `ToGeneratedResourceName(parts...)` builds HCL identifiers from API names (used in list resources)  
+- Use `new(T)` to take a pointer to a value — prefer this over `fastly.ToPointer` (a go-fastly helper that has been replaced with idiomatic Go)
 
 ## Conventions
 

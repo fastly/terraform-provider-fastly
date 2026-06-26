@@ -639,6 +639,7 @@ main() {
     log_success "✓ Service creation (fastly_service_compute)"
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
+    log_success "✓ ACL configuration (fastly_service_acl)"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Package upload action (fastly_service_compute_package_upload)"
     log_success "✓ Resource updates"

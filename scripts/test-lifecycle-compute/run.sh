@@ -634,8 +634,21 @@ main() {
     test_clone_from_latest_and_version_writes
     test_resource_destruction
 
-    log_step "All tests passed!"
-    log_success "Compute service lifecycle tests completed successfully"
+    log_step "Test Summary - Compute Service"
+    log_success "✓ Provider build"
+    log_success "✓ Service creation (fastly_service_compute)"
+    log_success "✓ Domain attachment (fastly_service_domain)"
+    log_success "✓ Backend configuration (fastly_service_backend)"
+    log_success "✓ Version data sources (data.fastly_service_version)"
+    log_success "✓ Package upload action (fastly_service_compute_package_upload)"
+    log_success "✓ Resource updates"
+    log_success "✓ Version clone action (fastly_service_version_clone)"
+    log_success "✓ Version activate action (fastly_service_version_activate)"
+    log_success "✓ Clone from latest version and version writes"
+    log_success "✓ Resources destruction"
+
+    echo ""
+    log_success "All Compute service lifecycle tests passed!"
 }
 
 # Run main

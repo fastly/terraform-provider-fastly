@@ -593,7 +593,7 @@ main() {
     test_clone_from_latest_and_version_writes
     test_resource_destruction
 
-    log_step "Test Summary"
+    log_step "Test Summary - CDN Service"
     log_success "✓ Provider build"
     log_success "✓ Service creation (fastly_service_cdn)"
     log_success "✓ Domain attachment (fastly_service_domain)"
@@ -606,7 +606,7 @@ main() {
     log_success "✓ Resource destruction"
 
     echo ""
-    log_success "All provider lifecycle tests passed!"
+    log_success "All CDN service lifecycle tests passed!"
 }
 
 # Run main function

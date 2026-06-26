@@ -10,6 +10,7 @@ The example provisions and manages:
 - one shared backend reused across both services
 - one service-specific backend on only service 1
 - one domain per service
+- one ACL per service (service 1 has an IP allowlist, service 2 has a temporary blocklist)
 
 ## What this example is for
 
@@ -46,7 +47,7 @@ Expected bootstrap behavior:
 
 1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
-3. The provider reconciles the nested `domain` and `backend` blocks to version `1`.
+3. The provider reconciles the nested `domain`, `backend`, and `acl` blocks to version `1`.
 4. The provider validates and activates version `1`.
 
 ## Day-to-day workflow
@@ -119,6 +120,28 @@ You should see:
 - `service_2_*` outputs remain unchanged
 
 A follow-up `terraform plan` should show no changes.
+
+### Add or modify an ACL
+
+For example, add a second ACL to `service_1` or change the `force_destroy` attribute on `service_2`'s ACL:
+
+```hcl
+  acl {
+    name = "secondary_allowlist"
+  }
+```
+
+Then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- the affected service get a new managed version
+- the new or modified ACL appear in the service configuration
+- `acl_id` outputs reflect the new ACL IDs
 
 ## Notes
 

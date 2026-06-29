@@ -65,11 +65,19 @@ Optional:
 - `ssl_cert_hostname` (String) Hostname used for certificate validation. Does not affect SNI.
 - `ssl_check_cert` (Boolean) Whether to strictly check SSL certificates. Default `true`.
 - `ssl_ciphers` (String) Cipher list for TLS connections to this backend.
-- `ssl_client_cert` (String, Sensitive) Client certificate used when connecting to the backend.
-- `ssl_client_key` (String, Sensitive) Client key used when connecting to the backend.
+- `ssl_client_secrets` (Attributes) Sensitive client certificate and key values used when connecting to the backend. (see [below for nested schema](#nestedatt--backend--ssl_client_secrets))
 - `ssl_sni_hostname` (String) Hostname used for SNI in the TLS handshake.
 - `use_ssl` (Boolean) Whether to use SSL to reach the backend. Default `false`.
 - `weight` (Number) Portion of traffic to send to this backend. Default `100`.
+
+<a id="nestedatt--backend--ssl_client_secrets"></a>
+### Nested Schema for `backend.ssl_client_secrets`
+
+Optional:
+
+- `ssl_client_cert` (String, Sensitive) Client certificate used when connecting to the backend.
+- `ssl_client_key` (String, Sensitive) Client key used when connecting to the backend.
+
 
 
 <a id="nestedblock--domain"></a>

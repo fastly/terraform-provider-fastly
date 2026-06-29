@@ -177,7 +177,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
-	if err := acl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.ACL); err != nil {
+	if err := acl.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ACL); err != nil {
 		resp.Diagnostics.AddError("Error reconciling ACLs", err.Error())
 		return
 	}
@@ -379,7 +379,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
-		if err := acl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.ACL); err != nil {
+		if err := acl.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.ACL, plan.ACL); err != nil {
 			resp.Diagnostics.AddError("Error reconciling ACLs", err.Error())
 			return
 		}

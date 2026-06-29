@@ -2,6 +2,7 @@ package acl
 
 import (
 	"context"
+	"fmt"
 	"maps"
 
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
@@ -162,6 +163,37 @@ func ReadForVersionWithPlan(ctx context.Context, client *fastly.Client, serviceI
 }
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
+	return reconciler.Run(ctx, client, serviceID, version, desired)
+}
+
+// ReconcileWithPrevious reconciles ACLs while validating force_destroy requirements for deletions.
+// It checks that ACLs being removed either have force_destroy=true in their previous state or are empty.
+func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID string, version int, previous, desired []NestedModel) error {
+	previousByName := make(map[string]NestedModel)
+	for _, p := range previous {
+		previousByName[service.StringValue(p.Name)] = p
+	}
+
+	desiredByName := make(map[string]NestedModel)
+	for _, d := range desired {
+		desiredByName[service.StringValue(d.Name)] = d
+	}
+
+	for name, prevACL := range previousByName {
+		if _, exists := desiredByName[name]; !exists {
+			if !service.BoolValue(prevACL.ForceDestroy) {
+				isEmpty, err := isACLEmpty(ctx, serviceID, service.StringValue(prevACL.ACLID), client)
+				if err != nil {
+					return fmt.Errorf("error checking if ACL is empty before removal: %w", err)
+				}
+
+				if !isEmpty {
+					return fmt.Errorf("cannot delete ACL %q (ID: %s): list is not empty. The ACL contains entries that must be removed first, or set force_destroy to true before removing the ACL", name, service.StringValue(prevACL.ACLID))
+				}
+			}
+		}
+	}
+
 	return reconciler.Run(ctx, client, serviceID, version, desired)
 }
 

@@ -2,6 +2,7 @@ package acceptancetests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -308,6 +309,108 @@ func TestAccFastlyServiceComputeAuto_withACLUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("fastly_service_compute_auto.test", "acl.0.acl_id"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_withACLForceDestroy(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
+	aclNameUpdated := fmt.Sprintf("acl_updated_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithACL(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.0.name", aclName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.0.force_destroy", "false"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithACL(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					AddACLEntry("fastly_service_cdn_auto.test"),
+				),
+			},
+			{
+				Config:      ConfigCDNAutoWithACL(serviceName, domainName, aclNameUpdated),
+				ExpectError: regexp.MustCompile("cannot delete ACL"),
+			},
+			{
+				Config: ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.0.name", aclName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.0.force_destroy", "true"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.0.name", aclNameUpdated),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "acl.0.force_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceComputeAuto_withACLForceDestroy(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
+	aclNameUpdated := fmt.Sprintf("acl_updated_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigComputeAutoWithACL(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.name", aclName),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.force_destroy", "false"),
+				),
+			},
+			{
+				Config: ConfigComputeAutoWithACL(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					AddACLEntry("fastly_service_compute_auto.test"),
+				),
+			},
+			{
+				Config:      ConfigComputeAutoWithACL(serviceName, domainName, aclNameUpdated),
+				ExpectError: regexp.MustCompile("cannot delete ACL"),
+			},
+			{
+				Config: ConfigComputeAutoWithACLForceDestroy(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.name", aclName),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.force_destroy", "true"),
+				),
+			},
+			{
+				Config: ConfigComputeAutoWithACLForceDestroy(serviceName, domainName, aclNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.name", aclNameUpdated),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.force_destroy", "true"),
 				),
 			},
 		},

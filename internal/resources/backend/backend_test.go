@@ -39,8 +39,7 @@ func defaultNestedModel() NestedModel {
 		SSLCertHostname:     types.StringValue(""),
 		SSLCheckCert:        types.BoolValue(true),
 		SSLCiphers:          types.StringValue(""),
-		SSLClientCert:       types.StringValue(""),
-		SSLClientKey:        types.StringValue(""),
+		SSLClientSecrets:    defaultSSLClientSecretsObject(),
 		SSLSNIHostname:      types.StringValue(""),
 		UseSSL:              types.BoolValue(false),
 		Weight:              types.Int64Value(100),
@@ -75,11 +74,13 @@ func fullNestedModel() NestedModel {
 		SSLCertHostname:     types.StringValue("cert.example.com"),
 		SSLCheckCert:        types.BoolValue(false),
 		SSLCiphers:          types.StringValue("ECDHE-RSA-AES128-GCM-SHA256"),
-		SSLClientCert:       types.StringValue("client-cert-content"),
-		SSLClientKey:        types.StringValue("client-key-content"),
-		SSLSNIHostname:      types.StringValue("sni.example.com"),
-		UseSSL:              types.BoolValue(true),
-		Weight:              types.Int64Value(75),
+		SSLClientSecrets: NewSSLClientSecretsObject(
+			types.StringValue("client-cert-content"),
+			types.StringValue("client-key-content"),
+		),
+		SSLSNIHostname: types.StringValue("sni.example.com"),
+		UseSSL:         types.BoolValue(true),
+		Weight:         types.Int64Value(75),
 	}
 }
 
@@ -534,9 +535,11 @@ func TestSetCreateOnlyNonEmptyStrings(t *testing.T) {
 				SSLCACert:       types.StringValue("ca-cert-content"),
 				SSLCertHostname: types.StringValue("cert.example.com"),
 				SSLCiphers:      types.StringValue("ECDHE-RSA-AES128-GCM-SHA256"),
-				SSLClientCert:   types.StringValue("client-cert-content"),
-				SSLClientKey:    types.StringValue("client-key-content"),
-				SSLSNIHostname:  types.StringValue("sni.example.com"),
+				SSLClientSecrets: NewSSLClientSecretsObject(
+					types.StringValue("client-cert-content"),
+					types.StringValue("client-key-content"),
+				),
+				SSLSNIHostname: types.StringValue("sni.example.com"),
 			},
 			validate: func(t *testing.T, input *fastly.CreateBackendInput) {
 				assert.NotNil(t, input.MinTLSVersion)
@@ -587,9 +590,11 @@ func TestSetCreateOnlyNonEmptyStrings(t *testing.T) {
 				SSLCACert:       types.StringValue("ca-cert-content"),
 				SSLCertHostname: types.StringValue(""),
 				SSLCiphers:      types.StringValue(""),
-				SSLClientCert:   types.StringValue("client-cert-content"),
-				SSLClientKey:    types.StringValue("client-key-content"),
-				SSLSNIHostname:  types.StringValue(""),
+				SSLClientSecrets: NewSSLClientSecretsObject(
+					types.StringValue("client-cert-content"),
+					types.StringValue("client-key-content"),
+				),
+				SSLSNIHostname: types.StringValue(""),
 			},
 			validate: func(t *testing.T, input *fastly.CreateBackendInput) {
 				assert.NotNil(t, input.MinTLSVersion)
@@ -683,8 +688,7 @@ func TestModelToNested(t *testing.T) {
 					SSLCertHostname:     types.StringValue(""),
 					SSLCheckCert:        types.BoolValue(true),
 					SSLCiphers:          types.StringValue(""),
-					SSLClientCert:       types.StringValue(""),
-					SSLClientKey:        types.StringValue(""),
+					SSLClientSecrets:    defaultSSLClientSecretsObject(),
 					SSLSNIHostname:      types.StringValue(""),
 					UseSSL:              types.BoolValue(false),
 					Weight:              types.Int64Value(100),
@@ -719,8 +723,7 @@ func TestModelToNested(t *testing.T) {
 				SSLCertHostname:     types.StringValue(""),
 				SSLCheckCert:        types.BoolValue(true),
 				SSLCiphers:          types.StringValue(""),
-				SSLClientCert:       types.StringValue(""),
-				SSLClientKey:        types.StringValue(""),
+				SSLClientSecrets:    defaultSSLClientSecretsObject(),
 				SSLSNIHostname:      types.StringValue(""),
 				UseSSL:              types.BoolValue(false),
 				Weight:              types.Int64Value(100),

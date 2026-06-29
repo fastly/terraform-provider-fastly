@@ -2,7 +2,7 @@
 
 # Test script for the full provider lifecycle
 # Tests: fastly_service_cdn, fastly_service_domain, fastly_service_backend,
-#        fastly_service_version_clone, and fastly_service_version_activate actions
+#        fastly_service_logging_s3, fastly_service_version_clone, and fastly_service_version_activate actions
 #
 # Coverage includes:
 #   - Clone from active version
@@ -352,6 +352,7 @@ verify_service_configuration() {
     terraform state show fastly_service_domain.service_1_domain > /dev/null
     terraform state show fastly_service_backend.service_1_backend_shared > /dev/null
     terraform state show fastly_service_backend.service_1_backend_unique > /dev/null
+    terraform state show fastly_service_logging_s3.service_1_logging > /dev/null
     log_success "Service 1 resources verified"
 
     # Check service 2 resources
@@ -535,6 +536,7 @@ test_resource_destruction() {
     terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
     terraform state rm 'fastly_service_domain.service_1_new_domain[0]' > /dev/null 2>&1 || true
     terraform state rm 'fastly_service_backend.service_1_new_backend[0]' > /dev/null 2>&1 || true
+    terraform state rm fastly_service_logging_s3.service_1_logging > /dev/null 2>&1 || true
     log_success "Version-locked resources removed from state"
 
     # Now run terraform destroy to delete the services
@@ -596,6 +598,7 @@ main() {
     log_success "✓ Service creation (fastly_service_cdn)"
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
+    log_success "✓ S3 logging endpoint (fastly_service_logging_s3)"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Resource updates"
     log_success "✓ Version clone action (fastly_service_version_clone)"

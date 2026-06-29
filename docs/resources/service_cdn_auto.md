@@ -24,6 +24,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `comment` (String) Optional service comment.
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
+- `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 
 ### Read-Only
@@ -90,3 +91,43 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--logging_s3"></a>
+### Nested Schema for `logging_s3`
+
+Required:
+
+- `bucket_name` (String) The bucket name for S3 account.
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `acl` (String) The access control list (ACL) specific request header. See the AWS documentation for [Access Control List (ACL) Specific Request Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html#initiate-mpu-acl-specific-request-headers) for more information.
+- `authentication` (Attributes) AWS authentication credentials for S3 access. Provide either `access_key` and `secret_key`, or `iam_role`. (see [below for nested schema](#nestedatt--logging_s3--authentication))
+- `compression_codec` (String) The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`.  Specifying both `compression_codec` and `gzip_level` in the same API request will result in an error.
+- `domain` (String) The Domain of the Amazon S3 endpoint.
+- `file_max_bytes` (Number) The maximum number of bytes for each uploaded file. A value of 0 can be used to indicate there is no limit on the size of uploaded files, otherwise the minimum value is 1048576 bytes (1 MiB.).
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/).
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `gzip_level` (Number) The level of gzip encoding when sending logs (default `0`, no compression). Specifying both `compression_codec` and `gzip_level` in the same API request will result in an error.
+- `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.
+- `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path.
+- `period` (Number) How frequently log files are finalized so they can be available for reading in seconds. Default `3600`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. Valid values are `none` or `waf_debug`.
+- `processing_region` (String) Region where logs will be processed before streaming to the destination. Valid values are `none`, `us` and `eu`.
+- `public_key` (String, Sensitive) PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+- `redundancy` (String) The S3 redundancy level. Valid values are `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier_ir`, `glacier`, `deep_archive`, and `reduced_redundancy`.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+- `server_side_encryption` (String) Server-side encryption method. Valid values are `AES256` and `aws:kms`.
+- `server_side_encryption_kms_key_id` (String) KMS key ID to use for `server_side_encryption`. Required when `server_side_encryption` is `aws:kms`.
+- `timestamp_format` (String) strftime-specified timestamp format for log filename.
+
+<a id="nestedatt--logging_s3--authentication"></a>
+### Nested Schema for `logging_s3.authentication`
+
+Optional:
+
+- `access_key` (String, Sensitive) The access key for your S3 account. Not required if `iam_role` is provided.
+- `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided.
+- `secret_key` (String, Sensitive) The secret key for your S3 account. Not required if `iam_role` is provided.

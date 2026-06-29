@@ -22,6 +22,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/serviceversion"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecompute"
@@ -94,6 +95,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		backend.NewResource,
 		domain.NewResource,
+		loggings3.NewResource,
 		servicecompute.NewResource,
 		servicecomputeauto.NewResource,
 		servicecdn.NewResource,
@@ -111,6 +113,7 @@ func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListReso
 	return []func() list.ListResource{
 		backend.NewListResource,
 		domain.NewListResource,
+		loggings3.NewListResource,
 		servicecompute.NewListResource,
 		servicecdn.NewListResource,
 	}

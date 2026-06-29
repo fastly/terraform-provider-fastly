@@ -180,70 +180,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, plan.Service.ValueString(), "fastly_service_acl", service.TypeVCL, service.TypeCompute); err != nil {
-		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
-		return
-	}
+	tflog.Debug(ctx, "No ACL changes detected", map[string]any{
+		"service_id": plan.Service.ValueString(),
+		"version":    plan.Version.ValueInt64(),
+		"name":       service.StringValue(plan.Name),
+	})
 
-	resp.Diagnostics.Append(r.providerData.VersionChecker.EnsureMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Check if name changed
-	if !plan.Name.Equal(state.Name) {
-		tflog.Debug(ctx, "ACL name changed, recreating ACL", map[string]any{
-			"service_id": plan.Service.ValueString(),
-			"version":    plan.Version.ValueInt64(),
-			"old_name":   state.Name.ValueString(),
-			"new_name":   plan.Name.ValueString(),
-		})
-
-		if !service.BoolValue(state.ForceDestroy) {
-			mayDelete, err := isACLEmpty(ctx, state.Service.ValueString(), state.ACLID.ValueString(), r.providerData.Client)
-			if err != nil {
-				resp.Diagnostics.AddError("Error checking if ACL is empty before recreating", err.Error())
-				return
-			}
-
-			if !mayDelete {
-				resp.Diagnostics.AddError(
-					"Cannot recreate ACL with name change",
-					fmt.Sprintf("Cannot change name of ACL %q because it contains entries. ACL names cannot be updated in-place. Either delete the entries first, or set force_destroy to true and apply it before making this change.", state.ACLID.ValueString()),
-				)
-				return
-			}
-		}
-
-		err := r.providerData.Client.DeleteACL(ctx, &fastly.DeleteACLInput{
-			ServiceID:      state.Service.ValueString(),
-			ServiceVersion: int(state.Version.ValueInt64()),
-			Name:           state.Name.ValueString(),
-		})
-		if err != nil && !errors.IsNotFound(err) {
-			resp.Diagnostics.AddError("Error deleting ACL during name change", err.Error())
-			return
-		}
-
-		opts := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel)
-		a, err := r.providerData.Client.CreateACL(ctx, opts)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating ACL during name change", err.Error())
-			return
-		}
-
-		flatten(ctx, a, &plan)
-	} else {
-		tflog.Debug(ctx, "No ACL changes detected", map[string]any{
-			"service_id": plan.Service.ValueString(),
-			"version":    plan.Version.ValueInt64(),
-			"name":       service.StringValue(plan.Name),
-		})
-
-		// Preserve computed fields from state
-		plan.ID = state.ID
-		plan.ACLID = state.ACLID
-	}
+	// Preserve computed fields from state
+	plan.ID = state.ID
+	plan.ACLID = state.ACLID
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 

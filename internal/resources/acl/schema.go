@@ -11,6 +11,9 @@ import (
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -57,13 +60,25 @@ func ResourceAttributes() map[string]schema.Attribute {
 		"service_id": schema.StringAttribute{
 			Required:    true,
 			Description: "Fastly service ID.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 		},
 		"version": schema.Int64Attribute{
 			Required:    true,
 			Description: "Writable Fastly service version to modify.",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.RequiresReplace(),
+			},
 		},
 	}
 	maps.Copy(attrs, CommonAttributes())
+	// Add RequiresReplace to name for standalone resource only
+	nameAttr := attrs["name"].(schema.StringAttribute)
+	nameAttr.PlanModifiers = []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	}
+	attrs["name"] = nameAttr
 	return attrs
 }
 

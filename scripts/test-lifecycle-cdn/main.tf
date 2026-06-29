@@ -45,6 +45,17 @@ resource "fastly_service_backend" "service_1_backend_unique" {
   ssl_sni_hostname  = "unique1.origin.example.com"
 }
 
+resource "fastly_service_logging_s3" "service_1_logging" {
+  service_id  = fastly_service_cdn.service_1.id
+  version     = var.service_1_version
+  name        = "test-s3-logger"
+  bucket_name = "tf-test-lifecycle-bucket"
+  authentication = {
+    access_key = "AKIAIOSFODNN7EXAMPLE"
+    secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  }
+}
+
 # Optional domain and backend for testing version writes
 resource "fastly_service_domain" "service_1_new_domain" {
   count      = var.service_1_new_domain != "" ? 1 : 0

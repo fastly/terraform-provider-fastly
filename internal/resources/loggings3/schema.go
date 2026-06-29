@@ -24,7 +24,7 @@ const (
 	DefaultPeriod                       = 3600
 	DefaultTimestampFormat              = "%Y-%m-%dT%H:%M:%S.000"
 	DefaultCompressionCodec             = ""
-	DefaultPlacement                    = ""
+	DefaultPlacement                    = "none"
 	DefaultResponseCondition            = ""
 	DefaultDomain                       = "s3.amazonaws.com"
 	DefaultACL                          = ""

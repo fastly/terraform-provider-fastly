@@ -368,3 +368,7 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 func Equal(a, b []NestedModel) bool {
 	return reconcile.ModelsEqual(a, b, func(m NestedModel) string { return service.StringValue(m.Name) }, NestedModel.ModelsEqual, true)
 }
+
+func MatchOrder(items, order []NestedModel) []NestedModel {
+	return reconcile.MatchOrder(items, order, func(m NestedModel) string { return service.StringValue(m.Name) })
+}

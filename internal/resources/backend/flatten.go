@@ -42,8 +42,10 @@ func FlattenToNestedModel(b *fastly.Backend) NestedModel {
 	m.SSLCertHostname = service.StringPointerOrDefault(b.SSLCertHostname, DefaultSSLCertHostname)
 	m.SSLCheckCert = service.BoolPointerOrDefault(b.SSLCheckCert, DefaultSSLCheckCert)
 	m.SSLCiphers = service.StringPointerOrDefault(b.SSLCiphers, DefaultSSLCiphers)
-	m.SSLClientCert = service.StringPointerOrDefault(b.SSLClientCert, DefaultSSLClientCert)
-	m.SSLClientKey = service.StringPointerOrDefault(b.SSLClientKey, DefaultSSLClientKey)
+	m.SSLClientSecrets = NewSSLClientSecretsObject(
+		service.StringPointerOrDefault(b.SSLClientCert, DefaultSSLClientCert),
+		service.StringPointerOrDefault(b.SSLClientKey, DefaultSSLClientKey),
+	)
 	m.SSLSNIHostname = service.StringPointerOrDefault(b.SSLSNIHostname, DefaultSSLSNIHostname)
 	m.UseSSL = service.BoolPointerOrDefault(b.UseSSL, DefaultUseSSL)
 	m.Weight = service.Int64PointerOrDefault(b.Weight, DefaultWeight)

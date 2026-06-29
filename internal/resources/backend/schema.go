@@ -8,6 +8,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -70,11 +71,58 @@ type NestedModel struct {
 	SSLCertHostname     types.String `tfsdk:"ssl_cert_hostname"`
 	SSLCheckCert        types.Bool   `tfsdk:"ssl_check_cert"`
 	SSLCiphers          types.String `tfsdk:"ssl_ciphers"`
-	SSLClientCert       types.String `tfsdk:"ssl_client_cert"`
-	SSLClientKey        types.String `tfsdk:"ssl_client_key"`
+	SSLClientSecrets    types.Object `tfsdk:"ssl_client_secrets"`
 	SSLSNIHostname      types.String `tfsdk:"ssl_sni_hostname"`
 	UseSSL              types.Bool   `tfsdk:"use_ssl"`
 	Weight              types.Int64  `tfsdk:"weight"`
+}
+
+var sslClientSecretsAttributeTypes = map[string]attr.Type{
+	"ssl_client_cert": types.StringType,
+	"ssl_client_key":  types.StringType,
+}
+
+func NewSSLClientSecretsObject(cert types.String, key types.String) types.Object {
+	return types.ObjectValueMust(
+		sslClientSecretsAttributeTypes,
+		map[string]attr.Value{
+			"ssl_client_cert": cert,
+			"ssl_client_key":  key,
+		},
+	)
+}
+
+func defaultSSLClientSecretsObject() types.Object {
+	return NewSSLClientSecretsObject(
+		types.StringValue(DefaultSSLClientCert),
+		types.StringValue(DefaultSSLClientKey),
+	)
+}
+
+func sslClientSecretValue(secrets types.Object, name string, fallback string) types.String {
+	if secrets.IsNull() || secrets.IsUnknown() {
+		return types.StringValue(fallback)
+	}
+
+	value, ok := secrets.Attributes()[name]
+	if !ok || value == nil || value.IsNull() || value.IsUnknown() {
+		return types.StringValue(fallback)
+	}
+
+	stringValue, ok := value.(types.String)
+	if !ok {
+		return types.StringValue(fallback)
+	}
+
+	return stringValue
+}
+
+func (n NestedModel) SSLClientCert() types.String {
+	return sslClientSecretValue(n.SSLClientSecrets, "ssl_client_cert", DefaultSSLClientCert)
+}
+
+func (n NestedModel) SSLClientKey() types.String {
+	return sslClientSecretValue(n.SSLClientSecrets, "ssl_client_key", DefaultSSLClientKey)
 }
 
 func (n NestedModel) ModelsEqual(other NestedModel) bool {
@@ -103,8 +151,8 @@ func (n NestedModel) ModelsEqual(other NestedModel) bool {
 		service.StringValue(n.SSLCertHostname) == service.StringValue(other.SSLCertHostname) &&
 		service.BoolValue(n.SSLCheckCert) == service.BoolValue(other.SSLCheckCert) &&
 		service.StringValue(n.SSLCiphers) == service.StringValue(other.SSLCiphers) &&
-		service.StringValue(n.SSLClientCert) == service.StringValue(other.SSLClientCert) &&
-		service.StringValue(n.SSLClientKey) == service.StringValue(other.SSLClientKey) &&
+		service.StringValue(n.SSLClientCert()) == service.StringValue(other.SSLClientCert()) &&
+		service.StringValue(n.SSLClientKey()) == service.StringValue(other.SSLClientKey()) &&
 		service.StringValue(n.SSLSNIHostname) == service.StringValue(other.SSLSNIHostname) &&
 		service.BoolValue(n.UseSSL) == service.BoolValue(other.UseSSL) &&
 		service.Int64Value(n.Weight) == service.Int64Value(other.Weight)
@@ -255,19 +303,26 @@ func CommonAttributes() map[string]schema.Attribute {
 			Default:     stringdefault.StaticString(DefaultSSLCiphers),
 			Description: "Cipher list for TLS connections to this backend.",
 		},
-		"ssl_client_cert": schema.StringAttribute{
+		"ssl_client_secrets": schema.SingleNestedAttribute{
 			Optional:    true,
 			Computed:    true,
-			Sensitive:   true,
-			Default:     stringdefault.StaticString(DefaultSSLClientCert),
-			Description: "Client certificate used when connecting to the backend.",
-		},
-		"ssl_client_key": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Sensitive:   true,
-			Default:     stringdefault.StaticString(DefaultSSLClientKey),
-			Description: "Client key used when connecting to the backend.",
+			Description: "Sensitive client certificate and key values used when connecting to the backend.",
+			Attributes: map[string]schema.Attribute{
+				"ssl_client_cert": schema.StringAttribute{
+					Optional:    true,
+					Computed:    true,
+					Sensitive:   true,
+					Default:     stringdefault.StaticString(DefaultSSLClientCert),
+					Description: "Client certificate used when connecting to the backend.",
+				},
+				"ssl_client_key": schema.StringAttribute{
+					Optional:    true,
+					Computed:    true,
+					Sensitive:   true,
+					Default:     stringdefault.StaticString(DefaultSSLClientKey),
+					Description: "Client key used when connecting to the backend.",
+				},
+			},
 		},
 		"ssl_sni_hostname": schema.StringAttribute{
 			Optional:    true,

@@ -71,8 +71,8 @@ func BuildUpdateInput(serviceID string, version int, plan NestedModel) *fastly.U
 	input.SSLCACert = fastly.NullString(service.StringValue(plan.SSLCACert))
 	input.SSLCertHostname = fastly.NullString(service.StringValue(plan.SSLCertHostname))
 	input.SSLCiphers = fastly.NullString(service.StringValue(plan.SSLCiphers))
-	input.SSLClientCert = fastly.NullString(service.StringValue(plan.SSLClientCert))
-	input.SSLClientKey = fastly.NullString(service.StringValue(plan.SSLClientKey))
+	input.SSLClientCert = fastly.NullString(service.StringValue(plan.SSLClientCert()))
+	input.SSLClientKey = fastly.NullString(service.StringValue(plan.SSLClientKey()))
 	input.SSLSNIHostname = fastly.NullString(service.StringValue(plan.SSLSNIHostname))
 
 	return input
@@ -86,7 +86,7 @@ func setCreateOnlyNonEmptyStrings(input *fastly.CreateBackendInput, m NestedMode
 	input.SSLCACert = fastly.NullString(service.StringValue(m.SSLCACert))
 	input.SSLCertHostname = fastly.NullString(service.StringValue(m.SSLCertHostname))
 	input.SSLCiphers = fastly.NullString(service.StringValue(m.SSLCiphers))
-	input.SSLClientCert = fastly.NullString(service.StringValue(m.SSLClientCert))
-	input.SSLClientKey = fastly.NullString(service.StringValue(m.SSLClientKey))
+	input.SSLClientCert = fastly.NullString(service.StringValue(m.SSLClientCert()))
+	input.SSLClientKey = fastly.NullString(service.StringValue(m.SSLClientKey()))
 	input.SSLSNIHostname = fastly.NullString(service.StringValue(m.SSLSNIHostname))
 }

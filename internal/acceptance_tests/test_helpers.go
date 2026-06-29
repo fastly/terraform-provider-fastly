@@ -532,3 +532,101 @@ func ConfigDomainForImport(serviceName, domainName, additionalDomainName string)
 		"internal/acceptance_tests/blocks/domain_multi.tf",
 	)
 }
+
+// Configuration helpers for S3 logging resources
+
+func ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}
+
+func ConfigLoggingS3Updated(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_updated.tf",
+	)
+}
+
+func ConfigLoggingS3IAM(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_iam.tf",
+	)
+}
+
+func ConfigLoggingS3All(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_all.tf",
+	)
+}
+
+func ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_defaults.tf",
+	)
+}
+
+func ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}

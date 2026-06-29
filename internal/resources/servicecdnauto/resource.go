@@ -8,6 +8,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v15/fastly"
@@ -35,15 +36,16 @@ func NewResource() resource.Resource {
 }
 
 type Model struct {
-	ID             types.String          `tfsdk:"id"`
-	Name           types.String          `tfsdk:"name"`
-	Comment        types.String          `tfsdk:"comment"`
-	ForceDestroy   types.Bool            `tfsdk:"force_destroy"`
-	Reuse          types.Bool            `tfsdk:"reuse"`
-	ActiveVersion  types.Int64           `tfsdk:"active_version"`
-	ManagedVersion types.Int64           `tfsdk:"managed_version"`
-	Domain         []domain.NestedModel  `tfsdk:"domain"`
-	Backend        []backend.NestedModel `tfsdk:"backend"`
+	ID             types.String            `tfsdk:"id"`
+	Name           types.String            `tfsdk:"name"`
+	Comment        types.String            `tfsdk:"comment"`
+	ForceDestroy   types.Bool              `tfsdk:"force_destroy"`
+	Reuse          types.Bool              `tfsdk:"reuse"`
+	ActiveVersion  types.Int64             `tfsdk:"active_version"`
+	ManagedVersion types.Int64             `tfsdk:"managed_version"`
+	Domain         []domain.NestedModel    `tfsdk:"domain"`
+	Backend        []backend.NestedModel   `tfsdk:"backend"`
+	LoggingS3      []loggings3.NestedModel `tfsdk:"logging_s3"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -93,8 +95,9 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"domain":  domain.NestedBlockSchema(),
-			"backend": backend.NestedBlockSchema(),
+			"domain":     domain.NestedBlockSchema(),
+			"backend":    backend.NestedBlockSchema(),
+			"logging_s3": loggings3.NestedBlockSchema(),
 		},
 	}
 }
@@ -157,6 +160,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+	if err := loggings3.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingS3); err != nil {
+		resp.Diagnostics.AddError("Error reconciling S3 logging endpoints", err.Error())
+		return
+	}
+
+	loggingS3s, err := loggings3.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingS3 = loggingS3s
 
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -236,8 +251,14 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
+	loggingS3s, err := loggings3.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
+	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -265,7 +286,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -323,6 +344,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
+		if err := loggings3.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingS3); err != nil {
+			resp.Diagnostics.AddError("Error reconciling S3 logging endpoints", err.Error())
+			return
+		}
+
+		loggingS3s, err := loggings3.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingS3 = loggingS3s
+
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
@@ -344,6 +377,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ActiveVersion = state.ActiveVersion
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
+		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 	}
 
 	plan.ID = state.ID

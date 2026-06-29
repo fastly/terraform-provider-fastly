@@ -40,6 +40,7 @@ type Model struct {
 
 type ACLIdentityModel struct {
 	ServiceID types.String `tfsdk:"service_id"`
+	Version   types.Int64  `tfsdk:"version"`
 	Name      types.String `tfsdk:"name"`
 }
 
@@ -104,6 +105,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if resp.Identity != nil {
 		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
 			ServiceID: plan.Service,
+			Version:   plan.Version,
 			Name:      plan.Name,
 		})...)
 	}
@@ -111,9 +113,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state Model
+	var identity ACLIdentityModel
+
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if req.Identity != nil {
+		resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	tflog.Debug(ctx, "Reading Fastly service ACL from API", map[string]any{
@@ -147,21 +158,26 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 
 	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
-			ServiceID: state.Service,
-			Name:      state.Name,
-		})...)
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 	}
 }
 
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan Model
 	var state Model
+	var identity ACLIdentityModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if req.Identity != nil {
+		resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, plan.Service.ValueString(), "fastly_service_acl", service.TypeVCL, service.TypeCompute); err != nil {
@@ -232,10 +248,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
-			ServiceID: plan.Service,
-			Name:      plan.Name,
-		})...)
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
 	}
 }
 
@@ -337,6 +350,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		if resp.Identity != nil {
 			resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
 				ServiceID: types.StringValue(serviceID),
+				Version:   types.Int64Value(int64(version)),
 				Name:      types.StringValue(name),
 			})...)
 		}
@@ -358,10 +372,35 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &ACLIdentityModel{
-		ServiceID: identity.ServiceID,
-		Name:      identity.Name,
-	})...)
+	tflog.Debug(ctx, "Importing ACL with identity", map[string]any{
+		"service_id": identity.ServiceID.ValueString(),
+		"version":    identity.Version.ValueInt64(),
+		"name":       identity.Name.ValueString(),
+	})
+
+	a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
+		ServiceID:      identity.ServiceID.ValueString(),
+		ServiceVersion: int(identity.Version.ValueInt64()),
+		Name:           identity.Name.ValueString(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Error importing ACL", err.Error())
+		return
+	}
+
+	var state Model
+	state.Service = identity.ServiceID
+	state.Version = identity.Version
+	flatten(ctx, a, &state)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	}
 }
 
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
@@ -370,6 +409,10 @@ func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRe
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",
+			},
+			"version": identityschema.Int64Attribute{
+				RequiredForImport: true,
+				Description:       "Service version.",
 			},
 			"name": identityschema.StringAttribute{
 				RequiredForImport: true,

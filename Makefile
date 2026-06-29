@@ -16,7 +16,7 @@ help:
 	@echo "  make fmt                    - Format Go code"
 	@echo "  make clean                  - Remove build artifacts"
 	@echo "  make test-unit              - Run unit tests"
-	@echo "  make test-acc               - Run acceptance tests (requires FASTLY_API_TOKEN)"
+	@echo "  make test-acc               - Run acceptance tests without Go test caching (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle-cdn     - Run CDN lifecycle tests (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle-compute - Run Compute lifecycle tests (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle         - Run all lifecycle tests (requires FASTLY_API_TOKEN)"
@@ -46,7 +46,7 @@ test-unit:
 test-acc:
 	@echo "==> Running acceptance tests..."
 	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
-	@TF_ACC=1 $(GO_BIN) test -v -timeout 30m ./internal/acceptance_tests -run TestAcc
+	@TF_ACC=1 $(GO_BIN) test -count=1 -v -timeout 30m ./internal/acceptance_tests -run TestAcc
 
 generate-docs:
 	@echo "==> Generating Terraform Registry documentation..."

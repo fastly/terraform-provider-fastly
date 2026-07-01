@@ -52,6 +52,26 @@ resource "fastly_service_acl" "service_1_acl" {
   force_destroy = true
 }
 
+resource "fastly_service_cdn_acl_entries" "service_1_acl_entries" {
+  service_id     = fastly_service_cdn.service_1.id
+  acl_id         = fastly_service_acl.service_1_acl.acl_id
+  manage_entries = true
+
+  entry {
+    ip      = "192.168.1.0"
+    subnet  = "24"
+    negated = false
+    comment = "Service 1 test entry"
+  }
+
+  entry {
+    ip      = "10.0.0.0"
+    subnet  = "8"
+    negated = true
+    comment = "Service 1 blocked network"
+  }
+}
+
 # Optional domain and backend for testing version writes
 resource "fastly_service_domain" "service_1_new_domain" {
   count      = var.service_1_new_domain != "" ? 1 : 0
@@ -103,6 +123,19 @@ resource "fastly_service_acl" "service_2_acl" {
   force_destroy = true
 }
 
+resource "fastly_service_cdn_acl_entries" "service_2_acl_entries" {
+  service_id     = fastly_service_cdn.service_2.id
+  acl_id         = fastly_service_acl.service_2_acl.acl_id
+  manage_entries = true
+
+  entry {
+    ip      = "172.16.0.0"
+    subnet  = "12"
+    negated = false
+    comment = "Service 2 test entry"
+  }
+}
+
 # Data sources to check version state
 data "fastly_service_version" "service_1" {
   service_id = fastly_service_cdn.service_1.id
@@ -110,7 +143,8 @@ data "fastly_service_version" "service_1" {
     fastly_service_domain.service_1_domain,
     fastly_service_backend.service_1_backend_shared,
     fastly_service_backend.service_1_backend_unique,
-    fastly_service_acl.service_1_acl
+    fastly_service_acl.service_1_acl,
+    fastly_service_cdn_acl_entries.service_1_acl_entries
   ]
 }
 
@@ -119,7 +153,8 @@ data "fastly_service_version" "service_2" {
   depends_on = [
     fastly_service_domain.service_2_domain,
     fastly_service_backend.service_2_backend_shared,
-    fastly_service_acl.service_2_acl
+    fastly_service_acl.service_2_acl,
+    fastly_service_cdn_acl_entries.service_2_acl_entries
   ]
 }
 

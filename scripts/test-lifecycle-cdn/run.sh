@@ -352,12 +352,16 @@ verify_service_configuration() {
     terraform state show fastly_service_domain.service_1_domain > /dev/null
     terraform state show fastly_service_backend.service_1_backend_shared > /dev/null
     terraform state show fastly_service_backend.service_1_backend_unique > /dev/null
+    terraform state show fastly_service_acl.service_1_acl > /dev/null
+    terraform state show fastly_service_acl_entries.service_1_acl_entries > /dev/null
     log_success "Service 1 resources verified"
 
     # Check service 2 resources
     terraform state show fastly_service_cdn.service_2 > /dev/null
     terraform state show fastly_service_domain.service_2_domain > /dev/null
     terraform state show fastly_service_backend.service_2_backend_shared > /dev/null
+    terraform state show fastly_service_acl.service_2_acl > /dev/null
+    terraform state show fastly_service_acl_entries.service_2_acl_entries > /dev/null
     log_success "Service 2 resources verified"
 
     # Verify data sources
@@ -447,9 +451,11 @@ test_clone_from_latest_and_version_writes() {
     terraform state rm fastly_service_backend.service_1_backend_unique > /dev/null 2>&1 || true
     terraform state rm fastly_service_domain.service_1_domain > /dev/null 2>&1 || true
     terraform state rm fastly_service_acl.service_1_acl > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl_entries.service_1_acl_entries > /dev/null 2>&1 || true
     terraform state rm fastly_service_backend.service_2_backend_shared > /dev/null 2>&1 || true
     terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
     terraform state rm fastly_service_acl.service_2_acl > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl_entries.service_2_acl_entries > /dev/null 2>&1 || true
     log_success "Version-locked resources removed from state"
 
     log_info "Updating terraform.tfvars to change version to 4 and add new resources..."
@@ -477,12 +483,27 @@ EOF
         "$SERVICE_1_ID/4/unique-origin-1" || log_warning "Failed to import service 1 backend unique"
     terraform import -var-file=terraform.tfvars 'fastly_service_acl.service_1_acl' \
         "$SERVICE_1_ID/4/test_acl_1" || log_warning "Failed to import service 1 ACL"
+
+    # Import ACL entries - get ACL ID first
+    local acl1_id=$(terraform state show fastly_service_acl.service_1_acl 2>/dev/null | grep "acl_id" | head -1 | awk '{print $3}' | tr -d '"')
+    if [ -n "$acl1_id" ]; then
+        terraform import -var-file=terraform.tfvars 'fastly_service_acl_entries.service_1_acl_entries' \
+            "$SERVICE_1_ID/$acl1_id" || log_warning "Failed to import service 1 ACL entries"
+    fi
+
     terraform import -var-file=terraform.tfvars 'fastly_service_domain.service_2_domain' \
         "$SERVICE_2_ID/2/test-svc2-$$.example.com" || log_warning "Failed to import service 2 domain"
     terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_2_backend_shared' \
         "$SERVICE_2_ID/2/shared-origin" || log_warning "Failed to import service 2 backend shared"
     terraform import -var-file=terraform.tfvars 'fastly_service_acl.service_2_acl' \
         "$SERVICE_2_ID/2/test_acl_2" || log_warning "Failed to import service 2 ACL"
+
+    # Import ACL entries for service 2
+    local acl2_id=$(terraform state show fastly_service_acl.service_2_acl 2>/dev/null | grep "acl_id" | head -1 | awk '{print $3}' | tr -d '"')
+    if [ -n "$acl2_id" ]; then
+        terraform import -var-file=terraform.tfvars 'fastly_service_acl_entries.service_2_acl_entries' \
+            "$SERVICE_2_ID/$acl2_id" || log_warning "Failed to import service 2 ACL entries"
+    fi
     log_success "Existing resources imported from cloned versions"
 
     log_info "Running terraform plan to add new domain and backend..."
@@ -569,6 +590,8 @@ test_resource_destruction() {
     terraform state rm 'fastly_service_backend.service_1_new_backend[0]' > /dev/null 2>&1 || true
     terraform state rm fastly_service_acl.service_1_acl > /dev/null 2>&1 || true
     terraform state rm fastly_service_acl.service_2_acl > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl_entries.service_1_acl_entries > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl_entries.service_2_acl_entries > /dev/null 2>&1 || true
     log_success "Version-locked resources removed from state"
 
     # Now run terraform destroy to delete the services
@@ -631,6 +654,7 @@ main() {
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
     log_success "✓ ACL configuration (fastly_service_acl)"
+    log_success "✓ ACL entries management (fastly_service_acl_entries)"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Resource updates"
     log_success "✓ Version clone action (fastly_service_version_clone)"

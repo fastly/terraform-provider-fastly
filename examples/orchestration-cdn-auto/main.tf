@@ -40,6 +40,10 @@ resource "fastly_service_cdn_auto" "service_1" {
       comment = backend.value.comment
     }
   }
+
+  acl {
+    name = "ip_allowlist"
+  }
 }
 
 resource "fastly_service_cdn_auto" "service_2" {
@@ -57,5 +61,10 @@ resource "fastly_service_cdn_auto" "service_2" {
       port    = backend.value.port
       comment = backend.value.comment
     }
+  }
+
+  acl {
+    name          = "temporary_blocklist"
+    force_destroy = true
   }
 }

@@ -446,8 +446,22 @@ test_clone_from_latest_and_version_writes() {
     # Test version-locked resource writes
     # Add a new domain and backend to the latest version
     log_info "Testing version-locked resource writes on version $svc1_latest..."
+
+    # Remove version-locked resources from state before changing versions
+    # These resources are pinned to version 1 which is now locked, so we need to remove them
+    # from state, update the version in config, and then import them from the new versions
+    log_info "Removing version-locked resources from state before version change..."
+    terraform state rm fastly_service_backend.service_1_backend_shared > /dev/null 2>&1 || true
+    terraform state rm fastly_service_backend.service_1_backend_unique > /dev/null 2>&1 || true
+    terraform state rm fastly_service_domain.service_1_domain > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl.service_1_acl > /dev/null 2>&1 || true
+    terraform state rm fastly_service_backend.service_2_backend_shared > /dev/null 2>&1 || true
+    terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
+    terraform state rm fastly_service_acl.service_2_acl > /dev/null 2>&1 || true
+    log_success "Version-locked resources removed from state"
+
     log_info "Updating terraform.tfvars to change version to $svc1_latest and add new resources..."
-    log_info "Note: Existing resources will be adopted from the cloned version"
+    log_info "Note: Existing resources will be imported from version $svc1_latest"
 
     cat > terraform.tfvars << EOF
 fastly_api_token     = "$FASTLY_API_TOKEN"
@@ -462,10 +476,28 @@ service_2_domain     = "test-compute-svc2-$$.example.com"
 package_path         = "$PACKAGE_PATH"
 EOF
 
-    log_info "Running terraform plan to add domain and backend..."
+    # Import the existing resources from the new versions (they were cloned)
+    log_info "Importing existing resources from cloned versions..."
+    terraform import -var-file=terraform.tfvars 'fastly_service_domain.service_1_domain' \
+        "$SERVICE_1_ID/$svc1_latest/test-compute-svc1-$$.example.com" || log_warning "Failed to import service 1 domain"
+    terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_1_backend_shared' \
+        "$SERVICE_1_ID/$svc1_latest/shared-origin" || log_warning "Failed to import service 1 backend shared"
+    terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_1_backend_unique' \
+        "$SERVICE_1_ID/$svc1_latest/unique-origin-1" || log_warning "Failed to import service 1 backend unique"
+    terraform import -var-file=terraform.tfvars 'fastly_service_acl.service_1_acl' \
+        "$SERVICE_1_ID/$svc1_latest/test_acl_1" || log_warning "Failed to import service 1 ACL"
+    terraform import -var-file=terraform.tfvars 'fastly_service_domain.service_2_domain' \
+        "$SERVICE_2_ID/2/test-compute-svc2-$$.example.com" || log_warning "Failed to import service 2 domain"
+    terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_2_backend_shared' \
+        "$SERVICE_2_ID/2/shared-origin" || log_warning "Failed to import service 2 backend shared"
+    terraform import -var-file=terraform.tfvars 'fastly_service_acl.service_2_acl' \
+        "$SERVICE_2_ID/2/test_acl_2" || log_warning "Failed to import service 2 ACL"
+    log_success "Existing resources imported from cloned versions"
+
+    log_info "Running terraform plan to add new domain and backend..."
     terraform plan -out=tfplan
 
-    log_info "Running terraform apply to write resources to version $svc1_latest..."
+    log_info "Running terraform apply to write new resources to version $svc1_latest..."
     if terraform apply tfplan; then
         log_success "New domain and backend added to version $svc1_latest"
     else
@@ -567,6 +599,8 @@ test_resource_destruction() {
     terraform state rm 'fastly_service_backend.service_1_new_backend[0]' 2>/dev/null || true
     terraform state rm fastly_service_domain.service_2_domain 2>/dev/null || true
     terraform state rm fastly_service_backend.service_2_backend_shared 2>/dev/null || true
+    terraform state rm fastly_service_acl.service_1_acl 2>/dev/null || true
+    terraform state rm fastly_service_acl.service_2_acl 2>/dev/null || true
 
     log_info "Running terraform destroy..."
     terraform destroy -auto-approve
@@ -637,6 +671,7 @@ main() {
     log_success "✓ Service creation (fastly_service_compute)"
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
+    log_success "✓ ACL configuration (fastly_service_acl)"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Package upload action (fastly_service_compute_package_upload)"
     log_success "✓ Resource updates"

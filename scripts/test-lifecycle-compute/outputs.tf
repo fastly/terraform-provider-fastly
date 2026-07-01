@@ -37,3 +37,13 @@ output "service_2_latest_version" {
   value       = data.fastly_service_version.service_2.latest_version
   description = "Service 2 latest version"
 }
+
+output "service_1_acl_id" {
+  value       = fastly_service_acl.service_1_acl.acl_id
+  description = "Service 1 ACL ID"
+}
+
+output "service_2_acl_id" {
+  value       = fastly_service_acl.service_2_acl.acl_id
+  description = "Service 2 ACL ID"
+}

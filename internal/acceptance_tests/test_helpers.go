@@ -114,6 +114,58 @@ func GetPackagePath() string {
 	return filepath.Join(wd, "fixtures", "packages", "valid.tar.gz")
 }
 
+// TODO: Replace this when implementing ACL entries
+// AddACLEntry adds an ACL entry to the specified ACL. This is used as a test side-effect
+// to populate ACLs for testing force_destroy behavior. Returns a TestCheckFunc.
+func AddACLEntry(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		serviceID := rs.Primary.ID
+		aclName := rs.Primary.Attributes["acl.0.name"]
+		activeVersion := rs.Primary.Attributes["active_version"]
+
+		if serviceID == "" || aclName == "" || activeVersion == "" {
+			return fmt.Errorf("service_id, acl name, or active_version not set in state")
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		version := new(int)
+		if _, err := fmt.Sscanf(activeVersion, "%d", version); err != nil {
+			return fmt.Errorf("error parsing active_version: %w", err)
+		}
+
+		acl, err := client.GetACL(context.Background(), &fastly.GetACLInput{
+			ServiceID:      serviceID,
+			ServiceVersion: *version,
+			Name:           aclName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching ACL %s: %w", aclName, err)
+		}
+
+		ip := "192.168.0.1"
+		_, err = client.CreateACLEntry(context.Background(), &fastly.CreateACLEntryInput{
+			ServiceID: serviceID,
+			ACLID:     *acl.ACLID,
+			IP:        &ip,
+		})
+
+		if err != nil {
+			return fmt.Errorf("error adding entry to ACL %s on service %s: %w", *acl.ACLID, serviceID, err)
+		}
+
+		return nil
+	}
+}
+
 // Configuration helpers for CDN Auto service
 
 // ConfigCDNAutoBasic returns a basic CDN auto service config with a single domain
@@ -186,6 +238,65 @@ func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domai
 	)
 }
 
+// ConfigCDNAutoWithACL returns a CDN auto service config with a domain and ACL
+func ConfigCDNAutoWithACL(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME":     aclName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackendAndACL returns a CDN auto service config with domain, backend, and ACL
+func ConfigCDNAutoWithBackendAndACL(serviceName, domainName, backendName, aclName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+			"ACL_NAME":     aclName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleACLs returns a CDN auto service config with multiple ACLs
+func ConfigCDNAutoWithMultipleACLs(serviceName, domainName, aclName1, aclName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME_1":   aclName1,
+			"ACL_NAME_2":   aclName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithACLForceDestroy returns a CDN auto service config with an ACL that has force_destroy enabled
+func ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME":     aclName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_with_force_destroy.tf",
+	)
+}
+
 // Configuration helpers for Compute Auto service
 
 // ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package
@@ -250,6 +361,22 @@ func ConfigComputeAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, d
 	)
 }
 
+// ConfigComputeAutoWithACL returns a Compute auto service config with a domain, ACL, and package
+func ConfigComputeAutoWithACL(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME":     aclName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 // ConfigComputeAutoReversedBackendAndDomainBlocks returns a Compute auto service config
 // with the same backend and domain blocks as ConfigComputeAutoUnsortedBackendAndDomainBlocks,
 // but declared in the reverse order.
@@ -264,6 +391,57 @@ func ConfigComputeAutoReversedBackendAndDomainBlocks(serviceName, domainBName, d
 		},
 		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithBackendAndACL returns a Compute auto service config with domain, backend, ACL, and package
+func ConfigComputeAutoWithBackendAndACL(serviceName, domainName, backendName, aclName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+			"ACL_NAME":     aclName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/acl_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithMultipleACLs returns a Compute auto service config with multiple ACLs and a package
+func ConfigComputeAutoWithMultipleACLs(serviceName, domainName, aclName1, aclName2 string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME_1":   aclName1,
+			"ACL_NAME_2":   aclName2,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_multi.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithACLForceDestroy returns a Compute auto service config with an ACL that has force_destroy enabled
+func ConfigComputeAutoWithACLForceDestroy(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"ACL_NAME":     aclName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/acl_with_force_destroy.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

@@ -9,6 +9,7 @@ The test suite validates the complete lifecycle of Fastly CDN services managed v
 - Service creation (`fastly_service_cdn`)
 - Domain attachment (`fastly_service_domain`)
 - Backend configuration (`fastly_service_backend`)
+- ACL configuration (`fastly_service_acl`)
 - Version data sources (`data.fastly_service_version`)
 - Resource updates
 - Version cloning action (`fastly_service_version_clone`)

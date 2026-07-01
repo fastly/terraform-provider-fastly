@@ -224,9 +224,9 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		return
 	}
 
-	notFound, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
+	notFound, locked, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
 	resp.Diagnostics.Append(diags...)
-	if notFound || resp.Diagnostics.HasError() {
+	if notFound || locked || resp.Diagnostics.HasError() {
 		return
 	}
 

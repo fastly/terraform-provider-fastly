@@ -11,7 +11,6 @@ import (
 	fastly "github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -67,9 +66,6 @@ func ResourceAttributes() map[string]schema.Attribute {
 		"version": schema.Int64Attribute{
 			Required:    true,
 			Description: "Writable Fastly service version to modify.",
-			PlanModifiers: []planmodifier.Int64{
-				int64planmodifier.RequiresReplace(),
-			},
 		},
 	}
 	maps.Copy(attrs, CommonAttributes())

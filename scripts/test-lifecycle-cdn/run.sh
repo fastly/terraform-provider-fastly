@@ -439,21 +439,7 @@ test_clone_from_latest_and_version_writes() {
     # Add a new domain and backend to version 4
     log_info "Testing version-locked resource writes on version 4..."
 
-    # Remove version-locked resources from state before changing versions
-    # These resources are pinned to version 1 which is now locked, so we need to remove them
-    # from state, update the version in config, and then import them from the new versions
-    log_info "Removing version-locked resources from state before version change..."
-    terraform state rm fastly_service_backend.service_1_backend_shared > /dev/null 2>&1 || true
-    terraform state rm fastly_service_backend.service_1_backend_unique > /dev/null 2>&1 || true
-    terraform state rm fastly_service_domain.service_1_domain > /dev/null 2>&1 || true
-    terraform state rm fastly_service_acl.service_1_acl > /dev/null 2>&1 || true
-    terraform state rm fastly_service_backend.service_2_backend_shared > /dev/null 2>&1 || true
-    terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
-    terraform state rm fastly_service_acl.service_2_acl > /dev/null 2>&1 || true
-    log_success "Version-locked resources removed from state"
-
     log_info "Updating terraform.tfvars to change version to 4 and add new resources..."
-    log_info "Note: Existing resources will be imported from version 4"
 
     cat > terraform.tfvars << EOF
 fastly_api_token     = "$FASTLY_API_TOKEN"
@@ -467,25 +453,7 @@ service_2_version    = 2
 service_2_domain     = "test-svc2-$$.example.com"
 EOF
 
-    # Import the existing resources from the new versions (they were cloned)
-    log_info "Importing existing resources from cloned versions..."
-    terraform import -var-file=terraform.tfvars 'fastly_service_domain.service_1_domain' \
-        "$SERVICE_1_ID/4/test-svc1-$$.example.com" || log_warning "Failed to import service 1 domain"
-    terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_1_backend_shared' \
-        "$SERVICE_1_ID/4/shared-origin" || log_warning "Failed to import service 1 backend shared"
-    terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_1_backend_unique' \
-        "$SERVICE_1_ID/4/unique-origin-1" || log_warning "Failed to import service 1 backend unique"
-    terraform import -var-file=terraform.tfvars 'fastly_service_acl.service_1_acl' \
-        "$SERVICE_1_ID/4/test_acl_1" || log_warning "Failed to import service 1 ACL"
-    terraform import -var-file=terraform.tfvars 'fastly_service_domain.service_2_domain' \
-        "$SERVICE_2_ID/2/test-svc2-$$.example.com" || log_warning "Failed to import service 2 domain"
-    terraform import -var-file=terraform.tfvars 'fastly_service_backend.service_2_backend_shared' \
-        "$SERVICE_2_ID/2/shared-origin" || log_warning "Failed to import service 2 backend shared"
-    terraform import -var-file=terraform.tfvars 'fastly_service_acl.service_2_acl' \
-        "$SERVICE_2_ID/2/test_acl_2" || log_warning "Failed to import service 2 ACL"
-    log_success "Existing resources imported from cloned versions"
-
-    log_info "Running terraform plan to add new domain and backend..."
+    log_info "Running terraform plan to update version and add new domain and backend..."
     terraform plan -out=tfplan
 
     log_info "Running terraform apply to write new resources to version 4..."
@@ -555,23 +523,7 @@ test_resource_destruction() {
     log_info "Service 1: $SERVICE_1_ID (latest version: $svc1_latest)"
     log_info "Service 2: $SERVICE_2_ID (latest version: $svc2_latest)"
 
-    # The issue with terraform destroy is that after cloning versions, the backends/domains/ACLs
-    # are pinned to version 1 (in state) which becomes locked after activation.
-    # We need to remove those resources from state first, then let Terraform destroy the services.
-
-    log_info "Removing version-locked resources from Terraform state..."
-    terraform state rm fastly_service_backend.service_1_backend_shared > /dev/null 2>&1 || true
-    terraform state rm fastly_service_backend.service_1_backend_unique > /dev/null 2>&1 || true
-    terraform state rm fastly_service_backend.service_2_backend_shared > /dev/null 2>&1 || true
-    terraform state rm fastly_service_domain.service_1_domain > /dev/null 2>&1 || true
-    terraform state rm fastly_service_domain.service_2_domain > /dev/null 2>&1 || true
-    terraform state rm 'fastly_service_domain.service_1_new_domain[0]' > /dev/null 2>&1 || true
-    terraform state rm 'fastly_service_backend.service_1_new_backend[0]' > /dev/null 2>&1 || true
-    terraform state rm fastly_service_acl.service_1_acl > /dev/null 2>&1 || true
-    terraform state rm fastly_service_acl.service_2_acl > /dev/null 2>&1 || true
-    log_success "Version-locked resources removed from state"
-
-    # Now run terraform destroy to delete the services
+    # Run terraform destroy to delete the services
     # With force_destroy=true, this will delete all versions and the service itself
     log_info "Running terraform destroy..."
     if terraform destroy -auto-approve; then

@@ -108,13 +108,11 @@ func (c *VersionChecker) EnsureMutableForDelete(
 	ctx context.Context,
 	serviceID string,
 	version int,
-) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+) (notFound bool, locked bool, diags diag.Diagnostics) {
 	mutability, err := c.GetMutability(ctx, serviceID, version)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return true, diags
+			return true, false, diags
 		}
 
 		diags.AddError(
@@ -126,19 +124,12 @@ func (c *VersionChecker) EnsureMutableForDelete(
 				err,
 			),
 		)
-		return false, diags
+		return false, false, diags
 	}
 
 	if mutability.Locked {
-		diags.AddError(
-			"Fastly service version is not mutable",
-			fmt.Sprintf(
-				"Service %q version %d is locked and cannot be modified. Select a different editable version, or clone this version and pin Terraform to the new draft version before applying changes.",
-				serviceID,
-				version,
-			),
-		)
+		return false, true, diags
 	}
 
-	return false, diags
+	return false, false, diags
 }

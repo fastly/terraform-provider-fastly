@@ -40,7 +40,6 @@ type Model struct {
 
 type ACLIdentityModel struct {
 	ServiceID types.String `tfsdk:"service_id"`
-	Version   types.Int64  `tfsdk:"version"`
 	Name      types.String `tfsdk:"name"`
 }
 
@@ -105,7 +104,6 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if resp.Identity != nil {
 		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
 			ServiceID: plan.Service,
-			Version:   plan.Version,
 			Name:      plan.Name,
 		})...)
 	}
@@ -127,15 +125,26 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		}
 	}
 
+	version := int(state.Version.ValueInt64())
+	if version == 0 {
+		selectedVersion, _, err := service.SelectReadVersion(ctx, r.providerData.Client, state.Service.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error selecting version for import", err.Error())
+			return
+		}
+		version = selectedVersion
+		state.Version = types.Int64Value(int64(version))
+	}
+
 	tflog.Debug(ctx, "Reading Fastly service ACL from API", map[string]any{
 		"service_id": state.Service.ValueString(),
-		"version":    state.Version.ValueInt64(),
+		"version":    version,
 		"name":       state.Name.ValueString(),
 	})
 
 	a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
 		ServiceID:      state.Service.ValueString(),
-		ServiceVersion: int(state.Version.ValueInt64()),
+		ServiceVersion: version,
 		Name:           state.Name.ValueString(),
 	})
 	if err != nil {
@@ -218,9 +227,9 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		return
 	}
 
-	notFound, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
+	notFound, locked, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
 	resp.Diagnostics.Append(diags...)
-	if notFound || resp.Diagnostics.HasError() {
+	if notFound || locked || resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -295,7 +304,6 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		if resp.Identity != nil {
 			resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
 				ServiceID: types.StringValue(serviceID),
-				Version:   types.Int64Value(int64(version)),
 				Name:      types.StringValue(name),
 			})...)
 		}
@@ -317,35 +325,10 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		return
 	}
 
-	tflog.Debug(ctx, "Importing ACL with identity", map[string]any{
-		"service_id": identity.ServiceID.ValueString(),
-		"version":    identity.Version.ValueInt64(),
-		"name":       identity.Name.ValueString(),
-	})
-
-	a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
-		ServiceID:      identity.ServiceID.ValueString(),
-		ServiceVersion: int(identity.Version.ValueInt64()),
-		Name:           identity.Name.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error importing ACL", err.Error())
-		return
-	}
-
-	var state Model
-	state.Service = identity.ServiceID
-	state.Version = identity.Version
-	flatten(ctx, a, &state)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &ACLIdentityModel{
+		ServiceID: identity.ServiceID,
+		Name:      identity.Name,
+	})...)
 }
 
 func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
@@ -354,10 +337,6 @@ func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRe
 			"service_id": identityschema.StringAttribute{
 				RequiredForImport: true,
 				Description:       "Fastly service ID.",
-			},
-			"version": identityschema.Int64Attribute{
-				RequiredForImport: true,
-				Description:       "Service version.",
 			},
 			"name": identityschema.StringAttribute{
 				RequiredForImport: true,

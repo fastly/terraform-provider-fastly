@@ -297,6 +297,22 @@ func ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclName string) s
 	)
 }
 
+// ConfigACLForImport returns a test configuration for importing an ACL
+func ConfigACLForImport(serviceName, domainName, aclName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"ACL_NAME":        aclName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+	)
+}
+
 // Configuration helpers for Compute Auto service
 
 // ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package

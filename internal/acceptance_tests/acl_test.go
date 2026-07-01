@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccFastlyServiceCDNAuto_withACL(t *testing.T) {
@@ -412,6 +413,92 @@ func TestAccFastlyServiceComputeAuto_withACLForceDestroy(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.name", aclNameUpdated),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "acl.0.force_destroy", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceACL_import(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
+
+	var serviceID string
+	var versionNumber string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigACLForImport(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "name", aclName),
+					resource.TestCheckResourceAttrSet("fastly_service_acl.test", "acl_id"),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "version", "1"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_acl.test"]
+						if !ok {
+							return fmt.Errorf("ACL resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						versionNumber = rs.Primary.Attributes["version"]
+						return nil
+					},
+				),
+			},
+			{
+				ResourceName: "fastly_service_acl.test",
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/%s/%s", serviceID, versionNumber, aclName), nil
+				},
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceACL_importWithUnderscores(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl_%s_with_underscores", acctest.RandString(10))
+
+	var serviceID string
+	var versionNumber string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigACLForImport(serviceName, domainName, aclName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "name", aclName),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_acl.test"]
+						if !ok {
+							return fmt.Errorf("ACL resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						versionNumber = rs.Primary.Attributes["version"]
+						return nil
+					},
+				),
+			},
+			{
+				ResourceName: "fastly_service_acl.test",
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/%s/%s", serviceID, versionNumber, aclName), nil
+				},
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

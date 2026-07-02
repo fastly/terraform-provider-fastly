@@ -55,14 +55,14 @@ func TestAccFastlyServiceACLEntries_update(t *testing.T) {
 			{
 				Config: ConfigACLEntriesCreate(serviceName, domainName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "entry.#", "1"),
 					CheckACLEntriesRemoteState("fastly_service_cdn.test", aclName, 1),
 				),
 			},
 			{
 				Config: ConfigACLEntriesUpdate(serviceName, domainName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "entry.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "entry.#", "2"),
 					CheckACLEntriesRemoteState("fastly_service_cdn.test", aclName, 2),
 				),
 			},
@@ -84,14 +84,14 @@ func TestAccFastlyServiceACLEntries_delete(t *testing.T) {
 			{
 				Config: ConfigACLEntriesCreate(serviceName, domainName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "entry.#", "1"),
 					CheckACLEntriesRemoteState("fastly_service_cdn.test", aclName, 1),
 				),
 			},
 			{
 				Config: ConfigACLEntriesDelete(serviceName, domainName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "entry.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "entry.#", "0"),
 					CheckACLEntriesRemoteState("fastly_service_cdn.test", aclName, 0),
 				),
 			},
@@ -113,8 +113,8 @@ func TestAccFastlyServiceACLEntries_manageEntriesFalse(t *testing.T) {
 			{
 				Config: ConfigACLEntriesManageEntriesFalse(serviceName, domainName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "entry.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "manage_entries", "false"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "manage_entries", "false"),
 				),
 			},
 		},
@@ -136,7 +136,7 @@ func TestAccFastlyServiceACLEntries_manyEntries(t *testing.T) {
 			{
 				Config: ConfigACLEntriesManyEntries(serviceName, domainName, aclName, entryCount),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.test", "entry.#", fmt.Sprintf("%d", entryCount)),
+					resource.TestCheckResourceAttr("fastly_service_cdn_acl_entries.test", "entry.#", fmt.Sprintf("%d", entryCount)),
 					CheckACLEntriesRemoteState("fastly_service_cdn.test", aclName, entryCount),
 				),
 			},

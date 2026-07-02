@@ -353,7 +353,7 @@ verify_service_configuration() {
     terraform state show fastly_service_backend.service_1_backend_shared > /dev/null
     terraform state show fastly_service_backend.service_1_backend_unique > /dev/null
     terraform state show fastly_service_acl.service_1_acl > /dev/null
-    terraform state show fastly_service_acl_entries.service_1_acl_entries > /dev/null
+    terraform state show fastly_service_cdn_acl_entries.service_1_acl_entries > /dev/null
     log_success "Service 1 resources verified"
 
     # Check service 2 resources
@@ -361,7 +361,7 @@ verify_service_configuration() {
     terraform state show fastly_service_domain.service_2_domain > /dev/null
     terraform state show fastly_service_backend.service_2_backend_shared > /dev/null
     terraform state show fastly_service_acl.service_2_acl > /dev/null
-    terraform state show fastly_service_acl_entries.service_2_acl_entries > /dev/null
+    terraform state show fastly_service_cdn_acl_entries.service_2_acl_entries > /dev/null
     log_success "Service 2 resources verified"
 
     # Verify data sources

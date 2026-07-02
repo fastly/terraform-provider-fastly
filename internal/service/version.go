@@ -6,7 +6,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 
-	fastly "github.com/fastly/go-fastly/v15/fastly"
+	fastly "github.com/fastly/go-fastly/v16/fastly"
 )
 
 // SelectReadVersion selects the service version that should be used for

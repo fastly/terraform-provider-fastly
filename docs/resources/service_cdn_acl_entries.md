@@ -105,7 +105,7 @@ Optional:
 
 - `comment` (String) A personal freeform descriptive note.
 - `negated` (Boolean) A boolean that will negate the match if true.
-- `subnet` (String) An optional subnet mask applied to the IP address.
+- `subnet` (Number) Number of bits for the subnet mask applied to the IP address (0-32 for IPv4, 0-128 for IPv6).
 
 Read-Only:
 
@@ -116,13 +116,13 @@ Read-Only:
 The import ID format is `service_id/acl_id`.
 
 ```shell
-terraform import fastly_service_acl_entries.example SERVICE_ID/ACL_ID
+terraform import fastly_service_cdn_acl_entries.example SERVICE_ID/ACL_ID
 ```
 
 Example:
 
 ```shell
-terraform import fastly_service_acl_entries.example SU1Z0isxPaozGVKXdv0eY/7Lsb7Y8w6St2eqwFgqzc
+terraform import fastly_service_cdn_acl_entries.example SU1Z0isxPaozGVKXdv0eY/7Lsb7Y8w6St2eqwFgqzc
 ```
 
 When imported, `manage_entries` is automatically set to `true`.

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/go-fastly/v16/fastly"
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 	"github.com/fastly/terraform-provider-fastly/internal/validation"

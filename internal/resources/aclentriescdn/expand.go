@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"

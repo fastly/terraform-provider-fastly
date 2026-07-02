@@ -65,13 +65,12 @@ EOT
   min_tls_version       = "1.2"
   max_tls_version       = "1.3"
   ssl_ciphers           = "ECDHE-RSA-AES128-GCM-SHA256"
-  weight                = 75
+  weight                = 50
   max_conn              = 100
   connect_timeout       = 2000
   first_byte_timeout    = 10000
   between_bytes_timeout = 5000
   error_threshold       = 5
-  keepalive_time        = 60
   max_lifetime          = 30000
   max_use               = 10
   override_host         = "override.example.com"

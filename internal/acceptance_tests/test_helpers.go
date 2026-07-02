@@ -617,6 +617,21 @@ func ConfigBackendFull(serviceName, domainName, backendName string) string {
 	)
 }
 
+func ConfigBackendFullUpdated(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_NAME":    backendName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_full_updated.tf",
+	)
+}
+
 // ConfigBackendMultiple returns a config with multiple backend resources
 func ConfigBackendMultiple(serviceName, domainName, backend1Name, backend2Name string) string {
 	return BuildConfig(

@@ -3,7 +3,7 @@ module github.com/fastly/terraform-provider-fastly
 go 1.26.4
 
 require (
-	github.com/fastly/go-fastly/v15 v15.0.3
+	github.com/fastly/go-fastly/v16 v16.0.0
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-go v0.31.0

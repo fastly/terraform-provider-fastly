@@ -5,6 +5,7 @@ import (
 	"maps"
 
 	"github.com/fastly/terraform-provider-fastly/internal/constants"
+	"github.com/fastly/terraform-provider-fastly/internal/defaults"
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
@@ -157,21 +158,21 @@ func CommonAttributes() map[string]schema.Attribute {
 					Optional:    true,
 					Computed:    true,
 					Sensitive:   true,
-					Default:     stringdefault.StaticString(""),
-					Description: "The access key for your S3 account. Not required if `iam_role` is provided.",
+					Default:     defaults.EnvString("FASTLY_S3_ACCESS_KEY", ""),
+					Description: "The access key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_ACCESS_KEY` environment variable.",
 				},
 				"iam_role": schema.StringAttribute{
 					Optional:    true,
 					Computed:    true,
-					Default:     stringdefault.StaticString(""),
-					Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided.",
+					Default:     defaults.EnvString("FASTLY_S3_IAM_ROLE", ""),
+					Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. Can be set via the `FASTLY_S3_IAM_ROLE` environment variable.",
 				},
 				"secret_key": schema.StringAttribute{
 					Optional:    true,
 					Computed:    true,
 					Sensitive:   true,
-					Default:     stringdefault.StaticString(""),
-					Description: "The secret key for your S3 account. Not required if `iam_role` is provided.",
+					Default:     defaults.EnvString("FASTLY_S3_SECRET_KEY", ""),
+					Description: "The secret key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_SECRET_KEY` environment variable.",
 				},
 			},
 		},

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/go-fastly/v16/fastly"
 )
 
 type ServiceTypeChecker struct {

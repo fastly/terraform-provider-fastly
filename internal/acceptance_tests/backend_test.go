@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fastly/go-fastly/v15/fastly"
+	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccFastlyServiceBackend_basic(t *testing.T) {
@@ -93,13 +96,39 @@ func TestAccFastlyServiceBackend_fullConfig(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "ssl_sni_hostname", "sni.example.com"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "min_tls_version", "1.2"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "max_tls_version", "1.3"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "ssl_ciphers", "ECDHE-RSA-AES128-GCM-SHA256"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "weight", "75"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "max_conn", "100"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "connect_timeout", "2000"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "first_byte_timeout", "10000"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "between_bytes_timeout", "5000"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "error_threshold", "5"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "keepalive_time", "60"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "max_lifetime", "30000"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "max_use", "10"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "override_host", "override.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "shield", "iad-va-us"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "auto_loadbalance", "true"),
 					resource.TestCheckResourceAttr("fastly_service_backend.origin", "comment", "Full test backend"),
+				),
+			},
+			{
+				// keepalive_time is the only attribute without a Default (the API omits it when unset),
+				// so it relies on UseStateForUnknown. This step omits it from config and changes an
+				// unrelated field to verify it stays known in the plan rather than drifting to (known after apply).
+				Config: ConfigBackendFullUpdated(serviceName, domainName, backendName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(
+							"fastly_service_backend.origin",
+							tfjsonpath.New("keepalive_time"),
+							knownvalue.Int64Exact(60),
+						),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "weight", "50"),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "keepalive_time", "60"),
 				),
 			},
 		},

@@ -7,11 +7,13 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
-	fastly "github.com/fastly/go-fastly/v15/fastly"
+	fastly "github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -215,8 +217,15 @@ func CommonAttributes() map[string]schema.Attribute {
 			Description: "Name of a defined healthcheck to assign to this backend.",
 		},
 		"keepalive_time": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
+			Optional: true,
+			Computed: true,
+			// Since there is no default for keepalive_time and the API omits the field from both create
+			// and read responses when unset, a static default would diverge from what flatten writes to
+			// state. UseStateForUnknown preserves the prior state value when the field is omitted from
+			// config, preventing (known after apply) drift on unrelated updates.
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 			Description: "How long in seconds to keep a persistent connection to the backend between requests.",
 		},
 		"max_conn": schema.Int64Attribute{

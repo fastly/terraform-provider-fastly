@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	fastly "github.com/fastly/go-fastly/v15/fastly"
+	fastly "github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/stretchr/testify/assert"

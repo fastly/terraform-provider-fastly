@@ -2,7 +2,6 @@ package backend
 
 import (
 	"context"
-	"strings"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,7 +18,6 @@ import (
 
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
-var _ resource.ResourceWithIdentity = &Resource{}
 
 type Resource struct {
 	providerData *fastlyclient.Data
@@ -35,11 +32,6 @@ type Model struct {
 	ID      types.String `tfsdk:"id"`
 	Service types.String `tfsdk:"service_id"`
 	Version types.Int64  `tfsdk:"version"`
-}
-
-type BackendIdentityModel struct {
-	ServiceID types.String `tfsdk:"service_id"`
-	Name      types.String `tfsdk:"name"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -96,16 +88,6 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	flatten(ctx, b, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
-			ServiceID: plan.Service,
-			Name:      plan.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -141,16 +123,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	flatten(ctx, b, &state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
-			ServiceID: state.Service,
-			Name:      state.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -193,14 +165,6 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	flatten(ctx, b, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	// Update identity to reflect any changes
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
-			ServiceID: plan.Service,
-			Name:      plan.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -244,90 +208,37 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 }
 
 func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Support legacy composite ID format: service_id/version/name
-	if req.ID != "" && strings.Contains(req.ID, "/") {
-		serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Invalid Import ID",
-				"Expected import ID in format: service_id/version/name\n"+
-					"For example: service123/3/origin\n\n"+
-					"Error: "+err.Error(),
-			)
-			return
-		}
-
-		tflog.Debug(ctx, "Importing backend with legacy composite ID", map[string]any{
-			"service_id": serviceID,
-			"version":    version,
-			"name":       name,
-		})
-
-		// Use the API to read the full backend configuration
-		b, err := r.providerData.Client.GetBackend(ctx, &fastly.GetBackendInput{
-			ServiceID:      serviceID,
-			ServiceVersion: version,
-			Name:           name,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError("Error importing backend", err.Error())
-			return
-		}
-
-		// Populate state with the full backend data
-		var state Model
-		state.Service = types.StringValue(serviceID)
-		state.Version = types.Int64Value(int64(version))
-		flatten(ctx, b, &state)
-
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Set identity using stable identity schema (service_id + name only)
-		if resp.Identity != nil {
-			resp.Diagnostics.Append(resp.Identity.Set(ctx, &BackendIdentityModel{
-				ServiceID: types.StringValue(serviceID),
-				Name:      types.StringValue(name),
-			})...)
-		}
-		return
-	}
-
-	// Non-composite req.ID is invalid for explicit backend resources
-	if req.ID != "" {
+	serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
-			"Expected import ID in format: service_id/version/name.\n"+
-				"For example: service123/3/origin",
+			"Expected import ID in format: service_id/version/name\n"+
+				"For example: service123/3/origin\n\n"+
+				"Error: "+err.Error(),
 		)
 		return
 	}
 
-	var identity BackendIdentityModel
-	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-	if resp.Diagnostics.HasError() {
+	tflog.Debug(ctx, "Importing backend", map[string]any{
+		"service_id": serviceID,
+		"version":    version,
+		"name":       name,
+	})
+
+	b, err := r.providerData.Client.GetBackend(ctx, &fastly.GetBackendInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           name,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Error importing backend", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &BackendIdentityModel{
-		ServiceID: identity.ServiceID,
-		Name:      identity.Name,
-	})...)
-}
+	var state Model
+	state.Service = types.StringValue(serviceID)
+	state.Version = types.Int64Value(int64(version))
+	flatten(ctx, b, &state)
 
-func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"service_id": identityschema.StringAttribute{
-				RequiredForImport: true,
-				Description:       "Fastly service ID.",
-			},
-			"name": identityschema.StringAttribute{
-				RequiredForImport: true,
-				Description:       "Backend name.",
-			},
-		},
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

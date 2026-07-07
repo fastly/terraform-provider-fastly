@@ -23,7 +23,7 @@ resource "fastly_service_cdn" "example" {
   }
 }
 
-resource "fastly_service_acl" "example" {
+resource "fastly_service_cdn_acl" "example" {
   service_id = fastly_service_cdn.example.id
   version    = 1
   name       = "example_acl"
@@ -32,7 +32,7 @@ resource "fastly_service_acl" "example" {
 # Manage ACL entries with explicit resource
 resource "fastly_service_cdn_acl_entries" "example" {
   service_id     = fastly_service_cdn.example.id
-  acl_id         = fastly_service_acl.example.acl_id
+  acl_id         = fastly_service_cdn_acl.example.acl_id
   manage_entries = true
 
   entry {

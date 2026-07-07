@@ -20,9 +20,9 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/actions/versionstage"
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/serviceversion"
-	"github.com/fastly/terraform-provider-fastly/internal/resources/aclentriescdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
@@ -94,14 +94,14 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		aclentriescdn.NewResource,
 		backend.NewResource,
 		cdnacl.NewResource,
+		cdnaclentries.NewResource,
 		domain.NewResource,
-		servicecompute.NewResource,
-		servicecomputeauto.NewResource,
 		servicecdn.NewResource,
 		servicecdnauto.NewResource,
+		servicecompute.NewResource,
+		servicecomputeauto.NewResource,
 	}
 }
 
@@ -113,12 +113,12 @@ func (p *fastlyProvider) DataSources(_ context.Context) []func() datasource.Data
 
 func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListResource {
 	return []func() list.ListResource{
-		aclentriescdn.NewListResource,
 		backend.NewListResource,
 		cdnacl.NewListResource,
+		cdnaclentries.NewListResource,
 		domain.NewListResource,
-		servicecompute.NewListResource,
 		servicecdn.NewListResource,
+		servicecompute.NewListResource,
 	}
 }
 

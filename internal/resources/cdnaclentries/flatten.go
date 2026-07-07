@@ -1,4 +1,4 @@
-package aclentriescdn
+package cdnaclentries
 
 import (
 	"context"

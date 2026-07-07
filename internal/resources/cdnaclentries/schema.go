@@ -1,4 +1,4 @@
-package aclentriescdn
+package cdnaclentries
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"

@@ -1109,6 +1109,22 @@ func ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName str
 	)
 }
 
+func ConfigLoggingS3CompressionCodec(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_compression_codec.tf",
+	)
+}
+
 func ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName string) string {
 	return BuildConfig(
 		ServiceCDN,

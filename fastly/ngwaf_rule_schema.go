@@ -344,6 +344,11 @@ func validateRuleHasConditions(_ context.Context, diff *schema.ResourceDiff, _ a
 	}
 
 	if !hasCondition {
+		// Rules of type 'templated_signal' do not require conditions, so we'll need to make
+		// an exception here.
+		if ruleType, ok := diff.GetOk("type"); ok && ruleType.(string) == "templated_signal" {
+			return nil
+		}
 		return fmt.Errorf("rule must define at least one 'condition', 'group_condition', or 'multival_condition'")
 	}
 

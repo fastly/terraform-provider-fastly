@@ -552,6 +552,74 @@ test_resource_updates() {
     log_success "Service update completed"
 }
 
+# The Fastly API rejects deletes of objects (domains/backends/ACLs) from a locked
+# (i.e. ever-activated) service version, and a locked version can never become
+# mutable again. If Terraform state has a resource pinned to a locked version,
+# clone that version to a fresh, never-activated draft and move the resource
+# there via a normal `terraform apply`, so the eventual `terraform destroy` can
+# delete it directly with no state manipulation.
+advance_off_locked_versions() {
+    log_step "Advancing resources off any locked versions before destroy"
+
+    cd "$TEST_DIR"
+
+    terraform refresh > /dev/null 2>&1 || true
+
+    local svc1_version=$(grep -oE 'service_1_version[[:space:]]*=[[:space:]]*[0-9]+' terraform.tfvars | grep -oE '[0-9]+$')
+    local svc1_locked=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/service/$SERVICE_1_ID/version/$svc1_version" | jq -r '.locked')
+
+    if [ "$svc1_locked" = "true" ]; then
+        log_info "Service 1 version $svc1_version is locked; cloning to a fresh draft version..."
+
+        if ! terraform apply -invoke=action.fastly_service_version_clone.service_1_clone_from_pinned -auto-approve; then
+            log_error "Failed to clone service 1 off its locked version"
+            return 1
+        fi
+
+        terraform refresh > /dev/null
+        local svc1_new_version=$(terraform output -raw service_1_latest_version)
+        log_success "Cloned version $svc1_version to draft version $svc1_new_version"
+
+        sed -i.bak "s/service_1_version[[:space:]]*=[[:space:]]*[0-9]*/service_1_version = $svc1_new_version/" terraform.tfvars
+        rm -f terraform.tfvars.bak
+
+        log_info "Moving service 1 resources to version $svc1_new_version..."
+        terraform plan -out=tfplan
+        terraform apply tfplan
+        log_success "Service 1 resources now pinned to unlocked version $svc1_new_version"
+    else
+        log_info "Service 1 version $svc1_version is not locked; no action needed"
+    fi
+
+    local svc2_version=$(grep -oE 'service_2_version[[:space:]]*=[[:space:]]*[0-9]+' terraform.tfvars | grep -oE '[0-9]+$')
+    local svc2_locked=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/service/$SERVICE_2_ID/version/$svc2_version" | jq -r '.locked')
+
+    if [ "$svc2_locked" = "true" ]; then
+        log_info "Service 2 version $svc2_version is locked; cloning to a fresh draft version..."
+
+        if ! terraform apply -invoke=action.fastly_service_version_clone.service_2_clone_from_pinned -auto-approve; then
+            log_error "Failed to clone service 2 off its locked version"
+            return 1
+        fi
+
+        terraform refresh > /dev/null
+        local svc2_new_version=$(terraform output -raw service_2_latest_version)
+        log_success "Cloned version $svc2_version to draft version $svc2_new_version"
+
+        sed -i.bak "s/service_2_version[[:space:]]*=[[:space:]]*[0-9]*/service_2_version = $svc2_new_version/" terraform.tfvars
+        rm -f terraform.tfvars.bak
+
+        log_info "Moving service 2 resources to version $svc2_new_version..."
+        terraform plan -out=tfplan
+        terraform apply tfplan
+        log_success "Service 2 resources now pinned to unlocked version $svc2_new_version"
+    else
+        log_info "Service 2 version $svc2_version is not locked; no action needed"
+    fi
+}
+
 # Test resource destruction
 test_resource_destruction() {
     log_step "Testing resource destruction"
@@ -620,6 +688,7 @@ main() {
     test_version_clone_action
     test_version_activate_action
     test_clone_from_latest_and_version_writes
+    advance_off_locked_versions
     test_resource_destruction
 
     log_step "Test Summary - Compute Service"

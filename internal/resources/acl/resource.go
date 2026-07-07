@@ -128,26 +128,49 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// Update only runs when the ACL's version changes in place: service_id and name
+// both force replacement, so this is never reached for a rename or a move to a
+// different service. The target version must already contain an ACL with this
+// name (e.g. because it was cloned from the prior version), since the ACL API has
+// no update operation to create or rename one here. Fetch that ACL and flatten it
+// into state so id/acl_id reflect the new version rather than the old one.
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan Model
-	var state Model
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "No ACL changes detected", map[string]any{
+	tflog.Debug(ctx, "Reading Fastly service ACL for new version", map[string]any{
 		"service_id": plan.Service.ValueString(),
 		"version":    plan.Version.ValueInt64(),
 		"name":       service.StringValue(plan.Name),
 	})
 
-	// Preserve computed fields from state
-	plan.ID = state.ID
-	plan.ACLID = state.ACLID
+	a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
+		ServiceID:      plan.Service.ValueString(),
+		ServiceVersion: int(plan.Version.ValueInt64()),
+		Name:           plan.Name.ValueString(),
+	})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			resp.Diagnostics.AddError(
+				"ACL not found in target version",
+				fmt.Sprintf(
+					"Service %q version %d has no ACL named %q. Clone a version that already contains this ACL before switching to it.",
+					plan.Service.ValueString(),
+					plan.Version.ValueInt64(),
+					plan.Name.ValueString(),
+				),
+			)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading explicit service ACL for new version", err.Error())
+		return
+	}
 
+	flatten(ctx, a, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -172,9 +195,9 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		return
 	}
 
-	notFound, locked, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
+	notFound, diags := r.providerData.VersionChecker.EnsureMutableForDelete(ctx, state.Service.ValueString(), int(state.Version.ValueInt64()))
 	resp.Diagnostics.Append(diags...)
-	if notFound || locked || resp.Diagnostics.HasError() {
+	if notFound || resp.Diagnostics.HasError() {
 		return
 	}
 

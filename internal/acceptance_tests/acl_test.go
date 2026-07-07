@@ -1,10 +1,12 @@
 package acceptancetests
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -457,6 +459,100 @@ func TestAccFastlyServiceACL_import(t *testing.T) {
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceACL_versionUpdateInPlace verifies that changing only the
+// version attribute on an explicit fastly_service_acl resource -- pointing it at
+// a version that was cloned from the one it started on -- applies successfully
+// and refreshes id/acl_id from the new version, rather than leaving them stale
+// from the version the resource was created against.
+func TestAccFastlyServiceACL_versionUpdateInPlace(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
+
+	var serviceID string
+	var aclIDAtV1 string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigACLAtVersion(serviceName, domainName, aclName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "name", aclName),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "version", "1"),
+					resource.TestCheckResourceAttrSet("fastly_service_acl.test", "acl_id"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_acl.test"]
+						if !ok {
+							return fmt.Errorf("ACL resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						aclIDAtV1 = rs.Primary.Attributes["acl_id"]
+						return nil
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := NewFastlyClient()
+					if err != nil {
+						t.Fatalf("error creating Fastly client: %s", err)
+					}
+					if _, err := client.CloneVersion(context.Background(), &fastly.CloneVersionInput{
+						ServiceID:      serviceID,
+						ServiceVersion: 1,
+					}); err != nil {
+						t.Fatalf("error cloning version 1: %s", err)
+					}
+				},
+				Config: ConfigACLAtVersion(serviceName, domainName, aclName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "name", aclName),
+					resource.TestCheckResourceAttr("fastly_service_acl.test", "version", "2"),
+					resource.TestCheckResourceAttrSet("fastly_service_acl.test", "acl_id"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_acl.test"]
+						if !ok {
+							return fmt.Errorf("ACL resource not found")
+						}
+
+						gotID := rs.Primary.Attributes["id"]
+						wantID := fmt.Sprintf("%s-2-%s", serviceID, aclName)
+						if gotID != wantID {
+							return fmt.Errorf("expected id %q to reflect version 2, got %q", wantID, gotID)
+						}
+
+						client, err := NewFastlyClient()
+						if err != nil {
+							return fmt.Errorf("error creating Fastly client: %w", err)
+						}
+						remote, err := client.GetACL(context.Background(), &fastly.GetACLInput{
+							ServiceID:      serviceID,
+							ServiceVersion: 2,
+							Name:           aclName,
+						})
+						if err != nil {
+							return fmt.Errorf("error fetching ACL at version 2: %w", err)
+						}
+
+						gotACLID := rs.Primary.Attributes["acl_id"]
+						if gotACLID != *remote.ACLID {
+							return fmt.Errorf("state acl_id %q does not match version 2's ACL id %q (stale from version 1: %q)", gotACLID, *remote.ACLID, aclIDAtV1)
+						}
+
+						return nil
+					},
+				),
 			},
 		},
 	})

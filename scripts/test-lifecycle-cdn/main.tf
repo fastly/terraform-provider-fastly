@@ -145,6 +145,23 @@ action "fastly_service_version_clone" "service_2_clone" {
   }
 }
 
+# Clones whichever version resources currently point at (var.service_N_version),
+# used to move off a locked version before destroy without relying on the
+# active/latest version happening to match.
+action "fastly_service_version_clone" "service_1_clone_from_pinned" {
+  config {
+    service_id = fastly_service_cdn.service_1.id
+    version    = var.service_1_version
+  }
+}
+
+action "fastly_service_version_clone" "service_2_clone_from_pinned" {
+  config {
+    service_id = fastly_service_cdn.service_2.id
+    version    = var.service_2_version
+  }
+}
+
 action "fastly_service_version_activate" "service_1_activate" {
   config {
     service_id = fastly_service_cdn.service_1.id

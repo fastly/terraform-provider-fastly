@@ -313,6 +313,23 @@ func ConfigACLForImport(serviceName, domainName, aclName string) string {
 	)
 }
 
+// ConfigACLAtVersion returns a service/domain/ACL config pinned to the given version,
+// for exercising in-place version changes on the explicit fastly_service_acl resource.
+func ConfigACLAtVersion(serviceName, domainName, aclName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": fmt.Sprintf("%d", version),
+			"ACL_NAME":        aclName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+	)
+}
+
 // Configuration helpers for Compute Auto service
 
 // ConfigComputeAutoBasic returns a basic Compute auto service config with a domain and package

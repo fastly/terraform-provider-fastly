@@ -104,13 +104,17 @@ func (c *VersionChecker) EnsureMutable(
 	return diags
 }
 
+// EnsureMutableForDelete verifies a version can be deleted from. Unlike EnsureMutable,
+// a not-found version is not an error: the service or version may already be gone
+// (e.g. deleted by a prior step in the same apply), so there is nothing left to clean up.
+// A locked version, however, always returns a diagnostic — the API cannot delete from
+// a locked version, and silently succeeding would remove the resource from Terraform
+// state while the remote object still exists, causing drift.
 func (c *VersionChecker) EnsureMutableForDelete(
 	ctx context.Context,
 	serviceID string,
 	version int,
-) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+) (notFound bool, diags diag.Diagnostics) {
 	mutability, err := c.GetMutability(ctx, serviceID, version)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -133,7 +137,7 @@ func (c *VersionChecker) EnsureMutableForDelete(
 		diags.AddError(
 			"Fastly service version is not mutable",
 			fmt.Sprintf(
-				"Service %q version %d is locked and cannot be modified. Select a different editable version, or clone this version and pin Terraform to the new draft version before applying changes.",
+				"Service %q version %d is locked and cannot be modified. Clone this version to remove the resource from an editable version, or destroy the entire service to remove all versions and their contents.",
 				serviceID,
 				version,
 			),

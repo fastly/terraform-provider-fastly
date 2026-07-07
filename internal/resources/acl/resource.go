@@ -3,7 +3,6 @@ package acl
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -21,7 +19,6 @@ import (
 
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
-var _ resource.ResourceWithIdentity = &Resource{}
 
 type Resource struct {
 	providerData *fastlyclient.Data
@@ -36,12 +33,6 @@ type Model struct {
 	ID      types.String `tfsdk:"id"`
 	Service types.String `tfsdk:"service_id"`
 	Version types.Int64  `tfsdk:"version"`
-}
-
-type ACLIdentityModel struct {
-	ServiceID types.String `tfsdk:"service_id"`
-	Version   types.Int64  `tfsdk:"version"`
-	Name      types.String `tfsdk:"name"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,33 +89,14 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	flatten(ctx, a, &plan)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
-			ServiceID: plan.Service,
-			Version:   plan.Version,
-			Name:      plan.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state Model
-	var identity ACLIdentityModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if req.Identity != nil {
-		resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
 	}
 
 	tflog.Debug(ctx, "Reading Fastly service ACL from API", map[string]any{
@@ -142,6 +114,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		if errors.IsNotFound(err) {
 			tflog.Warn(ctx, "Service ACL not found, removing from state", map[string]any{
 				"service_id": state.Service.ValueString(),
+				"version":    state.Version.ValueInt64(),
 				"name":       state.Name.ValueString(),
 			})
 			resp.State.RemoveResource(ctx)
@@ -153,48 +126,52 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	flatten(ctx, a, &state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
-	}
 }
 
+// Update only runs when the ACL's version changes in place: service_id and name
+// both force replacement, so this is never reached for a rename or a move to a
+// different service. The target version must already contain an ACL with this
+// name (e.g. because it was cloned from the prior version), since the ACL API has
+// no update operation to create or rename one here. Fetch that ACL and flatten it
+// into state so id/acl_id reflect the new version rather than the old one.
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan Model
-	var state Model
-	var identity ACLIdentityModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if req.Identity != nil {
-		resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	tflog.Debug(ctx, "No ACL changes detected", map[string]any{
+	tflog.Debug(ctx, "Reading Fastly service ACL for new version", map[string]any{
 		"service_id": plan.Service.ValueString(),
 		"version":    plan.Version.ValueInt64(),
 		"name":       service.StringValue(plan.Name),
 	})
 
-	// Preserve computed fields from state
-	plan.ID = state.ID
-	plan.ACLID = state.ACLID
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
+	a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
+		ServiceID:      plan.Service.ValueString(),
+		ServiceVersion: int(plan.Version.ValueInt64()),
+		Name:           plan.Name.ValueString(),
+	})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			resp.Diagnostics.AddError(
+				"ACL not found in target version",
+				fmt.Sprintf(
+					"Service %q version %d has no ACL named %q. Clone a version that already contains this ACL before switching to it.",
+					plan.Service.ValueString(),
+					plan.Version.ValueInt64(),
+					plan.Name.ValueString(),
+				),
+			)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading explicit service ACL for new version", err.Error())
+		return
 	}
+
+	flatten(ctx, a, &plan)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -254,79 +231,27 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 }
 
 func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	if req.ID != "" && strings.Contains(req.ID, "/") {
-		serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Invalid Import ID",
-				"Expected import ID in format: service_id/version/name\n"+
-					"For example: service123/3/my-acl\n\n"+
-					"Error: "+err.Error(),
-			)
-			return
-		}
-
-		tflog.Debug(ctx, "Importing ACL with legacy composite ID", map[string]any{
-			"service_id": serviceID,
-			"version":    version,
-			"name":       name,
-		})
-
-		a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
-			ServiceID:      serviceID,
-			ServiceVersion: version,
-			Name:           name,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError("Error importing ACL", err.Error())
-			return
-		}
-
-		var state Model
-		state.Service = types.StringValue(serviceID)
-		state.Version = types.Int64Value(int64(version))
-		flatten(ctx, a, &state)
-
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if resp.Identity != nil {
-			resp.Diagnostics.Append(resp.Identity.Set(ctx, &ACLIdentityModel{
-				ServiceID: types.StringValue(serviceID),
-				Version:   types.Int64Value(int64(version)),
-				Name:      types.StringValue(name),
-			})...)
-		}
-		return
-	}
-
-	if req.ID != "" {
+	serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
-			"Expected import ID in format: service_id/version/name.\n"+
-				"For example: service123/3/my-acl",
+			"Expected import ID in format: service_id/version/name\n"+
+				"For example: service123/3/my-acl\n\n"+
+				"Error: "+err.Error(),
 		)
 		return
 	}
 
-	var identity ACLIdentityModel
-	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Debug(ctx, "Importing ACL with identity", map[string]any{
-		"service_id": identity.ServiceID.ValueString(),
-		"version":    identity.Version.ValueInt64(),
-		"name":       identity.Name.ValueString(),
+	tflog.Debug(ctx, "Importing ACL", map[string]any{
+		"service_id": serviceID,
+		"version":    version,
+		"name":       name,
 	})
 
 	a, err := r.providerData.Client.GetACL(ctx, &fastly.GetACLInput{
-		ServiceID:      identity.ServiceID.ValueString(),
-		ServiceVersion: int(identity.Version.ValueInt64()),
-		Name:           identity.Name.ValueString(),
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           name,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error importing ACL", err.Error())
@@ -334,37 +259,11 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	}
 
 	var state Model
-	state.Service = identity.ServiceID
-	state.Version = identity.Version
+	state.Service = types.StringValue(serviceID)
+	state.Version = types.Int64Value(int64(version))
 	flatten(ctx, a, &state)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &identity)...)
-	}
-}
-
-func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"service_id": identityschema.StringAttribute{
-				RequiredForImport: true,
-				Description:       "Fastly service ID.",
-			},
-			"version": identityschema.Int64Attribute{
-				RequiredForImport: true,
-				Description:       "Service version.",
-			},
-			"name": identityschema.StringAttribute{
-				RequiredForImport: true,
-				Description:       "ACL name.",
-			},
-		},
-	}
 }
 
 func isACLEmpty(ctx context.Context, serviceID, aclID string, client *fastly.Client) (bool, error) {

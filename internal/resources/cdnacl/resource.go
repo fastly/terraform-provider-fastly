@@ -1,4 +1,4 @@
-package acl
+package cdnacl
 
 import (
 	"context"
@@ -36,12 +36,12 @@ type Model struct {
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_service_acl"
+	resp.TypeName = req.ProviderTypeName + "_service_cdn_acl"
 }
 
 func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fastly service ACL resource. Writes directly to the specified writable service version.",
+		Description: "Fastly CDN service ACL resource. Writes directly to the specified writable service version.",
 		Attributes:  ResourceAttributes(),
 	}
 }
@@ -63,7 +63,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, plan.Service.ValueString(), "fastly_service_acl", service.TypeVCL, service.TypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, plan.Service.ValueString(), "fastly_service_cdn_acl", service.TypeVCL); err != nil {
 		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
@@ -187,7 +187,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		"name":       state.Name.ValueString(),
 	})
 
-	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, state.Service.ValueString(), "fastly_service_acl", service.TypeVCL, service.TypeCompute); err != nil {
+	if err := validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, state.Service.ValueString(), "fastly_service_cdn_acl", service.TypeVCL); err != nil {
 		if errors.IsNotFound(err) {
 			return
 		}

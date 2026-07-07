@@ -1,4 +1,4 @@
-package acl
+package cdnacl
 
 import (
 	fastly "github.com/fastly/go-fastly/v16/fastly"

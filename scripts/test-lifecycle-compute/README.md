@@ -9,7 +9,6 @@ The test suite validates the complete lifecycle of Fastly Compute services manag
 - Service creation (`fastly_service_compute`)
 - Domain attachment (`fastly_service_domain`)
 - Backend configuration (`fastly_service_backend`)
-- ACL configuration (`fastly_service_acl`)
 - Version data sources (`data.fastly_service_version`)
 - Compute package uploads (`fastly_service_compute_package_upload` action)
 - Version cloning action (`fastly_service_version_clone`)
@@ -66,7 +65,7 @@ cd scripts/test-lifecycle-compute
 
 The test includes robust cleanup logic using Terraform:
 
-- Removes version-locked resources from Terraform state (backends, domains, and ACLs pinned to old versions)
+- Removes version-locked resources from Terraform state (backends and domains pinned to old versions)
 - Runs `terraform destroy` to delete services
 - The `force_destroy = true` flag ensures all versions are deleted automatically
 - Verifies services were successfully deleted via the Fastly API
@@ -94,7 +93,7 @@ Compute versions require a package to be uploaded before activation. The test ha
 
 ### Version Locked Resources
 
-After cloning versions, backends, domains, and ACLs remain pinned to version 1 in Terraform state, which becomes locked after activation. The script handles this by removing these resources from state before running `terraform destroy`. This allows the service deletion (with `force_destroy = true`) to clean up all versions and child resources automatically.
+After cloning versions, backends and domains remain pinned to version 1 in Terraform state, which becomes locked after activation. The script handles this by removing these resources from state before running `terraform destroy`. This allows the service deletion (with `force_destroy = true`) to clean up all versions and child resources automatically.
 
 ### API Rate Limiting
 
@@ -106,7 +105,6 @@ The test creates:
 - 2 Fastly Compute services
 - 2 domain attachments (one per service)
 - 3 backend configurations (1 shared, 2 unique)
-- 2 ACL configurations (one per service)
 - Compute package uploads to multiple versions
 
 All resources are tagged with the process ID for uniqueness and are destroyed during cleanup.

@@ -45,7 +45,7 @@ resource "fastly_service_backend" "service_1_backend_unique" {
   ssl_sni_hostname  = "unique1.origin.example.com"
 }
 
-resource "fastly_service_acl" "service_1_acl" {
+resource "fastly_service_cdn_acl" "service_1_acl" {
   service_id    = fastly_service_cdn.service_1.id
   version       = var.service_1_version
   name          = "test_acl_1"
@@ -96,7 +96,7 @@ resource "fastly_service_backend" "service_2_backend_shared" {
   ssl_sni_hostname  = "shared.origin.example.com"
 }
 
-resource "fastly_service_acl" "service_2_acl" {
+resource "fastly_service_cdn_acl" "service_2_acl" {
   service_id    = fastly_service_cdn.service_2.id
   version       = var.service_2_version
   name          = "test_acl_2"
@@ -110,7 +110,7 @@ data "fastly_service_version" "service_1" {
     fastly_service_domain.service_1_domain,
     fastly_service_backend.service_1_backend_shared,
     fastly_service_backend.service_1_backend_unique,
-    fastly_service_acl.service_1_acl
+    fastly_service_cdn_acl.service_1_acl
   ]
 }
 
@@ -119,7 +119,7 @@ data "fastly_service_version" "service_2" {
   depends_on = [
     fastly_service_domain.service_2_domain,
     fastly_service_backend.service_2_backend_shared,
-    fastly_service_acl.service_2_acl
+    fastly_service_cdn_acl.service_2_acl
   ]
 }
 

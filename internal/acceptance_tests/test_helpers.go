@@ -314,7 +314,7 @@ func ConfigACLForImport(serviceName, domainName, aclName string) string {
 }
 
 // ConfigACLAtVersion returns a service/domain/ACL config pinned to the given version,
-// for exercising in-place version changes on the explicit fastly_service_acl resource.
+// for exercising in-place version changes on the explicit fastly_service_cdn_acl resource.
 func ConfigACLAtVersion(serviceName, domainName, aclName string, version int) string {
 	return BuildConfig(
 		ServiceCDN,
@@ -394,22 +394,6 @@ func ConfigComputeAutoUnsortedBackendAndDomainBlocks(serviceName, domainBName, d
 	)
 }
 
-// ConfigComputeAutoWithACL returns a Compute auto service config with a domain, ACL, and package
-func ConfigComputeAutoWithACL(serviceName, domainName, aclName string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"ACL_NAME":     aclName,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/acl_single.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
-}
-
 // ConfigComputeAutoReversedBackendAndDomainBlocks returns a Compute auto service config
 // with the same backend and domain blocks as ConfigComputeAutoUnsortedBackendAndDomainBlocks,
 // but declared in the reverse order.
@@ -424,57 +408,6 @@ func ConfigComputeAutoReversedBackendAndDomainBlocks(serviceName, domainBName, d
 		},
 		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
-}
-
-// ConfigComputeAutoWithBackendAndACL returns a Compute auto service config with domain, backend, ACL, and package
-func ConfigComputeAutoWithBackendAndACL(serviceName, domainName, backendName, aclName string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"BACKEND_NAME": backendName,
-			"ACL_NAME":     aclName,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/backend_single.tf",
-		"internal/acceptance_tests/blocks/acl_single.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
-}
-
-// ConfigComputeAutoWithMultipleACLs returns a Compute auto service config with multiple ACLs and a package
-func ConfigComputeAutoWithMultipleACLs(serviceName, domainName, aclName1, aclName2 string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"ACL_NAME_1":   aclName1,
-			"ACL_NAME_2":   aclName2,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/acl_multi.tf",
-		"internal/acceptance_tests/blocks/package.tf",
-	)
-}
-
-// ConfigComputeAutoWithACLForceDestroy returns a Compute auto service config with an ACL that has force_destroy enabled
-func ConfigComputeAutoWithACLForceDestroy(serviceName, domainName, aclName string) string {
-	return BuildConfig(
-		ServiceComputeAuto,
-		map[string]string{
-			"SERVICE_NAME": serviceName,
-			"DOMAIN_NAME":  domainName,
-			"ACL_NAME":     aclName,
-			"PACKAGE_PATH": GetPackagePath(),
-		},
-		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/acl_with_force_destroy.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

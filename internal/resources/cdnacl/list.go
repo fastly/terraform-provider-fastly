@@ -1,4 +1,4 @@
-package acl
+package cdnacl
 
 import (
 	"context"
@@ -29,12 +29,12 @@ func NewListResource() list.ListResource {
 }
 
 func (l *ListResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_service_acl"
+	resp.TypeName = req.ProviderTypeName + "_service_cdn_acl"
 }
 
 func (l *ListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
 	resp.Schema = listschema.Schema{
-		Description: "List all ACLs across all Fastly CDN and Compute services at their active version, or latest version when no active version exists.",
+		Description: "List all ACLs across all Fastly CDN services at their active version, or latest version when no active version exists.",
 		Attributes:  map[string]listschema.Attribute{},
 	}
 }
@@ -63,7 +63,7 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 	stream.Results = func(push func(list.ListResult) bool) {
 		var count int64
 		for _, svc := range services {
-			if svc == nil || svc.Type == nil || !service.TypeSupported(*svc.Type, service.TypeVCL, service.TypeCompute) {
+			if svc == nil || svc.Type == nil || !service.TypeSupported(*svc.Type, service.TypeVCL) {
 				continue
 			}
 			serviceID := fastly.ToValue(svc.ServiceID)

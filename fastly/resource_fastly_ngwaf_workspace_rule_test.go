@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -1206,4 +1207,19 @@ func testAccFastlyNGWAFRuleConfigNoConditions() string {
     type = "request"
   }
   `, workspaceName)
+}
+
+func TestValidateRuleHasConditions_TemplatedSignalSkipsCheck(t *testing.T) {
+	r := resourceFastlyNGWAFRuleBase()
+	r.Schema["type"] = resourceFastlyNGWAFWorkspaceRule().Schema["type"]
+
+	cfg := terraform.NewResourceConfigRaw(map[string]any{
+		"description": "",
+		"enabled":     true,
+		"type":        "templated_signal",
+		"action":      []any{map[string]any{"type": "block"}},
+	})
+
+	_, err := r.Diff(context.Background(), nil, cfg, nil)
+	require.NoError(t, err, "templated_signal rule without conditions should pass validation")
 }

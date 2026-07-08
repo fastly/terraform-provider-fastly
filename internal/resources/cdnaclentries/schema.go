@@ -65,6 +65,7 @@ func ResourceBlocks() map[string]schema.Block {
 			Description: "ACL Entries.",
 			Validators: []validator.Set{
 				setvalidator.SizeAtMost(10000),
+				UniqueEntryIdentity(),
 			},
 			PlanModifiers: []planmodifier.Set{
 				preserveEntryIDsModifier{},

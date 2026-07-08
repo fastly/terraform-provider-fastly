@@ -352,7 +352,7 @@ verify_service_configuration() {
     terraform state show fastly_service_domain.service_1_domain > /dev/null
     terraform state show fastly_service_backend.service_1_backend_shared > /dev/null
     terraform state show fastly_service_backend.service_1_backend_unique > /dev/null
-    terraform state show fastly_service_acl.service_1_acl > /dev/null
+    terraform state show fastly_service_cdn_acl.service_1_acl > /dev/null
     terraform state show fastly_service_cdn_acl_entries.service_1_acl_entries > /dev/null
     log_success "Service 1 resources verified"
 
@@ -360,7 +360,7 @@ verify_service_configuration() {
     terraform state show fastly_service_cdn.service_2 > /dev/null
     terraform state show fastly_service_domain.service_2_domain > /dev/null
     terraform state show fastly_service_backend.service_2_backend_shared > /dev/null
-    terraform state show fastly_service_acl.service_2_acl > /dev/null
+    terraform state show fastly_service_cdn_acl.service_2_acl > /dev/null
     terraform state show fastly_service_cdn_acl_entries.service_2_acl_entries > /dev/null
     log_success "Service 2 resources verified"
 
@@ -409,7 +409,7 @@ test_acl_entries_update() {
         /^resource "fastly_service_cdn_acl_entries" "service_1_acl_entries" \{$/ {
             print "resource \"fastly_service_cdn_acl_entries\" \"service_1_acl_entries\" {"
             print "  service_id     = fastly_service_cdn.service_1.id"
-            print "  acl_id         = fastly_service_acl.service_1_acl.acl_id"
+            print "  acl_id         = fastly_service_cdn_acl.service_1_acl.acl_id"
             print "  manage_entries = true"
             print ""
             print "  entry {"
@@ -619,7 +619,10 @@ advance_off_locked_versions() {
     local svc1_locked=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
         "https://api.fastly.com/service/$SERVICE_1_ID/version/$svc1_version" | jq -r '.locked')
 
-    if [ "$svc1_locked" = "true" ]; then
+    # Treat anything other than a confirmed "false" (including a curl/API hiccup
+    # that leaves svc1_locked empty or "null") as locked, since an unnecessary
+    # clone is harmless but skipping a needed one fails destroy outright.
+    if [ "$svc1_locked" != "false" ]; then
         log_info "Service 1 version $svc1_version is locked; cloning to a fresh draft version..."
 
         if ! terraform apply -invoke=action.fastly_service_version_clone.service_1_clone_from_pinned -auto-approve; then
@@ -646,7 +649,9 @@ advance_off_locked_versions() {
     local svc2_locked=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
         "https://api.fastly.com/service/$SERVICE_2_ID/version/$svc2_version" | jq -r '.locked')
 
-    if [ "$svc2_locked" = "true" ]; then
+    # See note above: default to the safe (clone-off) path on anything but a
+    # confirmed "false".
+    if [ "$svc2_locked" != "false" ]; then
         log_info "Service 2 version $svc2_version is locked; cloning to a fresh draft version..."
 
         if ! terraform apply -invoke=action.fastly_service_version_clone.service_2_clone_from_pinned -auto-approve; then
@@ -746,7 +751,7 @@ main() {
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
     log_success "✓ ACL configuration (fastly_service_cdn_acl)"
-    log_success "✓ ACL entries management (fastly_service_acl_entries)"
+    log_success "✓ ACL entries management (fastly_service_cdn_acl_entries)"
     log_success "✓ ACL entries in-place update"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Resource updates"

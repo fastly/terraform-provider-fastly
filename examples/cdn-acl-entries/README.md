@@ -1,6 +1,6 @@
-# ACL Entries Example
+# CDN ACL Entries Example
 
-This example demonstrates managing ACL entries for a Fastly service using the `fastly_service_acl_entries` resource.
+This example demonstrates managing ACL entries for a Fastly service using the `fastly_service_cdn_acl_entries` resource.
 
 ## Usage
 

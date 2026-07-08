@@ -40,6 +40,34 @@ func NewFastlyClient() (*fastly.Client, error) {
 	return fastly.NewClient(apiToken)
 }
 
+// CreateTestKVStore creates a KV Store fixture directly against the Fastly API for use as a
+// resource_link target, and registers its cleanup via t.Cleanup. Returns the store's ID.
+//
+// This provider doesn't yet have a dedicated resource for KV Stores, so resource_link
+// acceptance tests need a real linkable resource created out-of-band from Terraform.
+//
+// TODO: once a fastly_kvstore resource exists, replace this raw go-fastly client call with a
+// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
+// same state/plan lifecycle as the rest of the test config.
+func CreateTestKVStore(t *testing.T, name string) string {
+	client, err := NewFastlyClient()
+	if err != nil {
+		t.Fatalf("error creating Fastly client: %s", err)
+	}
+
+	store, err := client.CreateKVStore(context.Background(), &fastly.CreateKVStoreInput{Name: name})
+	if err != nil {
+		t.Fatalf("error creating KV Store fixture: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := client.DeleteKVStore(context.Background(), &fastly.DeleteKVStoreInput{StoreID: store.StoreID}); err != nil {
+			t.Logf("error deleting KV Store fixture %q: %s", store.StoreID, err)
+		}
+	})
+
+	return store.StoreID
+}
+
 // CheckServiceDestroy returns a TestCheckFunc that verifies a service resource was destroyed
 func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -359,6 +387,25 @@ func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) s
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithResourceLink returns a Compute auto service config with a domain,
+// package, and a resource_link pointing at targetID, the ID of a shared resource (e.g. a
+// KV Store) created independently of this config.
+func ConfigComputeAutoWithResourceLink(serviceName, domainName, targetID, linkName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":            serviceName,
+			"DOMAIN_NAME":             domainName,
+			"PACKAGE_PATH":            GetPackagePath(),
+			"RESOURCE_LINK_NAME":      linkName,
+			"RESOURCE_LINK_TARGET_ID": targetID,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/resource_link_single.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

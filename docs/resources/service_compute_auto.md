@@ -25,6 +25,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `package` (Block List) Compute package attached to this service version. At most one package block is supported. (see [below for nested schema](#nestedblock--package))
+- `resource_link` (Block List) Shared resources (such as KV Stores or Config Stores) linked to this service, making them accessible from Compute code. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 
 ### Read-Only
@@ -101,3 +102,16 @@ Optional:
 - `content` (String) The contents of the Compute deployment package as a base64-encoded string. Conflicts with `filename`.
 - `filename` (String) The path to the Compute deployment package on the local filesystem. Conflicts with `content`.
 - `source_code_hash` (String) Hash of the package contents used to detect local package changes.
+
+
+<a id="nestedblock--resource_link"></a>
+### Nested Schema for `resource_link`
+
+Required:
+
+- `name` (String) The name the service will use to open the linked resource from Compute code (e.g. a KV Store or Config Store SDK lookup). This is an alias and does not need to match the name of the underlying resource.
+- `resource_id` (String) The ID of the shared resource to link (e.g. the ID of a KV Store or Config Store).
+
+Read-Only:
+
+- `link_id` (String) An alphanumeric string identifying this resource link.

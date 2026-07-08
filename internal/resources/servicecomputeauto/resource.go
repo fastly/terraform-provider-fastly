@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/resourcelink"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v16/fastly"
@@ -36,16 +37,17 @@ func NewResource() resource.Resource {
 }
 
 type Model struct {
-	ID             types.String           `tfsdk:"id"`
-	Name           types.String           `tfsdk:"name"`
-	Comment        types.String           `tfsdk:"comment"`
-	ForceDestroy   types.Bool             `tfsdk:"force_destroy"`
-	Reuse          types.Bool             `tfsdk:"reuse"`
-	ActiveVersion  types.Int64            `tfsdk:"active_version"`
-	ManagedVersion types.Int64            `tfsdk:"managed_version"`
-	Domain         []domain.NestedModel   `tfsdk:"domain"`
-	Backend        []backend.NestedModel  `tfsdk:"backend"`
-	Package        []computepackage.Model `tfsdk:"package"`
+	ID             types.String               `tfsdk:"id"`
+	Name           types.String               `tfsdk:"name"`
+	Comment        types.String               `tfsdk:"comment"`
+	ForceDestroy   types.Bool                 `tfsdk:"force_destroy"`
+	Reuse          types.Bool                 `tfsdk:"reuse"`
+	ActiveVersion  types.Int64                `tfsdk:"active_version"`
+	ManagedVersion types.Int64                `tfsdk:"managed_version"`
+	Domain         []domain.NestedModel       `tfsdk:"domain"`
+	Backend        []backend.NestedModel      `tfsdk:"backend"`
+	ResourceLink   []resourcelink.NestedModel `tfsdk:"resource_link"`
+	Package        []computepackage.Model     `tfsdk:"package"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -95,9 +97,10 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"domain":  domain.NestedBlockSchema(),
-			"backend": backend.NestedBlockSchema(),
-			"package": computepackage.NestedBlockSchema(),
+			"domain":        domain.NestedBlockSchema(),
+			"backend":       backend.NestedBlockSchema(),
+			"resource_link": resourcelink.NestedBlockSchema(),
+			"package":       computepackage.NestedBlockSchema(),
 		},
 	}
 }
@@ -173,6 +176,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+	if err := resourcelink.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.ResourceLink); err != nil {
+		resp.Diagnostics.AddError("Error reconciling resource links", err.Error())
+		return
+	}
+
+	resourceLinks, err := resourcelink.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service resource links", err.Error())
+		return
+	}
+	plan.ResourceLink = resourcelink.MatchOrder(resourceLinks, plan.ResourceLink)
 
 	if err := computepackage.Update(ctx, r.providerData.AutoClient(), serviceID, version, plan.Package); err != nil {
 		resp.Diagnostics.AddError("Error updating Compute package", err.Error())
@@ -267,6 +282,13 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 
+	resourceLinks, err := resourcelink.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service resource links", err.Error())
+		return
+	}
+	state.ResourceLink = resourcelink.MatchOrder(resourceLinks, state.ResourceLink)
+
 	packages, err := computepackage.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Package)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Compute package", err.Error())
@@ -300,7 +322,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !computepackage.Equal(plan.Package, state.Package)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !resourcelink.Equal(plan.ResourceLink, state.ResourceLink) || !computepackage.Equal(plan.Package, state.Package)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -358,6 +380,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Backend = backend.MatchOrder(backends, plan.Backend)
 
+		if err := resourcelink.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.ResourceLink); err != nil {
+			resp.Diagnostics.AddError("Error reconciling resource links", err.Error())
+			return
+		}
+
+		resourceLinks, err := resourcelink.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service resource links", err.Error())
+			return
+		}
+		plan.ResourceLink = resourcelink.MatchOrder(resourceLinks, plan.ResourceLink)
+
 		if len(state.Package) > 0 && len(plan.Package) == 0 {
 			resp.Diagnostics.AddError(
 				"Removing Compute packages is not supported",
@@ -399,6 +433,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ActiveVersion = state.ActiveVersion
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
+		plan.ResourceLink = resourcelink.MatchOrder(state.ResourceLink, plan.ResourceLink)
 		plan.Package = state.Package
 	}
 

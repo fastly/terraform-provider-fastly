@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
-	ws "github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/workspaces/thresholds"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	ws "github.com/fastly/go-fastly/v16/fastly/ngwaf/v1/workspaces/thresholds"
 )
 
 func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {

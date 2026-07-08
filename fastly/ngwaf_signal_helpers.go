@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/scope"
-	"github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/signals"
+	"github.com/fastly/go-fastly/v16/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v16/fastly/ngwaf/v1/signals"
 )
 
 func resourceFastlyNGWAFSignalBase() *schema.Resource {

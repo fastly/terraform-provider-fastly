@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	mailingListAlerts "github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/workspaces/alerts/mailinglist"
+	mailingListAlerts "github.com/fastly/go-fastly/v16/fastly/ngwaf/v1/workspaces/alerts/mailinglist"
 )
 
 const (

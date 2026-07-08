@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
-	pagerdutyAlerts "github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/workspaces/alerts/pagerduty"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	pagerdutyAlerts "github.com/fastly/go-fastly/v16/fastly/ngwaf/v1/workspaces/alerts/pagerduty"
 )
 
 func resourceFastlyNGWAFAlertPagerDutyIntegration() *schema.Resource {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
 )
 
 // HealthCheckServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.

@@ -22,6 +22,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/serviceversion"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
@@ -95,11 +96,12 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		backend.NewResource,
 		cdnacl.NewResource,
+		cdnaclentries.NewResource,
 		domain.NewResource,
-		servicecompute.NewResource,
-		servicecomputeauto.NewResource,
 		servicecdn.NewResource,
 		servicecdnauto.NewResource,
+		servicecompute.NewResource,
+		servicecomputeauto.NewResource,
 	}
 }
 
@@ -113,9 +115,10 @@ func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListReso
 	return []func() list.ListResource{
 		backend.NewListResource,
 		cdnacl.NewListResource,
+		cdnaclentries.NewListResource,
 		domain.NewListResource,
-		servicecompute.NewListResource,
 		servicecdn.NewListResource,
+		servicecompute.NewListResource,
 	}
 }
 

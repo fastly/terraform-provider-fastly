@@ -352,12 +352,16 @@ verify_service_configuration() {
     terraform state show fastly_service_domain.service_1_domain > /dev/null
     terraform state show fastly_service_backend.service_1_backend_shared > /dev/null
     terraform state show fastly_service_backend.service_1_backend_unique > /dev/null
+    terraform state show fastly_service_cdn_acl.service_1_acl > /dev/null
+    terraform state show fastly_service_cdn_acl_entries.service_1_acl_entries > /dev/null
     log_success "Service 1 resources verified"
 
     # Check service 2 resources
     terraform state show fastly_service_cdn.service_2 > /dev/null
     terraform state show fastly_service_domain.service_2_domain > /dev/null
     terraform state show fastly_service_backend.service_2_backend_shared > /dev/null
+    terraform state show fastly_service_cdn_acl.service_2_acl > /dev/null
+    terraform state show fastly_service_cdn_acl_entries.service_2_acl_entries > /dev/null
     log_success "Service 2 resources verified"
 
     # Verify data sources
@@ -388,6 +392,95 @@ test_resource_updates() {
     fi
 
     log_success "Resource updates work correctly"
+}
+
+# Test in-place entry updates on fastly_service_cdn_acl_entries. This runs before any
+# version-cloning steps so acl_id stays stable, exercising the resource's Update() path
+# (create + modify + remove entries against a fixed acl_id) rather than the forced
+# replace that a changing acl_id triggers later in the script.
+test_acl_entries_update() {
+    log_step "Testing ACL entries in-place update"
+
+    cd "$TEST_DIR"
+
+    log_info "Modifying service 1 ACL entries (update one, remove one, add one)..."
+
+    awk '
+        /^resource "fastly_service_cdn_acl_entries" "service_1_acl_entries" \{$/ {
+            print "resource \"fastly_service_cdn_acl_entries\" \"service_1_acl_entries\" {"
+            print "  service_id     = fastly_service_cdn.service_1.id"
+            print "  acl_id         = fastly_service_cdn_acl.service_1_acl.acl_id"
+            print "  manage_entries = true"
+            print ""
+            print "  entry {"
+            print "    ip      = \"192.168.1.0\""
+            print "    subnet  = \"24\""
+            print "    negated = false"
+            print "    comment = \"Service 1 test entry - updated\""
+            print "  }"
+            print ""
+            print "  entry {"
+            print "    ip      = \"203.0.113.0\""
+            print "    subnet  = \"24\""
+            print "    negated = false"
+            print "    comment = \"Service 1 new entry\""
+            print "  }"
+            print "}"
+            skip=1
+            next
+        }
+        skip && /^}$/ { skip=0; next }
+        skip { next }
+        { print }
+    ' main.tf > main.tf.new && mv main.tf.new main.tf
+
+    log_info "Running terraform plan..."
+    terraform plan -out=tfplan | tee plan_output.txt
+
+    if grep -q "fastly_service_cdn_acl_entries.service_1_acl_entries.*must be replaced" plan_output.txt; then
+        log_error "Expected an in-place update for service 1 ACL entries, but plan shows a replacement"
+        rm -f plan_output.txt
+        return 1
+    fi
+    rm -f plan_output.txt
+    log_success "Plan confirms in-place update (no replacement)"
+
+    log_info "Running terraform apply..."
+    terraform apply tfplan
+
+    log_info "Verifying updated entries via the Fastly API..."
+    local acl_id=$(terraform output -raw service_1_acl_id)
+    local entries_json=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/service/$SERVICE_1_ID/acl/$acl_id/entries")
+
+    local entry_count=$(echo "$entries_json" | jq '. | length')
+    local updated_count=$(echo "$entries_json" | jq '[.[] | select(.comment == "Service 1 test entry - updated")] | length')
+    local new_count=$(echo "$entries_json" | jq '[.[] | select(.ip == "203.0.113.0")] | length')
+    local removed_count=$(echo "$entries_json" | jq '[.[] | select(.ip == "10.0.0.0")] | length')
+
+    log_info "Service 1 ACL now has $entry_count entries"
+
+    if [ "$entry_count" != "2" ]; then
+        log_error "Expected 2 entries after update, found $entry_count"
+        return 1
+    fi
+
+    if [ "$updated_count" != "1" ]; then
+        log_error "Expected the existing entry's comment to be updated, not found"
+        return 1
+    fi
+
+    if [ "$new_count" != "1" ]; then
+        log_error "Expected new entry 203.0.113.0 to be present"
+        return 1
+    fi
+
+    if [ "$removed_count" != "0" ]; then
+        log_error "Expected removed entry 10.0.0.0 to be gone, still present"
+        return 1
+    fi
+
+    log_success "ACL entries in-place update verified: 1 updated, 1 removed, 1 added"
 }
 
 # Test clone from latest version and version-locked resource writes
@@ -526,7 +619,10 @@ advance_off_locked_versions() {
     local svc1_locked=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
         "https://api.fastly.com/service/$SERVICE_1_ID/version/$svc1_version" | jq -r '.locked')
 
-    if [ "$svc1_locked" = "true" ]; then
+    # Treat anything other than a confirmed "false" (including a curl/API hiccup
+    # that leaves svc1_locked empty or "null") as locked, since an unnecessary
+    # clone is harmless but skipping a needed one fails destroy outright.
+    if [ "$svc1_locked" != "false" ]; then
         log_info "Service 1 version $svc1_version is locked; cloning to a fresh draft version..."
 
         if ! terraform apply -invoke=action.fastly_service_version_clone.service_1_clone_from_pinned -auto-approve; then
@@ -553,7 +649,9 @@ advance_off_locked_versions() {
     local svc2_locked=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
         "https://api.fastly.com/service/$SERVICE_2_ID/version/$svc2_version" | jq -r '.locked')
 
-    if [ "$svc2_locked" = "true" ]; then
+    # See note above: default to the safe (clone-off) path on anything but a
+    # confirmed "false".
+    if [ "$svc2_locked" != "false" ]; then
         log_info "Service 2 version $svc2_version is locked; cloning to a fresh draft version..."
 
         if ! terraform apply -invoke=action.fastly_service_version_clone.service_2_clone_from_pinned -auto-approve; then
@@ -640,6 +738,7 @@ main() {
     verify_initial_state
     verify_service_configuration
     test_resource_updates
+    test_acl_entries_update
     test_version_clone_action
     test_version_activate_action
     test_clone_from_latest_and_version_writes
@@ -652,6 +751,8 @@ main() {
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
     log_success "✓ ACL configuration (fastly_service_cdn_acl)"
+    log_success "✓ ACL entries management (fastly_service_cdn_acl_entries)"
+    log_success "✓ ACL entries in-place update"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Resource updates"
     log_success "✓ Version clone action (fastly_service_version_clone)"

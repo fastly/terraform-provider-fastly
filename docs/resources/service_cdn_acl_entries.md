@@ -1,0 +1,128 @@
+---
+page_title: "fastly_service_cdn_acl_entries Resource - fastly"
+subcategory: ""
+description: |-
+  Manages ACL entries for a Fastly service ACL. Provides batch operations for creating, updating, and deleting ACL entries.
+---
+
+# fastly_service_cdn_acl_entries (Resource)
+
+Manages ACL entries for a Fastly service ACL. Provides batch operations for creating, updating, and deleting ACL entries.
+
+This resource is designed to manage the entries within an ACL. It uses the Fastly
+batch operations API to efficiently handle large numbers of entries.
+
+## Example Usage
+
+```terraform
+resource "fastly_service_cdn" "example" {
+  name = "example-service"
+
+  domain {
+    name = "example.com"
+  }
+
+  backend {
+    address = "http-me.fastly.dev"
+    name    = "backend"
+  }
+}
+
+resource "fastly_service_cdn_acl" "example" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "example_acl"
+}
+
+resource "fastly_service_cdn_acl_entries" "example" {
+  service_id     = fastly_service_cdn.example.id
+  acl_id         = fastly_service_cdn_acl.example.acl_id
+  manage_entries = true
+
+  entry {
+    ip      = "192.0.2.1"
+    subnet  = 32
+    negated = false
+    comment = "Single IP address"
+  }
+
+  entry {
+    ip      = "198.51.100.0"
+    subnet  = 24
+    negated = false
+    comment = "IP range"
+  }
+
+  entry {
+    ip      = "203.0.113.10"
+    subnet  = 32
+    negated = true
+    comment = "Negated entry - blocks this IP"
+  }
+}
+```
+
+## Behavior and Drift Management
+
+The `manage_entries` attribute controls whether Terraform should detect and reconcile
+drift in ACL entries:
+
+- When `manage_entries = true` (recommended for Terraform-managed ACLs): Terraform
+  will refresh the state on every read and detect if entries have been modified
+  outside of Terraform. Any drift will be corrected on the next apply.
+
+- When `manage_entries = false` (for externally-managed ACLs): Terraform will skip
+  the refresh on reads and will not detect drift. Use this when ACL entries are
+  managed by external systems (e.g., via API, scripts, or other automation).
+
+When importing an existing ACL entries resource, `manage_entries` is automatically
+set to `true` to enable drift detection.
+
+## Schema
+
+### Required
+
+- `acl_id` (String) The ID of the ACL that the items belong to.
+- `service_id` (String) The ID of the Service that the ACL belongs to.
+
+### Optional
+
+- `entry` (Block Set) ACL Entries. (see [below for nested schema](#nestedblock--entry))
+- `manage_entries` (Boolean) Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally.
+
+### Read-Only
+
+- `id` (String) Alphanumeric string identifying the resource. Format: `service_id/acl_id`.
+
+<a id="nestedblock--entry"></a>
+### Nested Schema for `entry`
+
+Required:
+
+- `ip` (String) An IP address that is the focus for the ACL.
+
+Optional:
+
+- `comment` (String) A personal freeform descriptive note.
+- `negated` (Boolean) A boolean that will negate the match if true.
+- `subnet` (Number) Number of bits for the subnet mask applied to the IP address (0-32 for IPv4, 0-128 for IPv6).
+
+Read-Only:
+
+- `id` (String) The unique ID of the entry.
+
+## Import
+
+The import ID format is `service_id/acl_id`.
+
+```shell
+terraform import fastly_service_cdn_acl_entries.example SERVICE_ID/ACL_ID
+```
+
+Example:
+
+```shell
+terraform import fastly_service_cdn_acl_entries.example SU1Z0isxPaozGVKXdv0eY/7Lsb7Y8w6St2eqwFgqzc
+```
+
+When imported, `manage_entries` is automatically set to `true`.

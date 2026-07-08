@@ -1,4 +1,4 @@
-package domain
+package cdnaclentries
 
 import (
 	"context"
@@ -29,12 +29,12 @@ func NewListResource() list.ListResource {
 }
 
 func (l *ListResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_service_domain"
+	resp.TypeName = req.ProviderTypeName + "_service_cdn_acl_entries"
 }
 
 func (l *ListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse) {
 	resp.Schema = listschema.Schema{
-		Description: "List all domains across all Fastly CDN and Compute services at their active version, or latest version when no active version exists.",
+		Description: "List ACL entries for all ACLs across all Fastly CDN services at their active version, or latest version when no active version exists.",
 		Attributes:  map[string]listschema.Attribute{},
 	}
 }
@@ -50,7 +50,7 @@ func (l *ListResource) Configure(_ context.Context, req resource.ConfigureReques
 }
 
 func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *list.ListResultsStream) {
-	tflog.Debug(ctx, "Listing Fastly service domains ")
+	tflog.Debug(ctx, "Listing Fastly service CDN ACL entries")
 
 	services, err := l.client.ListServices(ctx, &fastly.ListServicesInput{})
 	if err != nil {
@@ -63,7 +63,7 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 	stream.Results = func(push func(list.ListResult) bool) {
 		var count int64
 		for _, svc := range services {
-			if svc == nil || svc.Type == nil || !service.TypeSupported(*svc.Type, service.TypeVCL, service.TypeCompute) {
+			if svc == nil || svc.Type == nil || !service.TypeSupported(*svc.Type, service.TypeVCL) {
 				continue
 			}
 			serviceID := fastly.ToValue(svc.ServiceID)
@@ -80,20 +80,20 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 				continue
 			}
 
-			domains, err := l.client.ListDomains(ctx, &fastly.ListDomainsInput{
+			acls, err := l.client.ListACLs(ctx, &fastly.ListACLsInput{
 				ServiceID:      serviceID,
 				ServiceVersion: version,
 			})
 			if err != nil {
-				tflog.Warn(ctx, "Error listing domains for service", map[string]any{
+				tflog.Warn(ctx, "Error listing ACLs for service", map[string]any{
 					"service_id": serviceID,
 					"error":      err.Error(),
 				})
 				continue
 			}
 
-			for _, d := range domains {
-				if d == nil || d.Name == nil {
+			for _, a := range acls {
+				if a == nil || a.ACLID == nil || a.Name == nil {
 					continue
 				}
 				if req.Limit > 0 && count >= req.Limit {
@@ -101,11 +101,13 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 				}
 				count++
 
+				aclID := fastly.ToValue(a.ACLID)
+
 				result := listidentity.NewResult(ctx, req)
-				result.DisplayName = service.ToGeneratedResourceName(fastly.ToValue(svc.Name), serviceID, *d.Name)
+				result.DisplayName = service.ToGeneratedResourceName(fastly.ToValue(svc.Name), serviceID, *a.Name)
 
 				if req.IncludeResource {
-					result.Diagnostics.Append(setResourceAttrs(ctx, &result, d, serviceID, version)...)
+					result.Diagnostics.Append(setListResourceAttrs(ctx, l.client, &result, serviceID, aclID)...)
 				}
 
 				if !push(result) {
@@ -116,24 +118,36 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 	}
 }
 
-func setResourceAttrs(ctx context.Context, result *list.ListResult, d *fastly.Domain, serviceID string, version int) diag.Diagnostics {
+func setListResourceAttrs(ctx context.Context, client *fastly.Client, result *list.ListResult, serviceID, aclID string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(d.Name)
+	paginator := client.GetACLEntries(ctx, &fastly.GetACLEntriesInput{
+		ServiceID: serviceID,
+		ACLID:     aclID,
+	})
+
+	var remoteEntries []*fastly.ACLEntry
+	for paginator.HasNext() {
+		page, err := paginator.GetNext()
+		if err != nil {
+			diags.AddError("Error reading ACL entries", fmt.Sprintf("service %s, ACL %s: %s", serviceID, aclID, err))
+			return diags
+		}
+		remoteEntries = append(remoteEntries, page...)
+	}
+
+	entrySet := flattenEntries(ctx, remoteEntries, types.SetNull(types.ObjectType{AttrTypes: entryAttrTypes}), &diags)
+	if diags.HasError() {
+		return diags
+	}
 
 	model := Model{
-		ID:      types.StringValue(id),
-		Service: types.StringValue(serviceID),
-		Version: types.Int64Value(int64(version)),
-		Name:    types.StringValue(fastly.ToValue(d.Name)),
+		ID:            types.StringValue(fmt.Sprintf("%s/%s", serviceID, aclID)),
+		ServiceID:     types.StringValue(serviceID),
+		ACLID:         types.StringValue(aclID),
+		Entry:         entrySet,
+		ManageEntries: types.BoolValue(false),
 	}
-
-	if d.Comment != nil && *d.Comment != "" {
-		model.Comment = types.StringValue(*d.Comment)
-	} else {
-		model.Comment = types.StringNull()
-	}
-
 	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags
 }

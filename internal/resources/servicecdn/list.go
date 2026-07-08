@@ -4,6 +4,7 @@ import (
 	"context"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/listidentity"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	"github.com/fastly/go-fastly/v16/fastly"
@@ -69,14 +70,8 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 			}
 			count++
 
-			result := req.NewListResult(ctx)
+			result := listidentity.NewResult(ctx, req)
 			result.DisplayName = service.ToGeneratedResourceName(fastly.ToValue(svc.Name), fastly.ToValue(svc.ServiceID))
-
-			if svc.ServiceID != nil {
-				result.Diagnostics.Append(
-					result.Identity.SetAttribute(ctx, path.Root("service_id"), *svc.ServiceID)...,
-				)
-			}
 
 			if req.IncludeResource {
 				result.Diagnostics.Append(setResourceAttrs(ctx, &result, svc)...)

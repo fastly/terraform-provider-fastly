@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/fastly/go-fastly/v16/fastly"
@@ -689,5 +690,118 @@ func ConfigDomainForImport(serviceName, domainName, additionalDomainName string)
 			"DOMAIN_2_NAME":   additionalDomainName,
 		},
 		"internal/acceptance_tests/blocks/domain_multi.tf",
+	)
+}
+
+// Configuration helpers for ACL entries resources
+
+func aclEntriesBase(serviceName, domainName, aclName string) (ServiceType, map[string]string) {
+	return ServiceCDN, map[string]string{
+		"SERVICE_NAME":    serviceName,
+		"SERVICE_COMMENT": "",
+		"SERVICE_VERSION": "1",
+		"DOMAIN_NAME":     domainName,
+		"BACKEND_NAME":    "backend",
+		"ACL_NAME":        aclName,
+	}
+}
+
+func ConfigACLEntriesCreate(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_single.tf",
+	)
+}
+
+func ConfigACLEntriesUpdate(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_two.tf",
+	)
+}
+
+func ConfigACLEntriesDelete(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_empty.tf",
+	)
+}
+
+func ConfigACLEntriesManageEntriesFalse(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_manage_false.tf",
+	)
+}
+
+func ConfigACLEntriesManageEntriesFalseDifferentIP(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_manage_false_different_ip.tf",
+	)
+}
+
+func ConfigACLEntriesMinimalEntry(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_minimal.tf",
+	)
+}
+
+func ConfigACLEntriesSameIPDifferentSubnet(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_same_ip_different_subnet.tf",
+	)
+}
+
+// ConfigACLEntriesCommentChanged mirrors ConfigACLEntriesCreate's single entry but with
+// its comment changed and ip/subnet left untouched, exercising an in-place update of an
+// existing entry rather than a replace or a create of an additional entry.
+func ConfigACLEntriesCommentChanged(serviceName, domainName, aclName string) string {
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_single_comment_changed.tf",
+	)
+}
+
+func ConfigACLEntriesManyEntries(serviceName, domainName, aclName string, count int) string {
+	var entries strings.Builder
+	for i := 1; i <= count; i++ {
+		fmt.Fprintf(&entries, "\n  entry {\n    ip      = \"%d.0.0.1\"\n    subnet  = 32\n    negated = false\n    comment = \"Entry %d\"\n  }", i, i)
+	}
+	entries.WriteString("\n")
+
+	svc, replacements := aclEntriesBase(serviceName, domainName, aclName)
+	replacements["ENTRIES"] = entries.String()
+	return BuildConfig(svc, replacements,
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/service_cdn_backend.tf",
+		"internal/acceptance_tests/blocks/acl_explicit.tf",
+		"internal/acceptance_tests/blocks/acl_entries_many.tf",
 	)
 }

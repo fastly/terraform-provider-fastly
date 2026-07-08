@@ -59,14 +59,14 @@ resource "fastly_service_cdn_acl_entries" "service_1_acl_entries" {
 
   entry {
     ip      = "192.168.1.0"
-    subnet  = "24"
+    subnet  = 24
     negated = false
     comment = "Service 1 test entry"
   }
 
   entry {
     ip      = "10.0.0.0"
-    subnet  = "8"
+    subnet  = 8
     negated = true
     comment = "Service 1 blocked network"
   }
@@ -130,7 +130,7 @@ resource "fastly_service_cdn_acl_entries" "service_2_acl_entries" {
 
   entry {
     ip      = "172.16.0.0"
-    subnet  = "12"
+    subnet  = 12
     negated = false
     comment = "Service 2 test entry"
   }

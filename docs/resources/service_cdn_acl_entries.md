@@ -41,21 +41,21 @@ resource "fastly_service_cdn_acl_entries" "example" {
 
   entry {
     ip      = "192.0.2.1"
-    subnet  = "32"
+    subnet  = 32
     negated = false
     comment = "Single IP address"
   }
 
   entry {
     ip      = "198.51.100.0"
-    subnet  = "24"
+    subnet  = 24
     negated = false
     comment = "IP range"
   }
 
   entry {
     ip      = "203.0.113.10"
-    subnet  = "32"
+    subnet  = 32
     negated = true
     comment = "Negated entry - blocks this IP"
   }

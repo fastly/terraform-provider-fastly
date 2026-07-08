@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
 )
 
 func TestAccFastlyServiceVCL_creation_with_versionless_resources(t *testing.T) {

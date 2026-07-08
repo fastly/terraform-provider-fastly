@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v15/fastly/computeacls"
+	"github.com/fastly/go-fastly/v16/fastly/computeacls"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
 )
 
 func TestAccFastlyComputeACL_validate(t *testing.T) {

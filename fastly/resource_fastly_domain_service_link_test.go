@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
-	"github.com/fastly/go-fastly/v15/fastly/domainmanagement/v1/domains"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	"github.com/fastly/go-fastly/v16/fastly/domainmanagement/v1/domains"
 )
 
 func TestAccFastlyDomainServiceLink_Basic(t *testing.T) {

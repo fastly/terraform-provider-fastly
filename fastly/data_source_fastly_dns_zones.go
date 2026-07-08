@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v15/fastly/dns/v1/dnszones"
+	"github.com/fastly/go-fastly/v16/fastly/dns/v1/dnszones"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )

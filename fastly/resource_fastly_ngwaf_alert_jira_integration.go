@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v15/fastly"
-	jiraAlerts "github.com/fastly/go-fastly/v15/fastly/ngwaf/v1/workspaces/alerts/jira"
+	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	jiraAlerts "github.com/fastly/go-fastly/v16/fastly/ngwaf/v1/workspaces/alerts/jira"
 )
 
 func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {

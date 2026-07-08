@@ -9,6 +9,7 @@
 ### Dependencies
 
 - build(deps): `go.mongodb.org/mongo-driver` from 1.17.4 to 1.17.7 ([#1309](https://github.com/fastly/terraform-provider-fastly/pull/1309))
+- build(deps): `github.com/fastly/go-fastly/v16` from 15.0.3 to 16.0.0 ([#1332](https://github.com/fastly/terraform-provider-fastly/pull/1332))
 
 ## 9.3.0 (June 17, 2026)
 

@@ -70,7 +70,7 @@ func TestAccFastlyServiceComputeAuto_withBackend(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_withResourceLink(t *testing.T) {
 	t.Parallel()
-	PreCheck(t)
+	PreCheckAcc(t)
 
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -102,7 +102,7 @@ func TestAccFastlyServiceComputeAuto_withResourceLink(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkRename(t *testing.T) {
 	t.Parallel()
-	PreCheck(t)
+	PreCheckAcc(t)
 
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -147,7 +147,7 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRename(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkRetarget(t *testing.T) {
 	t.Parallel()
-	PreCheck(t)
+	PreCheckAcc(t)
 
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -190,7 +190,7 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRetarget(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkRemove(t *testing.T) {
 	t.Parallel()
-	PreCheck(t)
+	PreCheckAcc(t)
 
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -229,7 +229,7 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRemove(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkImport(t *testing.T) {
 	t.Parallel()
-	PreCheck(t)
+	PreCheckAcc(t)
 
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))

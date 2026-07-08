@@ -31,6 +31,22 @@ func PreCheck(t *testing.T) {
 	}
 }
 
+// PreCheckAcc mirrors resource.Test's own TF_ACC gate before running PreCheck. Use this
+// (instead of PreCheck) in any test that needs to perform live setup - e.g. creating a fixture
+// via CreateTestKVStore - before constructing its resource.TestCase, since that setup would
+// otherwise run unconditionally: resource.Test only checks TF_ACC after its TestCase argument,
+// including any Config strings built from that setup, has already been fully evaluated.
+//
+// TODO: once a fastly_kvstore resource exists and the resource_link tests build their KV Store
+// fixture via Terraform config instead of CreateTestKVStore, this early gate is no longer
+// needed - those tests can go back to calling PreCheck through TestCase.PreCheck like the rest.
+func PreCheckAcc(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless TF_ACC=1 is set")
+	}
+	PreCheck(t)
+}
+
 // NewFastlyClient creates a new Fastly API client for testing
 func NewFastlyClient() (*fastly.Client, error) {
 	apiToken := os.Getenv("FASTLY_API_TOKEN")

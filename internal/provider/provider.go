@@ -24,6 +24,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/resourcelink"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecompute"
@@ -98,6 +99,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		cdnacl.NewResource,
 		cdnaclentries.NewResource,
 		domain.NewResource,
+		resourcelink.NewResource,
 		servicecdn.NewResource,
 		servicecdnauto.NewResource,
 		servicecompute.NewResource,

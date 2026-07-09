@@ -6,7 +6,7 @@
 
 ### BUG FIXES:
 
-- fix(ngwaf/signals): increase character limit of the `name` attribute to `128` characters ([#1338](https://github.com/fastly/go-fastly/pull/1338))
+- fix(ngwaf/signals): increase character limit of the `name` attribute to `128` ([#1338](https://github.com/fastly/go-fastly/pull/1338))
 
 - fix(ngwaf/rules): allow `templated_signal` rules to be created without conditions ([#1330](https://github.com/fastly/go-fastly/pull/1330))
 

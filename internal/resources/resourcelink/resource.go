@@ -227,7 +227,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
 			"Expected import ID in format: service_id/version/name\n"+
-				"For example: service123/3/my-acl\n\n"+
+				"For example: service123/3/my-store-link\n\n"+
 				"Error: "+err.Error(),
 		)
 		return

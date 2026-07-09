@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -74,6 +75,9 @@ func ResourceAttributes() map[string]schema.Attribute {
 func NestedBlockSchema() schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		Description: "Shared resources (such as KV Stores or Config Stores) linked to this service, making them accessible from Compute code.",
+		Validators: []validator.List{
+			UniqueResourceLinkIdentity(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: CommonAttributes(),
 		},

@@ -9,8 +9,10 @@
 - fix(ngwaf/rules): allow `templated_signal` rules to be created without conditions ([#1330](https://github.com/fastly/go-fastly/pull/1330))
 
 ### Dependencies
-
 - build(deps): `go.mongodb.org/mongo-driver` from 1.17.4 to 1.17.7 ([#1309](https://github.com/fastly/terraform-provider-fastly/pull/1309))
+- build(deps): `github.com/fastly/go-fastly/v16` from 15.0.3 to 16.0.0 ([#1332](https://github.com/fastly/terraform-provider-fastly/pull/1332))
+- build(deps): `github.com/fastly/go-fastly/v16` from 16.0.0 to 16.0.1 ([#1336](https://github.com/fastly/terraform-provider-fastly/pull/1336))
+- build(deps): `golang.org/x/net` from 0.56.0 to 0.57.0 ([#1336](https://github.com/fastly/terraform-provider-fastly/pull/1336))
 - build(deps): `github.com/fastly/go-fastly/v16` from 15.0.3 to 16.0.0 ([#1332](https://github.com/fastly/terraform-provider-fastly/pull/1332))
 
 ## 9.3.0 (June 17, 2026)

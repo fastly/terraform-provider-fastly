@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/fastly/go-fastly/v16/fastly"
+	"github.com/fastly/go-fastly/v16/fastly/computeacls"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -92,6 +93,34 @@ const (
 	serviceDestroyCheckAttempts = 5
 	serviceDestroyCheckInterval = 2 * time.Second
 )
+
+// CreateTestACL creates an ACL fixture directly against the Fastly API for use as
+// a fastly_acl_entries target, and registers its cleanup via t.Cleanup. Returns the ACL's ID.
+//
+// This provider doesn't yet have a dedicated fastly_acl resource, so fastly_acl_entries
+// acceptance tests need a real ACL created out-of-band from Terraform.
+//
+// TODO: once a fastly_acl resource exists, replace this raw go-fastly client call with a
+// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
+// same state/plan lifecycle as the rest of the test config.
+func CreateTestACL(t *testing.T, name string) string {
+	client, err := NewFastlyClient()
+	if err != nil {
+		t.Fatalf("error creating Fastly client: %s", err)
+	}
+
+	acl, err := computeacls.Create(context.Background(), client, &computeacls.CreateInput{Name: &name})
+	if err != nil {
+		t.Fatalf("error creating ACL fixture: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := computeacls.Delete(context.Background(), client, &computeacls.DeleteInput{ComputeACLID: &acl.ComputeACLID}); err != nil {
+			t.Logf("error deleting ACL fixture %q: %s", acl.ComputeACLID, err)
+		}
+	})
+
+	return acl.ComputeACLID
+}
 
 // CheckServiceDestroy returns a TestCheckFunc that verifies a service resource was destroyed
 func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {

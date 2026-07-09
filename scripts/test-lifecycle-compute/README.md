@@ -14,6 +14,7 @@ The test suite validates the complete lifecycle of Fastly Compute services manag
 - Version cloning action (`fastly_service_version_clone`)
 - Version activation action (`fastly_service_version_activate`)
 - ACL creation (`fastly_acl`) -- versionless, created alongside the services
+- ACL entries management (`fastly_acl_entries`)
 - Attaching an ACL to a service (`fastly_service_resource_link`), including moving the link forward across cloned/activated versions
 - Resource updates
 - Resource destruction
@@ -57,11 +58,12 @@ cd scripts/test-lifecycle-compute
 5. **Verify State**: Checks that resources were created correctly
 6. **Test Package Upload**: Invokes `fastly_service_compute_package_upload` actions for both services
 7. **Test Resource Updates**: Modifies a service comment while version 1 is still editable
-8. **Test Clone Action**: Invokes version clone actions for both services (creates version 2)
-9. **Test Activate Action**: Uploads package and activates version 2
-10. **Test Version-Locked Writes**: Clones to version 3, adds new resources, uploads package, and activates -- and verifies the ACL's resource_link followed service 1 onto the new version
-11. **Test Destruction**: Cleans up all resources via `terraform destroy`, including the resource_link and the ACL
-12. **Cleanup**: Removes temporary test directory
+8. **Test ACL Entries Update**: Removes one ACL entry and flips the action on the other, verifying the change against the API
+9. **Test Clone Action**: Invokes version clone actions for both services (creates version 2)
+10. **Test Activate Action**: Uploads package and activates version 2
+11. **Test Version-Locked Writes**: Clones to version 3, adds new resources, uploads package, and activates -- and verifies the ACL's resource_link followed service 1 onto the new version
+12. **Test Destruction**: Cleans up all resources via `terraform destroy`, including the resource_link, the ACL, and its entries
+13. **Cleanup**: Removes temporary test directory
 
 ## Resource Cleanup
 
@@ -108,7 +110,7 @@ The test creates:
 - 2 domain attachments (one per service)
 - 3 backend configurations (1 shared, 2 unique)
 - Compute package uploads to multiple versions
-- 1 ACL (versionless), attached to service 1 via a `fastly_service_resource_link`
+- 1 ACL (versionless), with its entries managed via `fastly_acl_entries`, attached to service 1 via a `fastly_service_resource_link`
 
 All resources are tagged with the process ID for uniqueness and are destroyed during cleanup.
 

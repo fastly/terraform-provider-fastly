@@ -166,6 +166,18 @@ resource "fastly_acl" "acl" {
   name = var.acl_name
 }
 
+# Manages the ACL's entries via Terraform, exercising fastly_acl_entries against
+# the ACL created above.
+resource "fastly_acl_entries" "acl_entries" {
+  acl_id         = fastly_acl.acl.id
+  manage_entries = true
+
+  entries = {
+    "192.0.2.0/24"    = "ALLOW"
+    "198.51.100.0/24" = "BLOCK"
+  }
+}
+
 # Attaches the ACL to service 1 so it's usable from Wasm code, exercising the
 # same version lifecycle (clone/activate/advance-off-locked) as the other version-scoped
 # resources below.

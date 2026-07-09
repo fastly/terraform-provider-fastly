@@ -312,9 +312,19 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	serviceID := split[0]
 	aclID := split[1]
 
+	remote, err := r.refreshEntries(ctx, serviceID, aclID)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading ACL entries", err.Error())
+		return
+	}
+	entries := flattenEntries(ctx, remote, types.SetNull(types.ObjectType{AttrTypes: entryAttrTypes}), &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_id"), serviceID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("acl_id"), aclID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("manage_entries"), true)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entry"), entries)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }
 

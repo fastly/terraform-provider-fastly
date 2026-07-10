@@ -15,18 +15,16 @@ import (
 
 func TestAccFastlyACLEntries_create(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
 
 	aclName := fmt.Sprintf("tf_test_acl_%s", acctest.RandString(10))
-	aclID := CreateTestACL(t, aclName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckACLEntriesDestroy(aclID),
+		CheckDestroy:             CheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigACLEntries(aclID, map[string]string{
+				Config: ConfigACLEntries(aclName, map[string]string{
 					"192.0.2.0/24":    "ALLOW",
 					"198.51.100.0/24": "BLOCK",
 				}),
@@ -52,18 +50,16 @@ func TestAccFastlyACLEntries_create(t *testing.T) {
 
 func TestAccFastlyACLEntries_update(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
 
 	aclName := fmt.Sprintf("tf_test_acl_%s", acctest.RandString(10))
-	aclID := CreateTestACL(t, aclName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckACLEntriesDestroy(aclID),
+		CheckDestroy:             CheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigACLEntries(aclID, map[string]string{
+				Config: ConfigACLEntries(aclName, map[string]string{
 					"192.0.2.0/24":    "ALLOW",
 					"198.51.100.0/24": "BLOCK",
 				}),
@@ -75,7 +71,7 @@ func TestAccFastlyACLEntries_update(t *testing.T) {
 				),
 			},
 			{
-				Config: ConfigACLEntries(aclID, map[string]string{
+				Config: ConfigACLEntries(aclName, map[string]string{
 					"203.0.113.0/24":  "BLOCK",
 					"198.51.100.0/24": "ALLOW",
 				}),
@@ -93,18 +89,16 @@ func TestAccFastlyACLEntries_update(t *testing.T) {
 
 func TestAccFastlyACLEntries_delete(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
 
 	aclName := fmt.Sprintf("tf_test_acl_%s", acctest.RandString(10))
-	aclID := CreateTestACL(t, aclName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckACLEntriesDestroy(aclID),
+		CheckDestroy:             CheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigACLEntries(aclID, map[string]string{
+				Config: ConfigACLEntries(aclName, map[string]string{
 					"192.0.2.0/24": "ALLOW",
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -114,7 +108,7 @@ func TestAccFastlyACLEntries_delete(t *testing.T) {
 				),
 			},
 			{
-				Config: ConfigACLEntries(aclID, map[string]string{}),
+				Config: ConfigACLEntries(aclName, map[string]string{}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_acl_entries.acl_entries", "entries.%", "0"),
 					CheckStandaloneACLEntriesRemoteState("fastly_acl_entries.acl_entries", map[string]string{}),
@@ -129,18 +123,16 @@ func TestAccFastlyACLEntries_delete(t *testing.T) {
 // produces no plan diff -- the provider must not apply or show the change.
 func TestAccFastlyACLEntries_manageEntriesFalseSuppressDrift(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
 
 	aclName := fmt.Sprintf("tf_test_acl_%s", acctest.RandString(10))
-	aclID := CreateTestACL(t, aclName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckACLEntriesDestroy(aclID),
+		CheckDestroy:             CheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigACLEntriesUnmanaged(aclID, map[string]string{
+				Config: ConfigACLEntriesUnmanaged(aclName, map[string]string{
 					"192.0.2.0/24": "ALLOW",
 				}),
 				Check: resource.ComposeTestCheckFunc(
@@ -148,7 +140,7 @@ func TestAccFastlyACLEntries_manageEntriesFalseSuppressDrift(t *testing.T) {
 				),
 			},
 			{
-				Config: ConfigACLEntriesUnmanaged(aclID, map[string]string{
+				Config: ConfigACLEntriesUnmanaged(aclName, map[string]string{
 					"203.0.113.0/24": "BLOCK",
 				}),
 				PlanOnly:           true,
@@ -166,7 +158,7 @@ func TestAccFastlyACLEntries_invalidPrefix(t *testing.T) {
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigACLEntries("fake-acl-id", map[string]string{
+				Config: ConfigACLEntries("tf_test_acl_invalid_config", map[string]string{
 					"not_a_cidr": "ALLOW",
 				}),
 				ExpectError: regexp.MustCompile("not a valid CIDR prefix"),
@@ -183,38 +175,13 @@ func TestAccFastlyACLEntries_invalidAction(t *testing.T) {
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigACLEntries("fake-acl-id", map[string]string{
+				Config: ConfigACLEntries("tf_test_acl_invalid_config", map[string]string{
 					"192.0.2.0/24": "PERMIT",
 				}),
 				ExpectError: regexp.MustCompile("must be either ALLOW or BLOCK"),
 			},
 		},
 	})
-}
-
-// CheckACLEntriesDestroy returns a TestCheckFunc verifying that Terraform destroy
-// cleared every entry from the given ACL. The ACL itself is a fixture created
-// out-of-band via CreateTestACL, so its own lifecycle isn't asserted here.
-func CheckACLEntriesDestroy(aclID string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		client, err := NewFastlyClient()
-		if err != nil {
-			return fmt.Errorf("error creating Fastly client: %w", err)
-		}
-
-		resp, err := computeacls.ListEntries(context.Background(), client, &computeacls.ListEntriesInput{
-			ComputeACLID: &aclID,
-		})
-		if err != nil {
-			return fmt.Errorf("error listing ACL entries: %w", err)
-		}
-
-		if len(resp.Entries) != 0 {
-			return fmt.Errorf("expected ACL %s to have no entries after destroy, found %d", aclID, len(resp.Entries))
-		}
-
-		return nil
-	}
 }
 
 func CheckStandaloneACLEntriesRemoteState(resourceName string, want map[string]string) resource.TestCheckFunc {
@@ -248,32 +215,4 @@ func CheckStandaloneACLEntriesRemoteState(resourceName string, want map[string]s
 
 		return nil
 	}
-}
-
-func ConfigACLEntries(aclID string, entries map[string]string) string {
-	return fmt.Sprintf(`
-resource "fastly_acl_entries" "acl_entries" {
-  acl_id = %q
-  entries        = %s
-  manage_entries = true
-}
-`, aclID, entriesHCL(entries))
-}
-
-func ConfigACLEntriesUnmanaged(aclID string, entries map[string]string) string {
-	return fmt.Sprintf(`
-resource "fastly_acl_entries" "acl_entries" {
-  acl_id = %q
-  entries        = %s
-}
-`, aclID, entriesHCL(entries))
-}
-
-func entriesHCL(entries map[string]string) string {
-	hcl := "{\n"
-	for prefix, action := range entries {
-		hcl += fmt.Sprintf("    %q = %q\n", prefix, action)
-	}
-	hcl += "  }"
-	return hcl
 }

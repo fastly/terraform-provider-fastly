@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/fastly/go-fastly/v16/fastly"
-	"github.com/fastly/go-fastly/v16/fastly/computeacls"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -93,34 +92,6 @@ const (
 	serviceDestroyCheckAttempts = 5
 	serviceDestroyCheckInterval = 2 * time.Second
 )
-
-// CreateTestACL creates an ACL fixture directly against the Fastly API for use as
-// a fastly_acl_entries target, and registers its cleanup via t.Cleanup. Returns the ACL's ID.
-//
-// This provider doesn't yet have a dedicated fastly_acl resource, so fastly_acl_entries
-// acceptance tests need a real ACL created out-of-band from Terraform.
-//
-// TODO: once a fastly_acl resource exists, replace this raw go-fastly client call with a
-// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
-// same state/plan lifecycle as the rest of the test config.
-func CreateTestACL(t *testing.T, name string) string {
-	client, err := NewFastlyClient()
-	if err != nil {
-		t.Fatalf("error creating Fastly client: %s", err)
-	}
-
-	acl, err := computeacls.Create(context.Background(), client, &computeacls.CreateInput{Name: &name})
-	if err != nil {
-		t.Fatalf("error creating ACL fixture: %s", err)
-	}
-	t.Cleanup(func() {
-		if err := computeacls.Delete(context.Background(), client, &computeacls.DeleteInput{ComputeACLID: &acl.ComputeACLID}); err != nil {
-			t.Logf("error deleting ACL fixture %q: %s", acl.ComputeACLID, err)
-		}
-	})
-
-	return acl.ComputeACLID
-}
 
 // CheckServiceDestroy returns a TestCheckFunc that verifies a service resource was destroyed
 func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
@@ -900,7 +871,7 @@ func ConfigDomainForImport(serviceName, domainName, additionalDomainName string)
 	)
 }
 
-// Configuration helpers for ACL entries resources
+// Configuration helpers for CDN service ACL entries resources
 
 func aclEntriesBase(serviceName, domainName, aclName string) (ServiceType, map[string]string) {
 	return ServiceCDN, map[string]string{
@@ -1011,4 +982,47 @@ func ConfigACLEntriesManyEntries(serviceName, domainName, aclName string, count 
 		"internal/acceptance_tests/blocks/acl_explicit.tf",
 		"internal/acceptance_tests/blocks/acl_entries_many.tf",
 	)
+}
+
+// Configuration helpers for the standalone Compute ACL entries resource (fastly_acl_entries)
+
+// ConfigACLEntries returns a config declaring a fastly_acl resource alongside a
+// fastly_acl_entries resource (with manage_entries = true) that targets it.
+func ConfigACLEntries(aclName string, entries map[string]string) string {
+	return fmt.Sprintf(`
+resource "fastly_acl" "acl" {
+  name = %q
+}
+
+resource "fastly_acl_entries" "acl_entries" {
+  acl_id         = fastly_acl.acl.id
+  entries        = %s
+  manage_entries = true
+}
+`, aclName, entriesHCL(entries))
+}
+
+// ConfigACLEntriesUnmanaged mirrors ConfigACLEntries but omits manage_entries,
+// leaving it at its default (false).
+func ConfigACLEntriesUnmanaged(aclName string, entries map[string]string) string {
+	return fmt.Sprintf(`
+resource "fastly_acl" "acl" {
+  name = %q
+}
+
+resource "fastly_acl_entries" "acl_entries" {
+  acl_id  = fastly_acl.acl.id
+  entries = %s
+}
+`, aclName, entriesHCL(entries))
+}
+
+func entriesHCL(entries map[string]string) string {
+	var hcl strings.Builder
+	hcl.WriteString("{\n")
+	for prefix, action := range entries {
+		fmt.Fprintf(&hcl, "    %q = %q\n", prefix, action)
+	}
+	hcl.WriteString("  }")
+	return hcl.String()
 }

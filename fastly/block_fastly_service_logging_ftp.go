@@ -118,10 +118,11 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
-			Default:     LoggingFTPDefaultFormat,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			Default:          LoggingFTPDefaultFormat,
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,

@@ -17,6 +17,43 @@ func validateLoggingFormatVersion() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.IntBetween(1, 2))
 }
 
+// maximumLoggingFormatLength is the maximum length the Fastly API accepts
+// for a logging endpoint `format` string. Exceeding it is only rejected by
+// the API at apply time, so we enforce it at plan/validate time instead.
+const maximumLoggingFormatLength = 12288
+
+func validateLoggingFormat() schema.SchemaValidateDiagFunc {
+	return func(i any, p cty.Path) diag.Diagnostics {
+		v, ok := i.(string)
+		if !ok {
+			return diag.Errorf("expected type of %q to be string", renderAttributePath(p))
+		}
+		if len(v) > maximumLoggingFormatLength {
+			return diag.Errorf("expected length of %q to be at most %d, got %d", renderAttributePath(p), maximumLoggingFormatLength, len(v))
+		}
+		return nil
+	}
+}
+
+// renderAttributePath renders a cty.Path as a dotted attribute address
+// (e.g. `logging_datadog.0.format`) for use in validation error messages.
+func renderAttributePath(p cty.Path) string {
+	parts := make([]string, 0, len(p))
+	for _, step := range p {
+		switch s := step.(type) {
+		case cty.GetAttrStep:
+			parts = append(parts, s.Name)
+		case cty.IndexStep:
+			if s.Key.Type() == cty.String {
+				parts = append(parts, s.Key.AsString())
+			} else {
+				parts = append(parts, s.Key.AsBigFloat().String())
+			}
+		}
+	}
+	return strings.Join(parts, ".")
+}
+
 func validateLoggingMessageType() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"classic",

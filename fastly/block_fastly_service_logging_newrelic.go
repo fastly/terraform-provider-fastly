@@ -62,10 +62,11 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingNewRelicDefaultFormat,
-			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingNewRelicDefaultFormat,
+			Description:      "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,

@@ -61,10 +61,11 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingHoneycombDefaultFormat,
-			Description: "Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingHoneycombDefaultFormat,
+			Description:      "Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,

@@ -62,10 +62,11 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingSumologicDefaultFormat,
-			Description: "Apache-style string or VCL variables to use for log formatting",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingSumologicDefaultFormat,
+			Description:      "Apache-style string or VCL variables to use for log formatting",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,

@@ -79,10 +79,11 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingGooglePubSubDefaultFormat,
-			Description: "Apache style log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingGooglePubSubDefaultFormat,
+			Description:      "Apache style log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,

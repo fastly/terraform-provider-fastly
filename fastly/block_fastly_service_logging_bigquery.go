@@ -92,10 +92,11 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The logging format desired.",
-			Default:     LoggingBigQueryDefaultFormat,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The logging format desired.",
+			Default:          LoggingBigQueryDefaultFormat,
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

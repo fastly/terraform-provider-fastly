@@ -186,7 +186,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
 		return
 	}
-	plan.LoggingS3 = loggingS3s
+	plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
 
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -387,7 +387,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
 			return
 		}
-		plan.LoggingS3 = loggingS3s
+		plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
 
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())

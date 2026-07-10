@@ -14,12 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 const (
-	DefaultFormatVersion                = 2
-	DefaultGzipLevel                    = 0
+	DefaultFormatVersion = 2
+	// DefaultGzipLevel is a sentinel meaning "gzip_level not configured". A real
+	// value is 0-9, so -1 lets the provider distinguish an unset level from an
+	// explicit 0 (valid "no compression"). An unset level is never written,
+	// because the API rejects requests that set both compression_codec and
+	// gzip_level, and it auto-manages the level otherwise (e.g. 3 for gzip).
+	DefaultGzipLevel                    = -1
 	DefaultMessageType                  = "blank"
 	DefaultPath                         = ""
 	DefaultPeriod                       = 3600
@@ -180,7 +186,7 @@ func CommonAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Default:     stringdefault.StaticString(DefaultCompressionCodec),
-			Description: "The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`.  Specifying both `compression_codec` and `gzip_level` in the same API request will result in an error.",
+			Description: "The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`. If the codec is `gzip`, `gzip_level` defaults to `3`; to use a different level, leave `compression_codec` unset and set `gzip_level` instead. Conflicts with `gzip_level`: setting both in the same request will result in an error.",
 		},
 		"domain": schema.StringAttribute{
 			Optional:    true,
@@ -207,10 +213,17 @@ func CommonAttributes() map[string]schema.Attribute {
 			Description: "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.",
 		},
 		"gzip_level": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultGzipLevel),
-			Description: "The level of gzip encoding when sending logs (default `0`, no compression). Specifying both `compression_codec` and `gzip_level` in the same API request will result in an error.",
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(DefaultGzipLevel),
+			// compression_codec and gzip_level are mutually exclusive; the API
+			// rejects a request that sets both. Validation runs against config,
+			// where an unset gzip_level is null rather than the -1 default, so
+			// this correctly fires only when both are set.
+			Validators: []validator.Int64{
+				gzipLevelCodecConflict{},
+			},
+			Description: "The level of gzip encoding when sending logs. Valid values are `0` (no compression) through `9`. To compress at a specific gzip level, leave `compression_codec` unset and set this. Conflicts with `compression_codec`: setting both in the same request will result in an error.",
 		},
 		"message_type": schema.StringAttribute{
 			Optional:    true,
@@ -338,6 +351,7 @@ func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string
 
 func (o ops) Equal(desired NestedModel, remote *fastly.S3) bool {
 	remoteModel := FlattenToNestedModel(remote)
+	preserveGzipSentinel(&remoteModel, desired)
 	return desired.ModelsEqual(remoteModel)
 }
 
@@ -371,5 +385,9 @@ func Equal(a, b []NestedModel) bool {
 }
 
 func MatchOrder(items, order []NestedModel) []NestedModel {
-	return reconcile.MatchOrder(items, order, func(m NestedModel) string { return service.StringValue(m.Name) })
+	result := reconcile.MatchOrder(items, order, func(m NestedModel) string { return service.StringValue(m.Name) })
+	// order carries the configured/prior models, so it holds the gzip_level
+	// sentinel for endpoints the user left unset; preserve it on the read-back.
+	preserveGzipSentinelList(result, order)
+	return result
 }

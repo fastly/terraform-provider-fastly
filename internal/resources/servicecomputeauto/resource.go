@@ -202,7 +202,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
 		return
 	}
-	plan.LoggingS3 = loggingS3s
+	plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
 
 	if err := computepackage.Update(ctx, r.providerData.AutoClient(), serviceID, version, plan.Package); err != nil {
 		resp.Diagnostics.AddError("Error updating Compute package", err.Error())
@@ -423,7 +423,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
 			return
 		}
-		plan.LoggingS3 = loggingS3s
+		plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
 
 		if len(state.Package) > 0 && len(plan.Package) == 0 {
 			resp.Diagnostics.AddError(
@@ -468,7 +468,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
 		plan.ResourceLink = resourcelink.MatchOrder(state.ResourceLink, plan.ResourceLink)
 		plan.Package = state.Package
-		plan.LoggingS3 = state.LoggingS3
+		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 	}
 
 	plan.ID = state.ID

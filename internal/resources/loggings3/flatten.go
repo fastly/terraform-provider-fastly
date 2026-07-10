@@ -61,6 +61,30 @@ func FlattenToNestedModel(s *fastly.S3) NestedModel {
 	return m
 }
 
+// preserveGzipSentinel restores the gzip_level "unset" sentinel after a flatten.
+// When gzip_level was not configured (desired == DefaultGzipLevel), the API's
+// auto-managed value is discarded so the provider does not report a permanent
+// diff against the sentinel.
+func preserveGzipSentinel(m *NestedModel, desired NestedModel) {
+	if service.Int64Value(desired.GzipLevel) == DefaultGzipLevel {
+		m.GzipLevel = types.Int64Value(DefaultGzipLevel)
+	}
+}
+
+// preserveGzipSentinelList applies preserveGzipSentinel to each read model using
+// the matching desired/prior model (by name).
+func preserveGzipSentinelList(read, desired []NestedModel) {
+	desiredByName := make(map[string]NestedModel, len(desired))
+	for _, d := range desired {
+		desiredByName[service.StringValue(d.Name)] = d
+	}
+	for i := range read {
+		if d, ok := desiredByName[service.StringValue(read[i].Name)]; ok {
+			preserveGzipSentinel(&read[i], d)
+		}
+	}
+}
+
 func flatten(ctx context.Context, s *fastly.S3, m *Model) {
 	if s == nil {
 		tflog.Warn(ctx, "flatten called with nil S3 logging endpoint")

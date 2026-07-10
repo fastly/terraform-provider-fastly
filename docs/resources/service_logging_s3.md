@@ -25,12 +25,12 @@ Fastly service S3 logging endpoint resource. Writes directly to the specified wr
 
 - `acl` (String) The access control list (ACL) specific request header. See the AWS documentation for [Access Control List (ACL) Specific Request Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html#initiate-mpu-acl-specific-request-headers) for more information.
 - `authentication` (Attributes) AWS authentication credentials for S3 access. Provide either `access_key` and `secret_key`, or `iam_role`. (see [below for nested schema](#nestedatt--authentication))
-- `compression_codec` (String) The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`.  Specifying both `compression_codec` and `gzip_level` in the same API request will result in an error.
+- `compression_codec` (String) The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`. If the codec is `gzip`, `gzip_level` defaults to `3`; to use a different level, leave `compression_codec` unset and set `gzip_level` instead. Conflicts with `gzip_level`: setting both in the same request will result in an error.
 - `domain` (String) The Domain of the Amazon S3 endpoint.
 - `file_max_bytes` (Number) The maximum number of bytes for each uploaded file. A value of 0 can be used to indicate there is no limit on the size of uploaded files, otherwise the minimum value is 1048576 bytes (1 MiB.).
 - `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/).
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
-- `gzip_level` (Number) The level of gzip encoding when sending logs (default `0`, no compression). Specifying both `compression_codec` and `gzip_level` in the same API request will result in an error.
+- `gzip_level` (Number) The level of gzip encoding when sending logs. Valid values are `0` (no compression) through `9`. To compress at a specific gzip level, leave `compression_codec` unset and set this. Conflicts with `compression_codec`: setting both in the same request will result in an error.
 - `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path.
 - `period` (Number) How frequently log files are finalized so they can be available for reading in seconds. Default `3600`.

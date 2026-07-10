@@ -21,9 +21,11 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 	input.Path = new(service.StringValue(m.Path))
 	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
 	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
-	// The API rejects requests that set both compression_codec and gzip_level.
-	if service.StringValue(m.CompressionCodec) == "" {
-		input.GzipLevel = fastly.NullInt(int(service.Int64Value(m.GzipLevel)))
+	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
+	// unset: the API rejects requests that set both compression_codec and
+	// gzip_level, and it auto-manages the level when omitted.
+	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
+		input.GzipLevel = fastly.NullInt(int(gl))
 	}
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
@@ -72,9 +74,11 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	input.Path = new(service.StringValue(m.Path))
 	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
 	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
-	// The API rejects requests that set both compression_codec and gzip_level.
-	if service.StringValue(m.CompressionCodec) == "" {
-		input.GzipLevel = new(int(service.Int64Value(m.GzipLevel)))
+	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
+	// unset: the API rejects requests that set both compression_codec and
+	// gzip_level, and it auto-manages the level when omitted.
+	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
+		input.GzipLevel = new(int(gl))
 	}
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))

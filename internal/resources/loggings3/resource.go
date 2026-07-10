@@ -92,7 +92,9 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	desired := plan.NestedModel
 	flatten(ctx, s, &plan)
+	preserveGzipSentinel(&plan.NestedModel, desired)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -137,7 +139,9 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
+	prior := state.NestedModel
 	flatten(ctx, s, &state)
+	preserveGzipSentinel(&state.NestedModel, prior)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +189,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	desired := plan.NestedModel
 	flatten(ctx, s, &plan)
+	preserveGzipSentinel(&plan.NestedModel, desired)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	if resp.Identity != nil {

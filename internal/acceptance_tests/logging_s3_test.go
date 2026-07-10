@@ -3,6 +3,7 @@ package acceptancetests
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/fastly/go-fastly/v15/fastly"
@@ -183,7 +184,7 @@ func TestAccFastlyServiceLoggingS3_clearToDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "domain", "s3.amazonaws.com"),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "path", ""),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "period", "3600"),
-					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "0"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "message_type", "blank"),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S.000"),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "processing_region", "none"),
@@ -241,6 +242,7 @@ func TestAccFastlyServiceLoggingS3_importBasic(t *testing.T) {
 
 // TestAccFastlyServiceLoggingS3_compressionCodec verifies that setting compression_codec
 // without gzip_level does not result in an API error (the two fields are mutually exclusive).
+// With gzip_level unset it stays at the -1 sentinel and is never sent to the API.
 func TestAccFastlyServiceLoggingS3_compressionCodec(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -258,8 +260,58 @@ func TestAccFastlyServiceLoggingS3_compressionCodec(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn.test"),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "compression_codec", "zstd"),
-					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "0"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_gzipCodec verifies that the "gzip" codec (for which
+// the API auto-populates gzip_level, e.g. to 3) does not produce a perpetual diff.
+// gzip_level is left unset, so it must stay at the -1 sentinel rather than picking
+// up the API-managed value. The final implicit plan check fails on any residual diff.
+func TestAccFastlyServiceLoggingS3_gzipCodec(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3GzipCodec(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "compression_codec", "gzip"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_codecConflict verifies that configuring both
+// compression_codec and gzip_level fails at plan time with a clear validation
+// error, rather than producing an inconsistent-result error at apply time.
+func TestAccFastlyServiceLoggingS3_codecConflict(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigLoggingS3CodecConflict(serviceName, domainName, loggerName, bucketName),
+				ExpectError: regexp.MustCompile("cannot be set together"),
 			},
 		},
 	})

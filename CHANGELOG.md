@@ -6,7 +6,7 @@
 
 ### BUG FIXES:
 
-- Validate logging `format` length (max 12288 characters) at plan/validate time instead of failing at apply time ([#1340](https://github.com/fastly/terraform-provider-fastly/issues/1340))
+- fix(logging): Validate logging `format` length (max 12288 characters) at plan/validate time instead of failing at apply time ([#1340](https://github.com/fastly/terraform-provider-fastly/issues/1340))
 
 ### Dependencies
 

@@ -60,10 +60,11 @@ func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingPapertrailDefaultFormat,
-			Description: "A Fastly [log format string](https://docs.fastly.com/en/guides/custom-log-formats)",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingPapertrailDefaultFormat,
+			Description:      "A Fastly [log format string](https://docs.fastly.com/en/guides/custom-log-formats)",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,

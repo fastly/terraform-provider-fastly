@@ -35,9 +35,10 @@ func (h *NewRelicOTLPServiceAttributeHandler) Key() string {
 func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		"format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		},
 		"format_version": {
 			Type:             schema.TypeInt,

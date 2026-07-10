@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -24,6 +25,30 @@ func TestValidateLoggingFormatVersion(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingFormatVersion()(testcase.value, cty.GetAttrPath("format_version")))
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}
+
+func TestValidateLoggingFormat(t *testing.T) {
+	for name, testcase := range map[string]struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		"empty":    {"", 0, 0},
+		"short":    {"%h %l %u %t \"%r\" %>s %b", 0, 0},
+		"max":      {strings.Repeat("a", maximumLoggingFormatLength), 0, 0},
+		"over-max": {strings.Repeat("a", maximumLoggingFormatLength+1), 0, 1},
+		"way-over": {strings.Repeat("a", maximumLoggingFormatLength*2), 0, 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingFormat()(testcase.value, cty.GetAttrPath("format")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}

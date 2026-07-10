@@ -31,8 +31,11 @@ PACKAGE_PATH="$REPO_ROOT/internal/acceptance_tests/fixtures/packages/valid.tar.g
 # Test configuration
 TEST_SERVICE_1_NAME="tf-test-compute-svc1-$$"
 TEST_SERVICE_2_NAME="tf-test-compute-svc2-$$"
+TEST_ACL_NAME="tf-test-acl-$$"
+TEST_RESOURCE_LINK_NAME="tf-test-compute-link-$$"
 SERVICE_1_ID=""
 SERVICE_2_ID=""
+ACL_ID=""
 
 # Log functions
 log_info() {
@@ -81,6 +84,13 @@ cleanup() {
                 "https://api.fastly.com/service/$SERVICE_2_ID" > /dev/null 2>&1 || true
 
             log_info "Emergency cleanup completed"
+        fi
+
+        if [ -n "$ACL_ID" ]; then
+            log_info "Attempting emergency cleanup of ACL..."
+            curl -s -X DELETE -H "Fastly-Key: $FASTLY_API_TOKEN" \
+                "https://api.fastly.com/resources/acls/$ACL_ID" > /dev/null 2>&1 || true
+            log_info "Emergency ACL cleanup completed"
         fi
     fi
 
@@ -163,14 +173,16 @@ setup_test_environment() {
 
     # Create terraform.tfvars
     cat > terraform.tfvars << EOF
-fastly_api_token  = "$FASTLY_API_TOKEN"
-service_1_name    = "$TEST_SERVICE_1_NAME"
-service_1_version = 1
-service_1_domain  = "test-compute-svc1-$$.example.com"
-service_2_name    = "$TEST_SERVICE_2_NAME"
-service_2_version = 1
-service_2_domain  = "test-compute-svc2-$$.example.com"
-package_path      = "$PACKAGE_PATH"
+fastly_api_token   = "$FASTLY_API_TOKEN"
+service_1_name     = "$TEST_SERVICE_1_NAME"
+service_1_version  = 1
+service_1_domain   = "test-compute-svc1-$$.example.com"
+service_2_name     = "$TEST_SERVICE_2_NAME"
+service_2_version  = 1
+service_2_domain   = "test-compute-svc2-$$.example.com"
+package_path       = "$PACKAGE_PATH"
+acl_name           = "$TEST_ACL_NAME"
+resource_link_name = "$TEST_RESOURCE_LINK_NAME"
 EOF
 
     # Create .terraformrc for local provider
@@ -216,10 +228,12 @@ apply_initial_config() {
     # Extract service IDs
     SERVICE_1_ID=$(terraform output -raw service_1_id)
     SERVICE_2_ID=$(terraform output -raw service_2_id)
+    ACL_ID=$(terraform output -raw acl_id)
 
     log_success "Initial configuration applied"
     log_info "Service 1 ID: $SERVICE_1_ID"
     log_info "Service 2 ID: $SERVICE_2_ID"
+    log_info "ACL ID: $ACL_ID"
 }
 
 # Verify initial state
@@ -247,7 +261,45 @@ verify_initial_state() {
         exit 1
     fi
 
+    local acl_id=$(terraform output -raw acl_id)
+    local acl_name=$(terraform output -raw acl_name)
+    log_info "ACL - ID: $acl_id, Name: $acl_name"
+
+    if [ -z "$acl_id" ]; then
+        log_error "ACL has no ID"
+        exit 1
+    fi
+
+    local link_version=$(terraform output -raw resource_link_version)
+    verify_resource_link "$SERVICE_1_ID" "$link_version" "$ACL_ID" "$TEST_RESOURCE_LINK_NAME"
+
     log_success "Initial state verified"
+}
+
+# Verify a resource_link exists on the given service version, pointing at the
+# given resource_id with the given name (alias).
+verify_resource_link() {
+    local service_id="$1"
+    local version="$2"
+    local expected_resource_id="$3"
+    local expected_name="$4"
+
+    local resources_response=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/service/$service_id/version/$version/resource")
+
+    local actual_resource_id=$(echo "$resources_response" | jq -r --arg name "$expected_name" \
+        '.[] | select(.name == $name) | .resource_id')
+    local actual_name=$(echo "$resources_response" | jq -r --arg id "$expected_resource_id" \
+        '.[] | select(.resource_id == $id) | .name')
+
+    if [ "$actual_resource_id" != "$expected_resource_id" ] || [ "$actual_name" != "$expected_name" ]; then
+        log_error "Resource link on service $service_id version $version does not match expectations"
+        log_info "Expected resource_id=$expected_resource_id name=$expected_name"
+        log_info "Resources response: $resources_response"
+        return 1
+    fi
+
+    log_success "Resource link verified on service $service_id version $version (name=$expected_name, resource_id=$expected_resource_id)"
 }
 
 # Test compute package upload action
@@ -348,14 +400,16 @@ test_version_activate_action() {
     # Update service_1_version to 2 (the cloned version)
     log_info "Updating terraform.tfvars to set service versions to 2..."
     cat > terraform.tfvars << EOF
-fastly_api_token  = "$FASTLY_API_TOKEN"
-service_1_name    = "$TEST_SERVICE_1_NAME"
-service_1_version = 2
-service_1_domain  = "test-compute-svc1-$$.example.com"
-service_2_name    = "$TEST_SERVICE_2_NAME"
-service_2_version = 2
-service_2_domain  = "test-compute-svc2-$$.example.com"
-package_path      = "$PACKAGE_PATH"
+fastly_api_token   = "$FASTLY_API_TOKEN"
+service_1_name     = "$TEST_SERVICE_1_NAME"
+service_1_version  = 2
+service_1_domain   = "test-compute-svc1-$$.example.com"
+service_2_name     = "$TEST_SERVICE_2_NAME"
+service_2_version  = 2
+service_2_domain   = "test-compute-svc2-$$.example.com"
+package_path       = "$PACKAGE_PATH"
+acl_name           = "$TEST_ACL_NAME"
+resource_link_name = "$TEST_RESOURCE_LINK_NAME"
 EOF
 
     # Need to upload package to version 2 before activating
@@ -450,16 +504,18 @@ test_clone_from_latest_and_version_writes() {
     log_info "Updating terraform.tfvars to change version to $svc1_latest and add new resources..."
 
     cat > terraform.tfvars << EOF
-fastly_api_token     = "$FASTLY_API_TOKEN"
-service_1_name       = "$TEST_SERVICE_1_NAME"
-service_1_version    = $svc1_latest
-service_1_domain     = "test-compute-svc1-$$.example.com"
-service_1_new_domain = "test-compute-svc1-new-$$.example.com"
+fastly_api_token      = "$FASTLY_API_TOKEN"
+service_1_name        = "$TEST_SERVICE_1_NAME"
+service_1_version     = $svc1_latest
+service_1_domain      = "test-compute-svc1-$$.example.com"
+service_1_new_domain  = "test-compute-svc1-new-$$.example.com"
 service_1_new_backend = "new-backend.example.com"
-service_2_name       = "$TEST_SERVICE_2_NAME"
-service_2_version    = 2
-service_2_domain     = "test-compute-svc2-$$.example.com"
-package_path         = "$PACKAGE_PATH"
+service_2_name        = "$TEST_SERVICE_2_NAME"
+service_2_version     = 2
+service_2_domain      = "test-compute-svc2-$$.example.com"
+package_path          = "$PACKAGE_PATH"
+acl_name              = "$TEST_ACL_NAME"
+resource_link_name    = "$TEST_RESOURCE_LINK_NAME"
 EOF
 
     log_info "Running terraform plan to update version and add new domain and backend..."
@@ -528,6 +584,10 @@ EOF
         return 1
     fi
 
+    # Confirm the resource_link followed the service through the clone/activate
+    # cycle onto the new version, rather than being left behind on version 1.
+    verify_resource_link "$SERVICE_1_ID" "$svc1_latest" "$ACL_ID" "$TEST_RESOURCE_LINK_NAME"
+
     log_success "Clone from latest and version write tests completed"
 }
 
@@ -552,8 +612,8 @@ test_resource_updates() {
     log_success "Service update completed"
 }
 
-# The Fastly API rejects deletes of objects (domains/backends/ACLs) from a locked
-# (i.e. ever-activated) service version, and a locked version can never become
+# The Fastly API rejects deletes of objects (domains/backends/resource_links) from a
+# locked (i.e. ever-activated) service version, and a locked version can never become
 # mutable again. If Terraform state has a resource pinned to a locked version,
 # clone that version to a fresh, never-activated draft and move the resource
 # there via a normal `terraform apply`, so the eventual `terraform destroy` can
@@ -631,7 +691,21 @@ test_resource_destruction() {
 
     cd "$TEST_DIR"
 
-    log_info "Running terraform destroy..."
+    # The Fastly API rejects deleting an ACL while it's still recognized as
+    # linked, and that recognition doesn't clear the instant the resource_link (or
+    # the service it belongs to) is deleted -- destroying everything in one
+    # `terraform destroy` reliably 503s on the ACL delete. Destroy the services
+    # (which cascades to their resource_link) first, let that settle, then destroy
+    # the now-unlinked ACL separately.
+    log_info "Running terraform destroy for the services (cascades to the resource_link)..."
+    terraform destroy -auto-approve \
+        -target=fastly_service_compute.service_1 \
+        -target=fastly_service_compute.service_2
+
+    log_info "Waiting for the ACL unlink to settle..."
+    sleep 5
+
+    log_info "Running terraform destroy for the remaining ACL resources..."
     terraform destroy -auto-approve
 
     log_success "Resources destroyed"
@@ -671,9 +745,20 @@ test_resource_destruction() {
         return 1
     fi
 
-    # Clear service IDs to prevent emergency cleanup
+    local acl_response=$(curl -s -o /dev/null -w "%{http_code}" -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/resources/acls/$ACL_ID")
+
+    if [ "$acl_response" = "404" ]; then
+        log_success "ACL successfully deleted (not found)"
+    else
+        log_error "ACL still exists (HTTP $acl_response)"
+        return 1
+    fi
+
+    # Clear IDs to prevent emergency cleanup
     SERVICE_1_ID=""
     SERVICE_2_ID=""
+    ACL_ID=""
 
     log_success "Service destruction verified"
 }
@@ -704,6 +789,8 @@ main() {
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Package upload action (fastly_service_compute_package_upload)"
     log_success "✓ Resource updates"
+    log_success "✓ ACL creation (fastly_acl)"
+    log_success "✓ ACL attached to a service (fastly_service_resource_link)"
     log_success "✓ Version clone action (fastly_service_version_clone)"
     log_success "✓ Version activate action (fastly_service_version_activate)"
     log_success "✓ Clone from latest version and version writes"

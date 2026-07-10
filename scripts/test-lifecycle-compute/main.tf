@@ -95,7 +95,8 @@ data "fastly_service_version" "service_1" {
   depends_on = [
     fastly_service_domain.service_1_domain,
     fastly_service_backend.service_1_backend_shared,
-    fastly_service_backend.service_1_backend_unique
+    fastly_service_backend.service_1_backend_unique,
+    fastly_service_resource_link.service_1_acl
   ]
 }
 
@@ -158,6 +159,21 @@ action "fastly_service_version_activate" "service_2_activate" {
     service_id = fastly_service_compute.service_2.id
     version    = var.service_2_version
   }
+}
+
+# ACL -- versionless resource, not tied to a service or service version.
+resource "fastly_acl" "acl" {
+  name = var.acl_name
+}
+
+# Attaches the ACL to service 1 so it's usable from Wasm code, exercising the
+# same version lifecycle (clone/activate/advance-off-locked) as the other version-scoped
+# resources below.
+resource "fastly_service_resource_link" "service_1_acl" {
+  service_id  = fastly_service_compute.service_1.id
+  version     = var.service_1_version
+  name        = var.resource_link_name
+  resource_id = fastly_acl.acl.id
 }
 
 # Actions for compute package uploads

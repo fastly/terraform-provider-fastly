@@ -1,0 +1,30 @@
+---
+page_title: "fastly_acls Data Source - fastly"
+subcategory: ""
+description: |-
+  Use this data source to retrieve a list of Fastly ACLs.
+---
+
+# fastly_acls (Data Source)
+
+Use this data source to retrieve a list of [Fastly ACLs](https://www.fastly.com/documentation/reference/api/compute-acls/).
+
+## Example Usage
+
+```terraform
+data "fastly_acls" "example" {}
+
+output "fastly_acls_all" {
+  value = data.fastly_acls.example.acls
+}
+
+output "fastly_acls_filtered" {
+  # Example: get the ID of the ACL named "my_acl"
+  value = one([
+    for acl in data.fastly_acls.example.acls :
+    acl.id if acl.name == "my_acl"
+  ])
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

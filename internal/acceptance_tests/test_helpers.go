@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -84,6 +85,14 @@ func CreateTestKVStore(t *testing.T, name string) string {
 	return store.StoreID
 }
 
+// serviceDestroyCheckAttempts and serviceDestroyCheckInterval bound the retry loop in
+// CheckServiceDestroy, which tolerates the Fastly API's soft-delete taking a moment to become
+// visible on a subsequent read - most noticeable when many acceptance tests run in parallel.
+const (
+	serviceDestroyCheckAttempts = 5
+	serviceDestroyCheckInterval = 2 * time.Second
+)
+
 // CheckServiceDestroy returns a TestCheckFunc that verifies a service resource was destroyed
 func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -97,28 +106,44 @@ func CheckServiceDestroy(resourceType string) resource.TestCheckFunc {
 				continue
 			}
 
-			svc, err := client.GetService(context.Background(), &fastly.GetServiceInput{
-				ServiceID: rs.Primary.ID,
-			})
-
-			if errors.IsNotFound(err) {
-				continue
+			var lastErr error
+			for attempt := 1; attempt <= serviceDestroyCheckAttempts; attempt++ {
+				lastErr = checkServiceDestroyed(client, rs.Primary.ID)
+				if lastErr == nil {
+					break
+				}
+				if attempt < serviceDestroyCheckAttempts {
+					time.Sleep(serviceDestroyCheckInterval)
+				}
 			}
-
-			if err != nil {
-				return fmt.Errorf("error checking if service was destroyed: %w", err)
+			if lastErr != nil {
+				return lastErr
 			}
-
-			// Service exists - check if it's soft-deleted
-			if svc != nil && svc.DeletedAt != nil {
-				continue
-			}
-
-			return fmt.Errorf("service %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
+}
+
+func checkServiceDestroyed(client *fastly.Client, serviceID string) error {
+	svc, err := client.GetService(context.Background(), &fastly.GetServiceInput{
+		ServiceID: serviceID,
+	})
+
+	if errors.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error checking if service was destroyed: %w", err)
+	}
+
+	// Service exists - check if it's soft-deleted
+	if svc != nil && svc.DeletedAt != nil {
+		return nil
+	}
+
+	return fmt.Errorf("service %s still exists", serviceID)
 }
 
 // CheckServiceExists returns a TestCheckFunc that verifies a service resource exists
@@ -426,6 +451,80 @@ func ConfigComputeAutoWithResourceLink(serviceName, domainName, targetID, linkNa
 	)
 }
 
+// ConfigComputeAutoWithACLResourceLink returns a Compute auto service config with a
+// domain, package, and a resource_link block pointing at a Terraform-managed fastly_acl
+// (declared as a sibling resource, referenced by ID rather than a literal string).
+func ConfigComputeAutoWithACLResourceLink(serviceName, domainName, aclName, linkName string) string {
+	aclConfig := fmt.Sprintf(`
+resource "fastly_acl" "acl" {
+  name = %q
+}
+
+`, aclName)
+
+	return aclConfig + BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":            serviceName,
+			"DOMAIN_NAME":             domainName,
+			"PACKAGE_PATH":            GetPackagePath(),
+			"RESOURCE_LINK_NAME":      linkName,
+			"RESOURCE_LINK_TARGET_ID": "fastly_acl.acl.id",
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/resource_link_ref.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithStandaloneACL returns a Compute auto service config (domain and
+// package, no resource_link) alongside a separately declared, unlinked fastly_acl.
+//
+// The Fastly API doesn't allow deleting an ACL in the same request that unlinks it from a
+// service, so tests that remove a resource_link and then delete its target ACL need this as an
+// intermediate step: unlink first and let that settle, then delete the ACL in a later step.
+func ConfigComputeAutoWithStandaloneACL(serviceName, domainName, aclName string) string {
+	aclConfig := fmt.Sprintf(`
+resource "fastly_acl" "acl" {
+  name = %q
+}
+
+`, aclName)
+
+	return aclConfig + ConfigComputeAutoBasic(serviceName, domainName)
+}
+
+// ConfigComputeAutoWithACLResourceLinkTarget returns a Compute auto service config
+// declaring two fastly_acl resources (acl1 and acl2), with the resource_link pointing at
+// whichever is named by targetLabel. Both ACLs stay declared regardless of which is targeted, so
+// retargeting exercises the reconcile delete-old/create-new pass without deleting either ACL.
+func ConfigComputeAutoWithACLResourceLinkTarget(serviceName, domainName, aclName1, aclName2, linkName, targetLabel string) string {
+	aclConfig := fmt.Sprintf(`
+resource "fastly_acl" "acl1" {
+  name = %q
+}
+
+resource "fastly_acl" "acl2" {
+  name = %q
+}
+
+`, aclName1, aclName2)
+
+	return aclConfig + BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":            serviceName,
+			"DOMAIN_NAME":             domainName,
+			"PACKAGE_PATH":            GetPackagePath(),
+			"RESOURCE_LINK_NAME":      linkName,
+			"RESOURCE_LINK_TARGET_ID": fmt.Sprintf("fastly_acl.%s.id", targetLabel),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/resource_link_ref.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 // ConfigComputeAutoMultipleBackends returns a Compute auto service config with multiple backends and a package
 func ConfigComputeAutoMultipleBackends(serviceName, domainName string) string {
 	return BuildConfig(
@@ -594,6 +693,22 @@ func ConfigServiceComputeWithComment(serviceName string) string {
 			"SERVICE_NAME":    serviceName,
 			"SERVICE_COMMENT": "Managed by Terraform",
 		},
+	)
+}
+
+// ConfigServiceComputeWithACLResourceLink returns an explicit Compute service config
+// with a fastly_acl linked into it via fastly_service_resource_link.
+func ConfigServiceComputeWithACLResourceLink(serviceName, aclName, linkName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"ACL_NAME":           aclName,
+			"RESOURCE_LINK_NAME": linkName,
+			"SERVICE_VERSION":    "1",
+		},
+		"internal/acceptance_tests/blocks/resource_link_acl.tf",
 	)
 }
 

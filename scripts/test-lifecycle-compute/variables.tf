@@ -52,3 +52,13 @@ variable "service_1_new_backend" {
   description = "Additional backend address for service 1 to be added to cloned version"
   default     = ""
 }
+
+variable "acl_name" {
+  type        = string
+  description = "Name for the test ACL"
+}
+
+variable "resource_link_name" {
+  type        = string
+  description = "Name (alias) for the resource_link that attaches the ACL to service 1"
+}

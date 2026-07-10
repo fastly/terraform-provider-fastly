@@ -18,7 +18,7 @@ func TestAccFastlyServiceResourceLink_ACL(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute"),
+		CheckDestroy:             CheckServiceAndACLDestroy("fastly_service_compute"),
 		Steps: []resource.TestStep{
 			{
 				Config: ConfigServiceComputeWithACLResourceLink(serviceName, aclName, linkName),
@@ -46,7 +46,7 @@ func TestAccFastlyServiceResourceLink_ACLRename(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute"),
+		CheckDestroy:             CheckServiceAndACLDestroy("fastly_service_compute"),
 		Steps: []resource.TestStep{
 			{
 				Config: ConfigServiceComputeWithACLResourceLink(serviceName, aclName, linkName),
@@ -79,7 +79,7 @@ func TestAccFastlyServiceResourceLink_ACLRetarget(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute"),
+		CheckDestroy:             CheckServiceAndACLDestroy("fastly_service_compute"),
 		Steps: []resource.TestStep{
 			{
 				Config: ConfigServiceComputeWithACLResourceLink(serviceName, aclName, linkName),
@@ -114,7 +114,7 @@ func TestAccFastlyServiceResourceLink_ACLImport(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute"),
+		CheckDestroy:             CheckServiceAndACLDestroy("fastly_service_compute"),
 		Steps: []resource.TestStep{
 			{
 				Config: ConfigServiceComputeWithACLResourceLink(serviceName, aclName, linkName),

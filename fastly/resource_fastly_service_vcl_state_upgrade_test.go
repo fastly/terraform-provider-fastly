@@ -5,6 +5,46 @@ import (
 	"testing"
 )
 
+func TestUpgradeServiceVCLStateV1toV2_SnippetsPassThrough(t *testing.T) {
+	rawState := map[string]any{
+		"snippet": []any{
+			map[string]any{
+				"name":     "my_snippet",
+				"type":     "init",
+				"priority": 100,
+				"content":  "table my_table {}",
+			},
+		},
+	}
+
+	upgraded, err := upgradeServiceVCLStateV1toV2(context.Background(), rawState, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	snippets, ok := upgraded["snippet"].([]any)
+	if !ok {
+		t.Fatalf("expected snippet to be []any, got %T", upgraded["snippet"])
+	}
+	if len(snippets) != 1 {
+		t.Fatalf("expected 1 snippet, got %d", len(snippets))
+	}
+	snippet := snippets[0].(map[string]any)
+	if snippet["name"] != "my_snippet" || snippet["content"] != "table my_table {}" {
+		t.Errorf("snippet data was not preserved: %v", snippet)
+	}
+}
+
+func TestUpgradeServiceVCLStateV1toV2_NilState(t *testing.T) {
+	upgraded, err := upgradeServiceVCLStateV1toV2(context.Background(), nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if upgraded != nil {
+		t.Errorf("expected nil state to pass through, got %v", upgraded)
+	}
+}
+
 func TestUpgradeServiceVCLStateV0toV1_BotManagementTrue(t *testing.T) {
 	// Test upgrading when bot_management was true
 	// In rawState, Sets are represented as []any slices

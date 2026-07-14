@@ -14,6 +14,61 @@ import (
 	gofastly "github.com/fastly/go-fastly/v16/fastly"
 )
 
+func TestReorderSnippetsByPriorState(t *testing.T) {
+	cases := []struct {
+		desc      string
+		flattened []map[string]any
+		prior     []any
+		want      []string
+	}{
+		{
+			desc: "remote order flips but prior state order wins",
+			flattened: []map[string]any{
+				{"name": "b"},
+				{"name": "a"},
+			},
+			prior: []any{
+				map[string]any{"name": "a"},
+				map[string]any{"name": "b"},
+			},
+			want: []string{"a", "b"},
+		},
+		{
+			desc: "snippets unknown to prior state are appended sorted by name",
+			flattened: []map[string]any{
+				{"name": "z-new"},
+				{"name": "known"},
+				{"name": "a-new"},
+			},
+			prior: []any{
+				map[string]any{"name": "known"},
+			},
+			want: []string{"known", "a-new", "z-new"},
+		},
+		{
+			desc: "empty prior state sorts by name",
+			flattened: []map[string]any{
+				{"name": "c"},
+				{"name": "a"},
+				{"name": "b"},
+			},
+			prior: nil,
+			want:  []string{"a", "b", "c"},
+		},
+	}
+
+	for _, c := range cases {
+		got := reorderSnippetsByPriorState(c.flattened, c.prior)
+		var names []string
+		for _, m := range got {
+			names = append(names, m["name"].(string))
+		}
+		if !reflect.DeepEqual(names, c.want) {
+			t.Errorf("%s: got %v, want %v", c.desc, names, c.want)
+		}
+	}
+}
+
 func TestResourceFastlyFlattenSnippets(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Snippet

@@ -67,13 +67,19 @@ var vclService = &BaseServiceDefinition{
 func resourceServiceVCL() *schema.Resource {
 	resource := resourceService(vclService)
 
-	// Add schema version and state upgraders for bot_management breaking change (v9.0.0)
-	resource.SchemaVersion = 1
+	// v0 -> v1: bot_management breaking change (v9.0.0)
+	// v1 -> v2: snippet block container changed from TypeSet to TypeList
+	resource.SchemaVersion = 2
 	resource.StateUpgraders = []schema.StateUpgrader{
 		{
 			Version: 0,
 			Type:    serviceVCLStateUpgraderV0().CoreConfigSchema().ImpliedType(),
 			Upgrade: upgradeServiceVCLStateV0toV1,
+		},
+		{
+			Version: 1,
+			Type:    serviceVCLStateUpgraderV1().CoreConfigSchema().ImpliedType(),
+			Upgrade: upgradeServiceVCLStateV1toV2,
 		},
 	}
 

@@ -78,6 +78,41 @@ func upgradeServiceVCLStateV0toV1(_ context.Context, rawState map[string]any, _ 
 	return rawState, nil
 }
 
+// upgradeServiceVCLStateV1toV2 upgrades the state schema from version 1 to version 2,
+// where the snippet block moved from TypeSet to TypeList. Both serialize as a JSON
+// array, so the raw state passes through unchanged.
+func upgradeServiceVCLStateV1toV2(_ context.Context, rawState map[string]any, _ any) (map[string]any, error) {
+	if rawState == nil {
+		return rawState, nil
+	}
+
+	log.Println("[DEBUG] Upgrading fastly_service_vcl state from v1 to v2 (snippet TypeSet -> TypeList)")
+
+	return rawState, nil
+}
+
+// serviceVCLStateUpgraderV1 returns the parts of the version 1 schema of the service
+// VCL resource that are relevant to the v1 -> v2 upgrade, where snippet was a TypeSet.
+func serviceVCLStateUpgraderV1() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"snippet": {
+				Type:        schema.TypeSet,
+				Description: "VCL snippets (v1 schema, set container)",
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"content":  {Type: schema.TypeString, Description: "Snippet content", Required: true},
+						"name":     {Type: schema.TypeString, Description: "Snippet name", Required: true},
+						"priority": {Type: schema.TypeInt, Description: "Snippet priority", Optional: true},
+						"type":     {Type: schema.TypeString, Description: "Snippet type", Required: true},
+					},
+				},
+			},
+		},
+	}
+}
+
 // serviceVCLStateUpgraderV0 returns the schema for version 0 of the service VCL resource.
 // This represents the schema before the bot_management change in v9.0.0.
 func serviceVCLStateUpgraderV0() *schema.Resource {

@@ -80,15 +80,15 @@ func (h *blockSetAttributeHandler) Read(ctx context.Context, d *schema.ResourceD
 
 func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
 	oldVal, newVal := d.GetChange(h.handler.Key())
-	if oldVal == nil {
-		oldVal = new(schema.Set)
-	}
-	if newVal == nil {
-		newVal = new(schema.Set)
-	}
 
-	oldSet := oldVal.(*schema.Set)
-	newSet := newVal.(*schema.Set)
+	oldList, err := toResourceList(oldVal)
+	if err != nil {
+		return err
+	}
+	newList, err := toResourceList(newVal)
+	if err != nil {
+		return err
+	}
 
 	setDiff := NewSetDiff(func(resource any) (any, error) {
 		t, ok := resource.(map[string]any)
@@ -98,7 +98,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 		return t["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oldSet, newSet)
+	diffResult, err := setDiff.DiffLists(oldList, newList)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 
 	for _, resource := range diffResult.Modified {
 		resource := resource.(map[string]any)
-		modified := setDiff.Filter(resource, oldSet)
+		modified := setDiff.FilterList(resource, oldList)
 		err := h.handler.Update(ctx, d, resource, modified, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -129,6 +129,21 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	return nil
+}
+
+// toResourceList normalizes a nested block value (TypeSet or TypeList
+// container) into a list of resources.
+func toResourceList(val any) ([]any, error) {
+	switch t := val.(type) {
+	case nil:
+		return nil, nil
+	case *schema.Set:
+		return t.List(), nil
+	case []any:
+		return t, nil
+	default:
+		return nil, fmt.Errorf("unexpected nested block container type: %T", val)
+	}
 }
 
 func (h *blockSetAttributeHandler) HasChange(d *schema.ResourceData) bool {

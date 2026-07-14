@@ -2,7 +2,11 @@
 
 ### BREAKING:
 
+- breaking(service_vcl): the `snippet` block is now a list instead of a set. Existing state upgrades automatically (schema v1 -> v2); the first plan after upgrading may show a one-time, order-only diff for `snippet` blocks — applying it makes no changes to the service. Expressions that relied on the attribute being a set (e.g. passing `fastly_service_vcl.x.snippet` to set functions) may need a `tolist()`/`toset()` adjustment ([#802](https://github.com/fastly/terraform-provider-fastly/issues/802))
+
 ### ENHANCEMENTS:
+
+- enhancement(service_vcl): render in-place attribute diffs for `snippet` blocks — a one-line `content` edit now plans as a `~ content` line diff instead of a whole-block remove/add pair ([#802](https://github.com/fastly/terraform-provider-fastly/issues/802))
 
 ### BUG FIXES:
 

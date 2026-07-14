@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -35,7 +36,9 @@ func (h *SnippetServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		// TypeList (not TypeSet) so plans render in-place attribute diffs.
+		// Order carries no meaning for the API; Read keeps it stable by name.
+		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -82,7 +85,7 @@ func (h *SnippetServiceAttributeHandler) Create(ctx context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *SnippetServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	localState := d.Get(h.Key()).(*schema.Set).List()
+	localState := d.Get(h.Key()).([]any)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
@@ -94,7 +97,7 @@ func (h *SnippetServiceAttributeHandler) Read(ctx context.Context, d *schema.Res
 			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		vsl := flattenSnippets(remoteState)
+		vsl := reorderSnippetsByPriorState(flattenSnippets(remoteState), localState)
 
 		if err := d.Set(h.GetKey(), vsl); err != nil {
 			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
@@ -176,6 +179,40 @@ func buildSnippet(snippetMap any) *gofastly.CreateSnippetInput {
 	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
 
 	return &opts
+}
+
+// reorderSnippetsByPriorState orders flattened snippets by prior state order
+// (keyed by name) since the API listing order is not stable and would
+// otherwise surface as phantom list diffs. Unknown names are appended sorted.
+func reorderSnippetsByPriorState(flattened []map[string]any, priorState []any) []map[string]any {
+	position := map[string]int{}
+	for i, prior := range priorState {
+		if m, ok := prior.(map[string]any); ok {
+			if name, ok := m["name"].(string); ok {
+				position[name] = i
+			}
+		}
+	}
+
+	name := func(m map[string]any) string {
+		n, _ := m["name"].(string)
+		return n
+	}
+
+	sort.SliceStable(flattened, func(i, j int) bool {
+		pi, iKnown := position[name(flattened[i])]
+		pj, jKnown := position[name(flattened[j])]
+		switch {
+		case iKnown && jKnown:
+			return pi < pj
+		case iKnown != jKnown:
+			return iKnown
+		default:
+			return name(flattened[i]) < name(flattened[j])
+		}
+	})
+
+	return flattened
 }
 
 // flattenSnippets models data into format suitable for saving to Terraform state.

@@ -50,52 +50,58 @@ func NewSetDiff(keyFunc KeyFunc) *SetDiff {
 // 'comment' attribute, but in order to compare changes using SetDiff we only
 // really have the option to use 'name' as the lookup key.
 func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
-	// Convert the set into a map to facilitate lookup
-	oldSetMap := map[any]any{}
-	newSetMap := map[any]any{}
+	return h.DiffLists(oldSet.List(), newSet.List())
+}
 
-	for _, elem := range oldSet.List() {
+// DiffLists is the schema.TypeList equivalent of Diff: elements are matched
+// by KeyFunc and compared by deep equality, so element order is irrelevant.
+func (h *SetDiff) DiffLists(oldList, newList []any) (*DiffResult, error) {
+	// Convert the lists into maps to facilitate lookup
+	oldMap := map[any]any{}
+	newMap := map[any]any{}
+
+	for _, elem := range oldList {
 		key, err := h.computeKey(elem)
 		if err != nil {
 			return nil, newElementKeyError(elem, err)
 		}
-		oldSetMap[key] = elem
+		oldMap[key] = elem
 	}
 
-	for _, elem := range newSet.List() {
+	for _, elem := range newList {
 		key, err := h.computeKey(elem)
 		if err != nil {
 			return nil, newElementKeyError(elem, err)
 		}
-		newSetMap[key] = elem
+		newMap[key] = elem
 	}
 
-	// Compute all added and modified elements using Terraform set comparison method.
-	var added, modified []any
-	for _, newElem := range newSet.Difference(oldSet).List() {
+	var added, modified, unmodified []any
+	for _, newElem := range newList {
 		key, err := h.computeKey(newElem)
 		if err != nil {
 			return nil, newElementKeyError(newElem, err)
 		}
-		if oldSetMap[key] != nil {
-			modified = append(modified, newElem)
-		} else {
+		switch oldElem, exists := oldMap[key]; {
+		case !exists:
 			added = append(added, newElem)
+		case reflect.DeepEqual(oldElem, newElem):
+			unmodified = append(unmodified, newElem)
+		default:
+			modified = append(modified, newElem)
 		}
 	}
 
 	var deleted []any
-	for _, oldElem := range oldSet.Difference(newSet).List() {
+	for _, oldElem := range oldList {
 		key, err := h.computeKey(oldElem)
 		if err != nil {
 			return nil, newElementKeyError(oldElem, err)
 		}
-		if newSetMap[key] == nil {
+		if _, exists := newMap[key]; !exists {
 			deleted = append(deleted, oldElem)
 		}
 	}
-
-	unmodified := oldSet.Intersection(newSet).List()
 
 	return &DiffResult{
 		Added:      added,
@@ -124,7 +130,11 @@ func (h *SetDiff) computeKey(elem any) (any, error) {
 // attribute) it might have unexpected consequences (e.g. a nested resource
 // gets replaced/recreated). Safer to only update attributes that need to be.
 func (h *SetDiff) Filter(modified map[string]any, oldSet *schema.Set) map[string]any {
-	elements := oldSet.List()
+	return h.FilterList(modified, oldSet.List())
+}
+
+// FilterList is the schema.TypeList equivalent of Filter.
+func (h *SetDiff) FilterList(modified map[string]any, elements []any) map[string]any {
 	filtered := make(map[string]any)
 
 	for _, e := range elements {

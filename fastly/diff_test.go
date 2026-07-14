@@ -119,6 +119,42 @@ func TestSetDiff_Diff(t *testing.T) {
 	}
 }
 
+func TestSetDiff_DiffLists(t *testing.T) {
+	differ := NewSetDiff(testKeyFuncByName)
+
+	oldList := []any{
+		map[string]any{"name": "a", "value": "value-a"},
+		map[string]any{"name": "b", "value": "value-b"},
+		map[string]any{"name": "d", "value": "value-d"},
+	}
+	newList := []any{
+		map[string]any{"name": "a", "value": "value-a-new"},
+		map[string]any{"name": "c", "value": "value-c"},
+		map[string]any{"name": "d", "value": "value-d"},
+	}
+
+	diff, err := differ.DiffLists(oldList, newList)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	assert.Equal(t, []any{map[string]any{"name": "c", "value": "value-c"}}, diff.Added)
+	assert.Equal(t, []any{map[string]any{"name": "a", "value": "value-a-new"}}, diff.Modified)
+	assert.Equal(t, []any{map[string]any{"name": "b", "value": "value-b"}}, diff.Deleted)
+	assert.Equal(t, []any{map[string]any{"name": "d", "value": "value-d"}}, diff.Unmodified)
+
+	// A pure reorder must produce no changes.
+	reordered := []any{oldList[2], oldList[0], oldList[1]}
+	diff, err = differ.DiffLists(oldList, reordered)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assert.Empty(t, diff.Added)
+	assert.Empty(t, diff.Modified)
+	assert.Empty(t, diff.Deleted)
+	assert.Len(t, diff.Unmodified, 3)
+}
+
 func testKeyFuncByName(element any) (any, error) {
 	elemMap := element.(map[string]any)
 	return elemMap["name"], nil

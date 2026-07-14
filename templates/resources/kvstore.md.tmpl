@@ -1,0 +1,30 @@
+---
+page_title: "fastly_kvstore Resource - fastly"
+subcategory: ""
+description: |-
+  Provides a KV Store, a low-latency, high-throughput key-value data store that is accessible to Compute services during request processing.
+---
+
+# fastly_kvstore (Resource)
+
+Provides a KV Store, a low-latency, high-throughput key-value data store that is accessible to Compute services during request processing.
+
+This resource is versionless: it is not tied to a service version and is managed independently of any `fastly_service_compute` resource.
+
+## Example Usage
+
+```terraform
+resource "fastly_kvstore" "example" {
+  name = "my_kv_store"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Fastly KV Stores can be imported using their KV Store ID, e.g.
+
+```shell
+terraform import fastly_kvstore.example <kvstore_id>
+```

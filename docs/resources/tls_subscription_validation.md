@@ -135,6 +135,82 @@ resource "aws_route53_record" "subdomain" {
 }
 ```
 
+Managed certificates for multiple domains, in a single apply:
+
+The `certificate_id` attribute is only populated once the certificate has been issued, so resources referencing it are guaranteed to run after issuance — unlike `fastly_tls_subscription.<name>.certificate_id`, which is empty on first apply (certificates are issued asynchronously after domain validation) and causes API 400 errors when consumed in the same apply.
+
+~> **Note:** Fastly automatically activates TLS on a subscription's domains once the certificate is issued — set `configuration_id` on the `fastly_tls_subscription` itself and do **not** create a `fastly_tls_activation` for those domains (it fails with `400 domain_id has already been taken`). Use the `fastly_tls_activation` data source to read the automatically-created activation.
+
+```terraform
+# Certificates map: key = domain (common_name), value = subscription config
+variable "certificates" {
+  type = map(object({
+    authority     = optional(string, "lets-encrypt")
+    common_name   = optional(string, "")
+    domains       = set(string)
+    force_destroy = optional(bool, true)
+  }))
+}
+
+data "fastly_tls_configuration" "default_tls" {
+  default = true
+}
+
+resource "fastly_tls_subscription" "example" {
+  for_each = var.certificates
+
+  certificate_authority = each.value.authority
+  common_name           = each.value.common_name
+  domains               = each.value.domains
+  force_destroy         = each.value.force_destroy
+
+  # IMPORTANT: with a managed subscription, set the TLS configuration HERE.
+  # Fastly automatically activates TLS on the subscription's domains once the
+  # certificate is issued. Do NOT create a fastly_tls_activation for these
+  # domains — it will fail with `400 domain_id has already been taken`.
+  configuration_id = data.fastly_tls_configuration.default_tls.id
+}
+
+# The domain validation challenge records MUST be created before validation
+# can succeed. This example uses DNS-based validation: replace with your DNS
+# provider's record resource, fed from
+# fastly_tls_subscription.example[each.key].managed_dns_challenges
+# (see the fastly_tls_subscription documentation for a Route53 example).
+resource "aws_route53_record" "domain_validation" {
+  for_each = fastly_tls_subscription.example
+
+  name            = each.value.managed_dns_challenges[0].record_name
+  type            = each.value.managed_dns_challenges[0].record_type
+  records         = [each.value.managed_dns_challenges[0].record_value]
+  zone_id         = "REPLACE_WITH_YOUR_ZONE_ID"
+  allow_overwrite = true
+  ttl             = 60
+}
+
+# Blocks until the certificate has been issued. Its certificate_id attribute
+# is only known after issuance, so downstream resources referencing it are
+# guaranteed to run with a valid certificate — all in a single apply.
+resource "fastly_tls_subscription_validation" "example" {
+  for_each = var.certificates
+
+  subscription_id = fastly_tls_subscription.example[each.key].id
+  depends_on      = [aws_route53_record.domain_validation]
+}
+
+# The activation was created automatically by Fastly when the certificate was
+# issued; this data source reads it (e.g. to consume dns_records/IDs).
+data "fastly_tls_activation" "example" {
+  for_each = var.certificates
+
+  domain     = each.value.common_name
+  depends_on = [fastly_tls_subscription_validation.example]
+}
+
+output "certificate_ids" {
+  value = { for k, v in fastly_tls_subscription_validation.example : k => v.certificate_id }
+}
+```
+
 ## Timeouts
 
 `fastly_tls_subscription_validation` supports the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
@@ -154,6 +230,7 @@ resource "aws_route53_record" "subdomain" {
 
 ### Read-Only
 
+- `certificate_id` (String) The ID of the certificate issued for the validated subscription. Only populated once the subscription reaches the `issued` state. Reference this from `fastly_tls_activation.certificate_id` to guarantee the activation is created after the certificate exists, within a single apply.
 - `id` (String) The ID of this resource.
 
 <a id="nestedblock--timeouts"></a>

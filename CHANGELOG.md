@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(tls/subscription): include subscription ID and domains in `fastly_tls_subscription` API error messages so failing resources can be identified when managing many subscriptions ([#888](https://github.com/fastly/terraform-provider-fastly/issues/888))
+
 ### BUG FIXES:
 
 - fix(logging): Validate logging `format` length (max 12288 characters) at plan/validate time instead of failing at apply time ([#1340](https://github.com/fastly/terraform-provider-fastly/issues/1340))

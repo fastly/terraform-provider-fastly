@@ -3,12 +3,16 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/fastly/go-fastly/v16/fastly"
@@ -132,6 +136,93 @@ resource "fastly_tls_subscription" "subject" {
   certificate_authority = "lets-encrypt"
 }
 `, domain, commonName)
+}
+
+func TestResourceFastlyTLSSubscriptionErrorsIncludeSubscriptionContext(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"errors":[{"title":"Bad Request","detail":"something went wrong"}]}`))
+	}))
+	defer server.Close()
+
+	conn, err := fastly.NewClientForEndpoint("test-key", server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &APIClient{conn: conn}
+
+	for name, testcase := range map[string]struct {
+		invoke func(*schema.ResourceData) diag.Diagnostics
+		wants  []string
+	}{
+		"create": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				return resourceFastlyTLSSubscriptionCreate(context.Background(), d, client)
+			},
+			wants: []string{
+				"error creating TLS subscription for domains",
+				"henry.example.com",
+				"www.henry.example.com",
+				"something went wrong",
+			},
+		},
+		"read": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				return resourceFastlyTLSSubscriptionRead(context.Background(), d, client)
+			},
+			wants: []string{
+				"error fetching TLS subscription (h23m07b03)",
+				"something went wrong",
+			},
+		},
+		"update": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				// Simulate a config change so the update path calls the API.
+				if err := d.Set("common_name", "henry.example.com"); err != nil {
+					t.Fatal(err)
+				}
+				return resourceFastlyTLSSubscriptionUpdate(context.Background(), d, client)
+			},
+			wants: []string{
+				"error updating TLS subscription (h23m07b03)",
+				"henry.example.com",
+				"www.henry.example.com",
+				"something went wrong",
+			},
+		},
+		"delete": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				return resourceFastlyTLSSubscriptionDelete(context.Background(), d, client)
+			},
+			wants: []string{
+				"error deleting TLS subscription (h23m07b03)",
+				"henry.example.com",
+				"www.henry.example.com",
+				"something went wrong",
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resourceFastlyTLSSubscription().Schema, map[string]any{
+				"domains":               []any{"henry.example.com", "www.henry.example.com"},
+				"certificate_authority": "lets-encrypt",
+			})
+			d.SetId("h23m07b03")
+
+			diags := testcase.invoke(d)
+			if !diags.HasError() {
+				t.Fatalf("expected %s to return an error diagnostic", name)
+			}
+
+			summary := diags[0].Summary
+			for _, want := range testcase.wants {
+				if !strings.Contains(summary, want) {
+					t.Errorf("expected %s error %q to contain %q", name, summary, want)
+				}
+			}
+		})
+	}
 }
 
 func testSweepTLSSubscription(region string) error {

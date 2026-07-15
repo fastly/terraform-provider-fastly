@@ -59,7 +59,7 @@ resource "fastly_acl_entries" "example" {
 
 ### Optional
 
-- `manage_entries` (Boolean) Manage the ACL entries in Terraform (default: `false`). If `true`, Terraform will ensure that the ACL's entries match the entries in the Terraform configuration.
+- `manage_entries` (Boolean) Manage the ACL entries in Terraform (default: `false`). If `true`, Terraform will ensure that the ACL's entries match the entries in the Terraform configuration. When importing this resource, `manage_entries` is always set to `true`, so any ACL entries not present in the Terraform configuration will be deleted on the next apply.
 
 ### Read-Only
 
@@ -73,4 +73,6 @@ Fastly ACL entries can be imported using the format `<acl_id>/entries`, e.g.
 terraform import fastly_acl_entries.example <acl_id>/entries
 ```
 
-When imported, `manage_entries` is automatically set to `true`.
+Import reads the ACL's current entries from the Fastly API into state as-is; it does not modify the ACL or delete anything by itself.
+
+However, `manage_entries` is always set to `true` on import, regardless of the value in your configuration. Because of this, your `entries` map must match what was imported before you run `terraform apply` — any entry present in state (from the import) but missing from your configuration will be deleted on the next apply. Run `terraform show` after importing to see the entries that were read in, and copy them into your configuration before applying.

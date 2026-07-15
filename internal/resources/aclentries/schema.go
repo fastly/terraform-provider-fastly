@@ -44,7 +44,7 @@ func ResourceAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Default:     booldefault.StaticBool(false),
-			Description: "Manage the ACL entries in Terraform (default: `false`). If `true`, Terraform will ensure that the ACL's entries match the entries in the Terraform configuration.",
+			Description: "Manage the ACL entries in Terraform (default: `false`). If `true`, Terraform will ensure that the ACL's entries match the entries in the Terraform configuration. When importing this resource, `manage_entries` is always set to `true`, so any ACL entries not present in the Terraform configuration will be deleted on the next apply.",
 		},
 	}
 }

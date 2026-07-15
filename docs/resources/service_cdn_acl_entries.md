@@ -76,7 +76,16 @@ drift in ACL entries:
   managed by external systems (e.g., via API, scripts, or other automation).
 
 When importing an existing ACL entries resource, `manage_entries` is automatically
-set to `true` to enable drift detection.
+set to `true`, regardless of the value in your configuration, to enable drift
+detection.
+
+Import reads the ACL's current entries from the Fastly API into state as-is; it
+does not modify the ACL or delete anything by itself. But because `manage_entries`
+is forced to `true`, your `entry` blocks must match what was imported before you
+run `terraform apply` — any entry present in state (from the import) but missing
+from your configuration will be deleted on the next apply. Run `terraform show`
+after importing to see the entries that were read in, and copy them into your
+configuration before applying.
 
 ## Schema
 
@@ -88,7 +97,7 @@ set to `true` to enable drift detection.
 ### Optional
 
 - `entry` (Block Set) ACL Entries. (see [below for nested schema](#nestedblock--entry))
-- `manage_entries` (Boolean) Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally.
+- `manage_entries` (Boolean) Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally. When importing this resource, `manage_entries` is always set to `true`, so any ACL entries not present in the Terraform configuration will be deleted on the next apply.
 
 ### Read-Only
 
@@ -125,4 +134,4 @@ Example:
 terraform import fastly_service_cdn_acl_entries.example SU1Z0isxPaozGVKXdv0eY/7Lsb7Y8w6St2eqwFgqzc
 ```
 
-When imported, `manage_entries` is automatically set to `true`.
+Import reads the current entries from the API into state and sets `manage_entries = true`; it does not delete anything by itself. See [Behavior and Drift Management](#behavior-and-drift-management) above — make sure your `entry` blocks match the imported entries before running `terraform apply`, since `manage_entries = true` will delete any entry missing from your configuration.

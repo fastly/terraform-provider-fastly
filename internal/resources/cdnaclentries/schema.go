@@ -54,7 +54,7 @@ func ResourceAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Default:     booldefault.StaticBool(false),
-			Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally.",
+			Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally. When importing this resource, `manage_entries` is always set to `true`, so any ACL entries not present in the Terraform configuration will be deleted on the next apply.",
 		},
 	}
 }

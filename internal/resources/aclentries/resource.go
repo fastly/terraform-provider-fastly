@@ -205,19 +205,9 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		"acl_id": aclID,
 	})
 
-	remote, err := r.listEntries(ctx, aclID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading ACL entries", err.Error())
-		return
-	}
-	entries := flattenEntries(remote, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), fmt.Sprintf("%s/entries", aclID))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("acl_id"), aclID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entries"), entries)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("manage_entries"), true)...)
 }
 
 // ModifyPlan preserves the prior state's entries when manage_entries is

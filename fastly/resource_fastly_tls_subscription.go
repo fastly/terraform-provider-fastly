@@ -184,7 +184,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 		CommonName:           commonName,
 	})
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error creating TLS subscription for domains [%s]: %s", strings.Join(domainStrings, ", "), err)
 	}
 
 	d.SetId(subscription.ID)
@@ -213,7 +213,7 @@ func resourceFastlyTLSSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 			},
 		}
 	} else if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error fetching TLS subscription (%s): %s", d.Id(), err)
 	}
 
 	var domains []string
@@ -395,7 +395,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 		conn := meta.(*APIClient).conn
 		_, err := conn.UpdateTLSSubscription(ctx, updates)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.Errorf("error updating TLS subscription (%s) for domains [%s]: %s", d.Id(), strings.Join(domainStrings, ", "), err)
 		}
 	}
 
@@ -410,7 +410,21 @@ func resourceFastlyTLSSubscriptionDelete(ctx context.Context, d *schema.Resource
 		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.Errorf("error deleting TLS subscription (%s) for domains [%s]: %s", d.Id(), strings.Join(tlsSubscriptionDomains(d), ", "), err)
+	}
+	return nil
+}
+
+// tlsSubscriptionDomains returns the subscription's domains from state, for
+// inclusion in error messages so users running many subscriptions can tell
+// which resource an API error belongs to.
+func tlsSubscriptionDomains(d *schema.ResourceData) []string {
+	var domains []string
+	for _, domain := range d.Get("domains").(*schema.Set).List() {
+		domains = append(domains, domain.(string))
+	}
+	return domains
 }
 
 func resourceFastlyTLSSubscriptionIsStateImmutable(_ context.Context, d *schema.ResourceDiff, _ any) bool {

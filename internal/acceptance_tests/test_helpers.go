@@ -323,6 +323,35 @@ func ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclName string) s
 	)
 }
 
+// ConfigCDNAutoWithGzip returns a CDN auto service config with a domain and a gzip configuration
+func ConfigCDNAutoWithGzip(serviceName, domainName, gzipName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"GZIP_NAME":    gzipName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/gzip_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleGzips returns a CDN auto service config with multiple gzip configurations
+func ConfigCDNAutoWithMultipleGzips(serviceName, domainName, gzipName1, gzipName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"GZIP_NAME_1":  gzipName1,
+			"GZIP_NAME_2":  gzipName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/gzip_multi.tf",
+	)
+}
+
 // ConfigACLForImport returns a test configuration for importing an ACL
 func ConfigACLForImport(serviceName, domainName, aclName string) string {
 	return BuildConfig(

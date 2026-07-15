@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v16/fastly"
@@ -46,6 +47,7 @@ type Model struct {
 	Domain         []domain.NestedModel  `tfsdk:"domain"`
 	Backend        []backend.NestedModel `tfsdk:"backend"`
 	ACL            []cdnacl.NestedModel  `tfsdk:"acl"`
+	Gzip           []gzip.NestedModel    `tfsdk:"gzip"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -98,6 +100,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"domain":  domain.NestedBlockSchema(),
 			"backend": backend.NestedBlockSchema(),
 			"acl":     cdnacl.NestedBlockSchema(),
+			"gzip":    gzip.NestedBlockSchema(),
 		},
 	}
 }
@@ -172,6 +175,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.ACL = acls
+
+	if err := gzip.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Gzip); err != nil {
+		resp.Diagnostics.AddError("Error reconciling gzip configurations", err.Error())
+		return
+	}
+
+	gzips, err := gzip.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, version, plan.Gzip)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
+		return
+	}
+	plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
 
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -256,9 +271,15 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
 		return
 	}
+	gzips, err := gzip.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Gzip)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
+	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -286,7 +307,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !gzip.Equal(plan.Gzip, state.Gzip)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -356,6 +377,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ACL = acls
 
+		if err := gzip.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Gzip); err != nil {
+			resp.Diagnostics.AddError("Error reconciling gzip configurations", err.Error())
+			return
+		}
+
+		gzips, err := gzip.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Gzip)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
+			return
+		}
+		plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
+
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
@@ -379,6 +412,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
+		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 	}
 
 	plan.ID = state.ID

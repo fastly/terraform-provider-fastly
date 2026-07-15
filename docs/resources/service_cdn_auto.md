@@ -25,6 +25,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `comment` (String) Optional service comment.
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
+- `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 
 ### Read-Only
@@ -107,3 +108,17 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--gzip"></a>
+### Nested Schema for `gzip`
+
+Required:
+
+- `name` (String) A name to refer to this gzip condition. Changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `cache_condition` (String) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`.
+- `content_types` (List of String) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`.
+- `extensions` (List of String) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`.

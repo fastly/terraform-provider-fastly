@@ -13,11 +13,72 @@ This resource is versionless: it is not tied to a service version and is managed
 
 ## Example Usage
 
+Basic usage:
+
 ```terraform
 resource "fastly_kvstore" "example" {
   name = "my_kv_store"
 }
 ```
+
+Linking the store to a Compute service so it's readable from Wasm code, using
+the `resource_link` block nested in `fastly_service_compute_auto`:
+
+```terraform
+resource "fastly_kvstore" "example" {
+  name     = "my_kv_store"
+  location = "US"
+}
+
+resource "fastly_service_compute_auto" "example" {
+  name = "my_compute_service"
+
+  domain {
+    name = "demo.example.com"
+  }
+
+  package {
+    filename         = "package.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
+  }
+
+  resource_link {
+    name        = "my_resource_link"
+    resource_id = fastly_kvstore.example.id
+  }
+}
+
+data "fastly_package_hash" "example" {
+  filename = "package.tar.gz"
+}
+```
+
+For explicit (versioned) Compute services, use the standalone
+`fastly_service_resource_link` resource instead of a nested block:
+
+```terraform
+resource "fastly_kvstore" "example" {
+  name = "my_kv_store"
+}
+
+resource "fastly_service_compute" "example" {
+  name    = "my_compute_service"
+  comment = "Managed by Terraform"
+}
+
+resource "fastly_service_resource_link" "example" {
+  service_id  = fastly_service_compute.example.id
+  version     = 1
+  name        = "my_resource_link"
+  resource_id = fastly_kvstore.example.id
+}
+```
+
+-> **Note:** A KV Store cannot be deleted while a `resource_link` still
+references it. Since Terraform cannot guarantee ordering between a
+`fastly_kvstore` and the service resource linking to it, removing both in the
+same `terraform apply` may require running `apply` twice: once to remove the
+`resource_link`, and again to delete the KV Store.
 
 ## Schema
 

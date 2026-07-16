@@ -1029,6 +1029,120 @@ func entriesHCL(entries map[string]string) string {
 
 // Configuration helpers for S3 logging resources
 
+// ConfigCDNAutoWithLoggingS3 returns a CDN auto service config with a domain and a nested S3 logging block.
+func ConfigCDNAutoWithLoggingS3(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingS3All returns a CDN auto service config with a nested S3 logging
+// block that sets the full set of optional attributes.
+func ConfigCDNAutoWithLoggingS3All(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_all.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingS3GzipCodec returns a CDN auto service config with a nested S3 logging
+// block that sets compression_codec = "gzip" and leaves gzip_level unset, exercising the auto
+// read-back sentinel handling (MatchOrder/preserveGzipSentinelList) that must avoid a perpetual diff.
+func ConfigCDNAutoWithLoggingS3GzipCodec(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_gzip_codec.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingS3Updated returns a CDN auto service config with a nested S3 logging block
+// whose optional attributes have been changed, exercising the reconcile update path.
+func ConfigCDNAutoWithLoggingS3Updated(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleLoggingS3 returns a CDN auto service config with two nested S3 logging blocks.
+func ConfigCDNAutoWithMultipleLoggingS3(serviceName, domainName, loggerName1, loggerName2, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"LOGGING_S3_NAME_1": loggerName1,
+			"LOGGING_S3_NAME_2": loggerName2,
+			"BUCKET_NAME":       bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackendAndLoggingS3 returns a CDN auto service config with a domain, backend, and nested S3 logging block.
+func ConfigCDNAutoWithBackendAndLoggingS3(serviceName, domainName, backendName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"BACKEND_NAME":    backendName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingS3 returns a Compute auto service config with a domain, package, and nested S3 logging block.
+func ConfigComputeAutoWithLoggingS3(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 func ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName string) string {
 	return BuildConfig(
 		ServiceCDN,

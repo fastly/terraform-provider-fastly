@@ -22,6 +22,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/acls"
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/serviceversion"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/acl"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/aclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
@@ -98,6 +99,7 @@ func (p *fastlyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		acl.NewResource,
+		aclentries.NewResource,
 		backend.NewResource,
 		cdnacl.NewResource,
 		cdnaclentries.NewResource,

@@ -3,7 +3,7 @@
 # Test script for Compute service lifecycle
 # Tests: fastly_service_compute, fastly_service_domain, fastly_service_backend,
 #        fastly_service_compute_package_upload, fastly_service_version_clone,
-#        and fastly_service_version_activate actions
+#        fastly_service_version_activate actions, and fastly_acl_entries
 #
 # Coverage includes:
 #   - Clone from active version
@@ -11,6 +11,8 @@
 #   - Package uploads to specific versions
 #   - Version activation workflow
 #   - Multiple version lifecycle (versions 1, 2, 3)
+#   - ACL creation (fastly_acl) and entries management (fastly_acl_entries),
+#     attached to service 1 via fastly_service_resource_link
 
 set -euo pipefail
 
@@ -270,6 +272,8 @@ verify_initial_state() {
         exit 1
     fi
 
+    verify_acl_entries 2 "198.51.100.0/24" "BLOCK"
+
     local link_version=$(terraform output -raw resource_link_version)
     verify_resource_link "$SERVICE_1_ID" "$link_version" "$ACL_ID" "$TEST_RESOURCE_LINK_NAME"
 
@@ -300,6 +304,37 @@ verify_resource_link() {
     fi
 
     log_success "Resource link verified on service $service_id version $version (name=$expected_name, resource_id=$expected_resource_id)"
+}
+
+# Verify ACL entries against the API. Checks the total entry count
+# and, if a prefix is given, that it maps to the expected action.
+verify_acl_entries() {
+    local expected_count="$1"
+    local check_prefix="${2:-}"
+    local check_action="${3:-}"
+
+    local entries_response=$(curl -s -H "Fastly-Key: $FASTLY_API_TOKEN" \
+        "https://api.fastly.com/resources/acls/$ACL_ID/entries")
+
+    local entry_count=$(echo "$entries_response" | jq '.entries | length')
+    log_info "ACL has $entry_count entries (expected $expected_count)"
+
+    if [ "$entry_count" != "$expected_count" ]; then
+        log_error "Expected $expected_count ACL entries, found $entry_count"
+        log_info "Entries response: $entries_response"
+        return 1
+    fi
+
+    if [ -n "$check_prefix" ]; then
+        local actual_action=$(echo "$entries_response" | jq -r --arg prefix "$check_prefix" \
+            '.entries[] | select(.prefix == $prefix) | .action')
+        if [ "$actual_action" != "$check_action" ]; then
+            log_error "Expected ACL entry $check_prefix to have action $check_action, found '$actual_action'"
+            return 1
+        fi
+    fi
+
+    log_success "ACL entries verified ($entry_count entries)"
 }
 
 # Test compute package upload action
@@ -612,6 +647,33 @@ test_resource_updates() {
     log_success "Service update completed"
 }
 
+# Test ACL entries update: removes one entry and flips the
+# remaining entry's action, exercising both the delete and update batch
+# operations against the API.
+test_acl_entries_update() {
+    log_step "Testing ACL entries update"
+
+    cd "$TEST_DIR"
+
+    log_info "Updating ACL entries in config..."
+
+    sed -i.bak \
+        -e '/"192.0.2.0\/24"    = "ALLOW"/d' \
+        -e 's/"198.51.100.0\/24" = "BLOCK"/"198.51.100.0\/24" = "ALLOW"/' \
+        main.tf
+    rm -f main.tf.bak
+
+    log_info "Running terraform plan..."
+    terraform plan -out=tfplan
+
+    log_info "Running terraform apply..."
+    terraform apply tfplan
+
+    verify_acl_entries 1 "198.51.100.0/24" "ALLOW"
+
+    log_success "ACL entries update completed"
+}
+
 # The Fastly API rejects deletes of objects (domains/backends/resource_links) from a
 # locked (i.e. ever-activated) service version, and a locked version can never become
 # mutable again. If Terraform state has a resource pinned to a locked version,
@@ -696,7 +758,7 @@ test_resource_destruction() {
     # the service it belongs to) is deleted -- destroying everything in one
     # `terraform destroy` reliably 503s on the ACL delete. Destroy the services
     # (which cascades to their resource_link) first, let that settle, then destroy
-    # the now-unlinked ACL separately.
+    # the now-unlinked ACL (and its entries) separately.
     log_info "Running terraform destroy for the services (cascades to the resource_link)..."
     terraform destroy -auto-approve \
         -target=fastly_service_compute.service_1 \
@@ -775,6 +837,7 @@ main() {
     verify_initial_state
     test_package_upload_action
     test_resource_updates
+    test_acl_entries_update
     test_version_clone_action
     test_version_activate_action
     test_clone_from_latest_and_version_writes
@@ -790,6 +853,7 @@ main() {
     log_success "✓ Package upload action (fastly_service_compute_package_upload)"
     log_success "✓ Resource updates"
     log_success "✓ ACL creation (fastly_acl)"
+    log_success "✓ ACL entries management (fastly_acl_entries)"
     log_success "✓ ACL attached to a service (fastly_service_resource_link)"
     log_success "✓ Version clone action (fastly_service_version_clone)"
     log_success "✓ Version activate action (fastly_service_version_activate)"

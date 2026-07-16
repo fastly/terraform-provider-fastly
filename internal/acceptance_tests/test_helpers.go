@@ -871,7 +871,7 @@ func ConfigDomainForImport(serviceName, domainName, additionalDomainName string)
 	)
 }
 
-// Configuration helpers for ACL entries resources
+// Configuration helpers for CDN service ACL entries resources
 
 func aclEntriesBase(serviceName, domainName, aclName string) (ServiceType, map[string]string) {
 	return ServiceCDN, map[string]string{
@@ -982,4 +982,47 @@ func ConfigACLEntriesManyEntries(serviceName, domainName, aclName string, count 
 		"internal/acceptance_tests/blocks/acl_explicit.tf",
 		"internal/acceptance_tests/blocks/acl_entries_many.tf",
 	)
+}
+
+// Configuration helpers for the standalone Compute ACL entries resource (fastly_acl_entries)
+
+// ConfigACLEntries returns a config declaring a fastly_acl resource alongside a
+// fastly_acl_entries resource (with manage_entries = true) that targets it.
+func ConfigACLEntries(aclName string, entries map[string]string) string {
+	return fmt.Sprintf(`
+resource "fastly_acl" "acl" {
+  name = %q
+}
+
+resource "fastly_acl_entries" "acl_entries" {
+  acl_id         = fastly_acl.acl.id
+  entries        = %s
+  manage_entries = true
+}
+`, aclName, entriesHCL(entries))
+}
+
+// ConfigACLEntriesUnmanaged mirrors ConfigACLEntries but omits manage_entries,
+// leaving it at its default (false).
+func ConfigACLEntriesUnmanaged(aclName string, entries map[string]string) string {
+	return fmt.Sprintf(`
+resource "fastly_acl" "acl" {
+  name = %q
+}
+
+resource "fastly_acl_entries" "acl_entries" {
+  acl_id  = fastly_acl.acl.id
+  entries = %s
+}
+`, aclName, entriesHCL(entries))
+}
+
+func entriesHCL(entries map[string]string) string {
+	var hcl strings.Builder
+	hcl.WriteString("{\n")
+	for prefix, action := range entries {
+		fmt.Fprintf(&hcl, "    %q = %q\n", prefix, action)
+	}
+	hcl.WriteString("  }")
+	return hcl.String()
 }

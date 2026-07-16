@@ -10,6 +10,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
@@ -38,18 +39,19 @@ func NewResource() resource.Resource {
 }
 
 type Model struct {
-	ID             types.String            `tfsdk:"id"`
-	Name           types.String            `tfsdk:"name"`
-	Comment        types.String            `tfsdk:"comment"`
-	ForceDestroy   types.Bool              `tfsdk:"force_destroy"`
-	Reuse          types.Bool              `tfsdk:"reuse"`
-	ActiveVersion  types.Int64             `tfsdk:"active_version"`
-	ManagedVersion types.Int64             `tfsdk:"managed_version"`
-	Domain         []domain.NestedModel    `tfsdk:"domain"`
-	Backend        []backend.NestedModel   `tfsdk:"backend"`
-	ACL            []cdnacl.NestedModel    `tfsdk:"acl"`
-	Gzip           []gzip.NestedModel      `tfsdk:"gzip"`
-	LoggingS3      []loggings3.NestedModel `tfsdk:"logging_s3"`
+	ID                            types.String                                `tfsdk:"id"`
+	Name                          types.String                                `tfsdk:"name"`
+	Comment                       types.String                                `tfsdk:"comment"`
+	ForceDestroy                  types.Bool                                  `tfsdk:"force_destroy"`
+	Reuse                         types.Bool                                  `tfsdk:"reuse"`
+	ActiveVersion                 types.Int64                                 `tfsdk:"active_version"`
+	ManagedVersion                types.Int64                                 `tfsdk:"managed_version"`
+	Domain                        []domain.NestedModel                        `tfsdk:"domain"`
+	Backend                       []backend.NestedModel                       `tfsdk:"backend"`
+	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
+	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
+	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
+	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -99,11 +101,12 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"domain":     domain.NestedBlockSchema(),
-			"backend":    backend.NestedBlockSchema(),
-			"acl":        cdnacl.NestedBlockSchema(),
-			"gzip":       gzip.NestedBlockSchema(),
-			"logging_s3": loggings3.NestedBlockSchema(),
+			"domain":                           domain.NestedBlockSchema(),
+			"backend":                          backend.NestedBlockSchema(),
+			"acl":                              cdnacl.NestedBlockSchema(),
+			"gzip":                             gzip.NestedBlockSchema(),
+			"logging_s3":                       loggings3.NestedBlockSchema(),
+			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 		},
 	}
 }
@@ -202,6 +205,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
+
+	if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ImageOptimizerDefaultSettings); err != nil {
+		resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
+		return
+	}
+
+	imageOptimizerDefaultSettings, err := imageoptimizerdefaultsettings.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version, plan.ImageOptimizerDefaultSettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service Image Optimizer default settings", err.Error())
+		return
+	}
+	plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
@@ -302,6 +317,13 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 
+	imageOptimizerDefaultSettings, err := imageoptimizerdefaultsettings.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.ImageOptimizerDefaultSettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service Image Optimizer default settings", err.Error())
+		return
+	}
+	state.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -328,7 +350,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -422,6 +444,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
 
+		if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.ImageOptimizerDefaultSettings, plan.ImageOptimizerDefaultSettings); err != nil {
+			resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
+			return
+		}
+
+		imageOptimizerDefaultSettings, err := imageoptimizerdefaultsettings.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.ImageOptimizerDefaultSettings)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service Image Optimizer default settings", err.Error())
+			return
+		}
+		plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
+
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
@@ -447,6 +481,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
+		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 	}
 
 	plan.ID = state.ID

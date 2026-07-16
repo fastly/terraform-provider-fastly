@@ -28,7 +28,7 @@ resource "fastly_kvstore" "example" {
 ### Optional
 
 - `force_destroy` (Boolean) Allow the KV Store to be deleted, even if it contains entries. Defaults to false.
-- `location` (String) The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`. Changing this attribute will delete and recreate the KV Store.
+- `location` (String) The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`. Changing this attribute will delete and recreate the KV Store. The Fastly API does not return the configured location, so it cannot be verified on `terraform import`.
 
 ### Read-Only
 

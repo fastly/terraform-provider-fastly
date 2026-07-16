@@ -2,12 +2,9 @@ package acls
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"sort"
-	"strings"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
+	"github.com/fastly/terraform-provider-fastly/internal/datasources/idhash"
 
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/fastly/go-fastly/v16/fastly/computeacls"
@@ -118,17 +115,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	}
 
 	state.Acls = setVal
-	state.ID = types.StringValue(hashIDs(ids))
+	state.ID = types.StringValue(idhash.HashIDs(ids))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-// hashIDs derives a stable data source ID from the set of ACL IDs,
-// so the ID changes whenever the underlying set of ACLs changes.
-func hashIDs(ids []string) string {
-	sorted := append([]string(nil), ids...)
-	sort.Strings(sorted)
-
-	sum := sha256.Sum256([]byte(strings.Join(sorted, ",")))
-	return hex.EncodeToString(sum[:])
 }

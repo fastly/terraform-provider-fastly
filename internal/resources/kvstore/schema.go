@@ -27,7 +27,7 @@ func ResourceAttributes() map[string]schema.Attribute {
 		},
 		"location": schema.StringAttribute{
 			Optional:    true,
-			Description: "The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`. Changing this attribute will delete and recreate the KV Store.",
+			Description: "The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`. Changing this attribute will delete and recreate the KV Store. The Fastly API does not return the configured location, so it cannot be verified on `terraform import`.",
 			Validators: []validator.String{
 				stringvalidator.OneOf("US", "EU", "ASIA", "AUS"),
 			},

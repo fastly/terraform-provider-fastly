@@ -49,6 +49,45 @@ func TestAccFastlyKVStore_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyKVStore_location(t *testing.T) {
+	t.Parallel()
+	storeName := fmt.Sprintf("tf_test_kvstore_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckKVStoreDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigKVStoreWithLocation(storeName, "EU"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", storeName),
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "location", "EU"),
+					resource.TestCheckResourceAttrSet("fastly_kvstore.store", "id"),
+				),
+			},
+			{
+				ResourceName:      "fastly_kvstore.store",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The API never returns the store's location, so it can't be
+				// reconstructed on import; the schema description calls this out.
+				ImportStateVerifyIgnore: []string{"location"},
+			},
+			{
+				// Changing the location forces replacement, since there is no
+				// API endpoint to modify it in place.
+				Config: ConfigKVStoreWithLocation(storeName, "ASIA"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", storeName),
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "location", "ASIA"),
+					resource.TestCheckResourceAttrSet("fastly_kvstore.store", "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyKVStore_forceDestroy(t *testing.T) {
 	t.Parallel()
 	storeName := fmt.Sprintf("tf_test_kvstore_%s", acctest.RandString(10))

@@ -472,6 +472,18 @@ resource "fastly_kvstore" "store" {
 `, name)
 }
 
+// ConfigKVStoreWithLocation returns a standalone fastly_kvstore config with an explicit
+// location, for exercising the location attribute's plan-time validation and its
+// replace-on-change behavior.
+func ConfigKVStoreWithLocation(name, location string) string {
+	return fmt.Sprintf(`
+resource "fastly_kvstore" "store" {
+  name     = %q
+  location = %q
+}
+`, name, location)
+}
+
 // ConfigKVStoreForceDestroy returns a standalone fastly_kvstore config with force_destroy set,
 // for exercising deletion of a KV Store that still contains entries.
 func ConfigKVStoreForceDestroy(name string) string {

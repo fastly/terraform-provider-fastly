@@ -43,6 +43,34 @@ func NewFastlyClient() (*fastly.Client, error) {
 	return fastly.NewClient(apiToken)
 }
 
+// CreateTestKVStore creates a KV Store fixture directly against the Fastly API for use as a
+// resource_link target, and registers its cleanup via t.Cleanup. Returns the store's ID.
+//
+// This provider doesn't yet have a dedicated resource for KV Stores, so resource_link
+// acceptance tests need a real linkable resource created out-of-band from Terraform.
+//
+// TODO: once a fastly_kvstore resource exists, replace this raw go-fastly client call with a
+// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
+// same state/plan lifecycle as the rest of the test config.
+func CreateTestKVStore(t *testing.T, name string) string {
+	client, err := NewFastlyClient()
+	if err != nil {
+		t.Fatalf("error creating Fastly client: %s", err)
+	}
+
+	store, err := client.CreateKVStore(context.Background(), &fastly.CreateKVStoreInput{Name: name})
+	if err != nil {
+		t.Fatalf("error creating KV Store fixture: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := client.DeleteKVStore(context.Background(), &fastly.DeleteKVStoreInput{StoreID: store.StoreID}); err != nil {
+			t.Logf("error deleting KV Store fixture %q: %s", store.StoreID, err)
+		}
+	})
+
+	return store.StoreID
+}
+
 // serviceDestroyCheckAttempts and serviceDestroyCheckInterval bound the retry loop in
 // CheckServiceDestroy, which tolerates the Fastly API's soft-delete taking a moment to become
 // visible on a subsequent read - most noticeable when many acceptance tests run in parallel.
@@ -314,6 +342,61 @@ func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domai
 		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
 	)
+}
+
+// imageOptimizerProductEnablement returns a fastly_service_product_image_optimizer resource
+// block that enables Image Optimizer on the given service resource reference (e.g.
+// "fastly_service_cdn_auto.test"). Image Optimizer default settings can only be persisted once
+// the product has been enabled on the service.
+func imageOptimizerProductEnablement(serviceRef string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_product_image_optimizer" "image_optimizer" {
+  service_id = %s.id
+}
+`, serviceRef)
+}
+
+// ConfigCDNAutoImageOptimizerEnabled returns a CDN auto service config with a domain and Image
+// Optimizer enabled via fastly_service_product_image_optimizer, but no
+// image_optimizer_default_settings block.
+func ConfigCDNAutoImageOptimizerEnabled(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettings returns a CDN auto service config with a
+// domain, Image Optimizer enabled, and default (all-default-value) Image Optimizer default
+// settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettings(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_single.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated returns a CDN auto service config with
+// a domain, Image Optimizer enabled, and non-default Image Optimizer default settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_updated.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
 }
 
 // ConfigCDNAutoWithACL returns a CDN auto service config with a domain and ACL

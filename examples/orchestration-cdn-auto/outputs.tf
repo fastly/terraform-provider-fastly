@@ -33,6 +33,11 @@ output "service_1_acl_id" {
   value       = fastly_service_cdn_auto.service_1.acl[0].acl_id
 }
 
+output "service_1_image_optimizer_default_settings" {
+  description = "Image Optimizer default settings configured on service 1."
+  value       = fastly_service_cdn_auto.service_1.image_optimizer_default_settings
+}
+
 output "service_2_acl_id" {
   description = "ACL ID for service 2 temporary blocklist."
   value       = fastly_service_cdn_auto.service_2.acl[0].acl_id

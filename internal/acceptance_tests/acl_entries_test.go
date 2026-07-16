@@ -39,10 +39,9 @@ func TestAccFastlyACLEntries_create(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "fastly_acl_entries.acl_entries",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"manage_entries"},
+				ResourceName:      "fastly_acl_entries.acl_entries",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

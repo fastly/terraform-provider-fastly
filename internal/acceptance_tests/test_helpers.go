@@ -1159,6 +1159,22 @@ func ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName string
 	)
 }
 
+func ConfigLoggingS3AtVersion(serviceName, domainName, loggerName, bucketName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": fmt.Sprintf("%d", version),
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}
+
 func ConfigLoggingS3Updated(serviceName, domainName, loggerName, bucketName string) string {
 	return BuildConfig(
 		ServiceCDN,

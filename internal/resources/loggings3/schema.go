@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -304,6 +306,9 @@ func ResourceAttributes() map[string]schema.Attribute {
 		"service_id": schema.StringAttribute{
 			Required:    true,
 			Description: "Fastly service ID.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 		},
 		"version": schema.Int64Attribute{
 			Required:    true,
@@ -311,6 +316,17 @@ func ResourceAttributes() map[string]schema.Attribute {
 		},
 	}
 	maps.Copy(attrs, CommonAttributes())
+	// For the standalone resource, service_id + name locate the endpoint in the
+	// API, so a change to either cannot be an in-place update. version is not
+	// replacement-forcing: the explicit clone workflow copies the endpoint into
+	// the new version, so an in-place update there succeeds. Applied to name
+	// here (not in CommonAttributes) so the nested block, where name is only a
+	// list key, is unaffected.
+	nameAttr := attrs["name"].(schema.StringAttribute)
+	nameAttr.PlanModifiers = []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	}
+	attrs["name"] = nameAttr
 	return attrs
 }
 

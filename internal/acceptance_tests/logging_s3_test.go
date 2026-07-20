@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/go-fastly/v15/fastly"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -345,4 +346,94 @@ func CheckLoggingS3ExistsInFastly(serviceName, loggerName string, version int) r
 
 		return nil
 	}
+}
+
+// TestAccFastlyServiceLoggingS3_versionUpdateInPlace verifies that bumping the
+// explicit resource's version argument is an in-place update against the new
+// version rather than a destroy-and-recreate. The explicit clone workflow copies
+// the endpoint into the new version, so version is intentionally not
+// replacement-forcing (unlike service_id and name).
+func TestAccFastlyServiceLoggingS3_versionUpdateInPlace(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	var serviceID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3AtVersion(serviceName, domainName, loggerName, bucketName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "version", "1"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_s3.test"]
+						if !ok {
+							return fmt.Errorf("logging s3 resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						return nil
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := NewFastlyClient()
+					if err != nil {
+						t.Fatalf("error creating Fastly client: %s", err)
+					}
+					if _, err := client.CloneVersion(context.Background(), &fastly.CloneVersionInput{
+						ServiceID:      serviceID,
+						ServiceVersion: 1,
+					}); err != nil {
+						t.Fatalf("error cloning version 1: %s", err)
+					}
+				},
+				Config: ConfigLoggingS3AtVersion(serviceName, domainName, loggerName, bucketName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_logging_s3.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "version", "2"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_s3.test"]
+						if !ok {
+							return fmt.Errorf("logging s3 resource not found")
+						}
+
+						gotID := rs.Primary.Attributes["id"]
+						wantID := fmt.Sprintf("%s-2-%s", serviceID, loggerName)
+						if gotID != wantID {
+							return fmt.Errorf("expected id %q to reflect version 2, got %q", wantID, gotID)
+						}
+
+						client, err := NewFastlyClient()
+						if err != nil {
+							return fmt.Errorf("error creating Fastly client: %w", err)
+						}
+						if _, err := client.GetS3(context.Background(), &fastly.GetS3Input{
+							ServiceID:      serviceID,
+							ServiceVersion: 2,
+							Name:           loggerName,
+						}); err != nil {
+							return fmt.Errorf("error fetching S3 logging endpoint at version 2: %w", err)
+						}
+
+						return nil
+					},
+				),
+			},
+		},
+	})
 }

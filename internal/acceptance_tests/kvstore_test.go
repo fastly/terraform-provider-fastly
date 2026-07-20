@@ -3,6 +3,7 @@ package acceptancetests
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -103,6 +104,52 @@ func TestAccFastlyKVStore_forceDestroy(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", storeName),
 					resource.TestCheckResourceAttr("fastly_kvstore.store", "force_destroy", "true"),
 					InsertKVStoreKey("fastly_kvstore.store", "test-key", "test-value"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyKVStore_forceDestroyGuard verifies that a non-empty KV Store cannot
+// be deleted while force_destroy is false, and that setting force_destroy to true
+// unblocks the deletion, mirroring TestAccFastlyServiceCDNAuto_withACLForceDestroy.
+func TestAccFastlyKVStore_forceDestroyGuard(t *testing.T) {
+	t.Parallel()
+	storeName := fmt.Sprintf("tf_test_kvstore_%s", acctest.RandString(10))
+	storeNameUpdated := fmt.Sprintf("tf_test_kvstore_updated_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckKVStoreDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigKVStore(storeName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", storeName),
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "force_destroy", "false"),
+					InsertKVStoreKey("fastly_kvstore.store", "test-key", "test-value"),
+				),
+			},
+			{
+				// Changing the name forces replacement, which requires deleting the
+				// non-empty store first; that delete must be rejected.
+				Config:      ConfigKVStore(storeNameUpdated),
+				ExpectError: regexp.MustCompile("KV Store is not empty"),
+			},
+			{
+				Config: ConfigKVStoreForceDestroy(storeName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", storeName),
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "force_destroy", "true"),
+				),
+			},
+			{
+				// With force_destroy true, the replacement now succeeds.
+				Config: ConfigKVStoreForceDestroy(storeNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", storeNameUpdated),
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "force_destroy", "true"),
 				),
 			},
 		},

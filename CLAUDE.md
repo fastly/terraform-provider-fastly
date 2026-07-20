@@ -51,6 +51,7 @@ make fmt     # go fmt ./...
 
 - `make test-unit` — no API token needed; unit tests live next to the code (e.g. `backend/backend_test.go`)
 - `make test-acc` / `make test-lifecycle` — acceptance + full apply/destroy lifecycle; both require `FASTLY_API_TOKEN`
+- `make test-acc KEYWORD=<word>` — only run acceptance tests whose name matches `<word>`; passed through to `go test -run` as a regular expression (not a literal substring)
 
 Acceptance tests live in `internal/acceptance_tests/` and build HCL via `config_builder.go`.
 

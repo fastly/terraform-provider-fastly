@@ -2,7 +2,6 @@ package loggings3
 
 import (
 	"context"
-	"strings"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,7 +18,6 @@ import (
 
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
-var _ resource.ResourceWithIdentity = &Resource{}
 
 type Resource struct {
 	providerData *fastlyclient.Data
@@ -35,11 +32,6 @@ type Model struct {
 	ID      types.String `tfsdk:"id"`
 	Service types.String `tfsdk:"service_id"`
 	Version types.Int64  `tfsdk:"version"`
-}
-
-type LoggingS3IdentityModel struct {
-	ServiceID types.String `tfsdk:"service_id"`
-	Name      types.String `tfsdk:"name"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -113,16 +105,6 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	flatten(ctx, s, &plan)
 	preserveGzipSentinel(&plan.NestedModel, desired)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &LoggingS3IdentityModel{
-			ServiceID: plan.Service,
-			Name:      plan.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -160,16 +142,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	flatten(ctx, s, &state)
 	preserveGzipSentinel(&state.NestedModel, prior)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &LoggingS3IdentityModel{
-			ServiceID: state.Service,
-			Name:      state.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -225,13 +197,6 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	flatten(ctx, s, &plan)
 	preserveGzipSentinel(&plan.NestedModel, desired)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	if resp.Identity != nil {
-		resp.Diagnostics.Append(resp.Identity.Set(ctx, &LoggingS3IdentityModel{
-			ServiceID: plan.Service,
-			Name:      plan.Name,
-		})...)
-	}
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -272,85 +237,37 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 }
 
 func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	if req.ID != "" && strings.Contains(req.ID, "/") {
-		serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Invalid Import ID",
-				"Expected import ID in format: service_id/version/name\n"+
-					"For example: service123/3/my-s3-logger\n\n"+
-					"Error: "+err.Error(),
-			)
-			return
-		}
-
-		tflog.Debug(ctx, "Importing S3 logging endpoint with legacy composite ID", map[string]any{
-			"service_id": serviceID,
-			"version":    version,
-			"name":       name,
-		})
-
-		s, err := r.providerData.Client.GetS3(ctx, &fastly.GetS3Input{
-			ServiceID:      serviceID,
-			ServiceVersion: version,
-			Name:           name,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError("Error importing S3 logging endpoint", err.Error())
-			return
-		}
-
-		var state Model
-		state.Service = types.StringValue(serviceID)
-		state.Version = types.Int64Value(int64(version))
-		flatten(ctx, s, &state)
-
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if resp.Identity != nil {
-			resp.Diagnostics.Append(resp.Identity.Set(ctx, &LoggingS3IdentityModel{
-				ServiceID: types.StringValue(serviceID),
-				Name:      types.StringValue(name),
-			})...)
-		}
-		return
-	}
-
-	if req.ID != "" {
+	serviceID, version, name, err := importutil.ParseCompositeID(req.ID)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
-			"Expected import ID in format: service_id/version/name.\n"+
-				"For example: service123/3/my-s3-logger",
+			"Expected import ID in format: service_id/version/name\n"+
+				"For example: service123/3/my-s3-logger\n\n"+
+				"Error: "+err.Error(),
 		)
 		return
 	}
 
-	var identity LoggingS3IdentityModel
-	resp.Diagnostics.Append(req.Identity.Get(ctx, &identity)...)
-	if resp.Diagnostics.HasError() {
+	tflog.Debug(ctx, "Importing S3 logging endpoint", map[string]any{
+		"service_id": serviceID,
+		"version":    version,
+		"name":       name,
+	})
+
+	s, err := r.providerData.Client.GetS3(ctx, &fastly.GetS3Input{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           name,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Error importing S3 logging endpoint", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &LoggingS3IdentityModel{
-		ServiceID: identity.ServiceID,
-		Name:      identity.Name,
-	})...)
-}
+	var state Model
+	state.Service = types.StringValue(serviceID)
+	state.Version = types.Int64Value(int64(version))
+	flatten(ctx, s, &state)
 
-func (r *Resource) IdentitySchema(_ context.Context, _ resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	resp.IdentitySchema = identityschema.Schema{
-		Attributes: map[string]identityschema.Attribute{
-			"service_id": identityschema.StringAttribute{
-				RequiredForImport: true,
-				Description:       "Fastly service ID.",
-			},
-			"name": identityschema.StringAttribute{
-				RequiredForImport: true,
-				Description:       "S3 logging endpoint name.",
-			},
-		},
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

@@ -23,9 +23,11 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
 	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
 	// unset: the API rejects requests that set both compression_codec and
-	// gzip_level, and it auto-manages the level when omitted.
+	// gzip_level, and it auto-manages the level when omitted. fastly.NullInt is
+	// not used here because it treats 0 as unset too, which would silently drop
+	// an explicit "no compression" (gzip_level = 0).
 	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
-		input.GzipLevel = fastly.NullInt(int(gl))
+		input.GzipLevel = new(int(gl))
 	}
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
@@ -98,9 +100,11 @@ func BuildComputeCreateInput(serviceID string, version int, m ComputeNestedModel
 	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
 	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
 	// unset: the API rejects requests that set both compression_codec and
-	// gzip_level, and it auto-manages the level when omitted.
+	// gzip_level, and it auto-manages the level when omitted. fastly.NullInt is
+	// not used here because it treats 0 as unset too, which would silently drop
+	// an explicit "no compression" (gzip_level = 0).
 	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
-		input.GzipLevel = fastly.NullInt(int(gl))
+		input.GzipLevel = new(int(gl))
 	}
 	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
 	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))

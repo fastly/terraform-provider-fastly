@@ -2,6 +2,7 @@ package acceptancetests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -240,6 +241,31 @@ func TestAccFastlyServiceComputeAuto_withLoggingS3(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceComputeAuto_loggingS3RejectsVCLOnlyFields verifies that
+// format (and, by extension, format_version/placement/response_condition) is
+// not a valid attribute on service_compute_auto's nested logging_s3 block.
+// Those attributes only affect generated VCL, so ComputeNestedBlockSchema
+// omits them entirely — Terraform should reject this at plan time with its
+// own "Unsupported argument" schema error, without ever reaching the Fastly API.
+func TestAccFastlyServiceComputeAuto_loggingS3RejectsVCLOnlyFields(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigComputeAutoWithLoggingS3Format(serviceName, domainName, loggerName, bucketName),
+				ExpectError: regexp.MustCompile(`Unsupported argument`),
 			},
 		},
 	})

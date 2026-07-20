@@ -1143,6 +1143,27 @@ func ConfigComputeAutoWithLoggingS3(serviceName, domainName, loggerName, bucketN
 	)
 }
 
+// ConfigComputeAutoWithLoggingS3Format returns a Compute auto service config whose
+// nested S3 logging block sets format, a VCL-only attribute. service_compute_auto's
+// logging_s3 schema (ComputeNestedBlockSchema) omits format/format_version/placement/
+// response_condition entirely, so this is expected to fail Terraform's own schema
+// validation ("Unsupported argument") rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingS3Format(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 func ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName string) string {
 	return BuildConfig(
 		ServiceCDN,
@@ -1300,5 +1321,24 @@ func ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName st
 		},
 		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
 		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}
+
+// ConfigLoggingS3ComputeFormat returns a config attaching fastly_service_logging_s3
+// to an explicit Compute service with format set, a VCL-only attribute. Unlike the
+// nested blocks, the standalone resource's schema is shared by both service types, so
+// this is expected to fail at apply time via ValidateNoVCLOnlyAttributesForCompute
+// rather than at Terraform's own schema-validation stage.
+func ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/logging_s3_compute_format.tf",
 	)
 }

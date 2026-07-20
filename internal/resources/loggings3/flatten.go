@@ -61,14 +61,28 @@ func FlattenToNestedModel(s *fastly.S3) NestedModel {
 	return m
 }
 
-// preserveGzipSentinel restores the gzip_level "unset" sentinel after a flatten.
-// When gzip_level was not configured (desired == DefaultGzipLevel), the API's
-// auto-managed value is discarded so the provider does not report a permanent
-// diff against the sentinel.
-func preserveGzipSentinel(m *NestedModel, desired NestedModel) {
+// FlattenToComputeNestedModel is FlattenToNestedModel for Compute services: it
+// carries over only the attributes ComputeNestedModel exposes.
+func FlattenToComputeNestedModel(s *fastly.S3) ComputeNestedModel {
+	return ComputeNestedModel{commonModel: FlattenToNestedModel(s).commonModel}
+}
+
+// preserveGzipSentinelCommon restores the gzip_level "unset" sentinel after a
+// flatten. When gzip_level was not configured (desired == DefaultGzipLevel),
+// the API's auto-managed value is discarded so the provider does not report a
+// permanent diff against the sentinel.
+func preserveGzipSentinelCommon(m *commonModel, desired commonModel) {
 	if service.Int64Value(desired.GzipLevel) == DefaultGzipLevel {
 		m.GzipLevel = types.Int64Value(DefaultGzipLevel)
 	}
+}
+
+func preserveGzipSentinel(m *NestedModel, desired NestedModel) {
+	preserveGzipSentinelCommon(&m.commonModel, desired.commonModel)
+}
+
+func preserveGzipSentinelCompute(m *ComputeNestedModel, desired ComputeNestedModel) {
+	preserveGzipSentinelCommon(&m.commonModel, desired.commonModel)
 }
 
 // preserveGzipSentinelList applies preserveGzipSentinel to each read model using
@@ -81,6 +95,20 @@ func preserveGzipSentinelList(read, desired []NestedModel) {
 	for i := range read {
 		if d, ok := desiredByName[service.StringValue(read[i].Name)]; ok {
 			preserveGzipSentinel(&read[i], d)
+		}
+	}
+}
+
+// preserveGzipSentinelListCompute is preserveGzipSentinelList for Compute's
+// ComputeNestedModel.
+func preserveGzipSentinelListCompute(read, desired []ComputeNestedModel) {
+	desiredByName := make(map[string]ComputeNestedModel, len(desired))
+	for _, d := range desired {
+		desiredByName[service.StringValue(d.Name)] = d
+	}
+	for i := range read {
+		if d, ok := desiredByName[service.StringValue(read[i].Name)]; ok {
+			preserveGzipSentinelCompute(&read[i], d)
 		}
 	}
 }

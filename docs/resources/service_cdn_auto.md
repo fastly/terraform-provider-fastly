@@ -145,6 +145,6 @@ Optional:
 
 Optional:
 
-- `access_key` (String, Sensitive) The access key for your S3 account. Not required if `iam_role` is provided.
-- `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided.
-- `secret_key` (String, Sensitive) The secret key for your S3 account. Not required if `iam_role` is provided.
+- `access_key` (String, Sensitive) The access key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_ACCESS_KEY` environment variable.
+- `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. Can be set via the `FASTLY_S3_IAM_ROLE` environment variable.
+- `secret_key` (String, Sensitive) The secret key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_SECRET_KEY` environment variable.

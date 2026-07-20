@@ -45,7 +45,11 @@ const (
 	DefaultFileMaxBytes                 = 0
 )
 
-type NestedModel struct {
+// commonModel holds the S3 logging attributes shared by VCL and Compute
+// services. format, format_version, placement, and response_condition only
+// affect generated VCL, so they live on NestedModel only — Compute services
+// use ComputeNestedModel, which embeds just this common set.
+type commonModel struct {
 	Name                         types.String `tfsdk:"name"`
 	BucketName                   types.String `tfsdk:"bucket_name"`
 	Authentication               types.Object `tfsdk:"authentication"`
@@ -54,12 +58,8 @@ type NestedModel struct {
 	Period                       types.Int64  `tfsdk:"period"`
 	GzipLevel                    types.Int64  `tfsdk:"gzip_level"`
 	CompressionCodec             types.String `tfsdk:"compression_codec"`
-	Format                       types.String `tfsdk:"format"`
-	FormatVersion                types.Int64  `tfsdk:"format_version"`
 	MessageType                  types.String `tfsdk:"message_type"`
 	TimestampFormat              types.String `tfsdk:"timestamp_format"`
-	Placement                    types.String `tfsdk:"placement"`
-	ResponseCondition            types.String `tfsdk:"response_condition"`
 	ACL                          types.String `tfsdk:"acl"`
 	Redundancy                   types.String `tfsdk:"redundancy"`
 	ServerSideEncryption         types.String `tfsdk:"server_side_encryption"`
@@ -67,6 +67,24 @@ type NestedModel struct {
 	FileMaxBytes                 types.Int64  `tfsdk:"file_max_bytes"`
 	PublicKey                    types.String `tfsdk:"public_key"`
 	ProcessingRegion             types.String `tfsdk:"processing_region"`
+}
+
+// NestedModel is the S3 logging model for the standalone
+// fastly_service_logging_s3 resource and the VCL nested block
+// (service_cdn_auto.logging_s3).
+type NestedModel struct {
+	commonModel
+	Format            types.String `tfsdk:"format"`
+	FormatVersion     types.Int64  `tfsdk:"format_version"`
+	Placement         types.String `tfsdk:"placement"`
+	ResponseCondition types.String `tfsdk:"response_condition"`
+}
+
+// ComputeNestedModel is the S3 logging model for the Compute nested block
+// (service_compute_auto.logging_s3). It omits format, format_version,
+// placement, and response_condition, which only apply to VCL services.
+type ComputeNestedModel struct {
+	commonModel
 }
 
 var authenticationAttributeTypes = map[string]attr.Type{
@@ -101,19 +119,19 @@ func authenticationValue(auth types.Object, name string) types.String {
 	return stringValue
 }
 
-func (n NestedModel) AccessKey() types.String {
+func (n commonModel) AccessKey() types.String {
 	return authenticationValue(n.Authentication, "access_key")
 }
 
-func (n NestedModel) SecretKey() types.String {
+func (n commonModel) SecretKey() types.String {
 	return authenticationValue(n.Authentication, "secret_key")
 }
 
-func (n NestedModel) IAMRole() types.String {
+func (n commonModel) IAMRole() types.String {
 	return authenticationValue(n.Authentication, "iam_role")
 }
 
-func (n NestedModel) ModelsEqual(other NestedModel) bool {
+func (n commonModel) equal(other commonModel) bool {
 	return service.StringValue(n.Name) == service.StringValue(other.Name) &&
 		service.StringValue(n.BucketName) == service.StringValue(other.BucketName) &&
 		service.StringValue(n.AccessKey()) == service.StringValue(other.AccessKey()) &&
@@ -124,12 +142,8 @@ func (n NestedModel) ModelsEqual(other NestedModel) bool {
 		service.Int64Value(n.Period) == service.Int64Value(other.Period) &&
 		service.Int64Value(n.GzipLevel) == service.Int64Value(other.GzipLevel) &&
 		service.StringValue(n.CompressionCodec) == service.StringValue(other.CompressionCodec) &&
-		service.StringValue(n.Format) == service.StringValue(other.Format) &&
-		service.Int64Value(n.FormatVersion) == service.Int64Value(other.FormatVersion) &&
 		service.StringValue(n.MessageType) == service.StringValue(other.MessageType) &&
 		service.StringValue(n.TimestampFormat) == service.StringValue(other.TimestampFormat) &&
-		service.StringValue(n.Placement) == service.StringValue(other.Placement) &&
-		service.StringValue(n.ResponseCondition) == service.StringValue(other.ResponseCondition) &&
 		service.StringValue(n.ACL) == service.StringValue(other.ACL) &&
 		service.StringValue(n.Redundancy) == service.StringValue(other.Redundancy) &&
 		service.StringValue(n.ServerSideEncryption) == service.StringValue(other.ServerSideEncryption) &&
@@ -139,7 +153,38 @@ func (n NestedModel) ModelsEqual(other NestedModel) bool {
 		service.StringValue(n.ProcessingRegion) == service.StringValue(other.ProcessingRegion)
 }
 
+func (n NestedModel) ModelsEqual(other NestedModel) bool {
+	return n.commonModel.equal(other.commonModel) &&
+		service.StringValue(n.Format) == service.StringValue(other.Format) &&
+		service.Int64Value(n.FormatVersion) == service.Int64Value(other.FormatVersion) &&
+		service.StringValue(n.Placement) == service.StringValue(other.Placement) &&
+		service.StringValue(n.ResponseCondition) == service.StringValue(other.ResponseCondition)
+}
+
+func (c ComputeNestedModel) ModelsEqual(other ComputeNestedModel) bool {
+	return c.commonModel.equal(other.commonModel)
+}
+
+// CommonAttributes returns the full S3 logging attribute set — the shared
+// attributes plus the VCL-only ones (format, format_version, placement,
+// response_condition). Used by the standalone fastly_service_logging_s3
+// resource (which can attach to either service type) and the VCL nested
+// block (NestedBlockSchema). Compute services use ComputeAttributes instead.
 func CommonAttributes() map[string]schema.Attribute {
+	attrs := sharedAttributes()
+	maps.Copy(attrs, vclOnlyAttributes())
+	return attrs
+}
+
+// ComputeAttributes returns the S3 logging attribute set for Compute
+// services, omitting the VCL-only attributes exposed by CommonAttributes.
+func ComputeAttributes() map[string]schema.Attribute {
+	return sharedAttributes()
+}
+
+// sharedAttributes returns the S3 logging attributes common to both VCL and
+// Compute services.
+func sharedAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		// Required
 		"bucket_name": schema.StringAttribute{
@@ -202,18 +247,6 @@ func CommonAttributes() map[string]schema.Attribute {
 			Default:     int64default.StaticInt64(DefaultFileMaxBytes),
 			Description: "The maximum number of bytes for each uploaded file. A value of 0 can be used to indicate there is no limit on the size of uploaded files, otherwise the minimum value is 1048576 bytes (1 MiB.).",
 		},
-		"format": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(constants.LoggingS3DefaultFormat),
-			Description: "A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/).",
-		},
-		"format_version": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultFormatVersion),
-			Description: "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.",
-		},
 		"gzip_level": schema.Int64Attribute{
 			Optional: true,
 			Computed: true,
@@ -245,12 +278,6 @@ func CommonAttributes() map[string]schema.Attribute {
 			Default:     int64default.StaticInt64(DefaultPeriod),
 			Description: "How frequently log files are finalized so they can be available for reading in seconds. Default `3600`.",
 		},
-		"placement": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultPlacement),
-			Description: "Where in the generated VCL the logging call should be placed. Valid values are `none` or `waf_debug`.",
-		},
 		"processing_region": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
@@ -270,12 +297,6 @@ func CommonAttributes() map[string]schema.Attribute {
 			Default:     stringdefault.StaticString(DefaultRedundancy),
 			Description: "The S3 redundancy level. Valid values are `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier_ir`, `glacier`, `deep_archive`, and `reduced_redundancy`.",
 		},
-		"response_condition": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultResponseCondition),
-			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-		},
 		"server_side_encryption": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
@@ -293,6 +314,37 @@ func CommonAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Default:     stringdefault.StaticString(DefaultTimestampFormat),
 			Description: "strftime-specified timestamp format for log filename.",
+		},
+	}
+}
+
+// vclOnlyAttributes returns the S3 logging attributes that only affect
+// generated VCL and have no meaning for Compute services.
+func vclOnlyAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"format": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Default:     stringdefault.StaticString(constants.LoggingS3DefaultFormat),
+			Description: "A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/).",
+		},
+		"format_version": schema.Int64Attribute{
+			Optional:    true,
+			Computed:    true,
+			Default:     int64default.StaticInt64(DefaultFormatVersion),
+			Description: "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.",
+		},
+		"placement": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Default:     stringdefault.StaticString(DefaultPlacement),
+			Description: "Where in the generated VCL the logging call should be placed. Valid values are `none` or `waf_debug`.",
+		},
+		"response_condition": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Default:     stringdefault.StaticString(DefaultResponseCondition),
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
 		},
 	}
 }
@@ -330,11 +382,25 @@ func ResourceAttributes() map[string]schema.Attribute {
 	return attrs
 }
 
+// NestedBlockSchema returns the S3 logging nested block schema for VCL
+// services (service_cdn_auto.logging_s3), including the VCL-only attributes.
 func NestedBlockSchema() schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		Description: "S3 logging endpoints attached to this service.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: CommonAttributes(),
+		},
+	}
+}
+
+// ComputeNestedBlockSchema returns the S3 logging nested block schema for
+// Compute services (service_compute_auto.logging_s3), omitting the VCL-only
+// attributes.
+func ComputeNestedBlockSchema() schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		Description: "S3 logging endpoints attached to this service.",
+		NestedObject: schema.NestedBlockObject{
+			Attributes: ComputeAttributes(),
 		},
 	}
 }
@@ -405,5 +471,74 @@ func MatchOrder(items, order []NestedModel) []NestedModel {
 	// order carries the configured/prior models, so it holds the gzip_level
 	// sentinel for endpoints the user left unset; preserve it on the read-back.
 	preserveGzipSentinelList(result, order)
+	return result
+}
+
+type computeOps struct{}
+
+func (o computeOps) List(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]*fastly.S3, error) {
+	return client.ListS3s(ctx, &fastly.ListS3sInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+	})
+}
+
+func (o computeOps) GetName(api *fastly.S3) string {
+	return fastly.ToValue(api.Name)
+}
+
+func (o computeOps) Delete(ctx context.Context, client *fastly.Client, serviceID string, version int, name string) error {
+	return client.DeleteS3(ctx, &fastly.DeleteS3Input{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           name,
+	})
+}
+
+func (o computeOps) Create(ctx context.Context, client *fastly.Client, serviceID string, version int, desired ComputeNestedModel) (*fastly.S3, error) {
+	input := BuildComputeCreateInput(serviceID, version, desired)
+	return client.CreateS3(ctx, input)
+}
+
+func (o computeOps) Equal(desired ComputeNestedModel, remote *fastly.S3) bool {
+	remoteModel := FlattenToComputeNestedModel(remote)
+	preserveGzipSentinelCompute(&remoteModel, desired)
+	return desired.ModelsEqual(remoteModel)
+}
+
+func (o computeOps) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired ComputeNestedModel) (*fastly.S3, error) {
+	input := BuildComputeUpdateInput(serviceID, version, desired)
+	return client.UpdateS3(ctx, input)
+}
+
+func (o computeOps) ToModel(api *fastly.S3) ComputeNestedModel {
+	return FlattenToComputeNestedModel(api)
+}
+
+var computeReconciler = &reconcile.Resource[ComputeNestedModel, fastly.S3]{
+	Ops: computeOps{},
+	GetName: func(m ComputeNestedModel) string {
+		return service.StringValue(m.Name)
+	},
+	Sortable: true,
+}
+
+func ComputeReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]ComputeNestedModel, error) {
+	return computeReconciler.ReadForVersion(ctx, client, serviceID, version)
+}
+
+func ComputeReconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []ComputeNestedModel) error {
+	return computeReconciler.Run(ctx, client, serviceID, version, desired)
+}
+
+func ComputeEqual(a, b []ComputeNestedModel) bool {
+	return reconcile.ModelsEqual(a, b, func(m ComputeNestedModel) string { return service.StringValue(m.Name) }, ComputeNestedModel.ModelsEqual, true)
+}
+
+func ComputeMatchOrder(items, order []ComputeNestedModel) []ComputeNestedModel {
+	result := reconcile.MatchOrder(items, order, func(m ComputeNestedModel) string { return service.StringValue(m.Name) })
+	// order carries the configured/prior models, so it holds the gzip_level
+	// sentinel for endpoints the user left unset; preserve it on the read-back.
+	preserveGzipSentinelListCompute(result, order)
 	return result
 }

@@ -81,12 +81,29 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	serviceType, err := r.providerData.ServiceTypeChecker.GetType(ctx, plan.Service.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error determining service type", err.Error())
+		return
+	}
+	if serviceType == service.TypeCompute {
+		resp.Diagnostics.Append(ValidateNoVCLOnlyAttributesForCompute(ctx, req.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(r.providerData.VersionChecker.EnsureMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	s, err := r.providerData.Client.CreateS3(ctx, BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel))
+	input := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel)
+	if serviceType == service.TypeCompute {
+		ClearVCLOnlyCreateFields(input)
+	}
+
+	s, err := r.providerData.Client.CreateS3(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating S3 logging endpoint", err.Error())
 		return
@@ -170,12 +187,27 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	serviceType, err := r.providerData.ServiceTypeChecker.GetType(ctx, plan.Service.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error determining service type", err.Error())
+		return
+	}
+	if serviceType == service.TypeCompute {
+		resp.Diagnostics.Append(ValidateNoVCLOnlyAttributesForCompute(ctx, req.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(r.providerData.VersionChecker.EnsureMutable(ctx, plan.Service.ValueString(), int(plan.Version.ValueInt64()))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	opts := BuildUpdateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel)
+	if serviceType == service.TypeCompute {
+		ClearVCLOnlyUpdateFields(opts)
+	}
 
 	tflog.Debug(ctx, "Updating Fastly S3 logging endpoint", map[string]any{
 		"service_id": opts.ServiceID,

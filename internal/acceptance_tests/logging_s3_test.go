@@ -318,6 +318,29 @@ func TestAccFastlyServiceLoggingS3_codecConflict(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingS3_computeRejectsVCLOnlyFields verifies that
+// fastly_service_logging_s3 rejects format (a VCL-only attribute) when attached
+// to a Compute service. The standalone resource's schema is shared across both
+// service types, so this is enforced by ValidateNoVCLOnlyAttributesForCompute
+// at apply time rather than by the schema itself.
+func TestAccFastlyServiceLoggingS3_computeRejectsVCLOnlyFields(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName),
+				ExpectError: regexp.MustCompile("VCL-only attributes not supported on Compute services"),
+			},
+		},
+	})
+}
+
 // CheckLoggingS3ExistsInFastly verifies an S3 logging endpoint exists in the Fastly API.
 func CheckLoggingS3ExistsInFastly(serviceName, loggerName string, version int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

@@ -85,8 +85,24 @@ func preserveGzipSentinelCompute(m *ComputeNestedModel, desired ComputeNestedMod
 	preserveGzipSentinelCommon(&m.commonModel, desired.commonModel)
 }
 
+// inferGzipSentinelOnImport approximates the unset sentinel when there is no
+// desired/prior model to compare against — a freshly imported resource, or an
+// endpoint discovered on read that isn't tracked in config/state yet. The API
+// always returns a concrete gzip_level even when it was never configured, and
+// with no compression_codec set that auto-managed value is 0, indistinguishable
+// from an explicit gzip_level = 0. Treating that case as unset is the better
+// default: a genuine explicit 0 self-corrects with one harmless update on the
+// next apply, whereas leaving 0 in state would permanently diverge from the
+// -1 a Terraform-managed create/read always produces for "never configured".
+func inferGzipSentinelOnImport(m *commonModel) {
+	if service.StringValue(m.CompressionCodec) == "" && service.Int64Value(m.GzipLevel) == 0 {
+		m.GzipLevel = types.Int64Value(DefaultGzipLevel)
+	}
+}
+
 // preserveGzipSentinelList applies preserveGzipSentinel to each read model using
-// the matching desired/prior model (by name).
+// the matching desired/prior model (by name), falling back to
+// inferGzipSentinelOnImport for models with no match (e.g. freshly imported).
 func preserveGzipSentinelList(read, desired []NestedModel) {
 	desiredByName := make(map[string]NestedModel, len(desired))
 	for _, d := range desired {
@@ -95,6 +111,8 @@ func preserveGzipSentinelList(read, desired []NestedModel) {
 	for i := range read {
 		if d, ok := desiredByName[service.StringValue(read[i].Name)]; ok {
 			preserveGzipSentinel(&read[i], d)
+		} else {
+			inferGzipSentinelOnImport(&read[i].commonModel)
 		}
 	}
 }
@@ -109,6 +127,8 @@ func preserveGzipSentinelListCompute(read, desired []ComputeNestedModel) {
 	for i := range read {
 		if d, ok := desiredByName[service.StringValue(read[i].Name)]; ok {
 			preserveGzipSentinelCompute(&read[i], d)
+		} else {
+			inferGzipSentinelOnImport(&read[i].commonModel)
 		}
 	}
 }

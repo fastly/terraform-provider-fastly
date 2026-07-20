@@ -268,6 +268,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	state.Service = types.StringValue(serviceID)
 	state.Version = types.Int64Value(int64(version))
 	flatten(ctx, s, &state)
+	inferGzipSentinelOnImport(&state.commonModel)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

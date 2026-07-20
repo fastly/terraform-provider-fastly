@@ -273,6 +273,55 @@ func TestPreserveGzipSentinel(t *testing.T) {
 	}
 }
 
+func TestInferGzipSentinelOnImport(t *testing.T) {
+	tests := []struct {
+		name     string
+		m        commonModel
+		expected types.Int64
+	}{
+		{
+			name: "no codec, gzip_level 0 treated as unconfigured",
+			m: commonModel{
+				CompressionCodec: types.StringValue(""),
+				GzipLevel:        types.Int64Value(0),
+			},
+			expected: types.Int64Value(DefaultGzipLevel),
+		},
+		{
+			name: "codec set, gzip_level 0 is left alone",
+			m: commonModel{
+				CompressionCodec: types.StringValue("zstd"),
+				GzipLevel:        types.Int64Value(0),
+			},
+			expected: types.Int64Value(0),
+		},
+		{
+			name: "non-zero gzip_level is left alone",
+			m: commonModel{
+				CompressionCodec: types.StringValue(""),
+				GzipLevel:        types.Int64Value(5),
+			},
+			expected: types.Int64Value(5),
+		},
+		{
+			name: "already-unset sentinel is left alone",
+			m: commonModel{
+				CompressionCodec: types.StringValue(""),
+				GzipLevel:        types.Int64Value(DefaultGzipLevel),
+			},
+			expected: types.Int64Value(DefaultGzipLevel),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := tt.m
+			inferGzipSentinelOnImport(&m)
+			assert.Equal(t, tt.expected, m.GzipLevel)
+		})
+	}
+}
+
 func TestPreserveGzipSentinelList(t *testing.T) {
 	read := []NestedModel{
 		func() NestedModel {
@@ -285,6 +334,12 @@ func TestPreserveGzipSentinelList(t *testing.T) {
 			m := minimalNestedModel()
 			m.Name = types.StringValue("b")
 			m.GzipLevel = types.Int64Value(6)
+			return m
+		}(),
+		func() NestedModel {
+			m := minimalNestedModel()
+			m.Name = types.StringValue("c")
+			m.GzipLevel = types.Int64Value(0)
 			return m
 		}(),
 	}
@@ -300,9 +355,13 @@ func TestPreserveGzipSentinelList(t *testing.T) {
 			m.GzipLevel = types.Int64Value(6)
 			return m
 		}(),
+		// "c" has no entry in desired, simulating a freshly imported or
+		// undiscovered-in-config endpoint.
 	}
 
 	preserveGzipSentinelList(read, desired)
+
+	assert.Equal(t, types.Int64Value(DefaultGzipLevel), read[2].GzipLevel, "unmatched entry falls back to the import heuristic")
 
 	assert.Equal(t, types.Int64Value(DefaultGzipLevel), read[0].GzipLevel, "unmatched-by-desired sentinel should be restored")
 	assert.Equal(t, types.Int64Value(6), read[1].GzipLevel, "explicitly configured value should be preserved")

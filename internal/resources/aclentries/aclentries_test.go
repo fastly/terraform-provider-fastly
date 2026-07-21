@@ -113,3 +113,113 @@ func TestBuildBatchEntries(t *testing.T) {
 		})
 	}
 }
+
+func TestEntriesConverged(t *testing.T) {
+	tests := []struct {
+		name      string
+		remote    []computeacls.ComputeACLEntry
+		batch     []*computeacls.BatchComputeACLEntry
+		converged bool
+	}{
+		{
+			name:   "create not yet visible",
+			remote: nil,
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Action: new("ALLOW"), Operation: new(createOperation)},
+			},
+			converged: false,
+		},
+		{
+			name: "create visible",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "192.0.2.0/24", Action: "ALLOW"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Action: new("ALLOW"), Operation: new(createOperation)},
+			},
+			converged: true,
+		},
+		{
+			name: "update not yet visible",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "192.0.2.0/24", Action: "ALLOW"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Action: new("BLOCK"), Operation: new(updateOperation)},
+			},
+			converged: false,
+		},
+		{
+			name: "update visible",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "192.0.2.0/24", Action: "BLOCK"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Action: new("BLOCK"), Operation: new(updateOperation)},
+			},
+			converged: true,
+		},
+		{
+			name: "delete not yet visible",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "192.0.2.0/24", Action: "ALLOW"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Operation: new(deleteOperation)},
+			},
+			converged: false,
+		},
+		{
+			name:   "delete visible",
+			remote: nil,
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Operation: new(deleteOperation)},
+			},
+			converged: true,
+		},
+		{
+			name: "mixed operations all converged",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "198.51.100.0/24", Action: "ALLOW"},
+				{Prefix: "203.0.113.0/24", Action: "BLOCK"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Operation: new(deleteOperation)},
+				{Prefix: new("198.51.100.0/24"), Action: new("ALLOW"), Operation: new(updateOperation)},
+				{Prefix: new("203.0.113.0/24"), Action: new("BLOCK"), Operation: new(createOperation)},
+			},
+			converged: true,
+		},
+		{
+			name: "mixed operations one still pending",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "192.0.2.0/24", Action: "ALLOW"},
+				{Prefix: "198.51.100.0/24", Action: "ALLOW"},
+				{Prefix: "203.0.113.0/24", Action: "BLOCK"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Operation: new(deleteOperation)},
+				{Prefix: new("198.51.100.0/24"), Action: new("ALLOW"), Operation: new(updateOperation)},
+				{Prefix: new("203.0.113.0/24"), Action: new("BLOCK"), Operation: new(createOperation)},
+			},
+			converged: false,
+		},
+		{
+			name: "unrelated remote entries are ignored",
+			remote: []computeacls.ComputeACLEntry{
+				{Prefix: "192.0.2.0/24", Action: "ALLOW"},
+				{Prefix: "203.0.113.0/24", Action: "BLOCK"},
+			},
+			batch: []*computeacls.BatchComputeACLEntry{
+				{Prefix: new("192.0.2.0/24"), Action: new("ALLOW"), Operation: new(createOperation)},
+			},
+			converged: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.converged, entriesConverged(tt.remote, tt.batch))
+		})
+	}
+}

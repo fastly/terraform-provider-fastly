@@ -20,6 +20,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/actions/versionstage"
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/acls"
+	"github.com/fastly/terraform-provider-fastly/internal/datasources/kvstores"
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/serviceversion"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/acl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/aclentries"
@@ -28,6 +29,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/kvstore"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/resourcelink"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
@@ -106,6 +108,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		cdnaclentries.NewResource,
 		domain.NewResource,
 		loggings3.NewResource,
+		kvstore.NewResource,
 		resourcelink.NewResource,
 		servicecdn.NewResource,
 		servicecdnauto.NewResource,
@@ -117,6 +120,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 func (p *fastlyProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		acls.NewDataSource,
+		kvstores.NewDataSource,
 		serviceversion.NewDataSource,
 	}
 }

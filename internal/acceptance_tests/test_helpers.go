@@ -32,22 +32,6 @@ func PreCheck(t *testing.T) {
 	}
 }
 
-// PreCheckAcc mirrors resource.Test's own TF_ACC gate before running PreCheck. Use this
-// (instead of PreCheck) in any test that needs to perform live setup - e.g. creating a fixture
-// via CreateTestKVStore - before constructing its resource.TestCase, since that setup would
-// otherwise run unconditionally: resource.Test only checks TF_ACC after its TestCase argument,
-// including any Config strings built from that setup, has already been fully evaluated.
-//
-// TODO: once a fastly_kvstore resource exists and the resource_link tests build their KV Store
-// fixture via Terraform config instead of CreateTestKVStore, this early gate is no longer
-// needed - those tests can go back to calling PreCheck through TestCase.PreCheck like the rest.
-func PreCheckAcc(t *testing.T) {
-	if os.Getenv("TF_ACC") == "" {
-		t.Skip("Acceptance tests skipped unless TF_ACC=1 is set")
-	}
-	PreCheck(t)
-}
-
 // NewFastlyClient creates a new Fastly API client for testing
 func NewFastlyClient() (*fastly.Client, error) {
 	apiToken := os.Getenv("FASTLY_API_TOKEN")
@@ -55,34 +39,6 @@ func NewFastlyClient() (*fastly.Client, error) {
 		return nil, fmt.Errorf("FASTLY_API_TOKEN environment variable must be set")
 	}
 	return fastly.NewClient(apiToken)
-}
-
-// CreateTestKVStore creates a KV Store fixture directly against the Fastly API for use as a
-// resource_link target, and registers its cleanup via t.Cleanup. Returns the store's ID.
-//
-// This provider doesn't yet have a dedicated resource for KV Stores, so resource_link
-// acceptance tests need a real linkable resource created out-of-band from Terraform.
-//
-// TODO: once a fastly_kvstore resource exists, replace this raw go-fastly client call with a
-// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
-// same state/plan lifecycle as the rest of the test config.
-func CreateTestKVStore(t *testing.T, name string) string {
-	client, err := NewFastlyClient()
-	if err != nil {
-		t.Fatalf("error creating Fastly client: %s", err)
-	}
-
-	store, err := client.CreateKVStore(context.Background(), &fastly.CreateKVStoreInput{Name: name})
-	if err != nil {
-		t.Fatalf("error creating KV Store fixture: %s", err)
-	}
-	t.Cleanup(func() {
-		if err := client.DeleteKVStore(context.Background(), &fastly.DeleteKVStoreInput{StoreID: store.StoreID}); err != nil {
-			t.Logf("error deleting KV Store fixture %q: %s", store.StoreID, err)
-		}
-	})
-
-	return store.StoreID
 }
 
 // serviceDestroyCheckAttempts and serviceDestroyCheckInterval bound the retry loop in
@@ -432,23 +388,137 @@ func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) s
 	)
 }
 
-// ConfigComputeAutoWithResourceLink returns a Compute auto service config with a domain,
-// package, and a resource_link pointing at targetID, the ID of a shared resource (e.g. a
-// KV Store) created independently of this config.
-func ConfigComputeAutoWithResourceLink(serviceName, domainName, targetID, linkName string) string {
-	return BuildConfig(
+// ConfigComputeAutoWithKVStoreResourceLink returns a Compute auto service config with a
+// domain, package, and a resource_link block pointing at a Terraform-managed fastly_kvstore
+// (declared as a sibling resource, referenced by ID rather than a literal string).
+func ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, storeName, linkName string) string {
+	kvStoreConfig := fmt.Sprintf(`
+resource "fastly_kvstore" "store" {
+  name = %q
+}
+
+`, storeName)
+
+	return kvStoreConfig + BuildConfig(
 		ServiceComputeAuto,
 		map[string]string{
 			"SERVICE_NAME":            serviceName,
 			"DOMAIN_NAME":             domainName,
 			"PACKAGE_PATH":            GetPackagePath(),
 			"RESOURCE_LINK_NAME":      linkName,
-			"RESOURCE_LINK_TARGET_ID": targetID,
+			"RESOURCE_LINK_TARGET_ID": "fastly_kvstore.store.id",
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
-		"internal/acceptance_tests/blocks/resource_link_single.tf",
+		"internal/acceptance_tests/blocks/resource_link_ref.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
+}
+
+// ConfigComputeAutoWithStandaloneKVStore returns a Compute auto service config (domain and
+// package, no resource_link) alongside a separately declared, unlinked fastly_kvstore.
+//
+// The Fastly API doesn't allow deleting a KV Store in the same request that unlinks it from a
+// service, so tests that remove a resource_link and then delete its target KV Store need this as
+// an intermediate step: unlink first and let that settle, then delete the KV Store in a later step.
+func ConfigComputeAutoWithStandaloneKVStore(serviceName, domainName, storeName string) string {
+	kvStoreConfig := fmt.Sprintf(`
+resource "fastly_kvstore" "store" {
+  name = %q
+}
+
+`, storeName)
+
+	return kvStoreConfig + ConfigComputeAutoBasic(serviceName, domainName)
+}
+
+// ConfigComputeAutoWithKVStoreResourceLinkTarget returns a Compute auto service config
+// declaring two fastly_kvstore resources (kv1 and kv2), with the resource_link pointing at
+// whichever is named by targetLabel. Both KV Stores stay declared regardless of which is
+// targeted, so retargeting exercises the reconcile delete-old/create-new pass without deleting
+// either KV Store.
+func ConfigComputeAutoWithKVStoreResourceLinkTarget(serviceName, domainName, storeName1, storeName2, linkName, targetLabel string) string {
+	kvStoreConfig := fmt.Sprintf(`
+resource "fastly_kvstore" "kv1" {
+  name = %q
+}
+
+resource "fastly_kvstore" "kv2" {
+  name = %q
+}
+
+`, storeName1, storeName2)
+
+	return kvStoreConfig + BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":            serviceName,
+			"DOMAIN_NAME":             domainName,
+			"PACKAGE_PATH":            GetPackagePath(),
+			"RESOURCE_LINK_NAME":      linkName,
+			"RESOURCE_LINK_TARGET_ID": fmt.Sprintf("fastly_kvstore.%s.id", targetLabel),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/resource_link_ref.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigKVStore returns a minimal standalone fastly_kvstore config.
+func ConfigKVStore(name string) string {
+	return fmt.Sprintf(`
+resource "fastly_kvstore" "store" {
+  name = %q
+}
+`, name)
+}
+
+// ConfigKVStoreWithLocation returns a standalone fastly_kvstore config with an explicit
+// location, for exercising the location attribute's plan-time validation and its
+// replace-on-change behavior.
+func ConfigKVStoreWithLocation(name, location string) string {
+	return fmt.Sprintf(`
+resource "fastly_kvstore" "store" {
+  name     = %q
+  location = %q
+}
+`, name, location)
+}
+
+// ConfigKVStoreForceDestroy returns a standalone fastly_kvstore config with force_destroy set,
+// for exercising deletion of a KV Store that still contains entries.
+func ConfigKVStoreForceDestroy(name string) string {
+	return fmt.Sprintf(`
+resource "fastly_kvstore" "store" {
+  name          = %q
+  force_destroy = true
+}
+`, name)
+}
+
+// ConfigKVStoresDataSource returns a config declaring three fastly_kvstore resources alongside
+// a fastly_kvstores data source that depends on all three.
+func ConfigKVStoresDataSource(h string) string {
+	return fmt.Sprintf(`
+resource "fastly_kvstore" "store_1" {
+  name = "tf_%s_1"
+}
+
+resource "fastly_kvstore" "store_2" {
+  name = "tf_%s_2"
+}
+
+resource "fastly_kvstore" "store_3" {
+  name = "tf_%s_3"
+}
+
+data "fastly_kvstores" "example" {
+  depends_on = [
+    fastly_kvstore.store_1,
+    fastly_kvstore.store_2,
+    fastly_kvstore.store_3,
+  ]
+}
+`, h, h, h)
 }
 
 // ConfigComputeAutoWithACLResourceLink returns a Compute auto service config with a

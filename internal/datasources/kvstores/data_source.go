@@ -1,4 +1,4 @@
-package acls
+package kvstores
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/datasources/idhash"
 
 	"github.com/fastly/go-fastly/v16/fastly"
-	"github.com/fastly/go-fastly/v16/fastly/computeacls"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -22,11 +21,11 @@ type DataSource struct {
 }
 
 type DataSourceModel struct {
-	ID   types.String `tfsdk:"id"`
-	Acls types.Set    `tfsdk:"acls"`
+	ID     types.String `tfsdk:"id"`
+	Stores types.Set    `tfsdk:"stores"`
 }
 
-var aclAttrTypes = map[string]attr.Type{
+var storeAttrTypes = map[string]attr.Type{
 	"id":   types.StringType,
 	"name": types.StringType,
 }
@@ -36,29 +35,29 @@ func NewDataSource() datasource.DataSource {
 }
 
 func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_acls"
+	resp.TypeName = req.ProviderTypeName + "_kvstores"
 }
 
 func (d *DataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Use this data source to retrieve a list of Fastly ACLs.",
+		Description: "Use this data source to retrieve a list of Fastly KV Stores.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "Terraform data source identifier.",
 			},
-			"acls": schema.SetNestedAttribute{
+			"stores": schema.SetNestedAttribute{
 				Computed:    true,
-				Description: "List of all ACLs.",
+				Description: "List of all KV Stores.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:    true,
-							Description: "Identifier of the ACL.",
+							Description: "Identifier of the KV Store.",
 						},
 						"name": schema.StringAttribute{
 							Computed:    true,
-							Description: "Name of the ACL.",
+							Description: "Name of the KV Store.",
 						},
 					},
 				},
@@ -84,22 +83,26 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	tflog.Debug(ctx, "Reading Fastly ACLs")
+	tflog.Debug(ctx, "Reading Fastly KV Stores")
 
-	acls, err := computeacls.ListACLs(ctx, d.client)
-	if err != nil {
-		resp.Diagnostics.AddError("Error listing ACLs", err.Error())
+	var stores []fastly.KVStore
+	p := d.client.NewListKVStoresPaginator(ctx, &fastly.ListKVStoresInput{})
+	for p.Next() {
+		stores = append(stores, p.Stores()...)
+	}
+	if err := p.Err(); err != nil {
+		resp.Diagnostics.AddError("Error listing KV Stores", err.Error())
 		return
 	}
 
-	ids := make([]string, 0, len(acls.Data))
-	elements := make([]attr.Value, 0, len(acls.Data))
-	for _, acl := range acls.Data {
-		ids = append(ids, acl.ComputeACLID)
+	ids := make([]string, 0, len(stores))
+	elements := make([]attr.Value, 0, len(stores))
+	for _, store := range stores {
+		ids = append(ids, store.StoreID)
 
-		obj, diags := types.ObjectValue(aclAttrTypes, map[string]attr.Value{
-			"id":   types.StringValue(acl.ComputeACLID),
-			"name": types.StringValue(acl.Name),
+		obj, diags := types.ObjectValue(storeAttrTypes, map[string]attr.Value{
+			"id":   types.StringValue(store.StoreID),
+			"name": types.StringValue(store.Name),
 		})
 		resp.Diagnostics.Append(diags...)
 		elements = append(elements, obj)
@@ -108,13 +111,13 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	setVal, diags := types.SetValue(types.ObjectType{AttrTypes: aclAttrTypes}, elements)
+	setVal, diags := types.SetValue(types.ObjectType{AttrTypes: storeAttrTypes}, elements)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.Acls = setVal
+	state.Stores = setVal
 	state.ID = types.StringValue(idhash.HashIDs(ids))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

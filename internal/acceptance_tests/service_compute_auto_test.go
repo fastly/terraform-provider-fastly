@@ -70,26 +70,24 @@ func TestAccFastlyServiceComputeAuto_withBackend(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_withResourceLink(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
-
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	kvStoreName := fmt.Sprintf("tf-test-kv-%s", acctest.RandString(10))
 	linkName := fmt.Sprintf("tf_test_link_%s", acctest.RandString(10))
 
-	storeID := CreateTestKVStore(t, kvStoreName)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
+		CheckDestroy:             CheckServiceAndKVStoreDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID, linkName),
+				Config: ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, kvStoreName, linkName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttr("fastly_kvstore.store", "name", kvStoreName),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.name", linkName),
+					resource.TestCheckResourceAttrPair("fastly_service_compute_auto.test", "resource_link.0.resource_id", "fastly_kvstore.store", "id"),
 					resource.TestCheckResourceAttrSet("fastly_service_compute_auto.test", "resource_link.0.link_id"),
 					// Verify version 1 is created and activated with the resource link
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
@@ -102,28 +100,24 @@ func TestAccFastlyServiceComputeAuto_withResourceLink(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkRename(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
-
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	kvStoreName := fmt.Sprintf("tf-test-kv-%s", acctest.RandString(10))
 	linkName := fmt.Sprintf("tf_test_link_%s", acctest.RandString(10))
 	linkNameRenamed := fmt.Sprintf("tf_test_link_renamed_%s", acctest.RandString(10))
 
-	storeID := CreateTestKVStore(t, kvStoreName)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
+		CheckDestroy:             CheckServiceAndKVStoreDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID, linkName),
+				Config: ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, kvStoreName, linkName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.name", linkName),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.resource_id", storeID),
+					resource.TestCheckResourceAttrPair("fastly_service_compute_auto.test", "resource_link.0.resource_id", "fastly_kvstore.store", "id"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "1"),
 				),
@@ -131,12 +125,12 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRename(t *testing.T) {
 			{
 				// Renaming the alias (same resource_id) is applied in place via UpdateResource,
 				// but still requires a new service version like any other nested config change.
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID, linkNameRenamed),
+				Config: ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, kvStoreName, linkNameRenamed),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.name", linkNameRenamed),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.resource_id", storeID),
+					resource.TestCheckResourceAttrPair("fastly_service_compute_auto.test", "resource_link.0.resource_id", "fastly_kvstore.store", "id"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
 				),
@@ -147,39 +141,41 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRename(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkRetarget(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
-
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	kvStoreName1 := fmt.Sprintf("tf-test-kv-1-%s", acctest.RandString(10))
+	kvStoreName2 := fmt.Sprintf("tf-test-kv-2-%s", acctest.RandString(10))
 	linkName := fmt.Sprintf("tf_test_link_%s", acctest.RandString(10))
-
-	storeID1 := CreateTestKVStore(t, fmt.Sprintf("tf-test-kv-1-%s", acctest.RandString(10)))
-	storeID2 := CreateTestKVStore(t, fmt.Sprintf("tf-test-kv-2-%s", acctest.RandString(10)))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
+		CheckDestroy:             CheckServiceAndKVStoreDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID1, linkName),
+				Config: ConfigComputeAutoWithKVStoreResourceLinkTarget(serviceName, domainName, kvStoreName1, kvStoreName2, linkName, "kv1"),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttr("fastly_kvstore.kv1", "name", kvStoreName1),
+					resource.TestCheckResourceAttr("fastly_kvstore.kv2", "name", kvStoreName2),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.resource_id", storeID1),
+					resource.TestCheckResourceAttrPair("fastly_service_compute_auto.test", "resource_link.0.resource_id", "fastly_kvstore.kv1", "id"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "1"),
 				),
 			},
 			{
 				// Pointing the same alias at a different resource_id can't be done via
 				// UpdateResource (it only renames), so this exercises delete-old/create-new
-				// within the same reconcile pass.
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID2, linkName),
+				// within the same reconcile pass. Both KV Stores stay declared throughout, since
+				// the Fastly API rejects deleting a KV Store in the same request that
+				// unlinks it.
+				Config: ConfigComputeAutoWithKVStoreResourceLinkTarget(serviceName, domainName, kvStoreName1, kvStoreName2, linkName, "kv2"),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttrSet("fastly_kvstore.kv1", "id"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.name", linkName),
-					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.0.resource_id", storeID2),
+					resource.TestCheckResourceAttrPair("fastly_service_compute_auto.test", "resource_link.0.resource_id", "fastly_kvstore.kv2", "id"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
 				),
@@ -190,22 +186,18 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRetarget(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkRemove(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
-
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	kvStoreName := fmt.Sprintf("tf-test-kv-%s", acctest.RandString(10))
 	linkName := fmt.Sprintf("tf_test_link_%s", acctest.RandString(10))
 
-	storeID := CreateTestKVStore(t, kvStoreName)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
+		CheckDestroy:             CheckServiceAndKVStoreDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID, linkName),
+				Config: ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, kvStoreName, linkName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),
@@ -215,6 +207,21 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRemove(t *testing.T) {
 			{
 				// Removing the block entirely from an existing service deletes the link
 				// in-place on a newly cloned/activated version, without touching the service.
+				// The KV Store stays declared (unlinked) here rather than disappearing in this
+				// same apply, since the Fastly API rejects deleting a KV Store in the same
+				// request that unlinks it.
+				Config: ConfigComputeAutoWithStandaloneKVStore(serviceName, domainName, kvStoreName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute_auto.test"),
+					resource.TestCheckResourceAttrSet("fastly_kvstore.store", "id"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "managed_version", "2"),
+				),
+			},
+			{
+				// Now that the KV Store has been unlinked and that change has settled in its
+				// own apply, it can be safely deleted.
 				Config: ConfigComputeAutoBasic(serviceName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
@@ -229,22 +236,18 @@ func TestAccFastlyServiceComputeAuto_resourceLinkRemove(t *testing.T) {
 
 func TestAccFastlyServiceComputeAuto_resourceLinkImport(t *testing.T) {
 	t.Parallel()
-	PreCheckAcc(t)
-
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	kvStoreName := fmt.Sprintf("tf-test-kv-%s", acctest.RandString(10))
 	linkName := fmt.Sprintf("tf_test_link_%s", acctest.RandString(10))
 
-	storeID := CreateTestKVStore(t, kvStoreName)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { PreCheck(t) },
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
-		CheckDestroy:             CheckServiceDestroy("fastly_service_compute_auto"),
+		CheckDestroy:             CheckServiceAndKVStoreDestroy("fastly_service_compute_auto"),
 		Steps: []resource.TestStep{
 			{
-				Config: ConfigComputeAutoWithResourceLink(serviceName, domainName, storeID, linkName),
+				Config: ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, kvStoreName, linkName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_compute_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_compute_auto.test", "resource_link.#", "1"),

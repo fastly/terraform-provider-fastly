@@ -131,7 +131,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path.
 - `period` (Number) How frequently log files are finalized so they can be available for reading in seconds. Default `3600`.
-- `placement` (String) Where in the generated VCL the logging call should be placed. Valid values are `none` or `waf_debug`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.
 - `processing_region` (String) Region where logs will be processed before streaming to the destination. Valid values are `none`, `us` and `eu`.
 - `public_key` (String, Sensitive) PGP public key that Fastly will use to encrypt your log files before writing them to disk.
 - `redundancy` (String) The S3 redundancy level. Valid values are `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier_ir`, `glacier`, `deep_archive`, and `reduced_redundancy`.

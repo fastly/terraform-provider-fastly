@@ -20,6 +20,11 @@ func resourceFastlyTLSSubscriptionValidation() *schema.Resource {
 		ReadContext:   resourceFastlyTLSSubscriptionValidationRead,
 		DeleteContext: resourceFastlyTLSSubscriptionValidationDelete,
 		Schema: map[string]*schema.Schema{
+			"certificate_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ID of the certificate issued for the validated subscription. Only populated once the subscription reaches the `issued` state. Reference this from `fastly_tls_activation.certificate_id` to guarantee the activation is created after the certificate exists, within a single apply.",
+			},
 			"subscription_id": {
 				Type:        schema.TypeString,
 				Description: "The ID of the TLS Subscription that should be validated.",
@@ -89,10 +94,23 @@ func resourceFastlyTLSSubscriptionValidationRead(ctx context.Context, d *schema.
 		return diag.FromErr(err)
 	}
 
-	if subscription.State != subscriptionStateIssued {
+	// NOTE: there must be only one certificate id included per subscription.
+	// A subscription with a certificate may be in the "issued" or "renewing"
+	// state; both are valid, so validity is keyed off the certificate's
+	// presence rather than the state (avoids destroy/recreate churn during
+	// renewals).
+	certificateID := ""
+	if len(subscription.Certificates) > 0 {
+		certificateID = subscription.Certificates[0].ID
+	}
+
+	if certificateID == "" {
 		d.SetId("")
 	} else {
 		d.SetId(subscriptionID)
+		if err := d.Set("certificate_id", certificateID); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

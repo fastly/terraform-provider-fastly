@@ -64,6 +64,18 @@ func TestAccResourceFastlyTLSSubscription_Config(t *testing.T) {
 				),
 			},
 			{
+				// Regression test: changing ONLY configuration_id (no change
+				// to domains/common_name) must actually reach the API. If it
+				// doesn't, this step's automatic post-apply plan check fails
+				// because the diff reappears on the next refresh.
+				Config: testAccResourceFastlyTLSSubscriptionConfigWithConfigurationID(name, domain1, domain2, commonName2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_id"),
+					// subscription is "updated" so the subscription ID should remain the same
+					resource.TestCheckResourceAttrPtr(resourceName, "id", &subscriptionID),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -105,6 +117,43 @@ resource "fastly_tls_subscription" "subject" {
   domains = [for domain in fastly_service_vcl.test.domain : domain.name]
   common_name = "%s"
   certificate_authority = "lets-encrypt"
+}
+`, name, domain1, domain2, commonName)
+}
+
+// testAccResourceFastlyTLSSubscriptionConfigWithConfigurationID pins
+// configuration_id to a specific, non-default TLS configuration, so that a
+// subsequent step can change configuration_id alone and verify the change is
+// actually applied (see TestAccResourceFastlyTLSSubscription_Config).
+func testAccResourceFastlyTLSSubscriptionConfigWithConfigurationID(name, domain1, domain2, commonName string) string {
+	return fmt.Sprintf(`
+data "fastly_tls_configuration" "secondary" {
+  name = "HTTP/3 & TLS v1.3 (s.sni)"
+}
+
+resource "fastly_service_vcl" "test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+  }
+
+  force_destroy = true
+}
+resource "fastly_tls_subscription" "subject" {
+  domains = [for domain in fastly_service_vcl.test.domain : domain.name]
+  common_name = "%s"
+  certificate_authority = "lets-encrypt"
+  configuration_id = data.fastly_tls_configuration.secondary.id
 }
 `, name, domain1, domain2, commonName)
 }

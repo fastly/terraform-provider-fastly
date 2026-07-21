@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 
@@ -802,4 +803,55 @@ func TestComputeMatchOrder(t *testing.T) {
 
 	assert.Len(t, result, 1)
 	assert.Equal(t, types.Int64Value(DefaultGzipLevel), result[0].GzipLevel)
+}
+
+// TestAuthenticationEnvDefault_DefaultObject covers the schema.Default set on
+// the `authentication` attribute itself (schema.go), which is what makes the
+// FASTLY_S3_* environment variables apply when the whole `authentication`
+// block is omitted from config — a plain schema.Default on access_key alone
+// is never evaluated in that case, since the framework marks the parent
+// object wholly unknown instead of walking into its children. See
+// TestAccFastlyServiceLoggingS3_authEnvDefaults in
+// internal/acceptance_tests/logging_s3_test.go for the end-to-end version.
+func TestAuthenticationEnvDefault_DefaultObject(t *testing.T) {
+	t.Run("blank when no env vars set", func(t *testing.T) {
+		t.Setenv("FASTLY_S3_ACCESS_KEY", "")
+		t.Setenv("FASTLY_S3_SECRET_KEY", "")
+		t.Setenv("FASTLY_S3_IAM_ROLE", "")
+
+		var resp fwdefaults.ObjectResponse
+		authenticationEnvDefault{}.DefaultObject(context.Background(), fwdefaults.ObjectRequest{}, &resp)
+
+		assert.Equal(t, NewAuthenticationObject(types.StringValue(""), types.StringValue(""), types.StringValue("")), resp.PlanValue)
+	})
+
+	t.Run("access key and secret key from env", func(t *testing.T) {
+		t.Setenv("FASTLY_S3_ACCESS_KEY", "AKIAIOSFODNN7EXAMPLE")
+		t.Setenv("FASTLY_S3_SECRET_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+		t.Setenv("FASTLY_S3_IAM_ROLE", "")
+
+		var resp fwdefaults.ObjectResponse
+		authenticationEnvDefault{}.DefaultObject(context.Background(), fwdefaults.ObjectRequest{}, &resp)
+
+		assert.Equal(t, NewAuthenticationObject(
+			types.StringValue("AKIAIOSFODNN7EXAMPLE"),
+			types.StringValue("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"),
+			types.StringValue(""),
+		), resp.PlanValue)
+	})
+
+	t.Run("iam role from env", func(t *testing.T) {
+		t.Setenv("FASTLY_S3_ACCESS_KEY", "")
+		t.Setenv("FASTLY_S3_SECRET_KEY", "")
+		t.Setenv("FASTLY_S3_IAM_ROLE", "arn:aws:iam::123456789012:role/FastlyS3Access")
+
+		var resp fwdefaults.ObjectResponse
+		authenticationEnvDefault{}.DefaultObject(context.Background(), fwdefaults.ObjectRequest{}, &resp)
+
+		assert.Equal(t, NewAuthenticationObject(
+			types.StringValue(""),
+			types.StringValue(""),
+			types.StringValue("arn:aws:iam::123456789012:role/FastlyS3Access"),
+		), resp.PlanValue)
+	})
 }

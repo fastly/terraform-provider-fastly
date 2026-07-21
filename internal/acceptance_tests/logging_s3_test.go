@@ -115,6 +115,42 @@ func TestAccFastlyServiceLoggingS3_iamRole(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingS3_authEnvDefaults verifies that access_key and
+// secret_key still pick up FASTLY_S3_ACCESS_KEY / FASTLY_S3_SECRET_KEY when
+// the entire authentication object is omitted from config. authentication is
+// itself Optional+Computed with no schema-level Default, so this confirms the
+// framework still evaluates the child attributes' env-based Default handlers
+// rather than leaving the object null.
+//
+// Not run in parallel: t.Setenv panics if the test also calls t.Parallel, and
+// this test needs the env vars set for its own duration only.
+func TestAccFastlyServiceLoggingS3_authEnvDefaults(t *testing.T) {
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	t.Setenv("FASTLY_S3_ACCESS_KEY", "AKIAIOSFODNN7EXAMPLE")
+	t.Setenv("FASTLY_S3_SECRET_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3NoAuth(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.access_key", "AKIAIOSFODNN7EXAMPLE"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.secret_key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.iam_role", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceLoggingS3_allAttr(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

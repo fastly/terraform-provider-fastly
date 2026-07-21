@@ -24,7 +24,7 @@ Fastly service S3 logging endpoint resource. Writes directly to the specified wr
 ### Optional
 
 - `acl` (String) The access control list (ACL) specific request header. See the AWS documentation for [Access Control List (ACL) Specific Request Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html#initiate-mpu-acl-specific-request-headers) for more information.
-- `authentication` (Attributes) AWS authentication credentials for S3 access. Provide either `access_key` and `secret_key`, or `iam_role`. (see [below for nested schema](#nestedatt--authentication))
+- `authentication` (Attributes) AWS authentication credentials for S3 access. Provide either `access_key` and `secret_key`, or `iam_role`. When this block is omitted entirely, defaults to the `FASTLY_S3_ACCESS_KEY`, `FASTLY_S3_SECRET_KEY`, and `FASTLY_S3_IAM_ROLE` environment variables. (see [below for nested schema](#nestedatt--authentication))
 - `compression_codec` (String) The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`. If the codec is `gzip`, `gzip_level` defaults to `3`; to use a different level, leave `compression_codec` unset and set `gzip_level` instead. Conflicts with `gzip_level`: setting both in the same request will result in an error.
 - `domain` (String) The Domain of the Amazon S3 endpoint.
 - `file_max_bytes` (Number) The maximum number of bytes for each uploaded file. A value of 0 can be used to indicate there is no limit on the size of uploaded files, otherwise the minimum value is 1048576 bytes (1 MiB.).

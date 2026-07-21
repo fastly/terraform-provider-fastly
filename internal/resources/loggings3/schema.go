@@ -12,6 +12,7 @@ import (
 	fastly "github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -102,6 +103,40 @@ func NewAuthenticationObject(accessKey, secretKey, iamRole types.String) types.O
 			"iam_role":   iamRole,
 		},
 	)
+}
+
+// authenticationEnvDefault populates the authentication object from the
+// FASTLY_S3_* environment variables when the practitioner omits the whole
+// `authentication` block. The framework only walks into an object
+// attribute's per-field Default handlers (like access_key's) once the
+// object itself already resolves to a known value; a Computed object
+// attribute with no Default of its own is instead marked wholesale
+// unknown, and its children's Defaults are never evaluated. Setting this
+// Default on the parent gives the object a known value up front so the
+// per-field defaults still run for a partially-configured object (e.g.
+// only `iam_role` set).
+type authenticationEnvDefault struct{}
+
+func (authenticationEnvDefault) Description(_ context.Context) string {
+	return "value defaults to the FASTLY_S3_ACCESS_KEY, FASTLY_S3_SECRET_KEY, and FASTLY_S3_IAM_ROLE environment variables"
+}
+
+func (d authenticationEnvDefault) MarkdownDescription(ctx context.Context) string {
+	return d.Description(ctx)
+}
+
+func (authenticationEnvDefault) DefaultObject(ctx context.Context, _ fwdefaults.ObjectRequest, resp *fwdefaults.ObjectResponse) {
+	resp.PlanValue = NewAuthenticationObject(
+		envStringDefault(ctx, "FASTLY_S3_ACCESS_KEY"),
+		envStringDefault(ctx, "FASTLY_S3_SECRET_KEY"),
+		envStringDefault(ctx, "FASTLY_S3_IAM_ROLE"),
+	)
+}
+
+func envStringDefault(ctx context.Context, envVar string) types.String {
+	var resp fwdefaults.StringResponse
+	defaults.EnvString(envVar, "").DefaultString(ctx, fwdefaults.StringRequest{}, &resp)
+	return resp.PlanValue
 }
 
 func authenticationValue(auth types.Object, name string) types.String {
@@ -205,7 +240,8 @@ func sharedAttributes() map[string]schema.Attribute {
 		"authentication": schema.SingleNestedAttribute{
 			Optional:    true,
 			Computed:    true,
-			Description: "AWS authentication credentials for S3 access. Provide either `access_key` and `secret_key`, or `iam_role`.",
+			Default:     authenticationEnvDefault{},
+			Description: "AWS authentication credentials for S3 access. Provide either `access_key` and `secret_key`, or `iam_role`. When this block is omitted entirely, defaults to the `FASTLY_S3_ACCESS_KEY`, `FASTLY_S3_SECRET_KEY`, and `FASTLY_S3_IAM_ROLE` environment variables.",
 			Attributes: map[string]schema.Attribute{
 				"access_key": schema.StringAttribute{
 					Optional:    true,

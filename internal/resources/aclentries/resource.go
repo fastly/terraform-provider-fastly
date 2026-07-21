@@ -288,7 +288,8 @@ func (r *Resource) updateEntries(ctx context.Context, aclID string, batch []*com
 // waitForEntries polls listEntries until the remote state reflects every
 // operation in batch, since the batch update endpoint applies asynchronously.
 func (r *Resource) waitForEntries(ctx context.Context, aclID string, batch []*computeacls.BatchComputeACLEntry) ([]computeacls.ComputeACLEntry, error) {
-	deadline := time.Now().Add(entriesPollTimeout)
+	ctx, cancel := context.WithTimeout(ctx, entriesPollTimeout)
+	defer cancel()
 
 	for {
 		remote, err := r.listEntries(ctx, aclID)
@@ -300,13 +301,9 @@ func (r *Resource) waitForEntries(ctx context.Context, aclID string, batch []*co
 			return remote, nil
 		}
 
-		if time.Now().After(deadline) {
-			return nil, fmt.Errorf("timed out after %s waiting for ACL entries to reflect the update", entriesPollTimeout)
-		}
-
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, fmt.Errorf("timed out after %s waiting for ACL entries to reflect the update: %w", entriesPollTimeout, ctx.Err())
 		case <-time.After(entriesPollInterval):
 		}
 	}

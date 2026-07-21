@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -15,6 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+// The compute ACL batch update endpoint responds 202 Accepted and applies the
+// batch asynchronously, so a list call immediately afterward can race the
+// propagation. Poll until the listed entries reflect the batch we sent.
+const (
+	entriesPollInterval = 500 * time.Millisecond
+	entriesPollTimeout  = 30 * time.Second
 )
 
 var _ resource.Resource = &Resource{}
@@ -82,7 +91,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	remote, err := r.listEntries(ctx, aclID)
+	remote, err := r.waitForEntries(ctx, aclID, batch)
 	if err != nil {
 		resp.Diagnostics.AddError("Error refreshing ACL entries", err.Error())
 		return
@@ -154,7 +163,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	remote, err := r.listEntries(ctx, aclID)
+	remote, err := r.waitForEntries(ctx, aclID, batch)
 	if err != nil {
 		resp.Diagnostics.AddError("Error refreshing ACL entries", err.Error())
 		return
@@ -274,4 +283,56 @@ func (r *Resource) updateEntries(ctx context.Context, aclID string, batch []*com
 		ComputeACLID: &aclID,
 		Entries:      batch,
 	})
+}
+
+// waitForEntries polls listEntries until the remote state reflects every
+// operation in batch, since the batch update endpoint applies asynchronously.
+func (r *Resource) waitForEntries(ctx context.Context, aclID string, batch []*computeacls.BatchComputeACLEntry) ([]computeacls.ComputeACLEntry, error) {
+	deadline := time.Now().Add(entriesPollTimeout)
+
+	for {
+		remote, err := r.listEntries(ctx, aclID)
+		if err != nil {
+			return nil, err
+		}
+
+		if entriesConverged(remote, batch) {
+			return remote, nil
+		}
+
+		if time.Now().After(deadline) {
+			return nil, fmt.Errorf("timed out after %s waiting for ACL entries to reflect the update", entriesPollTimeout)
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(entriesPollInterval):
+		}
+	}
+}
+
+// entriesConverged reports whether remote already reflects every operation
+// in batch: deleted prefixes absent, created/updated prefixes present with
+// the expected action.
+func entriesConverged(remote []computeacls.ComputeACLEntry, batch []*computeacls.BatchComputeACLEntry) bool {
+	remoteActions := make(map[string]string, len(remote))
+	for _, e := range remote {
+		remoteActions[e.Prefix] = e.Action
+	}
+
+	for _, op := range batch {
+		action, exists := remoteActions[*op.Prefix]
+		if *op.Operation == deleteOperation {
+			if exists {
+				return false
+			}
+			continue
+		}
+		if !exists || action != *op.Action {
+			return false
+		}
+	}
+
+	return true
 }

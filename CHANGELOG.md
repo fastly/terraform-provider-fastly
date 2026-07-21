@@ -10,6 +10,8 @@
 
 - fix(logging): Validate logging `format` length (max 12288 characters) at plan/validate time instead of failing at apply time ([#1342](https://github.com/fastly/terraform-provider-fastly/pull/1342))
 
+- fix(tls_subscription): allow `configuration_id` attribute changes to be updated without requiring a resource replacement [#1353](https://github.com/fastly/terraform-provider-fastly/pull/1353)
+
 ### Dependencies
 
 ## 9.3.1 (July 09, 2026)

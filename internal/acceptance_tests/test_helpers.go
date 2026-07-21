@@ -1096,3 +1096,335 @@ func entriesHCL(entries map[string]string) string {
 	hcl.WriteString("  }")
 	return hcl.String()
 }
+
+// Configuration helpers for S3 logging resources
+
+// ConfigCDNAutoWithLoggingS3 returns a CDN auto service config with a domain and a nested S3 logging block.
+func ConfigCDNAutoWithLoggingS3(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingS3All returns a CDN auto service config with a nested S3 logging
+// block that sets the full set of optional attributes.
+func ConfigCDNAutoWithLoggingS3All(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_all.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingS3GzipCodec returns a CDN auto service config with a nested S3 logging
+// block that sets compression_codec = "gzip" and leaves gzip_level unset, exercising the auto
+// read-back sentinel handling (MatchOrder/preserveGzipSentinelList) that must avoid a perpetual diff.
+func ConfigCDNAutoWithLoggingS3GzipCodec(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_gzip_codec.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingS3Updated returns a CDN auto service config with a nested S3 logging block
+// whose optional attributes have been changed, exercising the reconcile update path.
+func ConfigCDNAutoWithLoggingS3Updated(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleLoggingS3 returns a CDN auto service config with two nested S3 logging blocks.
+func ConfigCDNAutoWithMultipleLoggingS3(serviceName, domainName, loggerName1, loggerName2, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"LOGGING_S3_NAME_1": loggerName1,
+			"LOGGING_S3_NAME_2": loggerName2,
+			"BUCKET_NAME":       bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackendAndLoggingS3 returns a CDN auto service config with a domain, backend, and nested S3 logging block.
+func ConfigCDNAutoWithBackendAndLoggingS3(serviceName, domainName, backendName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"BACKEND_NAME":    backendName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingS3 returns a Compute auto service config with a domain, package, and nested S3 logging block.
+func ConfigComputeAutoWithLoggingS3(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingS3Format returns a Compute auto service config whose
+// nested S3 logging block sets format, a VCL-only attribute. service_compute_auto's
+// logging_s3 schema (ComputeNestedBlockSchema) omits format/format_version/placement/
+// response_condition entirely, so this is expected to fail Terraform's own schema
+// validation ("Unsupported argument") rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingS3Format(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_s3_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+func ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}
+
+func ConfigLoggingS3AtVersion(serviceName, domainName, loggerName, bucketName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": fmt.Sprintf("%d", version),
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}
+
+func ConfigLoggingS3NoAuth(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_no_auth.tf",
+	)
+}
+
+func ConfigLoggingS3Updated(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_updated.tf",
+	)
+}
+
+func ConfigLoggingS3IAM(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_iam.tf",
+	)
+}
+
+func ConfigLoggingS3All(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_all.tf",
+	)
+}
+
+func ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_defaults.tf",
+	)
+}
+
+func ConfigLoggingS3CompressionCodec(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_compression_codec.tf",
+	)
+}
+
+func ConfigLoggingS3GzipCodec(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_gzip_codec.tf",
+	)
+}
+
+func ConfigLoggingS3CodecConflict(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_codec_conflict.tf",
+	)
+}
+
+func ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_basic.tf",
+	)
+}
+
+// ConfigLoggingS3ComputeFormat returns a config attaching fastly_service_logging_s3
+// to an explicit Compute service with format set, a VCL-only attribute. Unlike the
+// nested blocks, the standalone resource's schema is shared by both service types, so
+// this is expected to fail at apply time via ValidateNoVCLOnlyAttributesForCompute
+// rather than at Terraform's own schema-validation stage.
+func ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/logging_s3_compute_format.tf",
+	)
+}

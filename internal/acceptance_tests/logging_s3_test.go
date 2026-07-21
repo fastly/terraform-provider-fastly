@@ -1,0 +1,498 @@
+package acceptancetests
+
+import (
+	"context"
+	"fmt"
+	"regexp"
+	"testing"
+
+	"github.com/fastly/go-fastly/v16/fastly"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+)
+
+func TestAccFastlyServiceLoggingS3_basic(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "bucket_name", bucketName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "version", "1"),
+					resource.TestCheckResourceAttrSet("fastly_service_logging_s3.test", "service_id"),
+					resource.TestCheckResourceAttrSet("fastly_service_logging_s3.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceLoggingS3_update(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3All(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "domain", "s3.us-west-2.amazonaws.com"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "path", "/logs/"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "period", "7200"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "5"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "message_type", "classic"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "acl", "private"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "redundancy", "standard"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "processing_region", "us"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "file_max_bytes", "1048576"),
+				),
+			},
+			{
+				Config: ConfigLoggingS3Updated(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "domain", "s3.eu-west-1.amazonaws.com"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "path", "/updated-logs/"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "period", "1800"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "9"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "message_type", "classic"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "acl", "public-read"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "redundancy", "reduced_redundancy"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "processing_region", "eu"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "file_max_bytes", "2097152"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceLoggingS3_iamRole(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3IAM(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					// `iam_role` cannot be used with `access_key` + `secret_key`.
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.iam_role", "arn:aws:iam::123456789012:role/FastlyS3Access"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.access_key", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.secret_key", ""),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_authEnvDefaults verifies that access_key and
+// secret_key still pick up FASTLY_S3_ACCESS_KEY / FASTLY_S3_SECRET_KEY when
+// the entire authentication object is omitted from config. This exercises the
+// parent-level authenticationEnvDefault{} (schema.go): it confirms the
+// default populates the omitted object from the environment rather than the
+// object being left null.
+//
+// Not run in parallel: t.Setenv panics if the test also calls t.Parallel, and
+// this test needs the env vars set for its own duration only.
+func TestAccFastlyServiceLoggingS3_authEnvDefaults(t *testing.T) {
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	t.Setenv("FASTLY_S3_ACCESS_KEY", "AKIAIOSFODNN7EXAMPLE")
+	t.Setenv("FASTLY_S3_SECRET_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3NoAuth(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.access_key", "AKIAIOSFODNN7EXAMPLE"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.secret_key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.iam_role", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceLoggingS3_allAttr(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3All(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "bucket_name", bucketName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "domain", "s3.us-west-2.amazonaws.com"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "path", "/logs/"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "period", "7200"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "5"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format", "%h %l %u %t \"%r\" %>s %b"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "message_type", "classic"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "acl", "private"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "redundancy", "standard"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "processing_region", "us"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "file_max_bytes", "1048576"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceLoggingS3_clearToDefaults(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3All(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "domain", "s3.us-west-2.amazonaws.com"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "path", "/logs/"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "period", "7200"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "5"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format", "%h %l %u %t \"%r\" %>s %b"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "message_type", "classic"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "processing_region", "us"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "acl", "private"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "redundancy", "standard"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "file_max_bytes", "1048576"),
+				),
+			},
+			{
+				Config: ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "domain", "s3.amazonaws.com"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "path", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "period", "3600"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "message_type", "blank"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S.000"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "processing_region", "none"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "acl", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "redundancy", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "file_max_bytes", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceLoggingS3_importBasic(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	var serviceID string
+	var versionNumber string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_s3.test"]
+						if !ok {
+							return fmt.Errorf("logging s3 resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						versionNumber = rs.Primary.Attributes["version"]
+						return nil
+					},
+				),
+			},
+			{
+				ResourceName: "fastly_service_logging_s3.test",
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/%s/%s", serviceID, versionNumber, loggerName), nil
+				},
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_compressionCodec verifies that setting compression_codec
+// without gzip_level does not result in an API error (the two fields are mutually exclusive).
+// With gzip_level unset it stays at the -1 sentinel and is never sent to the API.
+func TestAccFastlyServiceLoggingS3_compressionCodec(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3CompressionCodec(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "compression_codec", "zstd"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_gzipCodec verifies that the "gzip" codec (for which
+// the API auto-populates gzip_level, e.g. to 3) does not produce a perpetual diff.
+// gzip_level is left unset, so it must stay at the -1 sentinel rather than picking
+// up the API-managed value. The final implicit plan check fails on any residual diff.
+func TestAccFastlyServiceLoggingS3_gzipCodec(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3GzipCodec(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "compression_codec", "gzip"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_codecConflict verifies that configuring both
+// compression_codec and gzip_level fails at plan time with a clear validation
+// error, rather than producing an inconsistent-result error at apply time.
+func TestAccFastlyServiceLoggingS3_codecConflict(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigLoggingS3CodecConflict(serviceName, domainName, loggerName, bucketName),
+				ExpectError: regexp.MustCompile("cannot be set together"),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_computeRejectsVCLOnlyFields verifies that
+// fastly_service_logging_s3 rejects format (a VCL-only attribute) when attached
+// to a Compute service. The standalone resource's schema is shared across both
+// service types, so this is enforced by ValidateNoVCLOnlyAttributesForCompute
+// at apply time rather than by the schema itself.
+func TestAccFastlyServiceLoggingS3_computeRejectsVCLOnlyFields(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName),
+				ExpectError: regexp.MustCompile("VCL-only attributes not supported on Compute services"),
+			},
+		},
+	})
+}
+
+// CheckLoggingS3ExistsInFastly verifies an S3 logging endpoint exists in the Fastly API.
+func CheckLoggingS3ExistsInFastly(serviceName, loggerName string, version int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[serviceName]
+		if !ok {
+			return fmt.Errorf("service not found: %s", serviceName)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		logger, err := client.GetS3(context.Background(), &fastly.GetS3Input{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+			Name:           loggerName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching S3 logging endpoint from Fastly: %w", err)
+		}
+
+		if logger == nil {
+			return fmt.Errorf("S3 logging endpoint %s not found in Fastly", loggerName)
+		}
+
+		return nil
+	}
+}
+
+// TestAccFastlyServiceLoggingS3_versionUpdateInPlace verifies that bumping the
+// explicit resource's version argument is an in-place update against the new
+// version rather than a destroy-and-recreate. The explicit clone workflow copies
+// the endpoint into the new version, so version is intentionally not
+// replacement-forcing (unlike service_id and name).
+func TestAccFastlyServiceLoggingS3_versionUpdateInPlace(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	var serviceID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3AtVersion(serviceName, domainName, loggerName, bucketName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "version", "1"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_s3.test"]
+						if !ok {
+							return fmt.Errorf("logging s3 resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						return nil
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := NewFastlyClient()
+					if err != nil {
+						t.Fatalf("error creating Fastly client: %s", err)
+					}
+					if _, err := client.CloneVersion(context.Background(), &fastly.CloneVersionInput{
+						ServiceID:      serviceID,
+						ServiceVersion: 1,
+					}); err != nil {
+						t.Fatalf("error cloning version 1: %s", err)
+					}
+				},
+				Config: ConfigLoggingS3AtVersion(serviceName, domainName, loggerName, bucketName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_logging_s3.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "version", "2"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_s3.test"]
+						if !ok {
+							return fmt.Errorf("logging s3 resource not found")
+						}
+
+						gotID := rs.Primary.Attributes["id"]
+						wantID := fmt.Sprintf("%s-2-%s", serviceID, loggerName)
+						if gotID != wantID {
+							return fmt.Errorf("expected id %q to reflect version 2, got %q", wantID, gotID)
+						}
+
+						client, err := NewFastlyClient()
+						if err != nil {
+							return fmt.Errorf("error creating Fastly client: %w", err)
+						}
+						if _, err := client.GetS3(context.Background(), &fastly.GetS3Input{
+							ServiceID:      serviceID,
+							ServiceVersion: 2,
+							Name:           loggerName,
+						}); err != nil {
+							return fmt.Errorf("error fetching S3 logging endpoint at version 2: %w", err)
+						}
+
+						return nil
+					},
+				),
+			},
+		},
+	})
+}

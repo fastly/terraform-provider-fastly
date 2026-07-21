@@ -117,10 +117,10 @@ func TestAccFastlyServiceLoggingS3_iamRole(t *testing.T) {
 
 // TestAccFastlyServiceLoggingS3_authEnvDefaults verifies that access_key and
 // secret_key still pick up FASTLY_S3_ACCESS_KEY / FASTLY_S3_SECRET_KEY when
-// the entire authentication object is omitted from config. authentication is
-// itself Optional+Computed with no schema-level Default, so this confirms the
-// framework still evaluates the child attributes' env-based Default handlers
-// rather than leaving the object null.
+// the entire authentication object is omitted from config. This exercises the
+// parent-level authenticationEnvDefault{} (schema.go): it confirms the
+// default populates the omitted object from the environment rather than the
+// object being left null.
 //
 // Not run in parallel: t.Setenv panics if the test also calls t.Parallel, and
 // this test needs the env vars set for its own duration only.

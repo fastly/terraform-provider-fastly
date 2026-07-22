@@ -1428,3 +1428,129 @@ func ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName string) st
 		"internal/acceptance_tests/blocks/logging_s3_compute_format.tf",
 	)
 }
+
+func ConfigLoggingNewRelicOTLPBasic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_basic.tf",
+	)
+}
+
+func ConfigLoggingNewRelicOTLPUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_updated.tf",
+	)
+}
+
+func ConfigLoggingNewRelicOTLPForImport(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_basic.tf",
+	)
+}
+
+// ConfigLoggingNewRelicOTLPComputeFormat returns a config attaching
+// fastly_service_logging_newrelicotlp to an explicit Compute service with
+// format set, a VCL-only attribute. The standalone resource's schema is shared
+// by both service types, so this is expected to fail at apply time via
+// ValidateNoVCLOnlyAttributesForCompute rather than at Terraform's own
+// schema-validation stage.
+func ConfigLoggingNewRelicOTLPComputeFormat(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_compute_format.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingNewRelicOTLP(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_nested.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingNewRelicOTLPUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_nested_updated.tf",
+	)
+}
+
+func ConfigComputeAutoWithLoggingNewRelicOTLP(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+			"PACKAGE_PATH":          GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingNewRelicOTLPFormat returns a Compute auto service
+// config whose nested logging_newrelicotlp block sets format, a VCL-only
+// attribute. service_compute_auto's logging_newrelicotlp schema
+// (ComputeNestedBlockSchema) omits format/format_version/placement/
+// response_condition entirely, so this is expected to fail Terraform's own
+// schema validation ("Unsupported argument") rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingNewRelicOTLPFormat(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+			"PACKAGE_PATH":          GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}

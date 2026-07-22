@@ -25,6 +25,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `comment` (String) Optional service comment.
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
+- `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 
@@ -108,6 +109,25 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--logging_newrelicotlp"></a>
+### Nested Schema for `logging_newrelicotlp`
+
+Required:
+
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
+
+Optional:
+
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid JSON that New Relic can ingest.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.
+- `processing_region` (String) Region where logs will be processed before streaming to the destination. Valid values are `none`, `us` and `eu`.
+- `region` (String) The region that log data will be sent to. Default: `US`.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+- `url` (String) The optional New Relic Trace Observer URL to stream logs to for Infinite Tracing.
 
 
 <a id="nestedblock--logging_s3"></a>

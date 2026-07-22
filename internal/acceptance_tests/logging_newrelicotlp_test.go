@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -112,6 +113,131 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_importBasic(t *testing.T) {
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingNewRelicOTLP_clearToDefaults sets the optional
+// attributes, then removes them, and verifies each reverts to its schema
+// default rather than leaving a perpetual diff.
+func TestAccFastlyServiceLoggingNewRelicOTLP_clearToDefaults(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("newrelic-logger-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingNewRelicOTLPUpdated(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "region", "EU"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "url", "https://otlp.eu01.nr-data.net"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "processing_region", "eu"),
+				),
+			},
+			{
+				Config: ConfigLoggingNewRelicOTLPBasic(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "region", "US"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "url", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "processing_region", "none"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "format_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "placement", "none"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingNewRelicOTLP_versionUpdateInPlace verifies that
+// bumping the explicit resource's version argument is an in-place update
+// against the new version rather than a destroy-and-recreate. The explicit
+// clone workflow copies the endpoint into the new version, so version is
+// intentionally not replacement-forcing (unlike service_id and name).
+func TestAccFastlyServiceLoggingNewRelicOTLP_versionUpdateInPlace(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("newrelic-logger-%s", acctest.RandString(10))
+
+	var serviceID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingNewRelicOTLPAtVersion(serviceName, domainName, loggerName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "version", "1"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_newrelicotlp.test"]
+						if !ok {
+							return fmt.Errorf("newrelic otlp resource not found")
+						}
+						serviceID = rs.Primary.Attributes["service_id"]
+						return nil
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := NewFastlyClient()
+					if err != nil {
+						t.Fatalf("error creating Fastly client: %s", err)
+					}
+					if _, err := client.CloneVersion(context.Background(), &fastly.CloneVersionInput{
+						ServiceID:      serviceID,
+						ServiceVersion: 1,
+					}); err != nil {
+						t.Fatalf("error cloning version 1: %s", err)
+					}
+				},
+				Config: ConfigLoggingNewRelicOTLPAtVersion(serviceName, domainName, loggerName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_logging_newrelicotlp.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "version", "2"),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["fastly_service_logging_newrelicotlp.test"]
+						if !ok {
+							return fmt.Errorf("newrelic otlp resource not found")
+						}
+
+						gotID := rs.Primary.Attributes["id"]
+						wantID := fmt.Sprintf("%s-2-%s", serviceID, loggerName)
+						if gotID != wantID {
+							return fmt.Errorf("expected id %q to reflect version 2, got %q", wantID, gotID)
+						}
+
+						client, err := NewFastlyClient()
+						if err != nil {
+							return fmt.Errorf("error creating Fastly client: %w", err)
+						}
+						if _, err := client.GetNewRelicOTLP(context.Background(), &fastly.GetNewRelicOTLPInput{
+							ServiceID:      serviceID,
+							ServiceVersion: 2,
+							Name:           loggerName,
+						}); err != nil {
+							return fmt.Errorf("error fetching New Relic OTLP logging endpoint at version 2: %w", err)
+						}
+
+						return nil
+					},
+				),
 			},
 		},
 	})

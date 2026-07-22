@@ -53,12 +53,17 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))
-	input.URL = fastly.NullString(service.StringValue(m.URL))
+	// url and response_condition default to "" and can be cleared, so always send
+	// them as a concrete value on update. fastly.NullString is not used because it
+	// maps "" to nil, which omits the field (url,omitempty) and leaves a
+	// previously-set value in place — producing an inconsistent-result error when
+	// the user clears the attribute.
+	input.URL = new(service.StringValue(m.URL))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.Placement = fastly.NullString(service.StringValue(m.Placement))
-	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
+	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
 
 	return input
 }
@@ -76,7 +81,9 @@ func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))
-	input.URL = fastly.NullString(service.StringValue(m.URL))
+	// url defaults to "" and can be cleared, so always send it as a concrete
+	// value on update — see BuildUpdateInput.
+	input.URL = new(service.StringValue(m.URL))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 
 	return input

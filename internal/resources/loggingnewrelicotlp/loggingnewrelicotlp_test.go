@@ -244,6 +244,26 @@ func TestBuildUpdateInput(t *testing.T) {
 	assert.Equal(t, "response-condition-1", *input.ResponseCondition)
 }
 
+// TestBuildUpdateInputClearsClearableFields verifies that url and
+// response_condition are always sent as a concrete value on update — even when
+// empty — so clearing them actually reaches the API rather than being omitted
+// (which would leave a previously-set value in place).
+func TestBuildUpdateInputClearsClearableFields(t *testing.T) {
+	input := BuildUpdateInput("service-1", 1, minimalNestedModel())
+
+	assert.NotNil(t, input.URL, "url must be sent even when empty")
+	assert.Equal(t, "", *input.URL)
+	assert.NotNil(t, input.ResponseCondition, "response_condition must be sent even when empty")
+	assert.Equal(t, "", *input.ResponseCondition)
+}
+
+func TestBuildComputeUpdateInputClearsURL(t *testing.T) {
+	input := BuildComputeUpdateInput("service-1", 1, ComputeNestedModel{commonModel: minimalNestedModel().commonModel})
+
+	assert.NotNil(t, input.URL, "url must be sent even when empty")
+	assert.Equal(t, "", *input.URL)
+}
+
 func TestBuildComputeUpdateInput(t *testing.T) {
 	input := BuildComputeUpdateInput("service-456", 10, fullComputeNestedModel())
 

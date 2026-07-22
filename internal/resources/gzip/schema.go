@@ -32,12 +32,17 @@ func (n NestedModel) ModelsEqual(other NestedModel) bool {
 // empty representation, since the Fastly API silently defaults content_types
 // and extensions when they're unset, which would otherwise appear as drift.
 func stringListEqual(a, b types.List) bool {
-	aEmpty := a.IsNull() || a.IsUnknown() || len(a.Elements()) == 0
-	bEmpty := b.IsNull() || b.IsUnknown() || len(b.Elements()) == 0
-	if aEmpty && bEmpty {
+	if listUnset(a) && listUnset(b) {
 		return true
 	}
 	return a.Equal(b)
+}
+
+// listUnset reports whether a list should be treated as "not provided" -
+// null, unknown, or an explicit empty list all send the same empty wire
+// value to the Fastly API (see joinStringList).
+func listUnset(l types.List) bool {
+	return l.IsNull() || l.IsUnknown() || len(l.Elements()) == 0
 }
 
 func CommonAttributes() map[string]schema.Attribute {
@@ -108,15 +113,16 @@ func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string
 }
 
 // Equal ignores content_types/extensions on the remote side when desired leaves them
-// unset, since the Fastly API silently substitutes a large default list for either
-// field when it's omitted or empty. Comparing against that default would otherwise
-// produce a permanent diff for any gzip config that doesn't set them explicitly.
+// unset (null, unknown, or an explicit empty list), since the Fastly API silently
+// substitutes a large default list for either field when it's omitted or empty.
+// Comparing against that default would otherwise produce a permanent diff for any
+// gzip config that doesn't set them explicitly.
 func (o ops) Equal(desired NestedModel, remote *fastly.Gzip) bool {
 	remoteModel := o.ToModel(remote)
-	if desired.ContentTypes.IsNull() || desired.ContentTypes.IsUnknown() {
+	if listUnset(desired.ContentTypes) {
 		remoteModel.ContentTypes = desired.ContentTypes
 	}
-	if desired.Extensions.IsNull() || desired.Extensions.IsUnknown() {
+	if listUnset(desired.Extensions) {
 		remoteModel.Extensions = desired.Extensions
 	}
 	return desired.ModelsEqual(remoteModel)
@@ -150,9 +156,12 @@ func (o ops) ToModel(api *fastly.Gzip) NestedModel {
 }
 
 // joinStringList converts a Terraform list of strings into the space-separated
-// wire format the Fastly API expects, always returning a non-nil pointer so an
-// omitted or emptied list explicitly clears the remote value rather than being
-// dropped from the request.
+// wire format the Fastly API expects, always returning a non-nil pointer. An
+// omitted or emptied list sends an empty string, which the API treats as unset
+// and responds with its own default list rather than clearing the remote value.
+// Once a value has been set remotely, sending an empty string again does not
+// revert it back to that default - see ops.Equal, which skips Update when the
+// desired value is unset so the remote value is left untouched.
 func joinStringList(l types.List) *string {
 	if l.IsNull() || l.IsUnknown() {
 		empty := ""
@@ -202,9 +211,11 @@ func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string
 }
 
 // ReadForVersionWithPlan reads gzip configurations from a service version and nulls out
-// content_types/extensions on any item whose plan left them unset, since the Fastly API
-// silently substitutes a large default list for either field when it's omitted or empty.
-// Without this, config that never sets these fields would show a permanent diff.
+// content_types/extensions on any item whose plan left them unset (null, unknown, or an
+// explicit empty list), since the Fastly API silently substitutes a large default list
+// for either field when it's omitted or empty. Without this, config that never sets these
+// fields would show a permanent diff, and an explicit empty list would produce a
+// "provider produced inconsistent result after apply" error against the planned value.
 func ReadForVersionWithPlan(ctx context.Context, client *fastly.Client, serviceID string, version int, plan []NestedModel) ([]NestedModel, error) {
 	remote, err := ops{}.List(ctx, client, serviceID, version)
 	if err != nil {
@@ -220,10 +231,10 @@ func ReadForVersionWithPlan(ctx context.Context, client *fastly.Client, serviceI
 	for _, item := range remote {
 		model := ops{}.ToModel(item)
 		if planItem, exists := planByName[service.StringValue(model.Name)]; exists {
-			if planItem.ContentTypes.IsNull() || planItem.ContentTypes.IsUnknown() {
+			if listUnset(planItem.ContentTypes) {
 				model.ContentTypes = planItem.ContentTypes
 			}
-			if planItem.Extensions.IsNull() || planItem.Extensions.IsUnknown() {
+			if listUnset(planItem.Extensions) {
 				model.Extensions = planItem.Extensions
 			}
 		}

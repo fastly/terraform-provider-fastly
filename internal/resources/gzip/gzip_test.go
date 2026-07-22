@@ -110,6 +110,27 @@ func TestToModel_emptyOptionalFields(t *testing.T) {
 	assert.True(t, result.Extensions.IsNull())
 }
 
+func TestOpsEqual_explicitEmptyListTreatedAsUnset(t *testing.T) {
+	// Regression test: the Fastly API substitutes a default list when
+	// content_types/extensions are omitted or empty, so an explicit empty
+	// list in config must be compared as unset against the remote's
+	// defaulted value rather than producing a permanent diff.
+	desired := NestedModel{
+		Name:           types.StringValue("gzip-config"),
+		CacheCondition: types.StringNull(),
+		ContentTypes:   stringList(),
+		Extensions:     stringList(),
+	}
+	remote := &fastly.Gzip{
+		Name:           new("gzip-config"),
+		CacheCondition: new(""),
+		ContentTypes:   new("text/html text/css text/javascript application/json"),
+		Extensions:     new("css js"),
+	}
+
+	assert.True(t, ops{}.Equal(desired, remote))
+}
+
 func TestModelsEqual(t *testing.T) {
 	tests := []struct {
 		name     string

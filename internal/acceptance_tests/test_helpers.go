@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -124,6 +125,56 @@ func CheckServiceExists(resourceName string) resource.TestCheckFunc {
 		})
 		if err != nil {
 			return fmt.Errorf("error fetching service: %w", err)
+		}
+
+		return nil
+	}
+}
+
+// CheckGzipFieldClearedRemotely returns a TestCheckFunc that fetches the named gzip
+// configuration directly from the Fastly API (bypassing Terraform state) and fails if
+// content_types or extensions still holds staleValue. This exists because the provider's
+// custom Read (gzip.ReadForVersionWithPlan) normalizes an unset field against the plan
+// regardless of what's actually stored remotely, so a state-only check can pass even if
+// the remote value was never cleared - see the servicecdnauto gzip.ReconcileWithPrevious fix.
+func CheckGzipFieldClearedRemotely(resourceName, gzipName, field, staleValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		version, err := strconv.Atoi(rs.Primary.Attributes["active_version"])
+		if err != nil {
+			return fmt.Errorf("error parsing active_version: %w", err)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		g, err := client.GetGzip(context.Background(), &fastly.GetGzipInput{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+			Name:           gzipName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching gzip %q: %w", gzipName, err)
+		}
+
+		var raw string
+		switch field {
+		case "content_types":
+			raw = fastly.ToValue(g.ContentTypes)
+		case "extensions":
+			raw = fastly.ToValue(g.Extensions)
+		default:
+			return fmt.Errorf("unknown gzip field %q", field)
+		}
+
+		if raw == staleValue {
+			return fmt.Errorf("gzip %q %s still equals the stale value %q in Fastly - the remote value was not actually cleared", gzipName, field, staleValue)
 		}
 
 		return nil

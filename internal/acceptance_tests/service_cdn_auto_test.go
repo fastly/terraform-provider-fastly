@@ -366,12 +366,18 @@ func TestAccFastlyServiceCDNAuto_gzipRemovedValuesCleared(t *testing.T) {
 				// Step 2: remove content_types. A previously configured value being
 				// removed must actually clear the remote value, not be silently
 				// skipped (see servicecdnauto's use of gzip.ReconcileWithPrevious).
+				// The state check alone isn't enough proof: the provider's custom
+				// Read normalizes an unset field against the plan regardless of
+				// what's actually stored remotely, so it would show "0" either way.
+				// CheckGzipFieldClearedRemotely queries the Fastly API directly to
+				// confirm the value was genuinely cleared, not just hidden in state.
 				Config: ConfigCDNAutoWithGzipContentTypesRemoved(serviceName, domainName, gzipName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.content_types.#", "0"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.extensions.#", "2"),
+					CheckGzipFieldClearedRemotely("fastly_service_cdn_auto.test", gzipName, "content_types", "text/html text/css"),
 				),
 			},
 			{
@@ -382,6 +388,8 @@ func TestAccFastlyServiceCDNAuto_gzipRemovedValuesCleared(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.content_types.#", "0"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.extensions.#", "0"),
+					CheckGzipFieldClearedRemotely("fastly_service_cdn_auto.test", gzipName, "content_types", "text/html text/css"),
+					CheckGzipFieldClearedRemotely("fastly_service_cdn_auto.test", gzipName, "extensions", "css js"),
 				),
 			},
 			{

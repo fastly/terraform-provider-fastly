@@ -2,7 +2,7 @@
 
 # Test script for Compute service lifecycle
 # Tests: fastly_service_compute, fastly_service_domain, fastly_service_backend,
-#        fastly_service_compute_package_upload, fastly_service_version_clone,
+#        fastly_service_logging_s3, fastly_service_compute_package_upload, fastly_service_version_clone,
 #        fastly_service_version_activate actions, and fastly_acl_entries
 #
 # Coverage includes:
@@ -849,6 +849,7 @@ main() {
     log_success "✓ Service creation (fastly_service_compute)"
     log_success "✓ Domain attachment (fastly_service_domain)"
     log_success "✓ Backend configuration (fastly_service_backend)"
+    log_success "✓ S3 logging endpoint (fastly_service_logging_s3)"
     log_success "✓ Version data sources (data.fastly_service_version)"
     log_success "✓ Package upload action (fastly_service_compute_package_upload)"
     log_success "✓ Resource updates"

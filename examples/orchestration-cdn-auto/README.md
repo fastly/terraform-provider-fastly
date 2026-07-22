@@ -12,6 +12,7 @@ The example provisions and manages:
 - one domain per service
 - one ACL per service (service 1 has an IP allowlist, service 2 has a temporary blocklist)
 - one gzip configuration on service 1
+- Image Optimizer default settings on service 1
 
 ## What this example is for
 
@@ -48,8 +49,15 @@ Expected bootstrap behavior:
 
 1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
-3. The provider reconciles the nested `domain`, `backend`, `acl`, and `gzip` blocks to version `1`.
+3. The provider reconciles the nested `domain`, `backend`, `acl`, `gzip`, and
+   `image_optimizer_default_settings` blocks to version `1`.
 4. The provider validates and activates version `1`.
+
+Note: `image_optimizer_default_settings` on `service_1` requires the Image
+Optimizer product to already be enabled on that service (via the Fastly UI,
+API, or product enablement tooling) - the provider does not enable it for you.
+If it isn't enabled, remove that block or enable the product out-of-band
+before applying.
 
 ## Day-to-day workflow
 
@@ -169,6 +177,37 @@ You should see:
 - the updated `content_types` reflected in the service configuration
 - `service_2_*` outputs remain unchanged
 
+### Change Image Optimizer default settings
+
+For example, change `resize_filter` from `lanczos3` to `bicubic` on `service_1`,
+then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- `service_1_active_version` move to the new version
+- `service_1_image_optimizer_default_settings` reflect the new value
+
+### Remove Image Optimizer default settings
+
+Delete the `image_optimizer_default_settings` block from `service_1` entirely
+and run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- `service_1_image_optimizer_default_settings` become an empty list
+- Image Optimizer default settings on the service reset back to Fastly's API
+  defaults (rather than staying at their last-configured values)
+
 ## Notes
 
 - This example is for the automatic compatibility resource family only.
@@ -176,3 +215,6 @@ You should see:
   resources for the same Fastly service.
 - This first cut is intended to mirror the current provider’s
   convenience-oriented lifecycle behavior for service, domain, and backend.
+- At most one `image_optimizer_default_settings` block is supported per
+  service, and it requires the Image Optimizer product to already be enabled
+  on that service.

@@ -26,6 +26,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
+- `image_optimizer_default_settings` (Block List) Image Optimizer default settings for this service. At most one block is supported. (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 
@@ -123,6 +124,20 @@ Optional:
 - `cache_condition` (String) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`.
 - `content_types` (List of String) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`.
 - `extensions` (List of String) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`.
+
+
+<a id="nestedblock--image_optimizer_default_settings"></a>
+### Nested Schema for `image_optimizer_default_settings`
+
+Optional:
+
+- `allow_video` (Boolean) Enables GIF to MP4 transformations on this service. Default `false`.
+- `jpeg_quality` (Number) The default quality to use with JPEG output. This can be overridden with the `quality` parameter on specific image optimizer requests. Default `85`.
+- `jpeg_type` (String) The default type of JPEG output to use. This can be overridden with `format=bjpeg` and `format=pjpeg` on specific image optimizer requests. Valid values are `auto`, `baseline` and `progressive`. Default `auto`.
+- `resize_filter` (String) The type of filter to use while resizing an image. Valid values are `lanczos3`, `lanczos2`, `bicubic`, `bilinear` and `nearest`. Default `lanczos3`.
+- `upscale` (Boolean) Whether or not we should allow output images to render at sizes larger than input. Default `false`.
+- `webp` (Boolean) Controls whether or not to default to WebP output when the client supports it. This is equivalent to adding `auto=webp` to all image optimizer requests. Default `false`.
+- `webp_quality` (Number) The default quality to use with WebP output. This can be overridden with the second option in the `quality` URL parameter on specific image optimizer requests. Default `85`.
 
 
 <a id="nestedblock--logging_s3"></a>

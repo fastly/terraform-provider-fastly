@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fastly/go-fastly/v16/fastly"
+	"github.com/fastly/go-fastly/v16/fastly/products/imageoptimizer"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -40,6 +41,71 @@ func NewFastlyClient() (*fastly.Client, error) {
 		return nil, fmt.Errorf("FASTLY_API_TOKEN environment variable must be set")
 	}
 	return fastly.NewClient(apiToken)
+}
+
+// CreateTestKVStore creates a KV Store fixture directly against the Fastly API for use as a
+// resource_link target, and registers its cleanup via t.Cleanup. Returns the store's ID.
+//
+// This provider doesn't yet have a dedicated resource for KV Stores, so resource_link
+// acceptance tests need a real linkable resource created out-of-band from Terraform.
+//
+// TODO: once a fastly_kvstore resource exists, replace this raw go-fastly client call with a
+// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
+// same state/plan lifecycle as the rest of the test config.
+func CreateTestKVStore(t *testing.T, name string) string {
+	client, err := NewFastlyClient()
+	if err != nil {
+		t.Fatalf("error creating Fastly client: %s", err)
+	}
+
+	store, err := client.CreateKVStore(context.Background(), &fastly.CreateKVStoreInput{Name: name})
+	if err != nil {
+		t.Fatalf("error creating KV Store fixture: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := client.DeleteKVStore(context.Background(), &fastly.DeleteKVStoreInput{StoreID: store.StoreID}); err != nil {
+			t.Logf("error deleting KV Store fixture %q: %s", store.StoreID, err)
+		}
+	})
+
+	return store.StoreID
+}
+
+// EnableImageOptimizer enables the Image Optimizer product on the service identified by
+// resourceName, and schedules it to be disabled again via t.Cleanup. Image Optimizer default
+// settings can only be persisted once the product has been enabled on the service - and
+// enabling the product in turn requires the test account to be allowed to enable Image
+// Optimizer. Callers should use this as a Check on a step that has already created the service,
+// since a later step can then declare an image_optimizer_default_settings block against it.
+func EnableImageOptimizer(t *testing.T, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		serviceID := rs.Primary.ID
+		if serviceID == "" {
+			return fmt.Errorf("no service ID is set")
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		if _, err := imageoptimizer.Enable(context.Background(), client, serviceID); err != nil {
+			return fmt.Errorf("error enabling Image Optimizer on service %s: %w", serviceID, err)
+		}
+
+		t.Cleanup(func() {
+			if err := imageoptimizer.Disable(context.Background(), client, serviceID); err != nil {
+				t.Logf("error disabling Image Optimizer on service %q: %s", serviceID, err)
+			}
+		})
+
+		return nil
+	}
 }
 
 // serviceDestroyCheckAttempts and serviceDestroyCheckInterval bound the retry loop in
@@ -315,6 +381,34 @@ func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domai
 	)
 }
 
+// ConfigCDNAutoWithImageOptimizerDefaultSettings returns a CDN auto service config with a
+// domain and default (all-default-value) Image Optimizer default settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettings(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated returns a CDN auto service config with
+// a domain and non-default Image Optimizer default settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_updated.tf",
+	)
+}
+
 // ConfigCDNAutoWithACL returns a CDN auto service config with a domain and ACL
 func ConfigCDNAutoWithACL(serviceName, domainName, aclName string) string {
 	return BuildConfig(
@@ -536,6 +630,38 @@ resource "fastly_kvstore" "store" {
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/resource_link_ref.tf",
 		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithImageOptimizerDefaultSettings returns a Compute auto service config with
+// a domain, package, and default (all-default-value) Image Optimizer default settings.
+func ConfigComputeAutoWithImageOptimizerDefaultSettings(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_single.tf",
+	)
+}
+
+// ConfigComputeAutoWithImageOptimizerDefaultSettingsUpdated returns a Compute auto service
+// config with a domain, package, and non-default Image Optimizer default settings.
+func ConfigComputeAutoWithImageOptimizerDefaultSettingsUpdated(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_updated.tf",
 	)
 }
 

@@ -352,6 +352,36 @@ func ConfigCDNAutoWithGzipEmptyLists(serviceName, domainName, gzipName string) s
 	)
 }
 
+// ConfigCDNAutoWithGzipContentTypesRemoved returns a CDN auto service config with a gzip
+// configuration whose content_types attribute has been removed, leaving extensions set
+func ConfigCDNAutoWithGzipContentTypesRemoved(serviceName, domainName, gzipName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"GZIP_NAME":    gzipName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/gzip_content_types_removed.tf",
+	)
+}
+
+// ConfigCDNAutoWithGzipAllRemoved returns a CDN auto service config with a gzip configuration
+// whose content_types and extensions attributes have both been removed
+func ConfigCDNAutoWithGzipAllRemoved(serviceName, domainName, gzipName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"GZIP_NAME":    gzipName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/gzip_all_removed.tf",
+	)
+}
+
 // ConfigCDNAutoWithMultipleGzips returns a CDN auto service config with multiple gzip configurations
 func ConfigCDNAutoWithMultipleGzips(serviceName, domainName, gzipName1, gzipName2 string) string {
 	return BuildConfig(

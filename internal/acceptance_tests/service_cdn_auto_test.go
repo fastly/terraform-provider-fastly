@@ -341,6 +341,58 @@ func TestAccFastlyServiceCDNAuto_gzipEmptyLists(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_gzipRemovedValuesCleared(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	gzipName := fmt.Sprintf("gzip-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: populate both content_types and extensions.
+				Config: ConfigCDNAutoWithGzip(serviceName, domainName, gzipName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.content_types.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.extensions.#", "2"),
+				),
+			},
+			{
+				// Step 2: remove content_types. A previously configured value being
+				// removed must actually clear the remote value, not be silently
+				// skipped (see servicecdnauto's use of gzip.ReconcileWithPrevious).
+				Config: ConfigCDNAutoWithGzipContentTypesRemoved(serviceName, domainName, gzipName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.content_types.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.extensions.#", "2"),
+				),
+			},
+			{
+				// Step 3: remove extensions too, clearing the last configured value.
+				Config: ConfigCDNAutoWithGzipAllRemoved(serviceName, domainName, gzipName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.content_types.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.extensions.#", "0"),
+				),
+			},
+			{
+				// Step 4: confirm no perpetual diff once both fields are unset.
+				Config:   ConfigCDNAutoWithGzipAllRemoved(serviceName, domainName, gzipName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

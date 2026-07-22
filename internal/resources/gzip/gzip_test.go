@@ -131,6 +131,55 @@ func TestOpsEqual_explicitEmptyListTreatedAsUnset(t *testing.T) {
 	assert.True(t, ops{}.Equal(desired, remote))
 }
 
+func TestOpsWithPreviousEqual_neverConfiguredTreatedAsUnset(t *testing.T) {
+	// A field that was never configured (no previous item at all) behaves the
+	// same as the plain ops.Equal case: the remote's API-substituted default
+	// should not be treated as a diff.
+	desired := NestedModel{
+		Name:           types.StringValue("gzip-config"),
+		CacheCondition: types.StringNull(),
+		ContentTypes:   types.ListNull(types.StringType),
+		Extensions:     types.ListNull(types.StringType),
+	}
+	remote := &fastly.Gzip{
+		Name:           new("gzip-config"),
+		CacheCondition: new(""),
+		ContentTypes:   new("text/html text/css text/javascript application/json"),
+		Extensions:     new("css js"),
+	}
+
+	o := opsWithPrevious{previousByName: map[string]NestedModel{}}
+	assert.True(t, o.Equal(desired, remote))
+}
+
+func TestOpsWithPreviousEqual_removedValueNotTreatedAsUnset(t *testing.T) {
+	// Regression test: removing a previously configured content_types/extensions
+	// value from config must not be treated as equal to the (still populated)
+	// remote value, otherwise Update is skipped and the stale value persists
+	// remotely while state hides it (see philippschulte's PR review).
+	desired := NestedModel{
+		Name:           types.StringValue("gzip-config"),
+		CacheCondition: types.StringNull(),
+		ContentTypes:   types.ListNull(types.StringType),
+		Extensions:     stringList("css", "js"),
+	}
+	remote := &fastly.Gzip{
+		Name:           new("gzip-config"),
+		CacheCondition: new(""),
+		ContentTypes:   new("text/html"),
+		Extensions:     new("css js"),
+	}
+
+	previous := NestedModel{
+		Name:         types.StringValue("gzip-config"),
+		ContentTypes: stringList("text/html"),
+		Extensions:   stringList("css", "js"),
+	}
+	o := opsWithPrevious{previousByName: map[string]NestedModel{"gzip-config": previous}}
+
+	assert.False(t, o.Equal(desired, remote))
+}
+
 func TestModelsEqual(t *testing.T) {
 	tests := []struct {
 		name     string

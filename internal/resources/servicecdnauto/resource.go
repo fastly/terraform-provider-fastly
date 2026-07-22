@@ -179,7 +179,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.ACL = acls
 
-	if err := gzip.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Gzip); err != nil {
+	if err := gzip.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.Gzip); err != nil {
 		resp.Diagnostics.AddError("Error reconciling gzip configurations", err.Error())
 		return
 	}
@@ -398,7 +398,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ACL = acls
 
-		if err := gzip.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Gzip); err != nil {
+		if err := gzip.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Gzip, plan.Gzip); err != nil {
 			resp.Diagnostics.AddError("Error reconciling gzip configurations", err.Error())
 			return
 		}

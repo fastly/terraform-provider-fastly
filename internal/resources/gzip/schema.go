@@ -128,6 +128,29 @@ func (o ops) Equal(desired NestedModel, remote *fastly.Gzip) bool {
 	return desired.ModelsEqual(remoteModel)
 }
 
+// opsWithPrevious narrows ops.Equal's normalization to fields that were never
+// previously configured. Without previous state, Equal can't tell "never set,
+// remote holds the API's default" from "was set, now removed from config" -
+// both look like desired-unset. Treating the latter as equal would skip Update
+// and silently leave the old remote value in place.
+type opsWithPrevious struct {
+	ops
+	previousByName map[string]NestedModel
+}
+
+func (o opsWithPrevious) Equal(desired NestedModel, remote *fastly.Gzip) bool {
+	remoteModel := o.ToModel(remote)
+	previous, hadPrevious := o.previousByName[service.StringValue(desired.Name)]
+
+	if listUnset(desired.ContentTypes) && !(hadPrevious && !listUnset(previous.ContentTypes)) {
+		remoteModel.ContentTypes = desired.ContentTypes
+	}
+	if listUnset(desired.Extensions) && !(hadPrevious && !listUnset(previous.Extensions)) {
+		remoteModel.Extensions = desired.Extensions
+	}
+	return desired.ModelsEqual(remoteModel)
+}
+
 func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Gzip, error) {
 	cacheCondition := service.StringValue(desired.CacheCondition)
 
@@ -157,11 +180,11 @@ func (o ops) ToModel(api *fastly.Gzip) NestedModel {
 
 // joinStringList converts a Terraform list of strings into the space-separated
 // wire format the Fastly API expects, always returning a non-nil pointer. An
-// omitted or emptied list sends an empty string, which the API treats as unset
-// and responds with its own default list rather than clearing the remote value.
-// Once a value has been set remotely, sending an empty string again does not
-// revert it back to that default - see ops.Equal, which skips Update when the
-// desired value is unset so the remote value is left untouched.
+// omitted or emptied list sends an empty string, which the API treats as unset:
+// on Create this makes the API substitute its own default list; on Update, an
+// explicit empty string clears a previously configured value back to unset
+// (see opsWithPrevious.Equal, which is what decides whether Update is called
+// at all when the desired value is unset).
 func joinStringList(l types.List) *string {
 	if l.IsNull() || l.IsUnknown() {
 		empty := ""
@@ -250,6 +273,24 @@ func ReadForVersionWithPlan(ctx context.Context, client *fastly.Client, serviceI
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
 	return reconciler.Run(ctx, client, serviceID, version, desired)
+}
+
+// ReconcileWithPrevious reconciles gzip configurations using the previous state to
+// distinguish a field that was never configured from one that was just removed, so
+// removing a previously configured content_types/extensions value actually clears it
+// remotely instead of being silently treated as no change (see opsWithPrevious.Equal).
+func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID string, version int, previous, desired []NestedModel) error {
+	previousByName := make(map[string]NestedModel, len(previous))
+	for _, p := range previous {
+		previousByName[service.StringValue(p.Name)] = p
+	}
+
+	r := &reconcile.Resource[NestedModel, fastly.Gzip]{
+		Ops:      opsWithPrevious{previousByName: previousByName},
+		GetName:  func(m NestedModel) string { return service.StringValue(m.Name) },
+		Sortable: true,
+	}
+	return r.Run(ctx, client, serviceID, version, desired)
 }
 
 func Equal(a, b []NestedModel) bool {

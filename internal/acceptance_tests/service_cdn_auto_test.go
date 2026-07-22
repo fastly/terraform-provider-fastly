@@ -309,6 +309,38 @@ func TestAccFastlyServiceCDNAuto_multipleGzips(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_gzipEmptyLists(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	gzipName := fmt.Sprintf("gzip-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				// Explicit empty lists must be preserved rather than normalized to
+				// null, otherwise Terraform Core reports "produced inconsistent
+				// result after apply" against the planned value.
+				Config: ConfigCDNAutoWithGzipEmptyLists(serviceName, domainName, gzipName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.name", gzipName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.content_types.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.extensions.#", "0"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithGzipEmptyLists(serviceName, domainName, gzipName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

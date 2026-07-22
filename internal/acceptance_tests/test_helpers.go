@@ -337,6 +337,21 @@ func ConfigCDNAutoWithGzip(serviceName, domainName, gzipName string) string {
 	)
 }
 
+// ConfigCDNAutoWithGzipEmptyLists returns a CDN auto service config with a gzip configuration
+// that explicitly sets content_types and extensions to empty lists
+func ConfigCDNAutoWithGzipEmptyLists(serviceName, domainName, gzipName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"GZIP_NAME":    gzipName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/gzip_empty_lists.tf",
+	)
+}
+
 // ConfigCDNAutoWithMultipleGzips returns a CDN auto service config with multiple gzip configurations
 func ConfigCDNAutoWithMultipleGzips(serviceName, domainName, gzipName1, gzipName2 string) string {
 	return BuildConfig(

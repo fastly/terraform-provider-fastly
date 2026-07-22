@@ -12,6 +12,7 @@
 
 - fix(logging): Validate logging `format` length (max 12288 characters) at plan/validate time instead of failing at apply time ([#1342](https://github.com/fastly/terraform-provider-fastly/pull/1342))
 
+- fix(tls_subscription): allow `configuration_id` attribute changes to be updated without requiring a resource replacement [#1353](https://github.com/fastly/terraform-provider-fastly/pull/1353)
 - fix(tls_subscription_validation): key resource validity on certificate presence instead of `issued` state, so subscriptions in `renewing` state no longer destroy/recreate the validation resource on refresh ([#1345](https://github.com/fastly/terraform-provider-fastly/issues/1345))
 
 - fix(tls_activation): fail fast with an actionable error when `certificate_id` is empty (certificate not yet issued) instead of an opaque API 400; document that managed subscription domains are auto-activated by Fastly and must not be paired with `fastly_tls_activation` ([#1345](https://github.com/fastly/terraform-provider-fastly/issues/1345))

@@ -353,18 +353,19 @@ func resourceFastlyTLSSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// NOTE: Terraform might trigger an update even when it doesn't make sense.
 	//
-	// This is because along with the "domains" and "common_name" attributes,
-	// there are other attributes a customer might modify, such as
-	// "force_update" (which has no effect on the upstream data model).
+	// This is because along with the "domains", "common_name", and
+	// "configuration_id" attributes, there are other attributes a customer
+	// might modify, such as "force_update" (which has no effect on the
+	// upstream data model).
 	//
 	// So we don't want to call the API if the customer neither passes a change to
-	// domains or to the common_name attributes as that would be a waste of
+	// domains, common_name, or configuration_id as that would be a waste of
 	// network resources.
 	//
 	// This is why we wrap the API request in the following conditional check.
-	// We then send BOTH "domains" and "common_name" in the API request.
-	// This is because they both will have a pre-existing value.
-	if d.HasChanges("domains", "common_name") {
+	// We then send "domains", "common_name" AND "configuration_id" in the API
+	// request. This is because they will all have a pre-existing value.
+	if d.HasChanges("domains", "common_name", "configuration_id") {
 		// NOTE: The API doesn't care if the domains are in a different order.
 		// I mention this because if it did, then we'd only want to set the Domains
 		// field on the input struct if there was a change because we otherwise

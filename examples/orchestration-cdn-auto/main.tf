@@ -44,6 +44,12 @@ resource "fastly_service_cdn_auto" "service_1" {
   acl {
     name = "ip_allowlist"
   }
+
+  gzip {
+    name          = "default_gzip"
+    content_types = ["text/html", "text/css", "application/javascript"]
+    extensions    = ["css", "js", "html"]
+  }
 }
 
 resource "fastly_service_cdn_auto" "service_2" {

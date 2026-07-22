@@ -59,13 +59,23 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*APIClient).conn
 	var diags diag.Diagnostics
 
+	certificateID := d.Get("certificate_id").(string)
+	if certificateID == "" {
+		return diag.Errorf(
+			"certificate_id is empty: the certificate for the referenced TLS subscription has not been issued yet " +
+				"(certificates are issued asynchronously after domain validation). " +
+				"Reference `fastly_tls_subscription_validation.<name>.certificate_id` instead of " +
+				"`fastly_tls_subscription.<name>.certificate_id` so the activation waits for issuance within a single apply.",
+		)
+	}
+
 	var configuration *fastly.TLSConfiguration
 	if v, ok := d.GetOk("configuration_id"); ok {
 		configuration = &fastly.TLSConfiguration{ID: v.(string)}
 	}
 
 	activation, err := conn.CreateTLSActivation(ctx, &fastly.CreateTLSActivationInput{
-		Certificate:   &fastly.CustomTLSCertificate{ID: d.Get("certificate_id").(string)},
+		Certificate:   &fastly.CustomTLSCertificate{ID: certificateID},
 		Configuration: configuration,
 		Domain:        &fastly.TLSDomain{ID: d.Get("domain").(string)},
 	})

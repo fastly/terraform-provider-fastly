@@ -1,3 +1,13 @@
+// Package constants holds shared literal values, notably the default log
+// formats used as Computed schema defaults by the logging resources.
+//
+// The default-format constants intentionally end with a trailing newline (the
+// closing "}" sits on its own line, followed by a blank line before the closing
+// backtick). The Fastly API stores multi-line JSON formats with a trailing
+// newline and returns them that way, so the constant needs to match it exactly.
+// The Terraform plugin framework requires a Computed value's planned value to
+// equal what the API returns after apply, so without the trailing newline the
+// first apply fails with "Provider produced inconsistent result after apply".
 package constants
 
 // LoggingNewRelicOTLPDefaultFormat is the default log format for New Relic OTLP logging.
@@ -18,7 +28,8 @@ const LoggingNewRelicOTLPDefaultFormat = `{
   "response_body_size":%{resp.body_bytes_written}V,
   "fastly_server":"%{json.escape(server.identity)}V",
   "fastly_is_edge":%{if(fastly.ff.visits_this_service == 0, "true", "false")}V
-}`
+}
+`
 
 // LoggingS3DefaultFormat is the default log format for S3 logging.
 const LoggingS3DefaultFormat = `{

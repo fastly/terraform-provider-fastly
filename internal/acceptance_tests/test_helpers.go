@@ -3,6 +3,7 @@ package acceptancetests
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -1552,4 +1553,233 @@ func ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName string) st
 		},
 		"internal/acceptance_tests/blocks/logging_s3_compute_format.tf",
 	)
+}
+
+// productEnablementBlock renders a single "internal/acceptance_tests/blocks/service_product_<product>.tf"
+// template, merging SERVICE_ID_REF (the Terraform expression for the owning
+// service's id, e.g. "fastly_service_cdn_auto.test.id") with any
+// product-specific values (e.g. CONTENT_GUARD, DDOS_MODE).
+func productEnablementBlock(product, serviceIDRef string, extra map[string]string) string {
+	data := map[string]string{"SERVICE_ID_REF": serviceIDRef}
+	maps.Copy(data, extra)
+	return RenderBlock(fmt.Sprintf("internal/acceptance_tests/blocks/service_product_%s.tf", product), data)
+}
+
+// joinBlocks concatenates rendered blocks, each already ending in its own
+// newline, separated by a blank line.
+func joinBlocks(blocks ...string) string {
+	return strings.Join(blocks, "\n")
+}
+
+// ConfigProductEnablementCDNEmpty returns a CDN auto service (with a
+// shield-equipped backend, required by image_optimizer) and no
+// product-enablement resources at all, for use as the "nothing enabled"
+// starting point of a lifecycle test.
+func ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"BACKEND_NAME": backendName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_with_shield.tf",
+	)
+}
+
+// ConfigProductEnablementCDNBasic returns the same CDN auto service as
+// ConfigProductEnablementCDNEmpty, plus one resource per CDN-applicable
+// product (every product except the Compute-only fanout).
+func ConfigProductEnablementCDNBasic(serviceName, domainName, backendName, ngwafWorkspaceID string) string {
+	const serviceIDRef = "fastly_service_cdn_auto.test.id"
+	products := joinBlocks(
+		productEnablementBlock("brotli_compression", serviceIDRef, nil),
+		productEnablementBlock("image_optimizer", serviceIDRef, nil),
+		productEnablementBlock("origin_inspector", serviceIDRef, nil),
+		productEnablementBlock("domain_inspector", serviceIDRef, nil),
+		productEnablementBlock("websockets", serviceIDRef, nil),
+		productEnablementBlock("log_explorer_insights", serviceIDRef, nil),
+		productEnablementBlock("api_discovery", serviceIDRef, nil),
+		productEnablementBlock("bot_management", serviceIDRef, map[string]string{"CONTENT_GUARD": "on"}),
+		productEnablementBlock("ddos_protection", serviceIDRef, map[string]string{"DDOS_MODE": "block"}),
+		productEnablementBlock("ngwaf", serviceIDRef, map[string]string{
+			"NGWAF_WORKSPACE_ID": ngwafWorkspaceID,
+			"NGWAF_TRAFFIC_RAMP": "50",
+		}),
+	)
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" + products
+}
+
+// ConfigProductEnablementComputeEmpty returns a Compute auto service and no
+// product-enablement resources at all.
+func ConfigProductEnablementComputeEmpty(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"PACKAGE_PATH": GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigProductEnablementComputeBasic returns the same Compute auto service
+// as ConfigProductEnablementComputeEmpty, plus one resource per
+// Compute-applicable product (every product except the CDN-only
+// brotli_compression and image_optimizer).
+func ConfigProductEnablementComputeBasic(serviceName, domainName, ngwafWorkspaceID string) string {
+	const serviceIDRef = "fastly_service_compute_auto.test.id"
+	products := joinBlocks(
+		productEnablementBlock("fanout", serviceIDRef, nil),
+		productEnablementBlock("origin_inspector", serviceIDRef, nil),
+		productEnablementBlock("domain_inspector", serviceIDRef, nil),
+		productEnablementBlock("websockets", serviceIDRef, nil),
+		productEnablementBlock("log_explorer_insights", serviceIDRef, nil),
+		productEnablementBlock("api_discovery", serviceIDRef, nil),
+		productEnablementBlock("bot_management", serviceIDRef, map[string]string{"CONTENT_GUARD": "on"}),
+		productEnablementBlock("ddos_protection", serviceIDRef, map[string]string{"DDOS_MODE": "block"}),
+		productEnablementBlock("ngwaf", serviceIDRef, map[string]string{"NGWAF_WORKSPACE_ID": ngwafWorkspaceID}),
+	)
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + "\n" + products
+}
+
+// ConfigProductEnablementInvalidFanoutOnCDN returns a CDN auto service
+// paired with fastly_service_product_fanout, a Compute-only resource, to
+// exercise runtime service-type validation.
+func ConfigProductEnablementInvalidFanoutOnCDN(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + "\n" +
+		productEnablementBlock("fanout", "fastly_service_cdn_auto.test.id", nil)
+}
+
+// ConfigProductEnablementInvalidFanoutOnCDNExistingService returns the same
+// CDN auto service as ConfigCDNAutoBasic, plus
+// fastly_service_product_fanout on it. Meant to be used as the second
+// step after ConfigCDNAutoBasic has already applied, so service_id is
+// already known when this config is planned - exercising ModifyPlan's
+// plan-time rejection path, rather than the Create-time fallback exercised
+// when the service and product-enablement resource are created together in
+// a single apply.
+func ConfigProductEnablementInvalidFanoutOnCDNExistingService(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + "\n" +
+		productEnablementBlock("fanout", "fastly_service_cdn_auto.test.id", nil)
+}
+
+// ConfigProductEnablementInvalidBrotliCompressionOnCompute returns a
+// Compute auto service paired with fastly_service_product_brotli_compression,
+// a CDN-only resource, to exercise runtime service-type validation - the
+// mirror image of ConfigProductEnablementInvalidFanoutOnCDN.
+func ConfigProductEnablementInvalidBrotliCompressionOnCompute(serviceName, domainName string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + "\n" +
+		productEnablementBlock("brotli_compression", "fastly_service_compute_auto.test.id", nil)
+}
+
+// ConfigProductEnablementInvalidImageOptimizerOnCompute returns a Compute
+// auto service paired with fastly_service_product_image_optimizer, a
+// CDN-only resource, to exercise runtime service-type validation.
+// Confirmed against the live Fastly API: the product_enablement API
+// rejects image_optimizer for wasm services outright ("image_optimizer not
+// available for wasm services"), independent of any account entitlement to
+// the Image Optimizer-on-Compute Beta described elsewhere in Fastly's docs
+// - that Beta is accessed through the Compute SDK's own request API, not
+// this enablement endpoint.
+func ConfigProductEnablementInvalidImageOptimizerOnCompute(serviceName, domainName string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + "\n" +
+		productEnablementBlock("image_optimizer", "fastly_service_compute_auto.test.id", nil)
+}
+
+// ConfigProductEnablementInvalidNGWAFTrafficRampOnCompute returns a Compute
+// auto service paired with fastly_service_product_ngwaf whose
+// traffic_ramp is set to a non-default value, a CDN-only setting, to
+// exercise runtime service-type validation.
+func ConfigProductEnablementInvalidNGWAFTrafficRampOnCompute(serviceName, domainName, ngwafWorkspaceID string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + "\n" +
+		productEnablementBlock("ngwaf", "fastly_service_compute_auto.test.id", map[string]string{
+			"NGWAF_WORKSPACE_ID": ngwafWorkspaceID,
+			"NGWAF_TRAFFIC_RAMP": "50",
+		})
+}
+
+// ConfigProductEnablementInvalidContentGuard returns a CDN auto service
+// paired with fastly_service_product_bot_management whose contentguard
+// is set to a value outside "off"/"on", to exercise the attribute's
+// stringvalidator.OneOf schema validation.
+func ConfigProductEnablementInvalidContentGuard(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + "\n" +
+		productEnablementBlock("bot_management", "fastly_service_cdn_auto.test.id", map[string]string{"CONTENT_GUARD": "nonsense"})
+}
+
+// ConfigProductEnablementInvalidDDoSMode returns a CDN auto service paired
+// with fastly_service_product_ddos_protection whose mode is set to a
+// value outside "off"/"log"/"block", to exercise the attribute's
+// stringvalidator.OneOf schema validation.
+func ConfigProductEnablementInvalidDDoSMode(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + "\n" +
+		productEnablementBlock("ddos_protection", "fastly_service_cdn_auto.test.id", map[string]string{"DDOS_MODE": "nonsense"})
+}
+
+// ConfigProductEnablementInvalidNGWAFTrafficRampRange returns a CDN auto
+// service paired with fastly_service_product_ngwaf whose traffic_ramp is
+// set outside the 0-100 range, to exercise the attribute's
+// int64validator.Between schema validation.
+func ConfigProductEnablementInvalidNGWAFTrafficRampRange(serviceName, domainName, ngwafWorkspaceID string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + "\n" +
+		productEnablementBlock("ngwaf", "fastly_service_cdn_auto.test.id", map[string]string{
+			"NGWAF_WORKSPACE_ID": ngwafWorkspaceID,
+			"NGWAF_TRAFFIC_RAMP": "150",
+		})
+}
+
+// ConfigProductEnablementDDoSModeOnly returns a CDN auto service paired
+// with just fastly_service_product_ddos_protection at the given mode,
+// used to verify that changing mode updates in place.
+func ConfigProductEnablementDDoSModeOnly(serviceName, domainName, backendName, mode string) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("ddos_protection", "fastly_service_cdn_auto.test.id", map[string]string{"DDOS_MODE": mode})
+}
+
+// ConfigProductEnablementBotManagementOnly returns a CDN auto service
+// paired with just fastly_service_product_bot_management at the given
+// contentguard value, used to verify that changing contentguard updates
+// in place.
+func ConfigProductEnablementBotManagementOnly(serviceName, domainName, backendName, contentGuard string) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("bot_management", "fastly_service_cdn_auto.test.id", map[string]string{"CONTENT_GUARD": contentGuard})
+}
+
+// ConfigProductEnablementNGWAFOnly returns a CDN auto service paired with
+// just fastly_service_product_ngwaf at the given workspace_id and
+// traffic_ramp, used to verify that changing either updates in place.
+func ConfigProductEnablementNGWAFOnly(serviceName, domainName, backendName, workspaceID string, trafficRamp int) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("ngwaf", "fastly_service_cdn_auto.test.id", map[string]string{
+			"NGWAF_WORKSPACE_ID": workspaceID,
+			"NGWAF_TRAFFIC_RAMP": strconv.Itoa(trafficRamp),
+		})
+}
+
+// ConfigProductEnablementServiceIDReplace returns two CDN auto services and
+// a single fastly_service_product_domain_inspector resource whose
+// service_id points at either "first" or "second" depending on useSecond,
+// to exercise the service_id RequiresReplace plan modifier.
+func ConfigProductEnablementServiceIDReplace(serviceName1, domainName1, serviceName2, domainName2 string, useSecond bool) string {
+	target := "fastly_service_cdn_auto.first.id"
+	if useSecond {
+		target = "fastly_service_cdn_auto.second.id"
+	}
+
+	first := RenderBlock("internal/acceptance_tests/blocks/service_cdn_auto_named.tf", map[string]string{
+		"LABEL":        "first",
+		"SERVICE_NAME": serviceName1,
+		"DOMAIN_NAME":  domainName1,
+	})
+	second := RenderBlock("internal/acceptance_tests/blocks/service_cdn_auto_named.tf", map[string]string{
+		"LABEL":        "second",
+		"SERVICE_NAME": serviceName2,
+		"DOMAIN_NAME":  domainName2,
+	})
+
+	return joinBlocks(first, second, productEnablementBlock("domain_inspector", target, nil))
 }

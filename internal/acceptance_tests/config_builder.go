@@ -56,6 +56,34 @@ const (
 	ServiceComputeAuto ServiceType = "service_compute_auto"
 )
 
+// RenderBlock loads a single template file (relative to the repository
+// root) and renders it with replacements, returning the raw result with no
+// further formatting. Unlike BuildConfig, it doesn't wrap the result in a
+// service resource - use it for standalone top-level resources that
+// reference a service via a computed ID (e.g. `service_id = {{.SERVICE_ID_REF}}`)
+// rather than nesting inside the service resource body.
+//
+// Placeholders in templates should use the format {{.PLACEHOLDER_NAME}}.
+func RenderBlock(blockPath string, replacements map[string]string) string {
+	fullPath := filepath.Join(getRepoRoot(), blockPath)
+	blockBytes, err := os.ReadFile(fullPath)
+	if err != nil {
+		panic(fmt.Sprintf("failed to load block %s: %v", fullPath, err))
+	}
+
+	tmpl, err := template.New(filepath.Base(blockPath)).Parse(string(blockBytes))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse block template %s: %v", blockPath, err))
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, replacements); err != nil {
+		panic(fmt.Sprintf("failed to execute block template %s: %v", blockPath, err))
+	}
+
+	return buf.String()
+}
+
 // BuildConfig constructs a Terraform config for a service with nested blocks.
 // It loads a service template from the blocks directory, injects nested blocks into the {{.RESOURCES}} placeholder,
 // and replaces all placeholders with actual values using text/template.
@@ -73,24 +101,7 @@ func BuildConfig(serviceType ServiceType, replacements map[string]string, blockP
 	// Load and parse nested blocks as templates
 	var resourcesBuilder strings.Builder
 	for _, blockPath := range blockPaths {
-		fullPath := filepath.Join(repoRoot, blockPath)
-		blockBytes, err := os.ReadFile(fullPath)
-		if err != nil {
-			panic(fmt.Sprintf("failed to load block %s: %v", fullPath, err))
-		}
-
-		// Parse and execute the block template
-		blockTmpl, err := template.New(filepath.Base(blockPath)).Parse(string(blockBytes))
-		if err != nil {
-			panic(fmt.Sprintf("failed to parse block template %s: %v", blockPath, err))
-		}
-
-		var blockBuf bytes.Buffer
-		if err := blockTmpl.Execute(&blockBuf, templateData); err != nil {
-			panic(fmt.Sprintf("failed to execute block template %s: %v", blockPath, err))
-		}
-
-		block := normalizeNestedBlockIndent(blockBuf.String())
+		block := normalizeNestedBlockIndent(RenderBlock(blockPath, templateData))
 		if resourcesBuilder.Len() > 0 {
 			resourcesBuilder.WriteString("\n")
 		}

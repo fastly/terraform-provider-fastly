@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### Dependencies
+- build(deps): `google.golang.org/grpc` from 1.79.3 to 1.82.1 ([#1360](https://github.com/fastly/terraform-provider-fastly/pull/1360))
 
 ## 9.4.0 (July 22, 2026)
 

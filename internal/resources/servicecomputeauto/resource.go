@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/resourcelink"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -38,18 +39,19 @@ func NewResource() resource.Resource {
 }
 
 type Model struct {
-	ID             types.String                   `tfsdk:"id"`
-	Name           types.String                   `tfsdk:"name"`
-	Comment        types.String                   `tfsdk:"comment"`
-	ForceDestroy   types.Bool                     `tfsdk:"force_destroy"`
-	Reuse          types.Bool                     `tfsdk:"reuse"`
-	ActiveVersion  types.Int64                    `tfsdk:"active_version"`
-	ManagedVersion types.Int64                    `tfsdk:"managed_version"`
-	Domain         []domain.NestedModel           `tfsdk:"domain"`
-	Backend        []backend.NestedModel          `tfsdk:"backend"`
-	ResourceLink   []resourcelink.NestedModel     `tfsdk:"resource_link"`
-	Package        []computepackage.Model         `tfsdk:"package"`
-	LoggingS3      []loggings3.ComputeNestedModel `tfsdk:"logging_s3"`
+	ID                  types.String                             `tfsdk:"id"`
+	Name                types.String                             `tfsdk:"name"`
+	Comment             types.String                             `tfsdk:"comment"`
+	ForceDestroy        types.Bool                               `tfsdk:"force_destroy"`
+	Reuse               types.Bool                               `tfsdk:"reuse"`
+	ActiveVersion       types.Int64                              `tfsdk:"active_version"`
+	ManagedVersion      types.Int64                              `tfsdk:"managed_version"`
+	Domain              []domain.NestedModel                     `tfsdk:"domain"`
+	Backend             []backend.NestedModel                    `tfsdk:"backend"`
+	ResourceLink        []resourcelink.NestedModel               `tfsdk:"resource_link"`
+	Package             []computepackage.Model                   `tfsdk:"package"`
+	LoggingS3           []loggings3.ComputeNestedModel           `tfsdk:"logging_s3"`
+	LoggingNewRelicOTLP []loggingnewrelicotlp.ComputeNestedModel `tfsdk:"logging_newrelicotlp"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -99,11 +101,12 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"domain":        domain.NestedBlockSchema(),
-			"backend":       backend.NestedBlockSchema(),
-			"resource_link": resourcelink.NestedBlockSchema(),
-			"package":       computepackage.NestedBlockSchema(),
-			"logging_s3":    loggings3.ComputeNestedBlockSchema(),
+			"domain":               domain.NestedBlockSchema(),
+			"backend":              backend.NestedBlockSchema(),
+			"resource_link":        resourcelink.NestedBlockSchema(),
+			"package":              computepackage.NestedBlockSchema(),
+			"logging_s3":           loggings3.ComputeNestedBlockSchema(),
+			"logging_newrelicotlp": loggingnewrelicotlp.ComputeNestedBlockSchema(),
 		},
 	}
 }
@@ -204,6 +207,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingS3 = loggings3.ComputeMatchOrder(loggingS3s, plan.LoggingS3)
 
+	if err := loggingnewrelicotlp.ComputeReconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingNewRelicOTLP); err != nil {
+		resp.Diagnostics.AddError("Error reconciling New Relic OTLP logging endpoints", err.Error())
+		return
+	}
+
+	loggingNewRelicOTLPs, err := loggingnewrelicotlp.ComputeReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingNewRelicOTLP = loggingnewrelicotlp.ComputeMatchOrder(loggingNewRelicOTLPs, plan.LoggingNewRelicOTLP)
+
 	if err := computepackage.Update(ctx, r.providerData.AutoClient(), serviceID, version, plan.Package); err != nil {
 		resp.Diagnostics.AddError("Error updating Compute package", err.Error())
 		return
@@ -299,9 +314,15 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
 		return
 	}
+	loggingNewRelicOTLPs, err := loggingnewrelicotlp.ComputeReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.LoggingS3 = loggings3.ComputeMatchOrder(loggingS3s, state.LoggingS3)
+	state.LoggingNewRelicOTLP = loggingnewrelicotlp.ComputeMatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
 
 	resourceLinks, err := resourcelink.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
@@ -343,7 +364,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !resourcelink.Equal(plan.ResourceLink, state.ResourceLink) || !computepackage.Equal(plan.Package, state.Package) || !loggings3.ComputeEqual(plan.LoggingS3, state.LoggingS3)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !resourcelink.Equal(plan.ResourceLink, state.ResourceLink) || !computepackage.Equal(plan.Package, state.Package) || !loggings3.ComputeEqual(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.ComputeEqual(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -425,6 +446,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingS3 = loggings3.ComputeMatchOrder(loggingS3s, plan.LoggingS3)
 
+		if err := loggingnewrelicotlp.ComputeReconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingNewRelicOTLP); err != nil {
+			resp.Diagnostics.AddError("Error reconciling New Relic OTLP logging endpoints", err.Error())
+			return
+		}
+
+		loggingNewRelicOTLPs, err := loggingnewrelicotlp.ComputeReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.ComputeMatchOrder(loggingNewRelicOTLPs, plan.LoggingNewRelicOTLP)
+
 		if len(state.Package) > 0 && len(plan.Package) == 0 {
 			resp.Diagnostics.AddError(
 				"Removing Compute packages is not supported",
@@ -469,6 +502,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ResourceLink = resourcelink.MatchOrder(state.ResourceLink, plan.ResourceLink)
 		plan.Package = state.Package
 		plan.LoggingS3 = loggings3.ComputeMatchOrder(state.LoggingS3, plan.LoggingS3)
+		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.ComputeMatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 	}
 
 	plan.ID = state.ID

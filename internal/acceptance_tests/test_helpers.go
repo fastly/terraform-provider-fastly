@@ -1553,3 +1553,340 @@ func ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName string) st
 		"internal/acceptance_tests/blocks/logging_s3_compute_format.tf",
 	)
 }
+
+// ConfigProductEnablementCDNEmpty returns a CDN auto service (with a
+// shield-equipped backend, required by image_optimizer) and no
+// product-enablement resources at all, for use as the "nothing enabled"
+// starting point of a lifecycle test.
+func ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_cdn_auto" "test" {
+  name = %q
+
+  domain {
+    name = %q
+  }
+
+  backend {
+    name    = %q
+    address = "httpbin.org"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendName)
+}
+
+// ConfigProductEnablementCDNBasic returns the same CDN auto service as
+// ConfigProductEnablementCDNEmpty, plus one resource per CDN-applicable
+// product (every product except the Compute-only fanout).
+func ConfigProductEnablementCDNBasic(serviceName, domainName, backendName, ngwafWorkspaceID string) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + fmt.Sprintf(`
+resource "fastly_product_enablement_brotli_compression" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_image_optimizer" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_origin_inspector" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_domain_inspector" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_websockets" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_log_explorer_insights" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_api_discovery" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+
+resource "fastly_product_enablement_bot_management" "test" {
+  service_id    = fastly_service_cdn_auto.test.id
+  content_guard = "on"
+}
+
+resource "fastly_product_enablement_ddos_protection" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+  mode       = "block"
+}
+
+resource "fastly_product_enablement_ngwaf" "test" {
+  service_id   = fastly_service_cdn_auto.test.id
+  workspace_id = %q
+  traffic_ramp = 50
+}
+`, ngwafWorkspaceID)
+}
+
+// ConfigProductEnablementComputeEmpty returns a Compute auto service and no
+// product-enablement resources at all.
+func ConfigProductEnablementComputeEmpty(serviceName, domainName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute_auto" "test" {
+  name = %q
+
+  domain {
+    name = %q
+  }
+
+  package {
+    filename = %q
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, GetPackagePath())
+}
+
+// ConfigProductEnablementComputeBasic returns the same Compute auto service
+// as ConfigProductEnablementComputeEmpty, plus one resource per
+// Compute-applicable product (every product except the CDN-only
+// brotli_compression and image_optimizer).
+func ConfigProductEnablementComputeBasic(serviceName, domainName, ngwafWorkspaceID string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + fmt.Sprintf(`
+resource "fastly_product_enablement_fanout" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+
+resource "fastly_product_enablement_origin_inspector" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+
+resource "fastly_product_enablement_domain_inspector" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+
+resource "fastly_product_enablement_websockets" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+
+resource "fastly_product_enablement_log_explorer_insights" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+
+resource "fastly_product_enablement_api_discovery" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+
+resource "fastly_product_enablement_bot_management" "test" {
+  service_id    = fastly_service_compute_auto.test.id
+  content_guard = "on"
+}
+
+resource "fastly_product_enablement_ddos_protection" "test" {
+  service_id = fastly_service_compute_auto.test.id
+  mode       = "block"
+}
+
+resource "fastly_product_enablement_ngwaf" "test" {
+  service_id   = fastly_service_compute_auto.test.id
+  workspace_id = %q
+}
+`, ngwafWorkspaceID)
+}
+
+// ConfigProductEnablementInvalidFanoutOnCDN returns a CDN auto service
+// paired with fastly_product_enablement_fanout, a Compute-only resource, to
+// exercise runtime service-type validation.
+func ConfigProductEnablementInvalidFanoutOnCDN(serviceName, domainName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_cdn_auto" "test" {
+  name = %q
+
+  domain {
+    name = %q
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_product_enablement_fanout" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+`, serviceName, domainName)
+}
+
+// ConfigProductEnablementInvalidFanoutOnCDNExistingService returns the same
+// CDN auto service as ConfigCDNAutoBasic, plus
+// fastly_product_enablement_fanout on it. Meant to be used as the second
+// step after ConfigCDNAutoBasic has already applied, so service_id is
+// already known when this config is planned - exercising ModifyPlan's
+// plan-time rejection path, rather than the Create-time fallback exercised
+// when the service and product-enablement resource are created together in
+// a single apply.
+func ConfigProductEnablementInvalidFanoutOnCDNExistingService(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + `
+resource "fastly_product_enablement_fanout" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+}
+`
+}
+
+// ConfigProductEnablementInvalidBrotliCompressionOnCompute returns a
+// Compute auto service paired with fastly_product_enablement_brotli_compression,
+// a CDN-only resource, to exercise runtime service-type validation - the
+// mirror image of ConfigProductEnablementInvalidFanoutOnCDN.
+func ConfigProductEnablementInvalidBrotliCompressionOnCompute(serviceName, domainName string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + `
+resource "fastly_product_enablement_brotli_compression" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+`
+}
+
+// ConfigProductEnablementInvalidImageOptimizerOnCompute returns a Compute
+// auto service paired with fastly_product_enablement_image_optimizer, a
+// CDN-only resource, to exercise runtime service-type validation.
+// Confirmed against the live Fastly API: the product_enablement API
+// rejects image_optimizer for wasm services outright ("image_optimizer not
+// available for wasm services"), independent of any account entitlement to
+// the Image Optimizer-on-Compute Beta described elsewhere in Fastly's docs
+// - that Beta is accessed through the Compute SDK's own request API, not
+// this enablement endpoint.
+func ConfigProductEnablementInvalidImageOptimizerOnCompute(serviceName, domainName string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + `
+resource "fastly_product_enablement_image_optimizer" "test" {
+  service_id = fastly_service_compute_auto.test.id
+}
+`
+}
+
+// ConfigProductEnablementInvalidNGWAFTrafficRampOnCompute returns a Compute
+// auto service paired with fastly_product_enablement_ngwaf whose
+// traffic_ramp is set to a non-default value, a CDN-only setting, to
+// exercise runtime service-type validation.
+func ConfigProductEnablementInvalidNGWAFTrafficRampOnCompute(serviceName, domainName, ngwafWorkspaceID string) string {
+	return ConfigProductEnablementComputeEmpty(serviceName, domainName) + fmt.Sprintf(`
+resource "fastly_product_enablement_ngwaf" "test" {
+  service_id   = fastly_service_compute_auto.test.id
+  workspace_id = %q
+  traffic_ramp = 50
+}
+`, ngwafWorkspaceID)
+}
+
+// ConfigProductEnablementInvalidContentGuard returns a CDN auto service
+// paired with fastly_product_enablement_bot_management whose content_guard
+// is set to a value outside "off"/"on", to exercise the attribute's
+// stringvalidator.OneOf schema validation.
+func ConfigProductEnablementInvalidContentGuard(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + `
+resource "fastly_product_enablement_bot_management" "test" {
+  service_id    = fastly_service_cdn_auto.test.id
+  content_guard = "nonsense"
+}
+`
+}
+
+// ConfigProductEnablementInvalidDDoSMode returns a CDN auto service paired
+// with fastly_product_enablement_ddos_protection whose mode is set to a
+// value outside "off"/"log"/"block", to exercise the attribute's
+// stringvalidator.OneOf schema validation.
+func ConfigProductEnablementInvalidDDoSMode(serviceName, domainName string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + `
+resource "fastly_product_enablement_ddos_protection" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+  mode       = "nonsense"
+}
+`
+}
+
+// ConfigProductEnablementInvalidNGWAFTrafficRampRange returns a CDN auto
+// service paired with fastly_product_enablement_ngwaf whose traffic_ramp is
+// set outside the 0-100 range, to exercise the attribute's
+// int64validator.Between schema validation.
+func ConfigProductEnablementInvalidNGWAFTrafficRampRange(serviceName, domainName, ngwafWorkspaceID string) string {
+	return ConfigCDNAutoBasic(serviceName, domainName) + fmt.Sprintf(`
+resource "fastly_product_enablement_ngwaf" "test" {
+  service_id   = fastly_service_cdn_auto.test.id
+  workspace_id = %q
+  traffic_ramp = 150
+}
+`, ngwafWorkspaceID)
+}
+
+// ConfigProductEnablementDDoSModeOnly returns a CDN auto service paired
+// with just fastly_product_enablement_ddos_protection at the given mode,
+// used to verify that changing mode updates in place.
+func ConfigProductEnablementDDoSModeOnly(serviceName, domainName, backendName, mode string) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + fmt.Sprintf(`
+resource "fastly_product_enablement_ddos_protection" "test" {
+  service_id = fastly_service_cdn_auto.test.id
+  mode       = %q
+}
+`, mode)
+}
+
+// ConfigProductEnablementBotManagementOnly returns a CDN auto service
+// paired with just fastly_product_enablement_bot_management at the given
+// content_guard value, used to verify that changing content_guard updates
+// in place.
+func ConfigProductEnablementBotManagementOnly(serviceName, domainName, backendName, contentGuard string) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + fmt.Sprintf(`
+resource "fastly_product_enablement_bot_management" "test" {
+  service_id    = fastly_service_cdn_auto.test.id
+  content_guard = %q
+}
+`, contentGuard)
+}
+
+// ConfigProductEnablementNGWAFOnly returns a CDN auto service paired with
+// just fastly_product_enablement_ngwaf at the given workspace_id and
+// traffic_ramp, used to verify that changing either updates in place.
+func ConfigProductEnablementNGWAFOnly(serviceName, domainName, backendName, workspaceID string, trafficRamp int) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + fmt.Sprintf(`
+resource "fastly_product_enablement_ngwaf" "test" {
+  service_id   = fastly_service_cdn_auto.test.id
+  workspace_id = %q
+  traffic_ramp = %d
+}
+`, workspaceID, trafficRamp)
+}
+
+// ConfigProductEnablementServiceIDReplace returns two CDN auto services and
+// a single fastly_product_enablement_domain_inspector resource whose
+// service_id points at either "first" or "second" depending on useSecond,
+// to exercise the service_id RequiresReplace plan modifier.
+func ConfigProductEnablementServiceIDReplace(serviceName1, domainName1, serviceName2, domainName2 string, useSecond bool) string {
+	target := "fastly_service_cdn_auto.first.id"
+	if useSecond {
+		target = "fastly_service_cdn_auto.second.id"
+	}
+	return fmt.Sprintf(`
+resource "fastly_service_cdn_auto" "first" {
+  name = %q
+
+  domain {
+    name = %q
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_service_cdn_auto" "second" {
+  name = %q
+
+  domain {
+    name = %q
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_product_enablement_domain_inspector" "test" {
+  service_id = %s
+}
+`, serviceName1, domainName1, serviceName2, domainName2, target)
+}

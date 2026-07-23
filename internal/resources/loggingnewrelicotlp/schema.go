@@ -9,11 +9,14 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v16/fastly"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -24,6 +27,11 @@ const (
 	DefaultPlacement         = "none"
 	DefaultResponseCondition = ""
 	DefaultProcessingRegion  = "none"
+
+	// maximumFormatLength is the maximum length the Fastly API accepts for a
+	// logging endpoint `format` string. Exceeding it is only rejected by the
+	// API at apply time, so it is enforced at plan/validate time instead.
+	maximumFormatLength = 12288
 )
 
 // commonModel holds the New Relic OTLP logging attributes shared by VCL and
@@ -112,9 +120,12 @@ func sharedAttributes() map[string]schema.Attribute {
 		},
 		// Optional
 		"processing_region": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultProcessingRegion),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultProcessingRegion),
+			Validators: []validator.String{
+				stringvalidator.OneOf("none", "us", "eu"),
+			},
 			Description: "Region where logs will be processed before streaming to the destination. Valid values are `none`, `us` and `eu`.",
 		},
 		"region": schema.StringAttribute{
@@ -137,21 +148,30 @@ func sharedAttributes() map[string]schema.Attribute {
 func vclOnlyAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"format": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(constants.LoggingNewRelicOTLPDefaultFormat),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(constants.LoggingNewRelicOTLPDefaultFormat),
+			Validators: []validator.String{
+				stringvalidator.LengthAtMost(maximumFormatLength),
+			},
 			Description: "A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid JSON that New Relic can ingest.",
 		},
 		"format_version": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultFormatVersion),
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(DefaultFormatVersion),
+			Validators: []validator.Int64{
+				int64validator.Between(1, 2),
+			},
 			Description: "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.",
 		},
 		"placement": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultPlacement),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultPlacement),
+			Validators: []validator.String{
+				stringvalidator.OneOf("none"),
+			},
 			Description: "Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.",
 		},
 		"response_condition": schema.StringAttribute{

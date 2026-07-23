@@ -23,7 +23,7 @@ var _ resource.ResourceWithImportState = &BotManagementResource{}
 type BotManagementModel struct {
 	ID           types.String `tfsdk:"id"`
 	ServiceID    types.String `tfsdk:"service_id"`
-	ContentGuard types.String `tfsdk:"content_guard"`
+	ContentGuard types.String `tfsdk:"contentguard"`
 }
 
 type BotManagementResource struct {
@@ -44,7 +44,7 @@ func (r *BotManagementResource) Schema(_ context.Context, _ resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"id":         idAttribute(),
 			"service_id": serviceIDAttribute("Bot Management"),
-			"content_guard": schema.StringAttribute{
+			"contentguard": schema.StringAttribute{
 				Required:    true,
 				Description: "ContentGuard status. Can be either `off` or `on`.",
 				Validators: []validator.String{

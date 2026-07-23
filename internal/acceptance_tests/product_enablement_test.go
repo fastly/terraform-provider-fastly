@@ -44,7 +44,7 @@ func TestAccFastlyProductEnablement_cdnBasic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("fastly_service_product_websockets.test", "service_id", "fastly_service_cdn_auto.test", "id"),
 					resource.TestCheckResourceAttrPair("fastly_service_product_log_explorer_insights.test", "service_id", "fastly_service_cdn_auto.test", "id"),
 					resource.TestCheckResourceAttrPair("fastly_service_product_api_discovery.test", "service_id", "fastly_service_cdn_auto.test", "id"),
-					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "content_guard", "on"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "contentguard", "on"),
 					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "mode", "block"),
 					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "workspace_id", testNGWAFWorkspaceID),
 					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "traffic_ramp", "50"),
@@ -153,7 +153,7 @@ func TestAccFastlyProductEnablement_computeBasic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("fastly_service_product_websockets.test", "service_id", "fastly_service_compute_auto.test", "id"),
 					resource.TestCheckResourceAttrPair("fastly_service_product_log_explorer_insights.test", "service_id", "fastly_service_compute_auto.test", "id"),
 					resource.TestCheckResourceAttrPair("fastly_service_product_api_discovery.test", "service_id", "fastly_service_compute_auto.test", "id"),
-					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "content_guard", "on"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "contentguard", "on"),
 					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "mode", "block"),
 					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "workspace_id", testNGWAFWorkspaceID),
 					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "traffic_ramp", "100"),
@@ -297,7 +297,7 @@ func TestAccFastlyProductEnablement_invalidNGWAFTrafficRampOnCompute(t *testing.
 }
 
 // TestAccFastlyProductEnablement_invalidContentGuard verifies that
-// fastly_service_product_bot_management's content_guard rejects a value
+// fastly_service_product_bot_management's contentguard rejects a value
 // outside "off"/"on" via the attribute's stringvalidator.OneOf schema
 // validation, at plan time and without ever calling the underlying product
 // API.
@@ -400,7 +400,7 @@ func TestAccFastlyProductEnablement_ddosModeUpdateOnly(t *testing.T) {
 }
 
 // TestAccFastlyProductEnablement_botManagementUpdateContentGuard verifies
-// that changing content_guard updates fastly_service_product_bot_management
+// that changing contentguard updates fastly_service_product_bot_management
 // in place via UpdateConfiguration.
 func TestAccFastlyProductEnablement_botManagementUpdateContentGuard(t *testing.T) {
 	t.Parallel()
@@ -417,7 +417,7 @@ func TestAccFastlyProductEnablement_botManagementUpdateContentGuard(t *testing.T
 				Config: ConfigProductEnablementBotManagementOnly(serviceName, domainName, backendName, "off"),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
-					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "content_guard", "off"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "contentguard", "off"),
 				),
 			},
 			{
@@ -428,7 +428,7 @@ func TestAccFastlyProductEnablement_botManagementUpdateContentGuard(t *testing.T
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "content_guard", "on"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "contentguard", "on"),
 				),
 			},
 		},

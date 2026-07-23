@@ -16,7 +16,7 @@ Enables Bot Management on a service. Product Enablement operates on the service 
 
 ### Required
 
-- `content_guard` (String) ContentGuard status. Can be either `off` or `on`.
+- `contentguard` (String) ContentGuard status. Can be either `off` or `on`.
 - `service_id` (String) The ID of the service to enable Bot Management on. Changing this value will delete and recreate this resource against the new service.
 
 ### Read-Only

@@ -54,6 +54,34 @@ func (gzipLevelCodecConflict) ValidateInt64(ctx context.Context, req validator.I
 	)
 }
 
+// notTrimmed rejects a string with leading or trailing whitespace (e.g.
+// \n\t\r\f). The Fastly API silently mishandles a PGP public_key with such
+// whitespace, so this is caught at plan/validate time instead.
+type notTrimmed struct{}
+
+func (notTrimmed) Description(_ context.Context) string {
+	return "value must not contain leading or trailing whitespace"
+}
+
+func (v notTrimmed) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (notTrimmed) ValidateString(_ context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	v := req.ConfigValue.ValueString()
+	if v != strings.TrimSpace(v) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Value",
+			"must not contain leading or trailing whitespace characters (e.g., \\n\\t\\r\\f). Consider trimming the value.",
+		)
+	}
+}
+
 // ValidateNoVCLOnlyAttributesForCompute returns an error diagnostic if
 // format, format_version, placement, or response_condition are explicitly
 // configured on a Compute service. The standalone fastly_service_logging_s3

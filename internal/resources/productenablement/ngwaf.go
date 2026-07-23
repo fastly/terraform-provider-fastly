@@ -42,7 +42,7 @@ func NewNGWAFResource() resource.Resource {
 }
 
 func (r *NGWAFResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_product_enablement_ngwaf"
+	resp.TypeName = req.ProviderTypeName + "_service_product_ngwaf"
 }
 
 func (r *NGWAFResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {

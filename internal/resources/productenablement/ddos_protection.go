@@ -35,7 +35,7 @@ func NewDDoSProtectionResource() resource.Resource {
 }
 
 func (r *DDoSProtectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_product_enablement_ddos_protection"
+	resp.TypeName = req.ProviderTypeName + "_service_product_ddos_protection"
 }
 
 func (r *DDoSProtectionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {

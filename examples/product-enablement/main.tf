@@ -31,23 +31,23 @@ resource "fastly_service_cdn_auto" "example" {
 # service_id, destroying it disables the product. There's no separate
 # "enabled" attribute to toggle.
 
-resource "fastly_product_enablement_brotli_compression" "example" {
+resource "fastly_service_product_brotli_compression" "example" {
   service_id = fastly_service_cdn_auto.example.id
 }
 
-resource "fastly_product_enablement_image_optimizer" "example" {
+resource "fastly_service_product_image_optimizer" "example" {
   service_id = fastly_service_cdn_auto.example.id
 }
 
-resource "fastly_product_enablement_domain_inspector" "example" {
+resource "fastly_service_product_domain_inspector" "example" {
   service_id = fastly_service_cdn_auto.example.id
 }
 
-resource "fastly_product_enablement_websockets" "example" {
+resource "fastly_service_product_websockets" "example" {
   service_id = fastly_service_cdn_auto.example.id
 }
 
-resource "fastly_product_enablement_ddos_protection" "example" {
+resource "fastly_service_product_ddos_protection" "example" {
   service_id = fastly_service_cdn_auto.example.id
   mode       = "log"
 }
@@ -59,7 +59,7 @@ variable "service_ids" {
   default = []
 }
 
-resource "fastly_product_enablement_domain_inspector" "fleet" {
+resource "fastly_service_product_domain_inspector" "fleet" {
   for_each = var.service_ids
 
   service_id = each.value

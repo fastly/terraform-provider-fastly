@@ -147,7 +147,7 @@ type simpleProductResource struct {
 }
 
 func (r *simpleProductResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_product_enablement_" + r.spec.attrName
+	resp.TypeName = req.ProviderTypeName + "_service_product_" + r.spec.attrName
 }
 
 func (r *simpleProductResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {

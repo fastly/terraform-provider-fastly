@@ -12,7 +12,7 @@ The example provisions and manages:
 - one domain per service
 - one ACL per service (service 1 has an IP allowlist, service 2 has a temporary blocklist)
 - one gzip configuration on service 1
-- Image Optimizer default settings on service 1
+- Image Optimizer enabled on service 1 (default settings added in a follow-up apply - see below)
 
 ## What this example is for
 
@@ -49,15 +49,18 @@ Expected bootstrap behavior:
 
 1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
-3. The provider reconciles the nested `domain`, `backend`, `acl`, `gzip`, and
-   `image_optimizer_default_settings` blocks to version `1`.
+3. The provider reconciles the nested `domain`, `backend`, `acl`, and `gzip`
+   blocks to version `1`.
 4. The provider validates and activates version `1`.
+5. `fastly_service_product_image_optimizer.service_1` enables the Image
+   Optimizer product on `service_1`.
 
-Note: `image_optimizer_default_settings` on `service_1` requires the Image
-Optimizer product to already be enabled on that service (via the Fastly UI,
-API, or product enablement tooling) - the provider does not enable it for you.
-If it isn't enabled, remove that block or enable the product out-of-band
-before applying.
+Note: `image_optimizer_default_settings` can't be added to `service_1` in
+this same bootstrap apply. That block is reconciled as part of
+`fastly_service_cdn_auto.service_1`'s own create step, which runs before
+`fastly_service_product_image_optimizer.service_1` - so Image Optimizer isn't
+enabled yet at the point the settings block would need it. See "Configure
+Image Optimizer default settings" below for the required follow-up apply.
 
 ## Day-to-day workflow
 
@@ -176,6 +179,37 @@ You should see:
 - `service_1_active_version` move to the new version
 - the updated `content_types` reflected in the service configuration
 - `service_2_*` outputs remain unchanged
+
+### Configure Image Optimizer default settings
+
+Once the bootstrap apply has enabled Image Optimizer on `service_1` via
+`fastly_service_product_image_optimizer.service_1`, add the
+`image_optimizer_default_settings` block to `fastly_service_cdn_auto.service_1`
+in `main.tf`:
+
+```hcl
+  image_optimizer_default_settings {
+    resize_filter = "lanczos3"
+    webp          = false
+    webp_quality  = 85
+    jpeg_type     = "auto"
+    jpeg_quality  = 85
+    upscale       = false
+    allow_video   = false
+  }
+```
+
+Then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- `service_1_active_version` move to the new version
+- `service_1_image_optimizer_default_settings` reflect the configured values
 
 ### Change Image Optimizer default settings
 

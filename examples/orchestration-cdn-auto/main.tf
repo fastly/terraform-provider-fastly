@@ -50,19 +50,17 @@ resource "fastly_service_cdn_auto" "service_1" {
     content_types = ["text/html", "text/css", "application/javascript"]
     extensions    = ["css", "js", "html"]
   }
+}
 
-  # Requires the Image Optimizer product to already be enabled on this service
-  # (via the Fastly UI, API, or product enablement tooling). Remove this block
-  # to reset Image Optimizer default settings back to their API defaults.
-  image_optimizer_default_settings {
-    resize_filter = "lanczos3"
-    webp          = false
-    webp_quality  = 85
-    jpeg_type     = "auto"
-    jpeg_quality  = 85
-    upscale       = false
-    allow_video   = false
-  }
+# Image Optimizer must be enabled on service_1 before an
+# image_optimizer_default_settings block can be added to fastly_service_cdn_auto.service_1.
+# This resource can be applied together with the service's own creation, since it only
+# depends on the service's id. But image_optimizer_default_settings is reconciled inside
+# the service resource's own create step, which runs before this resource - so the settings
+# block itself must be added in a later apply, once this resource has enabled the product.
+# See README.md's "Configure Image Optimizer default settings" section.
+resource "fastly_service_product_image_optimizer" "service_1" {
+  service_id = fastly_service_cdn_auto.service_1.id
 }
 
 resource "fastly_service_cdn_auto" "service_2" {

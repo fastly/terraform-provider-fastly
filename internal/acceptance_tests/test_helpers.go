@@ -14,6 +14,7 @@ import (
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,34 +42,6 @@ func NewFastlyClient() (*fastly.Client, error) {
 		return nil, fmt.Errorf("FASTLY_API_TOKEN environment variable must be set")
 	}
 	return fastly.NewClient(apiToken)
-}
-
-// CreateTestKVStore creates a KV Store fixture directly against the Fastly API for use as a
-// resource_link target, and registers its cleanup via t.Cleanup. Returns the store's ID.
-//
-// This provider doesn't yet have a dedicated resource for KV Stores, so resource_link
-// acceptance tests need a real linkable resource created out-of-band from Terraform.
-//
-// TODO: once a fastly_kvstore resource exists, replace this raw go-fastly client call with a
-// Terraform-managed fixture (e.g. via config_builder.go) so the fixture participates in the
-// same state/plan lifecycle as the rest of the test config.
-func CreateTestKVStore(t *testing.T, name string) string {
-	client, err := NewFastlyClient()
-	if err != nil {
-		t.Fatalf("error creating Fastly client: %s", err)
-	}
-
-	store, err := client.CreateKVStore(context.Background(), &fastly.CreateKVStoreInput{Name: name})
-	if err != nil {
-		t.Fatalf("error creating KV Store fixture: %s", err)
-	}
-	t.Cleanup(func() {
-		if err := client.DeleteKVStore(context.Background(), &fastly.DeleteKVStoreInput{StoreID: store.StoreID}); err != nil {
-			t.Logf("error deleting KV Store fixture %q: %s", store.StoreID, err)
-		}
-	})
-
-	return store.StoreID
 }
 
 // serviceDestroyCheckAttempts and serviceDestroyCheckInterval bound the retry loop in
@@ -204,6 +177,71 @@ func CheckGzipFieldClearedRemotely(resourceName, gzipName, field, staleValue str
 
 		if raw == staleValue {
 			return fmt.Errorf("gzip %q %s still equals the stale value %q in Fastly - the remote value was not actually cleared", gzipName, field, staleValue)
+		}
+
+		return nil
+	}
+}
+
+// CheckImageOptimizerDefaultSettingsMatchAPIDefaults returns a TestCheckFunc that fetches Image
+// Optimizer default settings directly from the Fastly API (bypassing Terraform state) and fails
+// if any field still holds a previously-configured, non-default value. This exists because the
+// read path only surfaces image_optimizer_default_settings when the block is present in config,
+// so a state-only check of the block being absent can pass even if the remote settings were
+// never actually reset.
+func CheckImageOptimizerDefaultSettingsMatchAPIDefaults(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		version, err := strconv.Atoi(rs.Primary.Attributes["active_version"])
+		if err != nil {
+			return fmt.Errorf("error parsing active_version: %w", err)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		settings, err := client.GetImageOptimizerDefaultSettings(context.Background(), &fastly.GetImageOptimizerDefaultSettingsInput{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching Image Optimizer default settings: %w", err)
+		}
+		if settings == nil {
+			return nil
+		}
+
+		var mismatches []string
+		if settings.ResizeFilter != imageoptimizerdefaultsettings.DefaultResizeFilter {
+			mismatches = append(mismatches, fmt.Sprintf("resize_filter=%q, want %q", settings.ResizeFilter, imageoptimizerdefaultsettings.DefaultResizeFilter))
+		}
+		if settings.Webp != imageoptimizerdefaultsettings.DefaultWebp {
+			mismatches = append(mismatches, fmt.Sprintf("webp=%v, want %v", settings.Webp, imageoptimizerdefaultsettings.DefaultWebp))
+		}
+		if settings.WebpQuality != imageoptimizerdefaultsettings.DefaultWebpQuality {
+			mismatches = append(mismatches, fmt.Sprintf("webp_quality=%d, want %d", settings.WebpQuality, imageoptimizerdefaultsettings.DefaultWebpQuality))
+		}
+		if settings.JpegType != imageoptimizerdefaultsettings.DefaultJpegType {
+			mismatches = append(mismatches, fmt.Sprintf("jpeg_type=%q, want %q", settings.JpegType, imageoptimizerdefaultsettings.DefaultJpegType))
+		}
+		if settings.JpegQuality != imageoptimizerdefaultsettings.DefaultJpegQuality {
+			mismatches = append(mismatches, fmt.Sprintf("jpeg_quality=%d, want %d", settings.JpegQuality, imageoptimizerdefaultsettings.DefaultJpegQuality))
+		}
+		if settings.Upscale != imageoptimizerdefaultsettings.DefaultUpscale {
+			mismatches = append(mismatches, fmt.Sprintf("upscale=%v, want %v", settings.Upscale, imageoptimizerdefaultsettings.DefaultUpscale))
+		}
+		if settings.AllowVideo != imageoptimizerdefaultsettings.DefaultAllowVideo {
+			mismatches = append(mismatches, fmt.Sprintf("allow_video=%v, want %v", settings.AllowVideo, imageoptimizerdefaultsettings.DefaultAllowVideo))
+		}
+
+		if len(mismatches) > 0 {
+			return fmt.Errorf("Image Optimizer default settings were not reset to API defaults in Fastly: %s", strings.Join(mismatches, ", "))
 		}
 
 		return nil

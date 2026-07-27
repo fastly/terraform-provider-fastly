@@ -79,6 +79,7 @@ func TestAccFastlyServiceCDNAuto_imageOptimizerDefaultSettings(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "image_optimizer_default_settings.#", "0"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "4"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "4"),
+					CheckImageOptimizerDefaultSettingsMatchAPIDefaults("fastly_service_cdn_auto.test"),
 				),
 			},
 		},

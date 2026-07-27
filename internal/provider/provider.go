@@ -28,8 +28,9 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
-	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/kvstore"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/productenablement"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/resourcelink"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdn"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
@@ -109,6 +110,17 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		domain.NewResource,
 		loggings3.NewResource,
 		kvstore.NewResource,
+		productenablement.NewFanoutResource,
+		productenablement.NewBrotliCompressionResource,
+		productenablement.NewImageOptimizerResource,
+		productenablement.NewOriginInspectorResource,
+		productenablement.NewDomainInspectorResource,
+		productenablement.NewWebsocketsResource,
+		productenablement.NewLogExplorerInsightsResource,
+		productenablement.NewAPIDiscoveryResource,
+		productenablement.NewBotManagementResource,
+		productenablement.NewDDoSProtectionResource,
+		productenablement.NewNGWAFResource,
 		resourcelink.NewResource,
 		servicecdn.NewResource,
 		servicecdnauto.NewResource,

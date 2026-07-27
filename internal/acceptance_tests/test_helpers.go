@@ -14,6 +14,7 @@ import (
 	"github.com/fastly/go-fastly/v16/fastly"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -182,6 +183,71 @@ func CheckGzipFieldClearedRemotely(resourceName, gzipName, field, staleValue str
 	}
 }
 
+// CheckImageOptimizerDefaultSettingsMatchAPIDefaults returns a TestCheckFunc that fetches Image
+// Optimizer default settings directly from the Fastly API (bypassing Terraform state) and fails
+// if any field still holds a previously-configured, non-default value. This exists because the
+// read path only surfaces image_optimizer_default_settings when the block is present in config,
+// so a state-only check of the block being absent can pass even if the remote settings were
+// never actually reset.
+func CheckImageOptimizerDefaultSettingsMatchAPIDefaults(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		version, err := strconv.Atoi(rs.Primary.Attributes["active_version"])
+		if err != nil {
+			return fmt.Errorf("error parsing active_version: %w", err)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		settings, err := client.GetImageOptimizerDefaultSettings(context.Background(), &fastly.GetImageOptimizerDefaultSettingsInput{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching Image Optimizer default settings: %w", err)
+		}
+		if settings == nil {
+			return fmt.Errorf("expected Image Optimizer default settings to be populated since Image Optimizer remains enabled, got nil")
+		}
+
+		var mismatches []string
+		if settings.ResizeFilter != imageoptimizerdefaultsettings.DefaultResizeFilter {
+			mismatches = append(mismatches, fmt.Sprintf("resize_filter=%q, want %q", settings.ResizeFilter, imageoptimizerdefaultsettings.DefaultResizeFilter))
+		}
+		if settings.Webp != imageoptimizerdefaultsettings.DefaultWebp {
+			mismatches = append(mismatches, fmt.Sprintf("webp=%v, want %v", settings.Webp, imageoptimizerdefaultsettings.DefaultWebp))
+		}
+		if settings.WebpQuality != imageoptimizerdefaultsettings.DefaultWebpQuality {
+			mismatches = append(mismatches, fmt.Sprintf("webp_quality=%d, want %d", settings.WebpQuality, imageoptimizerdefaultsettings.DefaultWebpQuality))
+		}
+		if settings.JpegType != imageoptimizerdefaultsettings.DefaultJpegType {
+			mismatches = append(mismatches, fmt.Sprintf("jpeg_type=%q, want %q", settings.JpegType, imageoptimizerdefaultsettings.DefaultJpegType))
+		}
+		if settings.JpegQuality != imageoptimizerdefaultsettings.DefaultJpegQuality {
+			mismatches = append(mismatches, fmt.Sprintf("jpeg_quality=%d, want %d", settings.JpegQuality, imageoptimizerdefaultsettings.DefaultJpegQuality))
+		}
+		if settings.Upscale != imageoptimizerdefaultsettings.DefaultUpscale {
+			mismatches = append(mismatches, fmt.Sprintf("upscale=%v, want %v", settings.Upscale, imageoptimizerdefaultsettings.DefaultUpscale))
+		}
+		if settings.AllowVideo != imageoptimizerdefaultsettings.DefaultAllowVideo {
+			mismatches = append(mismatches, fmt.Sprintf("allow_video=%v, want %v", settings.AllowVideo, imageoptimizerdefaultsettings.DefaultAllowVideo))
+		}
+
+		if len(mismatches) > 0 {
+			return fmt.Errorf("Image Optimizer default settings were not reset to API defaults in Fastly: %s", strings.Join(mismatches, ", "))
+		}
+
+		return nil
+	}
+}
+
 // GetPackagePath returns the path to the valid.tar.gz test package
 // Assumes tests are always run from the acceptance_tests package directory
 func GetPackagePath() string {
@@ -314,6 +380,61 @@ func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domai
 		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
 	)
+}
+
+// imageOptimizerProductEnablement returns a fastly_service_product_image_optimizer resource
+// block that enables Image Optimizer on the given service resource reference (e.g.
+// "fastly_service_cdn_auto.test"). Image Optimizer default settings can only be persisted once
+// the product has been enabled on the service.
+func imageOptimizerProductEnablement(serviceRef string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_product_image_optimizer" "image_optimizer" {
+  service_id = %s.id
+}
+`, serviceRef)
+}
+
+// ConfigCDNAutoImageOptimizerEnabled returns a CDN auto service config with a domain and Image
+// Optimizer enabled via fastly_service_product_image_optimizer, but no
+// image_optimizer_default_settings block.
+func ConfigCDNAutoImageOptimizerEnabled(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettings returns a CDN auto service config with a
+// domain, Image Optimizer enabled, and default (all-default-value) Image Optimizer default
+// settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettings(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_single.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated returns a CDN auto service config with
+// a domain, Image Optimizer enabled, and non-default Image Optimizer default settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_updated.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
 }
 
 // ConfigCDNAutoWithACL returns a CDN auto service config with a domain and ACL

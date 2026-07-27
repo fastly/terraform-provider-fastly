@@ -214,7 +214,7 @@ func CheckImageOptimizerDefaultSettingsMatchAPIDefaults(resourceName string) res
 			return fmt.Errorf("error fetching Image Optimizer default settings: %w", err)
 		}
 		if settings == nil {
-			return nil
+			return fmt.Errorf("expected Image Optimizer default settings to be populated since Image Optimizer remains enabled, got nil")
 		}
 
 		var mismatches []string

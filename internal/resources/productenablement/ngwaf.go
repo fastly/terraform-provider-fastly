@@ -168,7 +168,11 @@ func (r *NGWAFResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (ngwaf)", map[string]any{"service_id": serviceID})
 
 	if _, err := ngwafproduct.Get(ctx, r.client, serviceID); err != nil {
-		resp.State.RemoveResource(ctx)
+		if errors.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading ngwaf", err.Error())
 		return
 	}
 

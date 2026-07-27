@@ -100,7 +100,11 @@ func (r *BotManagementResource) Read(ctx context.Context, req resource.ReadReque
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (bot_management)", map[string]any{"service_id": serviceID})
 
 	if _, err := botmanagement.Get(ctx, r.client, serviceID); err != nil {
-		resp.State.RemoveResource(ctx)
+		if errors.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading bot_management", err.Error())
 		return
 	}
 

@@ -258,9 +258,11 @@ func (r *simpleProductResource) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// Read treats any error from the product's Get endpoint - whether because
-// the product was disabled outside Terraform or because the service itself
-// is gone - as "no longer enabled" and removes the resource from state.
+// Read treats a 404 from the product's Get endpoint - whether because the
+// product was disabled outside Terraform or because the service itself is
+// gone - as "no longer enabled" and removes the resource from state. Any
+// other error (e.g. a transient 5xx) is surfaced as a diagnostic instead of
+// silently dropping the resource from state.
 func (r *simpleProductResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state simpleProductModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -275,10 +277,14 @@ func (r *simpleProductResource) Read(ctx context.Context, req resource.ReadReque
 	})
 
 	if _, err := r.spec.get(ctx, r.client, serviceID); err != nil {
-		tflog.Warn(ctx, fmt.Sprintf("%s no longer enabled, removing from state", r.spec.attrName), map[string]any{
-			"service_id": serviceID,
-		})
-		resp.State.RemoveResource(ctx)
+		if errors.IsNotFound(err) {
+			tflog.Warn(ctx, fmt.Sprintf("%s no longer enabled, removing from state", r.spec.attrName), map[string]any{
+				"service_id": serviceID,
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Error reading %s", r.spec.attrName), err.Error())
 		return
 	}
 

@@ -96,7 +96,11 @@ func (r *DDoSProtectionResource) Read(ctx context.Context, req resource.ReadRequ
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (ddos_protection)", map[string]any{"service_id": serviceID})
 
 	if _, err := ddosprotection.Get(ctx, r.client, serviceID); err != nil {
-		resp.State.RemoveResource(ctx)
+		if errors.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading ddos_protection", err.Error())
 		return
 	}
 

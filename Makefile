@@ -8,7 +8,7 @@ BIN_DIR := $(CURDIR)/bin
 BINARY := $(BIN_DIR)/terraform-provider-$(PKG_NAME)_$(VERSION)
 OVERRIDES_FILE := $(BIN_DIR)/developer_overrides.tfrc
 
-.PHONY: fmt build dev-overrides clean test-unit test-acc generate-docs validate-docs docs test-lifecycle-cdn test-lifecycle-compute test-lifecycle help
+.PHONY: fmt build dev-overrides clean test-unit test-acc test-baseline generate-docs validate-docs docs test-lifecycle-cdn test-lifecycle-compute test-lifecycle help
 
 help:
 	@echo "Available targets:"
@@ -20,6 +20,8 @@ help:
 	@echo "                                Add KEYWORD=<word> to only run tests whose name matches <word>"
 	@echo "                                (KEYWORD is passed through to 'go test -run' as a regular expression,"
 	@echo "                                not a literal substring, so characters like . * + [ ] are special)"
+	@echo "  make test-baseline          - Run the baseline regression suite, ~2.5m (requires FASTLY_API_TOKEN)"
+	@echo "                                See 'Baseline regression suite' in CLAUDE.md"
 	@echo "  make test-lifecycle-cdn     - Run CDN lifecycle tests (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle-compute - Run Compute lifecycle tests (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle         - Run all lifecycle tests (requires FASTLY_API_TOKEN)"
@@ -50,6 +52,45 @@ test-acc:
 	@echo "==> Running acceptance tests..."
 	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
 	@TF_ACC=1 $(GO_BIN) test -count=1 -v -timeout 30m ./internal/acceptance_tests -run 'TestAcc.*$(KEYWORD)'
+
+# One canonical happy-path test per resource family/feature, picked to fail fast (~2.5m)
+# on a broken build without running the full acceptance suite. See "Baseline regression
+# suite" in CLAUDE.md for the criteria used to decide whether a new test belongs here.
+empty :=
+space := $(empty) $(empty)
+
+BASELINE_TEST_NAMES := \
+	TestAccProvider_ConfigureWithAPIToken \
+	TestAccFastlyServiceCDN_basic \
+	TestAccFastlyServiceCompute_basic \
+	TestAccFastlyServiceCDNAuto_basic \
+	TestAccFastlyServiceComputeAuto_basic \
+	TestAccFastlyServiceBackend_basic \
+	TestAccFastlyServiceDomain_basic \
+	TestAccFastlyACL_basic \
+	TestAccFastlyKVStore_basic \
+	TestAccFastlyServiceLoggingS3_basic \
+	TestAccFastlyServiceCDNAuto_withLoggingS3 \
+	TestAccFastlyProductEnablement_cdnBasic \
+	TestAccFastlyProductEnablement_computeBasic \
+	TestAccFastlyServiceResourceLink_ACL
+
+BASELINE_TESTS := $(subst $(space),|,$(addsuffix $$,$(BASELINE_TEST_NAMES)))
+
+test-baseline:
+	@echo "==> Verifying baseline test names resolve..."
+	@found="$$($(GO_BIN) test ./internal/acceptance_tests -list '$(BASELINE_TESTS)' 2>/dev/null)"; \
+	missing=0; \
+	for name in $(BASELINE_TEST_NAMES); do \
+		if ! printf '%s\n' "$$found" | grep -qx "$$name"; then \
+			echo "ERROR: baseline test $$name not found in ./internal/acceptance_tests (renamed or deleted?)" >&2; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ "$$missing" -eq 1 ]; then exit 1; fi
+	@echo "==> Running baseline regression suite..."
+	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
+	@TF_ACC=1 $(GO_BIN) test -count=1 -v -timeout 5m ./internal/acceptance_tests -run '$(BASELINE_TESTS)'
 
 generate-docs:
 	@echo "==> Generating Terraform Registry documentation..."

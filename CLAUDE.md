@@ -52,8 +52,20 @@ make fmt     # go fmt ./...
 - `make test-unit` — no API token needed; unit tests live next to the code (e.g. `backend/backend_test.go`)
 - `make test-acc` / `make test-lifecycle` — acceptance + full apply/destroy lifecycle; both require `FASTLY_API_TOKEN`
 - `make test-acc KEYWORD=<word>` — only run acceptance tests whose name matches `<word>`; passed through to `go test -run` as a regular expression (not a literal substring)
+- `make test-baseline` — baseline regression suite; requires `FASTLY_API_TOKEN`, runs in ~2.5m (budget: 5m)
 
 Acceptance tests live in `internal/acceptance_tests/` and build HCL via `config_builder.go`.
+
+### Baseline regression suite
+
+`make test-baseline` runs a fixed list of `-run` patterns (see `BASELINE_TESTS` in the `Makefile`) — one canonical happy-path acceptance test per resource family/feature, picked to fail fast on a broken build without running the full acceptance suite. It intentionally excludes update/import/error-path variants; those live in the full `make test-acc` run.
+
+When adding or substantially changing a resource, action, or nested block, check whether it warrants a slot in `BASELINE_TESTS`:
+
+- **Add it** if the change introduces a new resource family, a new top-level feature (e.g. a new nested block type on an `_auto` resource), or a new external API surface the provider talks to — something no existing baseline test would catch if it broke.
+- **Don't add it** if the change is a new field, variant, or edge case on a resource family already represented (e.g. another logging backend alongside S3, another `_basic` update path) — that belongs in the full acceptance suite instead.
+- Prefer the smallest/fastest test that exercises the new code path (usually a `_basic` create-only test, not `_update`/`_import`).
+- Keep the suite's total wall-clock under 5 minutes. Since all acceptance tests run with `t.Parallel()`, wall-clock is bounded by the slowest single test in the set, not the sum — but re-run `make test-baseline` after adding a test and confirm the total.
 
 ### Documentation
 
@@ -65,6 +77,7 @@ Per-object docs in `docs/` are **generated** by `tfplugindocs` — do not hand-e
 - No comments explaining *what* code does — only *why* when non-obvious  
 - `StringValue`, `Int64Value`, `BoolValue` unwrap `types.*` safely; prefer these over direct field access  
 - `ToGeneratedResourceName(parts...)` builds HCL identifiers from API names (used in list resources)  
+- Aim to maintain basic schema-level validation (enums, ranges, max lengths) rather than fully relying on the API to reject bad input — catching mistakes at plan time is a better user experience than a failed apply, e.g. [`stringvalidator.OneOf`](https://github.com/fastly/terraform-provider-fastly/blob/6965b4aa8d50398e3d5ff9ee552f7e312a5483ec/internal/resources/kvstore/schema.go#L31-L33)  
 - Use `new(T)` to take a pointer to a value — prefer this over `fastly.ToPointer` (a go-fastly helper that has been replaced with idiomatic Go)
 
 ## Conventions
@@ -101,7 +114,7 @@ See `internal/resources/servicecdnauto/resource.go` for the exact pattern.
 
 ## Dependencies
 
-- `github.com/fastly/go-fastly/v15` — Fastly API client  
+- `github.com/fastly/go-fastly/v16` — Fastly API client  
 - `github.com/hashicorp/terraform-plugin-framework v1.17.0` — includes `action` and `list` packages
 
 ## Related

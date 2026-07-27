@@ -146,6 +146,12 @@ func TestAccFastlyServiceCDNAuto_loggingNewRelicOTLPPlacementUnsetVsNone(t *test
 					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "logging_newrelicotlp.0.placement"),
 				),
 			},
+			{
+				// The API's null response must leave no residual diff against the
+				// same, still-unset config.
+				Config:   ConfigCDNAutoWithLoggingNewRelicOTLP(serviceName, domainName, loggerName),
+				PlanOnly: true,
+			},
 		},
 	})
 }

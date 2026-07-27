@@ -199,6 +199,12 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_placementUnsetVsNone(t *testing.T) 
 					resource.TestCheckNoResourceAttr("fastly_service_logging_newrelicotlp.test", "placement"),
 				),
 			},
+			{
+				// The API's null response must leave no residual diff against the
+				// same, still-unset config.
+				Config:   ConfigLoggingNewRelicOTLPBasic(serviceName, domainName, loggerName),
+				PlanOnly: true,
+			},
 		},
 	})
 }

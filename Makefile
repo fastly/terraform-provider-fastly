@@ -21,7 +21,7 @@ help:
 	@echo "                                (KEYWORD is passed through to 'go test -run' as a regular expression,"
 	@echo "                                not a literal substring, so characters like . * + [ ] are special)"
 	@echo "  make test-baseline          - Run the baseline regression suite, ~2.5m (requires FASTLY_API_TOKEN)"
-	@echo "                                See 'Baseline regression suite' in CLAUDE.md"
+	@echo "                                See 'Baseline Regression Suite' in TESTING.md"
 	@echo "  make test-lifecycle-cdn     - Run CDN lifecycle tests (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle-compute - Run Compute lifecycle tests (requires FASTLY_API_TOKEN)"
 	@echo "  make test-lifecycle         - Run all lifecycle tests (requires FASTLY_API_TOKEN)"
@@ -55,7 +55,7 @@ test-acc:
 
 # One canonical happy-path test per resource family/feature, picked to fail fast (~2.5m)
 # on a broken build without running the full acceptance suite. See "Baseline regression
-# suite" in CLAUDE.md for the criteria used to decide whether a new test belongs here.
+# suite" in TESTING.md for the criteria used to decide whether a new test belongs here.
 empty :=
 space := $(empty) $(empty)
 

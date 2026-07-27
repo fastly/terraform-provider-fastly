@@ -477,13 +477,27 @@ Ensure API token has permissions to:
 
 ### Baseline Regression Suite
 
-`make test-baseline` runs a fixed subset of acceptance tests (one canonical happy-path
-test per resource family/feature) intended to fail fast on a broken build, in under 5
-minutes, without running the full acceptance suite. It requires `FASTLY_API_TOKEN`.
+`make test-baseline` runs a fixed list of `-run` patterns (see `BASELINE_TESTS` /
+`BASELINE_TEST_NAMES` in the `Makefile`) — one canonical happy-path acceptance test per
+resource family/feature, picked to fail fast on a broken build without running the full
+acceptance suite. It intentionally excludes update/import/error-path variants; those live
+in the full `make test-acc` run. It requires `FASTLY_API_TOKEN` and runs in ~2.5m (budget:
+5m).
 
-The test list lives in `BASELINE_TESTS`/`BASELINE_TEST_NAMES` in the `Makefile`. See
-"Baseline regression suite" in `CLAUDE.md` for the criteria used to decide whether a new
-test belongs in this list.
+When adding or substantially changing a resource, action, or nested block, check whether
+it warrants a slot in `BASELINE_TESTS`:
+
+- **Add it** if the change introduces a new resource family, a new top-level feature (e.g.
+  a new nested block type on an `_auto` resource), or a new external API surface the
+  provider talks to — something no existing baseline test would catch if it broke.
+- **Don't add it** if the change is a new field, variant, or edge case on a resource family
+  already represented (e.g. another logging backend alongside S3, another `_basic` update
+  path) — that belongs in the full acceptance suite instead.
+- Prefer the smallest/fastest test that exercises the new code path (usually a `_basic`
+  create-only test, not `_update`/`_import`).
+- Keep the suite's total wall-clock under 5 minutes. Since all acceptance tests run with
+  `t.Parallel()`, wall-clock is bounded by the slowest single test in the set, not the sum
+  — but re-run `make test-baseline` after adding a test and confirm the total.
 
 ### Lifecycle Tests
 

@@ -116,6 +116,13 @@ func Int64PointerOrNull(v *int) types.Int64 {
 	return types.Int64Value(int64(*v))
 }
 
+func StringPointerOrNull(v *string) types.String {
+	if v == nil {
+		return types.StringNull()
+	}
+	return types.StringValue(*v)
+}
+
 func BoolPointerOrDefault(v *bool, defaultValue bool) types.Bool {
 	if v == nil {
 		return types.BoolValue(defaultValue)

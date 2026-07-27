@@ -97,6 +97,59 @@ func TestAccFastlyServiceCDNAuto_withLoggingNewRelicOTLPUpdate(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceCDNAuto_loggingNewRelicOTLPPlacementUnsetVsNone verifies
+// that the nested logging_newrelicotlp block's placement round-trips between
+// unset and explicit "none". It checks active_version/managed_version
+// alongside placement because those Computed fields only advance when a
+// nested block actually changes — the reset needs to be visible there too.
+func TestAccFastlyServiceCDNAuto_loggingNewRelicOTLPPlacementUnsetVsNone(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("newrelic-logger-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				// Start unset. Created directly with the logging block already
+				// present, so this is a single Create at version 1 — not a
+				// subsequent clone — unlike TestAccFastlyServiceCDNAuto_withLoggingNewRelicOTLP,
+				// which adds the block in a second step against an already-created service.
+				Config: ConfigCDNAutoWithLoggingNewRelicOTLP(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "logging_newrelicotlp.0.placement"),
+				),
+			},
+			{
+				// Update to explicit "none".
+				Config: ConfigCDNAutoWithLoggingNewRelicOTLPPlacementNone(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_newrelicotlp.0.placement", "none"),
+				),
+			},
+			{
+				// Update back to unset.
+				Config: ConfigCDNAutoWithLoggingNewRelicOTLP(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "3"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "3"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "logging_newrelicotlp.0.placement"),
+				),
+			},
+		},
+	})
+}
+
 // TestAccFastlyServiceCDNAuto_withMultipleLoggingNewRelicOTLP verifies that
 // multiple nested New Relic OTLP logging endpoints reconcile correctly and
 // preserve configured order across reads.

@@ -26,7 +26,7 @@ func FlattenToNestedModel(n *fastly.NewRelicOTLP) NestedModel {
 	m.ProcessingRegion = service.StringPointerOrDefault(n.ProcessingRegion, DefaultProcessingRegion)
 	m.Format = service.StringPointerOrDefault(n.Format, constants.LoggingNewRelicOTLPDefaultFormat)
 	m.FormatVersion = service.Int64PointerOrDefault(n.FormatVersion, DefaultFormatVersion)
-	m.Placement = service.StringPointerOrDefault(n.Placement, DefaultPlacement)
+	m.Placement = service.StringPointerOrNull(n.Placement)
 	m.ResponseCondition = service.StringPointerOrDefault(n.ResponseCondition, DefaultResponseCondition)
 
 	return m

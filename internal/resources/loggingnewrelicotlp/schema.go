@@ -24,7 +24,6 @@ const (
 	DefaultFormatVersion     = 2
 	DefaultRegion            = "US"
 	DefaultURL               = ""
-	DefaultPlacement         = "none"
 	DefaultResponseCondition = ""
 	DefaultProcessingRegion  = "none"
 
@@ -166,9 +165,14 @@ func vclOnlyAttributes() map[string]schema.Attribute {
 			Description: "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.",
 		},
 		"placement": schema.StringAttribute{
+			// Not Computed: unset and explicitly "none" are distinct states on the
+			// API (unset lets the API auto-place the logging call; "none" suppresses
+			// it entirely), and the API always resolves to exactly what was
+			// configured — never some other server-computed value — so there is
+			// nothing for Computed to add. Keeping it plain Optional means removing
+			// placement from config is a real, visible diff from Terraform core's own
+			// plan proposal, with no plan modifier required to force it.
 			Optional: true,
-			Computed: true,
-			Default:  stringdefault.StaticString(DefaultPlacement),
 			Validators: []validator.String{
 				stringvalidator.OneOf("none"),
 			},

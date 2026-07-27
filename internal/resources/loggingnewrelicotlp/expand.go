@@ -62,7 +62,17 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
-	input.Placement = fastly.NullString(service.StringValue(m.Placement))
+	// placement can be cleared back to unset / nil (distinct from "none" —
+	// see schema.go). UpdateNewRelicOTLPInput.Placement is a *Nullable[string]
+	// specifically so this can be sent as a real JSON null: omitting the field
+	// leaves the previous value in place, and sending a literal empty string
+	// gets stored as "" rather than reverting to null/auto-placement — neither
+	// actually clears it.
+	if v := service.StringValue(m.Placement); v != "" {
+		input.Placement = fastly.NewNullable(v)
+	} else {
+		input.Placement = fastly.NullValue[string]()
+	}
 	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
 
 	return input

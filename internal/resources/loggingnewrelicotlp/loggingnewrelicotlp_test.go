@@ -18,7 +18,7 @@ func defaultNestedModel() NestedModel {
 		commonModel:       defaultCommonModel(),
 		Format:            types.StringValue(constants.LoggingNewRelicOTLPDefaultFormat),
 		FormatVersion:     types.Int64Value(DefaultFormatVersion),
-		Placement:         types.StringValue(DefaultPlacement),
+		Placement:         types.StringNull(),
 		ResponseCondition: types.StringValue(DefaultResponseCondition),
 	}
 }
@@ -42,7 +42,7 @@ func fullNestedModel() NestedModel {
 	m.ProcessingRegion = types.StringValue("eu")
 	m.Format = types.StringValue("%h %l %u")
 	m.FormatVersion = types.Int64Value(1)
-	m.Placement = types.StringValue("waf_debug")
+	m.Placement = types.StringValue("none")
 	m.ResponseCondition = types.StringValue("response-condition-1")
 	return m
 }
@@ -89,7 +89,7 @@ func TestFlattenToNestedModel(t *testing.T) {
 				ProcessingRegion:  new("eu"),
 				Format:            new("%h %l %u"),
 				FormatVersion:     new(1),
-				Placement:         new("waf_debug"),
+				Placement:         new("none"),
 				ResponseCondition: new("response-condition-1"),
 			},
 			expected: fullNestedModel(),
@@ -114,7 +114,7 @@ func TestFlattenToComputeNestedModel(t *testing.T) {
 		// VCL-only fields must be ignored by the Compute flatten.
 		Format:            new("%h %l %u"),
 		FormatVersion:     new(1),
-		Placement:         new("waf_debug"),
+		Placement:         new("none"),
 		ResponseCondition: new("response-condition-1"),
 	}
 
@@ -186,6 +186,7 @@ func TestBuildCreateInput(t *testing.T) {
 				assert.Equal(t, "insert-api-key", *input.Token)
 				assert.Equal(t, "US", *input.Region)
 				assert.Equal(t, "none", *input.ProcessingRegion)
+				assert.Nil(t, input.Placement, "unset placement must not be sent as \"none\" — the API treats them differently")
 			},
 		},
 		{
@@ -201,7 +202,7 @@ func TestBuildCreateInput(t *testing.T) {
 				assert.Equal(t, "eu", *input.ProcessingRegion)
 				assert.Equal(t, "%h %l %u", *input.Format)
 				assert.Equal(t, 1, *input.FormatVersion)
-				assert.Equal(t, "waf_debug", *input.Placement)
+				assert.Equal(t, "none", *input.Placement)
 				assert.Equal(t, "response-condition-1", *input.ResponseCondition)
 			},
 		},
@@ -240,14 +241,16 @@ func TestBuildUpdateInput(t *testing.T) {
 	assert.Equal(t, "EU", *input.Region)
 	assert.Equal(t, "%h %l %u", *input.Format)
 	assert.Equal(t, 1, *input.FormatVersion)
-	assert.Equal(t, "waf_debug", *input.Placement)
+	assert.Equal(t, fastly.NewNullable("none"), input.Placement)
 	assert.Equal(t, "response-condition-1", *input.ResponseCondition)
 }
 
 // TestBuildUpdateInputClearsClearableFields verifies that url and
 // response_condition are always sent as a concrete value on update — even when
 // empty — so clearing them actually reaches the API rather than being omitted
-// (which would leave a previously-set value in place).
+// (which would leave a previously-set value in place). placement is cleared
+// the same way, but as an explicit JSON null rather than an empty string —
+// see BuildUpdateInput.
 func TestBuildUpdateInputClearsClearableFields(t *testing.T) {
 	input := BuildUpdateInput("service-1", 1, minimalNestedModel())
 
@@ -255,6 +258,8 @@ func TestBuildUpdateInputClearsClearableFields(t *testing.T) {
 	assert.Equal(t, "", *input.URL)
 	assert.NotNil(t, input.ResponseCondition, "response_condition must be sent even when empty")
 	assert.Equal(t, "", *input.ResponseCondition)
+	assert.NotNil(t, input.Placement, "unset placement must be sent as an explicit null, not omitted (omitting leaves a previously-set \"none\" in place)")
+	assert.Equal(t, fastly.NullValue[string](), input.Placement)
 }
 
 func TestBuildComputeUpdateInputClearsURL(t *testing.T) {
@@ -281,7 +286,7 @@ func TestClearVCLOnlyCreateFields(t *testing.T) {
 	input := &fastly.CreateNewRelicOTLPInput{
 		Format:            new("some-format"),
 		FormatVersion:     new(2),
-		Placement:         new("waf_debug"),
+		Placement:         new("none"),
 		ResponseCondition: new("cond"),
 	}
 
@@ -297,7 +302,7 @@ func TestClearVCLOnlyUpdateFields(t *testing.T) {
 	input := &fastly.UpdateNewRelicOTLPInput{
 		Format:            new("some-format"),
 		FormatVersion:     new(2),
-		Placement:         new("waf_debug"),
+		Placement:         fastly.NewNullable("none"),
 		ResponseCondition: new("cond"),
 	}
 

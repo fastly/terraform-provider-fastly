@@ -1646,6 +1646,19 @@ func ConfigCDNAutoWithLoggingNewRelicOTLP(serviceName, domainName, loggerName st
 	)
 }
 
+func ConfigCDNAutoWithLoggingNewRelicOTLPPlacementNone(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_nested_placement_none.tf",
+	)
+}
+
 func ConfigCDNAutoWithLoggingNewRelicOTLPUpdated(serviceName, domainName, loggerName string) string {
 	return BuildConfig(
 		ServiceCDNAuto,

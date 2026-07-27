@@ -120,7 +120,8 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_importBasic(t *testing.T) {
 
 // TestAccFastlyServiceLoggingNewRelicOTLP_clearToDefaults sets the optional
 // attributes, then removes them, and verifies each reverts to its schema
-// default rather than leaving a perpetual diff.
+// default (or, for placement, to unset — it has no default) rather than
+// leaving a perpetual diff.
 func TestAccFastlyServiceLoggingNewRelicOTLP_clearToDefaults(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -147,7 +148,55 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_clearToDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "url", ""),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "processing_region", "none"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "format_version", "2"),
+					// placement is left unconfigured here, which is distinct from
+					// explicitly set to "none" — see
+					// TestAccFastlyServiceLoggingNewRelicOTLP_placementUnsetVsNone.
+					resource.TestCheckNoResourceAttr("fastly_service_logging_newrelicotlp.test", "placement"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingNewRelicOTLP_placementUnsetVsNone verifies that
+// leaving placement unconfigured and explicitly setting it to "none" are
+// distinct, round-trippable states — not just "on create" but across updates
+// in both directions — rather than being collapsed together, since the API
+// treats an unset placement (auto-place in vcl_log/vcl_deliver) differently
+// from an explicit "none" (suppress the log statement entirely).
+func TestAccFastlyServiceLoggingNewRelicOTLP_placementUnsetVsNone(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("newrelic-logger-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				// Start unset.
+				Config: ConfigLoggingNewRelicOTLPBasic(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckNoResourceAttr("fastly_service_logging_newrelicotlp.test", "placement"),
+				),
+			},
+			{
+				// Update to explicit "none".
+				Config: ConfigLoggingNewRelicOTLPUpdated(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "placement", "none"),
+				),
+			},
+			{
+				// Update back to unset.
+				Config: ConfigLoggingNewRelicOTLPBasic(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckNoResourceAttr("fastly_service_logging_newrelicotlp.test", "placement"),
 				),
 			},
 		},

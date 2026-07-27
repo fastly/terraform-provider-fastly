@@ -56,9 +56,38 @@ test-acc:
 # One canonical happy-path test per resource family/feature, picked to fail fast (~2.5m)
 # on a broken build without running the full acceptance suite. See "Baseline regression
 # suite" in CLAUDE.md for the criteria used to decide whether a new test belongs here.
-BASELINE_TESTS := TestAccProvider_ConfigureWithAPIToken$$|TestAccFastlyServiceCDN_basic$$|TestAccFastlyServiceCompute_basic$$|TestAccFastlyServiceCDNAuto_basic$$|TestAccFastlyServiceComputeAuto_basic$$|TestAccFastlyServiceBackend_basic$$|TestAccFastlyServiceDomain_basic$$|TestAccFastlyACL_basic$$|TestAccFastlyKVStore_basic$$|TestAccFastlyServiceLoggingS3_basic$$|TestAccFastlyServiceCDNAuto_withLoggingS3$$|TestAccFastlyProductEnablement_cdnBasic$$|TestAccFastlyProductEnablement_computeBasic$$|TestAccFastlyServiceResourceLink_ACL$$
+empty :=
+space := $(empty) $(empty)
+
+BASELINE_TEST_NAMES := \
+	TestAccProvider_ConfigureWithAPIToken \
+	TestAccFastlyServiceCDN_basic \
+	TestAccFastlyServiceCompute_basic \
+	TestAccFastlyServiceCDNAuto_basic \
+	TestAccFastlyServiceComputeAuto_basic \
+	TestAccFastlyServiceBackend_basic \
+	TestAccFastlyServiceDomain_basic \
+	TestAccFastlyACL_basic \
+	TestAccFastlyKVStore_basic \
+	TestAccFastlyServiceLoggingS3_basic \
+	TestAccFastlyServiceCDNAuto_withLoggingS3 \
+	TestAccFastlyProductEnablement_cdnBasic \
+	TestAccFastlyProductEnablement_computeBasic \
+	TestAccFastlyServiceResourceLink_ACL
+
+BASELINE_TESTS := $(subst $(space),|,$(addsuffix $$,$(BASELINE_TEST_NAMES)))
 
 test-baseline:
+	@echo "==> Verifying baseline test names resolve..."
+	@found="$$($(GO_BIN) test ./internal/acceptance_tests -list '$(BASELINE_TESTS)' 2>/dev/null)"; \
+	missing=0; \
+	for name in $(BASELINE_TEST_NAMES); do \
+		if ! printf '%s\n' "$$found" | grep -qx "$$name"; then \
+			echo "ERROR: baseline test $$name not found in ./internal/acceptance_tests (renamed or deleted?)" >&2; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ "$$missing" -eq 1 ]; then exit 1; fi
 	@echo "==> Running baseline regression suite..."
 	@echo "    Note: This requires FASTLY_API_TOKEN to be set"
 	@TF_ACC=1 $(GO_BIN) test -count=1 -v -timeout 5m ./internal/acceptance_tests -run '$(BASELINE_TESTS)'

@@ -475,6 +475,16 @@ Ensure API token has permissions to:
 - All CRUD operations covered
 - Edge cases: mutability, service types, special characters
 
+### Baseline Regression Suite
+
+`make test-baseline` runs a fixed subset of acceptance tests (one canonical happy-path
+test per resource family/feature) intended to fail fast on a broken build, in under 5
+minutes, without running the full acceptance suite. It requires `FASTLY_API_TOKEN`.
+
+The test list lives in `BASELINE_TESTS`/`BASELINE_TEST_NAMES` in the `Makefile`. See
+"Baseline regression suite" in `CLAUDE.md` for the criteria used to decide whether a new
+test belongs in this list.
+
 ### Lifecycle Tests
 
 End-to-end lifecycle tests in `scripts/test-lifecycle-{cdn,compute}/`:

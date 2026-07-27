@@ -65,6 +65,7 @@ Per-object docs in `docs/` are **generated** by `tfplugindocs` — do not hand-e
 - No comments explaining *what* code does — only *why* when non-obvious  
 - `StringValue`, `Int64Value`, `BoolValue` unwrap `types.*` safely; prefer these over direct field access  
 - `ToGeneratedResourceName(parts...)` builds HCL identifiers from API names (used in list resources)  
+- Aim to maintain basic schema-level validation (enums, ranges, max lengths) rather than fully relying on the API to reject bad input — catching mistakes at plan time is a better user experience than a failed apply, e.g. [`stringvalidator.OneOf`](https://github.com/fastly/terraform-provider-fastly/blob/6965b4aa8d50398e3d5ff9ee552f7e312a5483ec/internal/resources/kvstore/schema.go#L31-L33)  
 - Use `new(T)` to take a pointer to a value — prefer this over `fastly.ToPointer` (a go-fastly helper that has been replaced with idiomatic Go)
 
 ## Conventions

@@ -10,6 +10,8 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v16/fastly"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
@@ -44,6 +46,11 @@ const (
 	DefaultProcessingRegion             = "none"
 	DefaultPublicKey                    = ""
 	DefaultFileMaxBytes                 = 0
+
+	// maximumFormatLength is the maximum length the Fastly API accepts for a
+	// logging endpoint `format` string. Exceeding it is only rejected by the
+	// API at apply time, so it is enforced at plan/validate time instead.
+	maximumFormatLength = 12288
 )
 
 // commonModel holds the S3 logging attributes shared by VCL and Compute
@@ -232,9 +239,20 @@ func sharedAttributes() map[string]schema.Attribute {
 		},
 		// Optional
 		"acl": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultACL),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultACL),
+			Validators: []validator.String{
+				stringvalidator.OneOf(
+					string(fastly.S3AccessControlListPrivate),
+					string(fastly.S3AccessControlListPublicRead),
+					string(fastly.S3AccessControlListPublicReadWrite),
+					string(fastly.S3AccessControlListAWSExecRead),
+					string(fastly.S3AccessControlListAuthenticatedRead),
+					string(fastly.S3AccessControlListBucketOwnerRead),
+					string(fastly.S3AccessControlListBucketOwnerFullControl),
+				),
+			},
 			Description: "The access control list (ACL) specific request header. See the AWS documentation for [Access Control List (ACL) Specific Request Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/mpUploadInitiate.html#initiate-mpu-acl-specific-request-headers) for more information.",
 		},
 		"authentication": schema.SingleNestedAttribute{
@@ -266,9 +284,12 @@ func sharedAttributes() map[string]schema.Attribute {
 			},
 		},
 		"compression_codec": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultCompressionCodec),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultCompressionCodec),
+			Validators: []validator.String{
+				stringvalidator.OneOf("zstd", "snappy", "gzip"),
+			},
 			Description: "The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`. If the codec is `gzip`, `gzip_level` defaults to `3`; to use a different level, leave `compression_codec` unset and set `gzip_level` instead. Conflicts with `gzip_level`: setting both in the same request will result in an error.",
 		},
 		"domain": schema.StringAttribute{
@@ -297,9 +318,12 @@ func sharedAttributes() map[string]schema.Attribute {
 			Description: "The level of gzip encoding when sending logs. Valid values are `0` (no compression) through `9`. To compress at a specific gzip level, leave `compression_codec` unset and set this. Conflicts with `compression_codec`: setting both in the same request will result in an error.",
 		},
 		"message_type": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultMessageType),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultMessageType),
+			Validators: []validator.String{
+				stringvalidator.OneOf("classic", "loggly", "logplex", "blank"),
+			},
 			Description: "How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.",
 		},
 		"path": schema.StringAttribute{
@@ -315,28 +339,52 @@ func sharedAttributes() map[string]schema.Attribute {
 			Description: "How frequently log files are finalized so they can be available for reading in seconds. Default `3600`.",
 		},
 		"processing_region": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultProcessingRegion),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultProcessingRegion),
+			Validators: []validator.String{
+				stringvalidator.OneOf("none", "us", "eu"),
+			},
 			Description: "Region where logs will be processed before streaming to the destination. Valid values are `none`, `us` and `eu`.",
 		},
 		"public_key": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Sensitive:   true,
-			Default:     stringdefault.StaticString(DefaultPublicKey),
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
+			Default:   stringdefault.StaticString(DefaultPublicKey),
+			Validators: []validator.String{
+				notTrimmed{},
+			},
 			Description: "PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
 		},
 		"redundancy": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultRedundancy),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultRedundancy),
+			Validators: []validator.String{
+				stringvalidator.OneOf(
+					string(fastly.S3RedundancyStandard),
+					string(fastly.S3RedundancyIntelligentTiering),
+					string(fastly.S3RedundancyStandardIA),
+					string(fastly.S3RedundancyOneZoneIA),
+					string(fastly.S3RedundancyGlacierFlexibleRetrieval),
+					string(fastly.S3RedundancyGlacierInstantRetrieval),
+					string(fastly.S3RedundancyGlacierDeepArchive),
+					string(fastly.S3RedundancyReduced),
+				),
+			},
 			Description: "The S3 redundancy level. Valid values are `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier_ir`, `glacier`, `deep_archive`, and `reduced_redundancy`.",
 		},
 		"server_side_encryption": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultServerSideEncryption),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultServerSideEncryption),
+			Validators: []validator.String{
+				stringvalidator.OneOf(
+					string(fastly.S3ServerSideEncryptionAES),
+					string(fastly.S3ServerSideEncryptionKMS),
+				),
+			},
 			Description: "Server-side encryption method. Valid values are `AES256` and `aws:kms`.",
 		},
 		"server_side_encryption_kms_key_id": schema.StringAttribute{
@@ -359,21 +407,30 @@ func sharedAttributes() map[string]schema.Attribute {
 func vclOnlyAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"format": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(constants.LoggingS3DefaultFormat),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(constants.LoggingS3DefaultFormat),
+			Validators: []validator.String{
+				stringvalidator.LengthAtMost(maximumFormatLength),
+			},
 			Description: "A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/).",
 		},
 		"format_version": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultFormatVersion),
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(DefaultFormatVersion),
+			Validators: []validator.Int64{
+				int64validator.Between(1, 2),
+			},
 			Description: "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in vcl_log if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.",
 		},
 		"placement": schema.StringAttribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     stringdefault.StaticString(DefaultPlacement),
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(DefaultPlacement),
+			Validators: []validator.String{
+				stringvalidator.OneOf("none"),
+			},
 			Description: "Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.",
 		},
 		"response_condition": schema.StringAttribute{

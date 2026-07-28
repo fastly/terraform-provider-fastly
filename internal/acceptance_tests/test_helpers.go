@@ -2057,6 +2057,127 @@ func productEnablementBlock(product, serviceIDRef string, extra map[string]strin
 	return RenderBlock(fmt.Sprintf("internal/acceptance_tests/blocks/service_product_%s.tf", product), data)
 }
 
+// ConfigServiceVCLWithFile returns a CDN service with one explicit custom VCL resource
+// whose content is loaded through Terraform's file() function.
+func ConfigServiceVCLWithFile(serviceName, vclName, vclFilePath string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "VCL acceptance test",
+			"VCL_NAME":        vclName,
+			"VCL_FILE_PATH":   filepath.ToSlash(vclFilePath),
+		},
+		"internal/acceptance_tests/blocks/vcl_explicit.tf",
+	)
+}
+
+// ConfigServiceVCLInline returns an explicit custom VCL resource whose content
+// is defined inline in HCL rather than loaded through Terraform's file() function.
+func ConfigServiceVCLInline(serviceName, vclName, content string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "VCL acceptance test",
+			"VCL_NAME":           vclName,
+			"VCL_INLINE_CONTENT": strconv.Quote(content),
+		},
+		"internal/acceptance_tests/blocks/vcl_explicit_inline.tf",
+	)
+}
+
+// ConfigCDNAutoWithVCLFile returns a CDN auto service with domain, backend, and one
+// nested custom VCL block whose content is loaded through Terraform's file() function.
+func ConfigCDNAutoWithVCLFile(serviceName, domainName, backendName, vclName, vclFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_NAME":   domainName,
+			"BACKEND_NAME":  backendName,
+			"VCL_NAME":      vclName,
+			"VCL_FILE_PATH": filepath.ToSlash(vclFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/vcl_nested_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithVCLInline returns a CDN auto service with domain, backend,
+// and one nested custom VCL block whose content is defined inline in HCL.
+func ConfigCDNAutoWithVCLInline(serviceName, domainName, backendName, vclName, content string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"BACKEND_NAME":       backendName,
+			"VCL_NAME":           vclName,
+			"VCL_INLINE_CONTENT": strconv.Quote(content),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/vcl_nested_inline.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleVCLFiles returns a CDN auto service with a main VCL file
+// and an included library VCL file.
+func ConfigCDNAutoWithMultipleVCLFiles(serviceName, domainName, backendName, mainName, includeName, mainFilePath, includeFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"BACKEND_NAME":          backendName,
+			"VCL_MAIN_NAME":         mainName,
+			"VCL_INCLUDE_NAME":      includeName,
+			"VCL_MAIN_FILE_PATH":    filepath.ToSlash(mainFilePath),
+			"VCL_INCLUDE_FILE_PATH": filepath.ToSlash(includeFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/vcl_nested_multiple.tf",
+	)
+}
+
+// ConfigCDNAutoWithInvalidMultipleMainVCLFiles returns a CDN auto service with two
+// nested custom VCL files marked as main, exercising provider-side validation.
+func ConfigCDNAutoWithInvalidMultipleMainVCLFiles(serviceName, domainName, backendName, mainFilePath, secondMainFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":              serviceName,
+			"DOMAIN_NAME":               domainName,
+			"BACKEND_NAME":              backendName,
+			"VCL_MAIN_FILE_PATH":        filepath.ToSlash(mainFilePath),
+			"VCL_SECOND_MAIN_FILE_PATH": filepath.ToSlash(secondMainFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/vcl_nested_two_main.tf",
+	)
+}
+
+// ConfigCDNAutoWithInvalidNoMainVCLFile returns a CDN auto service with one
+// nested custom VCL file but no main VCL, exercising provider-side validation.
+func ConfigCDNAutoWithInvalidNoMainVCLFile(serviceName, domainName, backendName, includeFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"BACKEND_NAME":          backendName,
+			"VCL_INCLUDE_FILE_PATH": filepath.ToSlash(includeFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/vcl_nested_no_main.tf",
+	)
+}
+
 // joinBlocks concatenates rendered blocks, each already ending in its own
 // newline, separated by a blank line.
 func joinBlocks(blocks ...string) string {

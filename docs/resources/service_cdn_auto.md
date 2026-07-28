@@ -31,6 +31,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
+- `vcl` (Block List) Custom VCL files attached to this service. This is modeled as a list so Terraform can render changes to `content` as an in-place string diff instead of a whole set element delete/add. (see [below for nested schema](#nestedblock--vcl))
 
 ### Read-Only
 
@@ -213,3 +214,17 @@ Optional:
 - `access_key` (String, Sensitive) The access key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_ACCESS_KEY` environment variable.
 - `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. Can be set via the `FASTLY_S3_IAM_ROLE` environment variable.
 - `secret_key` (String, Sensitive) The secret key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_SECRET_KEY` environment variable.
+
+
+
+<a id="nestedblock--vcl"></a>
+### Nested Schema for `vcl`
+
+Required:
+
+- `content` (String) The custom VCL source code to upload. Commonly configured with file("${path.module}/main.vcl") or templatefile(...).
+- `name` (String) A unique name for this custom VCL file. Included VCL files must be referenced by this exact name from the main VCL file.
+
+Optional:
+
+- `main` (Boolean) Whether this custom VCL file is the main configuration. Exactly one configured custom VCL file must be marked as main.

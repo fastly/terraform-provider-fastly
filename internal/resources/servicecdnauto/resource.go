@@ -14,6 +14,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/vcl"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
@@ -62,6 +63,7 @@ type Model struct {
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
+	VCL                           []vcl.NestedModel                           `tfsdk:"vcl"`
 }
 
 func (r *Resource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -119,6 +121,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
+			"vcl":                              vcl.NestedBlockSchema(),
 		},
 	}
 }
@@ -137,6 +140,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := vcl.Validate(plan.VCL); err != nil {
+		resp.Diagnostics.AddError("Invalid custom VCL configuration", err.Error())
 		return
 	}
 
@@ -257,6 +265,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
+	if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.VCL); err != nil {
+		resp.Diagnostics.AddError("Error reconciling custom VCL", err.Error())
+		return
+	}
+
+	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading custom VCL", err.Error())
+		return
+	}
+	plan.VCL = vcl.MatchOrderPreservePlanContent(vcls, plan.VCL)
+
 	if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, version); err != nil {
 		resp.Diagnostics.AddError("Error validating service version", err.Error())
 		return
@@ -360,6 +380,12 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
 		return
 	}
+	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading custom VCL", err.Error())
+		return
+	}
+
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
@@ -367,6 +393,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
+	state.VCL = vcl.MatchOrder(vcls, state.VCL)
 
 	importedBytes, diags := req.Private.GetKey(ctx, imageOptimizerImportedPrivateKey)
 	resp.Diagnostics.Append(diags...)
@@ -398,6 +425,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	if err := vcl.Validate(plan.VCL); err != nil {
+		resp.Diagnostics.AddError("Invalid custom VCL configuration", err.Error())
+		return
+	}
+
 	serviceID := state.ID.ValueString()
 
 	if err := service.UpdateMetadataIfChanged(
@@ -413,7 +445,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !condition.Equal(plan.Condition, state.Condition) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !condition.Equal(plan.Condition, state.Condition) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) || !vcl.Equal(plan.VCL, state.VCL)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -546,6 +578,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
+		if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.VCL); err != nil {
+			resp.Diagnostics.AddError("Error reconciling custom VCL", err.Error())
+			return
+		}
+
+		vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading custom VCL", err.Error())
+			return
+		}
+		plan.VCL = vcl.MatchOrderPreservePlanContent(vcls, plan.VCL)
+
 		if err := service.ValidateVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion); err != nil {
 			resp.Diagnostics.AddError("Error validating service version", err.Error())
 			return
@@ -574,6 +618,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
+		plan.VCL = vcl.MatchOrderPreservePlanContent(state.VCL, plan.VCL)
 	}
 
 	plan.ID = state.ID

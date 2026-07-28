@@ -38,6 +38,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecdnauto"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecompute"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/servicecomputeauto"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/vcl"
 	"github.com/fastly/terraform-provider-fastly/internal/version"
 )
 
@@ -114,6 +115,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		loggingnewrelicotlp.NewResource,
 		loggings3.NewResource,
 		kvstore.NewResource,
+		vcl.NewResource,
 		productenablement.NewFanoutResource,
 		productenablement.NewBrotliCompressionResource,
 		productenablement.NewImageOptimizerResource,
@@ -149,6 +151,7 @@ func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListReso
 		condition.NewListResource,
 		domain.NewListResource,
 		loggingnewrelicotlp.NewListResource,
+		vcl.NewListResource,
 		loggings3.NewListResource,
 		servicecdn.NewListResource,
 		servicecompute.NewListResource,

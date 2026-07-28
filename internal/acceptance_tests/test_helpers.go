@@ -14,6 +14,7 @@ import (
 	"github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/provider"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -182,6 +183,71 @@ func CheckGzipFieldClearedRemotely(resourceName, gzipName, field, staleValue str
 	}
 }
 
+// CheckImageOptimizerDefaultSettingsMatchAPIDefaults returns a TestCheckFunc that fetches Image
+// Optimizer default settings directly from the Fastly API (bypassing Terraform state) and fails
+// if any field still holds a previously-configured, non-default value. This exists because the
+// read path only surfaces image_optimizer_default_settings when the block is present in config,
+// so a state-only check of the block being absent can pass even if the remote settings were
+// never actually reset.
+func CheckImageOptimizerDefaultSettingsMatchAPIDefaults(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		version, err := strconv.Atoi(rs.Primary.Attributes["active_version"])
+		if err != nil {
+			return fmt.Errorf("error parsing active_version: %w", err)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		settings, err := client.GetImageOptimizerDefaultSettings(context.Background(), &fastly.GetImageOptimizerDefaultSettingsInput{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching Image Optimizer default settings: %w", err)
+		}
+		if settings == nil {
+			return fmt.Errorf("expected Image Optimizer default settings to be populated since Image Optimizer remains enabled, got nil")
+		}
+
+		var mismatches []string
+		if settings.ResizeFilter != imageoptimizerdefaultsettings.DefaultResizeFilter {
+			mismatches = append(mismatches, fmt.Sprintf("resize_filter=%q, want %q", settings.ResizeFilter, imageoptimizerdefaultsettings.DefaultResizeFilter))
+		}
+		if settings.Webp != imageoptimizerdefaultsettings.DefaultWebp {
+			mismatches = append(mismatches, fmt.Sprintf("webp=%v, want %v", settings.Webp, imageoptimizerdefaultsettings.DefaultWebp))
+		}
+		if settings.WebpQuality != imageoptimizerdefaultsettings.DefaultWebpQuality {
+			mismatches = append(mismatches, fmt.Sprintf("webp_quality=%d, want %d", settings.WebpQuality, imageoptimizerdefaultsettings.DefaultWebpQuality))
+		}
+		if settings.JpegType != imageoptimizerdefaultsettings.DefaultJpegType {
+			mismatches = append(mismatches, fmt.Sprintf("jpeg_type=%q, want %q", settings.JpegType, imageoptimizerdefaultsettings.DefaultJpegType))
+		}
+		if settings.JpegQuality != imageoptimizerdefaultsettings.DefaultJpegQuality {
+			mismatches = append(mismatches, fmt.Sprintf("jpeg_quality=%d, want %d", settings.JpegQuality, imageoptimizerdefaultsettings.DefaultJpegQuality))
+		}
+		if settings.Upscale != imageoptimizerdefaultsettings.DefaultUpscale {
+			mismatches = append(mismatches, fmt.Sprintf("upscale=%v, want %v", settings.Upscale, imageoptimizerdefaultsettings.DefaultUpscale))
+		}
+		if settings.AllowVideo != imageoptimizerdefaultsettings.DefaultAllowVideo {
+			mismatches = append(mismatches, fmt.Sprintf("allow_video=%v, want %v", settings.AllowVideo, imageoptimizerdefaultsettings.DefaultAllowVideo))
+		}
+
+		if len(mismatches) > 0 {
+			return fmt.Errorf("Image Optimizer default settings were not reset to API defaults in Fastly: %s", strings.Join(mismatches, ", "))
+		}
+
+		return nil
+	}
+}
+
 // GetPackagePath returns the path to the valid.tar.gz test package
 // Assumes tests are always run from the acceptance_tests package directory
 func GetPackagePath() string {
@@ -314,6 +380,61 @@ func ConfigCDNAutoReversedBackendAndDomainBlocks(serviceName, domainBName, domai
 		"internal/acceptance_tests/blocks/domain_multiple_reversed.tf",
 		"internal/acceptance_tests/blocks/backend_multiple_reversed.tf",
 	)
+}
+
+// imageOptimizerProductEnablement returns a fastly_service_product_image_optimizer resource
+// block that enables Image Optimizer on the given service resource reference (e.g.
+// "fastly_service_cdn_auto.test"). Image Optimizer default settings can only be persisted once
+// the product has been enabled on the service.
+func imageOptimizerProductEnablement(serviceRef string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_product_image_optimizer" "image_optimizer" {
+  service_id = %s.id
+}
+`, serviceRef)
+}
+
+// ConfigCDNAutoImageOptimizerEnabled returns a CDN auto service config with a domain and Image
+// Optimizer enabled via fastly_service_product_image_optimizer, but no
+// image_optimizer_default_settings block.
+func ConfigCDNAutoImageOptimizerEnabled(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettings returns a CDN auto service config with a
+// domain, Image Optimizer enabled, and default (all-default-value) Image Optimizer default
+// settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettings(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_single.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
+}
+
+// ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated returns a CDN auto service config with
+// a domain, Image Optimizer enabled, and non-default Image Optimizer default settings.
+func ConfigCDNAutoWithImageOptimizerDefaultSettingsUpdated(serviceName, domainName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/image_optimizer_default_settings_updated.tf",
+	) + imageOptimizerProductEnablement("fastly_service_cdn_auto.test")
 }
 
 // ConfigCDNAutoWithACL returns a CDN auto service config with a domain and ACL
@@ -518,14 +639,11 @@ func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) s
 // domain, package, and a resource_link block pointing at a Terraform-managed fastly_kvstore
 // (declared as a sibling resource, referenced by ID rather than a literal string).
 func ConfigComputeAutoWithKVStoreResourceLink(serviceName, domainName, storeName, linkName string) string {
-	kvStoreConfig := fmt.Sprintf(`
-resource "fastly_kvstore" "store" {
-  name = %q
-}
+	kvStoreConfig := RenderBlock("internal/acceptance_tests/blocks/kvstore_single.tf", map[string]string{
+		"KVSTORE_NAME": storeName,
+	})
 
-`, storeName)
-
-	return kvStoreConfig + BuildConfig(
+	return kvStoreConfig + "\n" + BuildConfig(
 		ServiceComputeAuto,
 		map[string]string{
 			"SERVICE_NAME":            serviceName,
@@ -547,14 +665,11 @@ resource "fastly_kvstore" "store" {
 // service, so tests that remove a resource_link and then delete its target KV Store need this as
 // an intermediate step: unlink first and let that settle, then delete the KV Store in a later step.
 func ConfigComputeAutoWithStandaloneKVStore(serviceName, domainName, storeName string) string {
-	kvStoreConfig := fmt.Sprintf(`
-resource "fastly_kvstore" "store" {
-  name = %q
-}
+	kvStoreConfig := RenderBlock("internal/acceptance_tests/blocks/kvstore_single.tf", map[string]string{
+		"KVSTORE_NAME": storeName,
+	})
 
-`, storeName)
-
-	return kvStoreConfig + ConfigComputeAutoBasic(serviceName, domainName)
+	return kvStoreConfig + "\n" + ConfigComputeAutoBasic(serviceName, domainName)
 }
 
 // ConfigComputeAutoWithKVStoreResourceLinkTarget returns a Compute auto service config
@@ -563,18 +678,12 @@ resource "fastly_kvstore" "store" {
 // targeted, so retargeting exercises the reconcile delete-old/create-new pass without deleting
 // either KV Store.
 func ConfigComputeAutoWithKVStoreResourceLinkTarget(serviceName, domainName, storeName1, storeName2, linkName, targetLabel string) string {
-	kvStoreConfig := fmt.Sprintf(`
-resource "fastly_kvstore" "kv1" {
-  name = %q
-}
+	kvStoreConfig := RenderBlock("internal/acceptance_tests/blocks/kvstore_two.tf", map[string]string{
+		"KVSTORE_NAME_1": storeName1,
+		"KVSTORE_NAME_2": storeName2,
+	})
 
-resource "fastly_kvstore" "kv2" {
-  name = %q
-}
-
-`, storeName1, storeName2)
-
-	return kvStoreConfig + BuildConfig(
+	return kvStoreConfig + "\n" + BuildConfig(
 		ServiceComputeAuto,
 		map[string]string{
 			"SERVICE_NAME":            serviceName,
@@ -591,74 +700,48 @@ resource "fastly_kvstore" "kv2" {
 
 // ConfigKVStore returns a minimal standalone fastly_kvstore config.
 func ConfigKVStore(name string) string {
-	return fmt.Sprintf(`
-resource "fastly_kvstore" "store" {
-  name = %q
-}
-`, name)
+	return RenderBlock("internal/acceptance_tests/blocks/kvstore_single.tf", map[string]string{
+		"KVSTORE_NAME": name,
+	})
 }
 
 // ConfigKVStoreWithLocation returns a standalone fastly_kvstore config with an explicit
 // location, for exercising the location attribute's plan-time validation and its
 // replace-on-change behavior.
 func ConfigKVStoreWithLocation(name, location string) string {
-	return fmt.Sprintf(`
-resource "fastly_kvstore" "store" {
-  name     = %q
-  location = %q
-}
-`, name, location)
+	return RenderBlock("internal/acceptance_tests/blocks/kvstore_with_location.tf", map[string]string{
+		"KVSTORE_NAME":     name,
+		"KVSTORE_LOCATION": location,
+	})
 }
 
 // ConfigKVStoreForceDestroy returns a standalone fastly_kvstore config with force_destroy set,
 // for exercising deletion of a KV Store that still contains entries.
 func ConfigKVStoreForceDestroy(name string) string {
-	return fmt.Sprintf(`
-resource "fastly_kvstore" "store" {
-  name          = %q
-  force_destroy = true
-}
-`, name)
+	return RenderBlock("internal/acceptance_tests/blocks/kvstore_force_destroy.tf", map[string]string{
+		"KVSTORE_NAME": name,
+	})
 }
 
 // ConfigKVStoresDataSource returns a config declaring three fastly_kvstore resources alongside
 // a fastly_kvstores data source that depends on all three.
 func ConfigKVStoresDataSource(h string) string {
-	return fmt.Sprintf(`
-resource "fastly_kvstore" "store_1" {
-  name = "tf_%s_1"
-}
-
-resource "fastly_kvstore" "store_2" {
-  name = "tf_%s_2"
-}
-
-resource "fastly_kvstore" "store_3" {
-  name = "tf_%s_3"
-}
-
-data "fastly_kvstores" "example" {
-  depends_on = [
-    fastly_kvstore.store_1,
-    fastly_kvstore.store_2,
-    fastly_kvstore.store_3,
-  ]
-}
-`, h, h, h)
+	return RenderBlock("internal/acceptance_tests/blocks/kvstore_three_with_datasource.tf", map[string]string{
+		"KVSTORE_NAME_1": fmt.Sprintf("tf_%s_1", h),
+		"KVSTORE_NAME_2": fmt.Sprintf("tf_%s_2", h),
+		"KVSTORE_NAME_3": fmt.Sprintf("tf_%s_3", h),
+	})
 }
 
 // ConfigComputeAutoWithACLResourceLink returns a Compute auto service config with a
 // domain, package, and a resource_link block pointing at a Terraform-managed fastly_acl
 // (declared as a sibling resource, referenced by ID rather than a literal string).
 func ConfigComputeAutoWithACLResourceLink(serviceName, domainName, aclName, linkName string) string {
-	aclConfig := fmt.Sprintf(`
-resource "fastly_acl" "acl" {
-  name = %q
-}
+	aclConfig := RenderBlock("internal/acceptance_tests/blocks/acl_resource_single.tf", map[string]string{
+		"ACL_NAME": aclName,
+	})
 
-`, aclName)
-
-	return aclConfig + BuildConfig(
+	return aclConfig + "\n" + BuildConfig(
 		ServiceComputeAuto,
 		map[string]string{
 			"SERVICE_NAME":            serviceName,
@@ -680,14 +763,11 @@ resource "fastly_acl" "acl" {
 // service, so tests that remove a resource_link and then delete its target ACL need this as an
 // intermediate step: unlink first and let that settle, then delete the ACL in a later step.
 func ConfigComputeAutoWithStandaloneACL(serviceName, domainName, aclName string) string {
-	aclConfig := fmt.Sprintf(`
-resource "fastly_acl" "acl" {
-  name = %q
-}
+	aclConfig := RenderBlock("internal/acceptance_tests/blocks/acl_resource_single.tf", map[string]string{
+		"ACL_NAME": aclName,
+	})
 
-`, aclName)
-
-	return aclConfig + ConfigComputeAutoBasic(serviceName, domainName)
+	return aclConfig + "\n" + ConfigComputeAutoBasic(serviceName, domainName)
 }
 
 // ConfigComputeAutoWithACLResourceLinkTarget returns a Compute auto service config
@@ -695,18 +775,12 @@ resource "fastly_acl" "acl" {
 // whichever is named by targetLabel. Both ACLs stay declared regardless of which is targeted, so
 // retargeting exercises the reconcile delete-old/create-new pass without deleting either ACL.
 func ConfigComputeAutoWithACLResourceLinkTarget(serviceName, domainName, aclName1, aclName2, linkName, targetLabel string) string {
-	aclConfig := fmt.Sprintf(`
-resource "fastly_acl" "acl1" {
-  name = %q
-}
+	aclConfig := RenderBlock("internal/acceptance_tests/blocks/acl_resource_two.tf", map[string]string{
+		"ACL_NAME_1": aclName1,
+		"ACL_NAME_2": aclName2,
+	})
 
-resource "fastly_acl" "acl2" {
-  name = %q
-}
-
-`, aclName1, aclName2)
-
-	return aclConfig + BuildConfig(
+	return aclConfig + "\n" + BuildConfig(
 		ServiceComputeAuto,
 		map[string]string{
 			"SERVICE_NAME":            serviceName,
@@ -1185,32 +1259,19 @@ func ConfigACLEntriesManyEntries(serviceName, domainName, aclName string, count 
 // ConfigACLEntries returns a config declaring a fastly_acl resource alongside a
 // fastly_acl_entries resource (with manage_entries = true) that targets it.
 func ConfigACLEntries(aclName string, entries map[string]string) string {
-	return fmt.Sprintf(`
-resource "fastly_acl" "acl" {
-  name = %q
-}
-
-resource "fastly_acl_entries" "acl_entries" {
-  acl_id         = fastly_acl.acl.id
-  entries        = %s
-  manage_entries = true
-}
-`, aclName, entriesHCL(entries))
+	return RenderBlock("internal/acceptance_tests/blocks/acl_entries_resource.tf", map[string]string{
+		"ACL_NAME": aclName,
+		"ENTRIES":  entriesHCL(entries),
+	})
 }
 
 // ConfigACLEntriesUnmanaged mirrors ConfigACLEntries but omits manage_entries,
 // leaving it at its default (false).
 func ConfigACLEntriesUnmanaged(aclName string, entries map[string]string) string {
-	return fmt.Sprintf(`
-resource "fastly_acl" "acl" {
-  name = %q
-}
-
-resource "fastly_acl_entries" "acl_entries" {
-  acl_id  = fastly_acl.acl.id
-  entries = %s
-}
-`, aclName, entriesHCL(entries))
+	return RenderBlock("internal/acceptance_tests/blocks/acl_entries_resource_unmanaged.tf", map[string]string{
+		"ACL_NAME": aclName,
+		"ENTRIES":  entriesHCL(entries),
+	})
 }
 
 func entriesHCL(entries map[string]string) string {

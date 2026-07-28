@@ -52,8 +52,12 @@ make fmt     # go fmt ./...
 - `make test-unit` — no API token needed; unit tests live next to the code (e.g. `backend/backend_test.go`)
 - `make test-acc` / `make test-lifecycle` — acceptance + full apply/destroy lifecycle; both require `FASTLY_API_TOKEN`
 - `make test-acc KEYWORD=<word>` — only run acceptance tests whose name matches `<word>`; passed through to `go test -run` as a regular expression (not a literal substring)
+- `make test-baseline` — baseline regression suite; requires `FASTLY_API_TOKEN`, runs in ~2.5m (budget: 5m)
 
 Acceptance tests live in `internal/acceptance_tests/` and build HCL via `config_builder.go`.
+
+See "Baseline Regression Suite" in `TESTING.md` for what `make test-baseline` covers and
+the criteria for adding a new test to it.
 
 ### Documentation
 
@@ -65,6 +69,7 @@ Per-object docs in `docs/` are **generated** by `tfplugindocs` — do not hand-e
 - No comments explaining *what* code does — only *why* when non-obvious  
 - `StringValue`, `Int64Value`, `BoolValue` unwrap `types.*` safely; prefer these over direct field access  
 - `ToGeneratedResourceName(parts...)` builds HCL identifiers from API names (used in list resources)  
+- Aim to maintain basic schema-level validation (enums, ranges, max lengths) rather than fully relying on the API to reject bad input — catching mistakes at plan time is a better user experience than a failed apply, e.g. [`stringvalidator.OneOf`](https://github.com/fastly/terraform-provider-fastly/blob/6965b4aa8d50398e3d5ff9ee552f7e312a5483ec/internal/resources/kvstore/schema.go#L31-L33)  
 - Use `new(T)` to take a pointer to a value — prefer this over `fastly.ToPointer` (a go-fastly helper that has been replaced with idiomatic Go)
 
 ## Conventions
@@ -101,7 +106,7 @@ See `internal/resources/servicecdnauto/resource.go` for the exact pattern.
 
 ## Dependencies
 
-- `github.com/fastly/go-fastly/v15` — Fastly API client  
+- `github.com/fastly/go-fastly/v16` — Fastly API client  
 - `github.com/hashicorp/terraform-plugin-framework v1.17.0` — includes `action` and `list` packages
 
 ## Related

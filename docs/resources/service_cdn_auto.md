@@ -23,6 +23,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `acl` (Block List) ACLs attached to this service. (see [below for nested schema](#nestedblock--acl))
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Optional service comment.
+- `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
@@ -99,6 +100,20 @@ Optional:
 - `ssl_client_cert` (String, Sensitive) Client certificate used when connecting to the backend.
 - `ssl_client_key` (String, Sensitive) Client key used when connecting to the backend.
 
+
+
+<a id="nestedblock--condition"></a>
+### Nested Schema for `condition`
+
+Required:
+
+- `name` (String) A name to refer to this condition. Changing this attribute will delete and recreate the resource.
+- `statement` (String) A conditional expression in VCL used to determine if the condition is met.
+- `type` (String) Type of condition. Must be one of `REQUEST`, `RESPONSE`, `CACHE`, or `PREFETCH`.
+
+Optional:
+
+- `priority` (Number) A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`.
 
 
 <a id="nestedblock--domain"></a>

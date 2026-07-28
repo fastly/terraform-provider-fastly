@@ -401,6 +401,190 @@ func TestAccFastlyServiceCDNAuto_gzipRemovedValuesCleared(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_withCondition(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	conditionName := fmt.Sprintf("condition-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithCondition(serviceName, domainName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.name", conditionName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.type", "REQUEST"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.statement", `req.url ~ "^/admin"`),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.priority", "10"),
+					// Adding a condition should create and activate version 2
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithConditionUpdated(serviceName, domainName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.statement", `req.url ~ "^/private"`),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.priority", "5"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "3"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "0"),
+					// Removing the condition should create and activate version 4
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_multipleConditions(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	conditionName1 := fmt.Sprintf("condition-a-%s", acctest.RandString(10))
+	conditionName2 := fmt.Sprintf("condition-b-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithMultipleConditions(serviceName, domainName, conditionName1, conditionName2),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.name", conditionName1),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.type", "REQUEST"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.1.name", conditionName2),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.1.type", "CACHE"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.1.priority", "20"),
+				),
+			},
+			{
+				// Verify plan stability - reapplying the same config should be a no-op
+				Config:   ConfigCDNAutoWithMultipleConditions(serviceName, domainName, conditionName1, conditionName2),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_conditionTypeChange(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	conditionName := fmt.Sprintf("condition-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithCondition(serviceName, domainName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.type", "REQUEST"),
+					CheckConditionTypeInFastly("fastly_service_cdn_auto.test", conditionName, "REQUEST"),
+				),
+			},
+			{
+				// The Fastly API doesn't support updating a condition's type via PUT, so the
+				// provider must delete and recreate the condition. Confirm the new type is
+				// actually reflected remotely, not just in Terraform state.
+				Config: ConfigCDNAutoWithConditionTypeChanged(serviceName, domainName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.name", conditionName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.type", "CACHE"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.statement", "beresp.status == 200"),
+					CheckConditionTypeInFastly("fastly_service_cdn_auto.test", conditionName, "CACHE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_backendWithRequestCondition(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	conditionName := fmt.Sprintf("condition-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithBackendRequestCondition(serviceName, domainName, backendName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.name", conditionName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", backendName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.request_condition", conditionName),
+				),
+			},
+			{
+				// Removing both the backend and the condition it references in the same apply
+				// must not fail: the condition is reconciled before the backend so referencing
+				// it on create works, but that means a stale condition is deleted before the
+				// backend that used it is updated/removed in the same pass. Prove that doesn't
+				// trip referential-integrity validation on the Fastly API side.
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_gzipWithCacheCondition(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	gzipName := fmt.Sprintf("gzip-%s", acctest.RandString(10))
+	conditionName := fmt.Sprintf("condition-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithGzipCacheCondition(serviceName, domainName, gzipName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.name", conditionName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.type", "CACHE"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.name", gzipName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "gzip.0.cache_condition", conditionName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_import(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

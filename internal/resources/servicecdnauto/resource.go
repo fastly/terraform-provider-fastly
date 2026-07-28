@@ -8,6 +8,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
@@ -56,6 +57,7 @@ type Model struct {
 	Domain                        []domain.NestedModel                        `tfsdk:"domain"`
 	Backend                       []backend.NestedModel                       `tfsdk:"backend"`
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
+	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
@@ -112,6 +114,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"domain":                           domain.NestedBlockSchema(),
 			"backend":                          backend.NestedBlockSchema(),
 			"acl":                              cdnacl.NestedBlockSchema(),
+			"condition":                        condition.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
@@ -166,6 +169,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Domain = domain.MatchOrder(domains, plan.Domain)
+
+	// Conditions must be reconciled before backend/gzip: both can reference a condition by
+	// name (request_condition, cache_condition), and the Fastly API rejects a backend/gzip
+	// create that names a condition which doesn't exist yet in this version.
+	if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Condition); err != nil {
+		resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
+		return
+	}
+
+	conditions, err := condition.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service conditions", err.Error())
+		return
+	}
+	plan.Condition = condition.MatchOrder(conditions, plan.Condition)
 
 	if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -322,6 +340,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
 		return
 	}
+	conditions, err := condition.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service conditions", err.Error())
+		return
+	}
 	gzips, err := gzip.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Gzip)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
@@ -340,6 +363,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
+	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
@@ -387,7 +411,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !condition.Equal(plan.Condition, state.Condition) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -432,6 +456,21 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.Domain = domain.MatchOrder(domains, plan.Domain)
+
+		// Conditions must be reconciled before backend/gzip: both can reference a condition by
+		// name (request_condition, cache_condition), and the Fastly API rejects a backend/gzip
+		// create that names a condition which doesn't exist yet in this version.
+		if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Condition); err != nil {
+			resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
+			return
+		}
+
+		conditions, err := condition.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service conditions", err.Error())
+			return
+		}
+		plan.Condition = condition.MatchOrder(conditions, plan.Condition)
 
 		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -528,6 +567,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
+		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)

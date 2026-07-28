@@ -11,6 +11,7 @@ The example provisions and manages:
 - one service-specific backend on only service 1
 - one domain per service
 - one ACL per service (service 1 has an IP allowlist, service 2 has a temporary blocklist)
+- one condition on service 1, referenced by its gzip configuration's `cache_condition`
 - one gzip configuration on service 1
 - Image Optimizer enabled on service 1 (default settings added in a follow-up apply - see below)
 
@@ -49,8 +50,11 @@ Expected bootstrap behavior:
 
 1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
-3. The provider reconciles the nested `domain`, `backend`, `acl`, and `gzip`
-   blocks to version `1`.
+3. The provider reconciles the nested `domain`, `backend`, `acl`, `condition`,
+   and `gzip` blocks to version `1`. `condition` is reconciled before `backend`
+   and `gzip` since both can reference a condition by name, and the Fastly API
+   rejects a backend or gzip config that names a condition which doesn't exist
+   yet in that version.
 4. The provider validates and activates version `1`.
 5. `fastly_service_product_image_optimizer.service_1` enables the Image
    Optimizer product on `service_1`.
@@ -178,6 +182,32 @@ You should see:
 - `service_1_managed_version` increase
 - `service_1_active_version` move to the new version
 - the updated `content_types` reflected in the service configuration
+- `service_2_*` outputs remain unchanged
+
+### Add or modify a condition
+
+For example, add a second condition to `service_1` and reference it from the
+unique backend's `request_condition`:
+
+```hcl
+  condition {
+    name      = "unique_origin_only"
+    type      = "REQUEST"
+    statement = "req.url ~ \"^/unique\""
+  }
+```
+
+Then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- `service_1_active_version` move to the new version
+- the new condition appear in the service configuration
 - `service_2_*` outputs remain unchanged
 
 ### Configure Image Optimizer default settings

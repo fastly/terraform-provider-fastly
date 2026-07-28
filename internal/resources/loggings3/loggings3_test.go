@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fastly "github.com/fastly/go-fastly/v17/fastly"
 	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
@@ -71,7 +71,7 @@ func fullNestedModel() NestedModel {
 	m.ProcessingRegion = types.StringValue("us")
 	m.Format = types.StringValue("%h %l %u")
 	m.FormatVersion = types.Int64Value(1)
-	m.Placement = types.StringValue("waf_debug")
+	m.Placement = types.StringValue("none")
 	m.ResponseCondition = types.StringValue("response-condition-1")
 	return m
 }
@@ -132,7 +132,7 @@ func TestFlattenToNestedModel(t *testing.T) {
 				ProcessingRegion:             new("us"),
 				Format:                       new("%h %l %u"),
 				FormatVersion:                new(1),
-				Placement:                    new("waf_debug"),
+				Placement:                    new("none"),
 				ResponseCondition:            new("response-condition-1"),
 			},
 			expected: fullNestedModel(),
@@ -181,7 +181,7 @@ func TestFlattenToComputeNestedModel(t *testing.T) {
 		// VCL-only fields must be ignored by the Compute flatten.
 		Format:            new("%h %l %u"),
 		FormatVersion:     new(1),
-		Placement:         new("waf_debug"),
+		Placement:         new("none"),
 		ResponseCondition: new("response-condition-1"),
 	}
 
@@ -429,7 +429,7 @@ func TestBuildCreateInput(t *testing.T) {
 				assert.Equal(t, "us", *input.ProcessingRegion)
 				assert.Equal(t, "%h %l %u", *input.Format)
 				assert.Equal(t, 1, *input.FormatVersion)
-				assert.Equal(t, "waf_debug", *input.Placement)
+				assert.Equal(t, "none", *input.Placement)
 				assert.Equal(t, "response-condition-1", *input.ResponseCondition)
 			},
 		},
@@ -522,6 +522,7 @@ func TestBuildUpdateInput(t *testing.T) {
 				assert.Nil(t, input.ServerSideEncryption)
 				assert.NotNil(t, input.FileMaxBytes)
 				assert.Equal(t, 0, *input.FileMaxBytes)
+				assert.Equal(t, fastly.NewNullable(DefaultPlacement), input.Placement, "placement defaults to \"none\" via the schema, never an unset null")
 			},
 		},
 		{
@@ -538,7 +539,7 @@ func TestBuildUpdateInput(t *testing.T) {
 				assert.Equal(t, fastly.S3ServerSideEncryption("aws:kms"), *input.ServerSideEncryption)
 				assert.Equal(t, "%h %l %u", *input.Format)
 				assert.Equal(t, 1, *input.FormatVersion)
-				assert.Equal(t, "waf_debug", *input.Placement)
+				assert.Equal(t, fastly.NewNullable("none"), input.Placement)
 				assert.Equal(t, "response-condition-1", *input.ResponseCondition)
 			},
 		},
@@ -570,7 +571,7 @@ func TestClearVCLOnlyCreateFields(t *testing.T) {
 	input := &fastly.CreateS3Input{
 		Format:            new("some-format"),
 		FormatVersion:     new(2),
-		Placement:         new("waf_debug"),
+		Placement:         new("none"),
 		ResponseCondition: new("cond"),
 	}
 
@@ -586,7 +587,7 @@ func TestClearVCLOnlyUpdateFields(t *testing.T) {
 	input := &fastly.UpdateS3Input{
 		Format:            new("some-format"),
 		FormatVersion:     new(2),
-		Placement:         new("waf_debug"),
+		Placement:         fastly.NewNullable("none"),
 		ResponseCondition: new("cond"),
 	}
 

@@ -9,7 +9,8 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
-	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
@@ -374,6 +375,9 @@ func vclOnlyAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Default:     stringdefault.StaticString(DefaultPlacement),
+			Validators: []validator.String{
+				stringvalidator.OneOf("none"),
+			},
 			Description: "Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.",
 		},
 		"response_condition": schema.StringAttribute{

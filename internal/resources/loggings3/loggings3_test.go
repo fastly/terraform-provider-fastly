@@ -19,7 +19,7 @@ func defaultNestedModel() NestedModel {
 		commonModel:       defaultCommonModel(),
 		Format:            types.StringValue(constants.LoggingS3DefaultFormat),
 		FormatVersion:     types.Int64Value(DefaultFormatVersion),
-		Placement:         types.StringValue(DefaultPlacement),
+		Placement:         types.StringNull(),
 		ResponseCondition: types.StringValue(DefaultResponseCondition),
 	}
 }
@@ -519,10 +519,18 @@ func TestBuildUpdateInput(t *testing.T) {
 				assert.Equal(t, fastly.S3AccessControlList(""), *input.ACL)
 				assert.NotNil(t, input.Redundancy)
 				assert.Equal(t, fastly.S3Redundancy(""), *input.Redundancy)
-				assert.Nil(t, input.ServerSideEncryption)
+				assert.Nil(t, input.ServerSideEncryption, "server_side_encryption is a strict enum; the API rejects an explicit \"\", so it must stay omitted when unset")
 				assert.NotNil(t, input.FileMaxBytes)
 				assert.Equal(t, 0, *input.FileMaxBytes)
-				assert.Equal(t, fastly.NewNullable(DefaultPlacement), input.Placement, "placement defaults to \"none\" via the schema, never an unset null")
+				assert.Equal(t, fastly.NullValue[string](), input.Placement, "unset placement clears to a JSON null, distinct from an explicit \"none\"")
+				assert.NotNil(t, input.CompressionCodec)
+				assert.Equal(t, "", *input.CompressionCodec)
+				assert.NotNil(t, input.ResponseCondition)
+				assert.Equal(t, "", *input.ResponseCondition)
+				assert.NotNil(t, input.PublicKey)
+				assert.Equal(t, "", *input.PublicKey)
+				assert.NotNil(t, input.ServerSideEncryptionKMSKeyID)
+				assert.Equal(t, "", *input.ServerSideEncryptionKMSKeyID)
 			},
 		},
 		{
@@ -541,6 +549,48 @@ func TestBuildUpdateInput(t *testing.T) {
 				assert.Equal(t, 1, *input.FormatVersion)
 				assert.Equal(t, fastly.NewNullable("none"), input.Placement)
 				assert.Equal(t, "response-condition-1", *input.ResponseCondition)
+				assert.Equal(t, "pgp-public-key", *input.PublicKey)
+				assert.Equal(t, "kms-key-1", *input.ServerSideEncryptionKMSKeyID)
+			},
+		},
+		{
+			name:      "clearing previously-set optional fields back to defaults",
+			serviceID: "service-789",
+			version:   3,
+			model: func() NestedModel {
+				m := fullNestedModel()
+				m.CompressionCodec = types.StringValue(DefaultCompressionCodec)
+				m.ResponseCondition = types.StringValue(DefaultResponseCondition)
+				m.PublicKey = types.StringValue(DefaultPublicKey)
+				m.ServerSideEncryption = types.StringValue(DefaultServerSideEncryption)
+				m.ServerSideEncryptionKMSKeyID = types.StringValue(DefaultServerSideEncryptionKMSKeyID)
+				m.Placement = types.StringNull()
+				// Switch from access_key/secret_key auth to iam_role: the two
+				// key credentials clear to "".
+				m.Authentication = NewAuthenticationObject(
+					types.StringValue(""),
+					types.StringValue(""),
+					types.StringValue("arn:aws:iam::123456789012:role/test"),
+				)
+				return m
+			}(),
+			validate: func(t *testing.T, input *fastly.UpdateS3Input) {
+				assert.NotNil(t, input.CompressionCodec)
+				assert.Equal(t, "", *input.CompressionCodec)
+				assert.NotNil(t, input.ResponseCondition)
+				assert.Equal(t, "", *input.ResponseCondition)
+				assert.NotNil(t, input.PublicKey)
+				assert.Equal(t, "", *input.PublicKey)
+				assert.Nil(t, input.ServerSideEncryption, "server_side_encryption is a strict enum; the API rejects an explicit \"\", so clearing it must omit the field")
+				assert.NotNil(t, input.ServerSideEncryptionKMSKeyID)
+				assert.Equal(t, "", *input.ServerSideEncryptionKMSKeyID)
+				assert.Equal(t, fastly.NullValue[string](), input.Placement, "clearing placement must send a JSON null, not omit the field")
+				assert.NotNil(t, input.AccessKey, "clearing access_key must send \"\", not omit the field, or the old credential survives")
+				assert.Equal(t, "", *input.AccessKey)
+				assert.NotNil(t, input.SecretKey)
+				assert.Equal(t, "", *input.SecretKey)
+				assert.NotNil(t, input.IAMRole)
+				assert.Equal(t, "arn:aws:iam::123456789012:role/test", *input.IAMRole)
 			},
 		},
 	}
@@ -565,6 +615,40 @@ func TestBuildComputeUpdateInput(t *testing.T) {
 	assert.Nil(t, input.FormatVersion)
 	assert.Nil(t, input.Placement)
 	assert.Nil(t, input.ResponseCondition)
+	assert.Equal(t, "pgp-public-key", *input.PublicKey)
+	assert.Equal(t, fastly.S3ServerSideEncryption("aws:kms"), *input.ServerSideEncryption)
+	assert.Equal(t, "kms-key-1", *input.ServerSideEncryptionKMSKeyID)
+}
+
+func TestBuildComputeUpdateInput_clearingOptionalFieldsBackToDefaults(t *testing.T) {
+	m := ComputeNestedModel{commonModel: fullNestedModel().commonModel}
+	m.CompressionCodec = types.StringValue(DefaultCompressionCodec)
+	m.PublicKey = types.StringValue(DefaultPublicKey)
+	m.ServerSideEncryption = types.StringValue(DefaultServerSideEncryption)
+	m.ServerSideEncryptionKMSKeyID = types.StringValue(DefaultServerSideEncryptionKMSKeyID)
+	// Switch from access_key/secret_key auth to iam_role: the two key
+	// credentials clear to "".
+	m.Authentication = NewAuthenticationObject(
+		types.StringValue(""),
+		types.StringValue(""),
+		types.StringValue("arn:aws:iam::123456789012:role/test"),
+	)
+
+	input := BuildComputeUpdateInput("service-789", 3, m)
+
+	assert.NotNil(t, input.CompressionCodec)
+	assert.Equal(t, "", *input.CompressionCodec)
+	assert.NotNil(t, input.PublicKey)
+	assert.Equal(t, "", *input.PublicKey)
+	assert.Nil(t, input.ServerSideEncryption, "server_side_encryption is a strict enum; the API rejects an explicit \"\", so clearing it must omit the field")
+	assert.NotNil(t, input.ServerSideEncryptionKMSKeyID)
+	assert.Equal(t, "", *input.ServerSideEncryptionKMSKeyID)
+	assert.NotNil(t, input.AccessKey, "clearing access_key must send \"\", not omit the field, or the old credential survives")
+	assert.Equal(t, "", *input.AccessKey)
+	assert.NotNil(t, input.SecretKey)
+	assert.Equal(t, "", *input.SecretKey)
+	assert.NotNil(t, input.IAMRole)
+	assert.Equal(t, "arn:aws:iam::123456789012:role/test", *input.IAMRole)
 }
 
 func TestClearVCLOnlyCreateFields(t *testing.T) {

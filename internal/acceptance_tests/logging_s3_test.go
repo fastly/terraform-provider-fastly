@@ -115,6 +115,53 @@ func TestAccFastlyServiceLoggingS3_iamRole(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingS3_credentialSwitchClearsKeys verifies that
+// switching auth from access_key/secret_key to iam_role on update actually
+// clears the previously-set keys against the API. BuildUpdateInput must send
+// the cleared credentials as "" (via new()) rather than fastly.NullString,
+// which maps "" to nil, omits the field, and leaves the old keys in place —
+// producing an inconsistent-result error when the read-back still shows them.
+func TestAccFastlyServiceLoggingS3_credentialSwitchClearsKeys(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				// Start with access_key + secret_key set.
+				Config: ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.access_key", "AKIAIOSFODNN7EXAMPLE"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.secret_key", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.iam_role", ""),
+				),
+			},
+			{
+				// Switch to iam_role: the keys must clear back to "".
+				Config: ConfigLoggingS3IAM(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.iam_role", "arn:aws:iam::123456789012:role/FastlyS3Access"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.access_key", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "authentication.secret_key", ""),
+				),
+			},
+			{
+				// The clear must leave no residual diff against the same config.
+				Config:   ConfigLoggingS3IAM(serviceName, domainName, loggerName, bucketName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 // TestAccFastlyServiceLoggingS3_authEnvDefaults verifies that access_key and
 // secret_key still pick up FASTLY_S3_ACCESS_KEY / FASTLY_S3_SECRET_KEY when
 // the entire authentication object is omitted from config. This exercises the
@@ -228,7 +275,67 @@ func TestAccFastlyServiceLoggingS3_clearToDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "acl", ""),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "redundancy", ""),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "file_max_bytes", "0"),
+					// placement has no default: unconfigured means unset, distinct
+					// from "none" — see TestAccFastlyServiceLoggingS3_placementUnsetVsNone.
+					resource.TestCheckNoResourceAttr("fastly_service_logging_s3.test", "placement"),
 				),
+			},
+			{
+				// The clear must leave no residual diff against the same config.
+				Config:   ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_placementUnsetVsNone verifies that leaving
+// placement unconfigured and explicitly setting it to "none" are distinct,
+// round-trippable states — not just on create but across updates in both
+// directions — rather than being collapsed together, since the API treats an
+// unset placement (auto-place in vcl_log/vcl_deliver) differently from an
+// explicit "none" (suppress the log statement entirely).
+func TestAccFastlyServiceLoggingS3_placementUnsetVsNone(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				// Start unset.
+				Config: ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckNoResourceAttr("fastly_service_logging_s3.test", "placement"),
+				),
+			},
+			{
+				// Update to explicit "none".
+				Config: ConfigLoggingS3PlacementNone(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "placement", "none"),
+				),
+			},
+			{
+				// Update back to unset.
+				Config: ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckNoResourceAttr("fastly_service_logging_s3.test", "placement"),
+				),
+			},
+			{
+				// The API's null response must leave no residual diff against the
+				// same, still-unset config.
+				Config:   ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -280,6 +387,12 @@ func TestAccFastlyServiceLoggingS3_importBasic(t *testing.T) {
 // TestAccFastlyServiceLoggingS3_compressionCodec verifies that setting compression_codec
 // without gzip_level does not result in an API error (the two fields are mutually exclusive).
 // With gzip_level unset it stays at the -1 sentinel and is never sent to the API.
+// TestAccFastlyServiceLoggingS3_compressionCodec also verifies compression_codec
+// clears back to its "" default on update. compression_codec is Optional+Computed
+// with a static "" default; BuildUpdateInput must always send it via new() rather
+// than fastly.NullString, or clearing a previously-set value never reaches the API
+// (it gets omitted instead of sent as "") and the second step's check fails with
+// the old value still applied.
 func TestAccFastlyServiceLoggingS3_compressionCodec(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -299,6 +412,18 @@ func TestAccFastlyServiceLoggingS3_compressionCodec(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "compression_codec", "zstd"),
 					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
 				),
+			},
+			{
+				Config: ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "compression_codec", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "gzip_level", "-1"),
+				),
+			},
+			{
+				// The clear must leave no residual diff against the same config.
+				Config:   ConfigLoggingS3Defaults(serviceName, domainName, loggerName, bucketName),
+				PlanOnly: true,
 			},
 		},
 	})

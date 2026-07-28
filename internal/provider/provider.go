@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fastly/go-fastly/v16/fastly"
+	"github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/list"
@@ -29,6 +29,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/kvstore"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/productenablement"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/resourcelink"
@@ -108,6 +109,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		cdnacl.NewResource,
 		cdnaclentries.NewResource,
 		domain.NewResource,
+		loggingnewrelicotlp.NewResource,
 		loggings3.NewResource,
 		kvstore.NewResource,
 		productenablement.NewFanoutResource,
@@ -143,6 +145,7 @@ func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListReso
 		cdnacl.NewListResource,
 		cdnaclentries.NewListResource,
 		domain.NewListResource,
+		loggingnewrelicotlp.NewListResource,
 		loggings3.NewListResource,
 		servicecdn.NewListResource,
 		servicecompute.NewListResource,

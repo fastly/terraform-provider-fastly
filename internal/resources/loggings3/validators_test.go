@@ -100,7 +100,7 @@ func TestValidateNoVCLOnlyAttributesForCompute(t *testing.T) {
 			name:      "all VCL-only attributes configured",
 			format:    types.StringValue("custom-format"),
 			version:   types.Int64Value(2),
-			placement: types.StringValue("waf_debug"),
+			placement: types.StringValue("none"),
 			respCond:  types.StringValue("cond"),
 			wantError: true,
 		},

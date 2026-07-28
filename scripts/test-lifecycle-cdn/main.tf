@@ -83,6 +83,13 @@ resource "fastly_service_logging_s3" "service_1_logging" {
   }
 }
 
+resource "fastly_service_logging_newrelicotlp" "service_1_logging_newrelic" {
+  service_id = fastly_service_cdn.service_1.id
+  version    = var.service_1_version
+  name       = "test-newrelic-logger"
+  token      = "test-insert-key"
+}
+
 # Optional domain and backend for testing version writes
 resource "fastly_service_domain" "service_1_new_domain" {
   count      = var.service_1_new_domain != "" ? 1 : 0

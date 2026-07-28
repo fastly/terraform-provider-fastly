@@ -1,7 +1,7 @@
 package loggings3
 
 import (
-	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fastly "github.com/fastly/go-fastly/v17/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
@@ -207,7 +207,12 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
 	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))
-	input.Placement = fastly.NullString(service.StringValue(m.Placement))
+	// placement is Optional+Computed with a static "none" default (schema.go),
+	// so it is never actually empty here — unlike endpoints where placement is
+	// truly optional, there is no unset state to preserve as a JSON null.
+	// UpdateS3Input.Placement is still a *Nullable[string] because go-fastly
+	// models placement uniformly across logging endpoints.
+	input.Placement = fastly.NewNullable(service.StringValue(m.Placement))
 	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
 	input.PublicKey = fastly.NullString(service.StringValue(m.PublicKey))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))

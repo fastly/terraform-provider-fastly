@@ -8,8 +8,8 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
-	"github.com/fastly/go-fastly/v16/fastly"
-	ngwafproduct "github.com/fastly/go-fastly/v16/fastly/products/ngwaf"
+	"github.com/fastly/go-fastly/v17/fastly"
+	ngwafproduct "github.com/fastly/go-fastly/v17/fastly/products/ngwaf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"

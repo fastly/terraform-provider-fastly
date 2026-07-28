@@ -1,7 +1,7 @@
 package cdnacl
 
 import (
-	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fastly "github.com/fastly/go-fastly/v17/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )

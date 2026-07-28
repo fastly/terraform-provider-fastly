@@ -3,7 +3,7 @@ package aclentries
 import (
 	"context"
 
-	"github.com/fastly/go-fastly/v16/fastly/computeacls"
+	"github.com/fastly/go-fastly/v17/fastly/computeacls"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )

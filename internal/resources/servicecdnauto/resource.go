@@ -11,10 +11,11 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
-	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -57,6 +58,7 @@ type Model struct {
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
+	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 }
 
@@ -112,6 +114,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
+			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 		},
 	}
@@ -211,6 +214,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
+
+	if err := loggingnewrelicotlp.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingNewRelicOTLP); err != nil {
+		resp.Diagnostics.AddError("Error reconciling New Relic OTLP logging endpoints", err.Error())
+		return
+	}
+
+	loggingNewRelicOTLPs, err := loggingnewrelicotlp.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, plan.LoggingNewRelicOTLP)
 
 	if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ImageOptimizerDefaultSettings); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
@@ -317,11 +332,17 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
 		return
 	}
+	loggingNewRelicOTLPs, err := loggingnewrelicotlp.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
+	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
 
 	importedBytes, diags := req.Private.GetKey(ctx, imageOptimizerImportedPrivateKey)
 	resp.Diagnostics.Append(diags...)
@@ -366,7 +387,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -460,6 +481,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingS3 = loggings3.MatchOrder(loggingS3s, plan.LoggingS3)
 
+		if err := loggingnewrelicotlp.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingNewRelicOTLP); err != nil {
+			resp.Diagnostics.AddError("Error reconciling New Relic OTLP logging endpoints", err.Error())
+			return
+		}
+
+		loggingNewRelicOTLPs, err := loggingnewrelicotlp.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, plan.LoggingNewRelicOTLP)
+
 		if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.ImageOptimizerDefaultSettings, plan.ImageOptimizerDefaultSettings); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
 			return
@@ -497,6 +530,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
+		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 	}
 

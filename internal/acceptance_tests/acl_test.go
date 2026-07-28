@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fastly/go-fastly/v16/fastly/computeacls"
+	"github.com/fastly/go-fastly/v17/fastly/computeacls"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"

@@ -9,7 +9,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
-	fastly "github.com/fastly/go-fastly/v16/fastly"
+	fastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"

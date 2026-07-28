@@ -35,7 +35,7 @@ func FlattenToNestedModel(s *fastly.S3) NestedModel {
 	m.FormatVersion = service.Int64PointerOrDefault(s.FormatVersion, DefaultFormatVersion)
 	m.MessageType = service.StringPointerOrDefault(s.MessageType, DefaultMessageType)
 	m.TimestampFormat = service.StringPointerOrDefault(s.TimestampFormat, DefaultTimestampFormat)
-	m.Placement = service.StringPointerOrDefault(s.Placement, DefaultPlacement)
+	m.Placement = service.StringPointerOrNull(s.Placement)
 	m.ResponseCondition = service.StringPointerOrDefault(s.ResponseCondition, DefaultResponseCondition)
 	m.PublicKey = service.StringPointerOrDefault(s.PublicKey, DefaultPublicKey)
 	m.ProcessingRegion = service.StringPointerOrDefault(s.ProcessingRegion, DefaultProcessingRegion)

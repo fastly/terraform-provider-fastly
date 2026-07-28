@@ -145,13 +145,17 @@ func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel
 		BucketName:     new(service.StringValue(m.BucketName)),
 	}
 
-	input.AccessKey = fastly.NullString(service.StringValue(m.AccessKey()))
-	input.SecretKey = fastly.NullString(service.StringValue(m.SecretKey()))
-	input.IAMRole = fastly.NullString(service.StringValue(m.IAMRole()))
+	// Credentials default to "" and can be cleared — e.g. switching from
+	// access_key/secret_key to iam_role auth. Always send a concrete value via
+	// new() rather than fastly.NullString, which maps "" to nil, omits the field
+	// (access_key,omitempty), and leaves the previously-set credential in place.
+	input.AccessKey = new(service.StringValue(m.AccessKey()))
+	input.SecretKey = new(service.StringValue(m.SecretKey()))
+	input.IAMRole = new(service.StringValue(m.IAMRole()))
 	input.Domain = fastly.NullString(service.StringValue(m.Domain))
 	input.Path = new(service.StringValue(m.Path))
 	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
-	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
+	input.CompressionCodec = new(service.StringValue(m.CompressionCodec))
 	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
 	// unset: the API rejects requests that set both compression_codec and
 	// gzip_level, and it auto-manages the level when omitted.
@@ -160,7 +164,7 @@ func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel
 	}
 	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
 	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))
-	input.PublicKey = fastly.NullString(service.StringValue(m.PublicKey))
+	input.PublicKey = new(service.StringValue(m.PublicKey))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 
 	aclVal := fastly.S3AccessControlList(service.StringValue(m.ACL))
@@ -173,7 +177,7 @@ func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel
 		v := fastly.S3ServerSideEncryption(enc)
 		input.ServerSideEncryption = &v
 	}
-	input.ServerSideEncryptionKMSKeyID = fastly.NullString(service.StringValue(m.ServerSideEncryptionKMSKeyID))
+	input.ServerSideEncryptionKMSKeyID = new(service.StringValue(m.ServerSideEncryptionKMSKeyID))
 
 	fmb := int(service.Int64Value(m.FileMaxBytes))
 	input.FileMaxBytes = &fmb
@@ -190,13 +194,17 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		BucketName:     new(service.StringValue(m.BucketName)),
 	}
 
-	input.AccessKey = fastly.NullString(service.StringValue(m.AccessKey()))
-	input.SecretKey = fastly.NullString(service.StringValue(m.SecretKey()))
-	input.IAMRole = fastly.NullString(service.StringValue(m.IAMRole()))
+	// Credentials default to "" and can be cleared — e.g. switching from
+	// access_key/secret_key to iam_role auth. Always send a concrete value via
+	// new() rather than fastly.NullString, which maps "" to nil, omits the field
+	// (access_key,omitempty), and leaves the previously-set credential in place.
+	input.AccessKey = new(service.StringValue(m.AccessKey()))
+	input.SecretKey = new(service.StringValue(m.SecretKey()))
+	input.IAMRole = new(service.StringValue(m.IAMRole()))
 	input.Domain = fastly.NullString(service.StringValue(m.Domain))
 	input.Path = new(service.StringValue(m.Path))
 	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
-	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
+	input.CompressionCodec = new(service.StringValue(m.CompressionCodec))
 	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
 	// unset: the API rejects requests that set both compression_codec and
 	// gzip_level, and it auto-manages the level when omitted.
@@ -207,14 +215,19 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
 	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))
-	// placement is Optional+Computed with a static "none" default (schema.go),
-	// so it is never actually empty here — unlike endpoints where placement is
-	// truly optional, there is no unset state to preserve as a JSON null.
-	// UpdateS3Input.Placement is still a *Nullable[string] because go-fastly
-	// models placement uniformly across logging endpoints.
-	input.Placement = fastly.NewNullable(service.StringValue(m.Placement))
-	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
-	input.PublicKey = fastly.NullString(service.StringValue(m.PublicKey))
+	// placement can be cleared back to unset / nil (distinct from "none" —
+	// see schema.go). UpdateS3Input.Placement is a *Nullable[string]
+	// specifically so this can be sent as a real JSON null: omitting the field
+	// leaves the previous value in place, and sending a literal empty string
+	// gets stored as "" rather than reverting to null/auto-placement — neither
+	// actually clears it.
+	if v := service.StringValue(m.Placement); v != "" {
+		input.Placement = fastly.NewNullable(v)
+	} else {
+		input.Placement = fastly.NullValue[string]()
+	}
+	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
+	input.PublicKey = new(service.StringValue(m.PublicKey))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 
 	aclVal := fastly.S3AccessControlList(service.StringValue(m.ACL))
@@ -227,7 +240,7 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		v := fastly.S3ServerSideEncryption(enc)
 		input.ServerSideEncryption = &v
 	}
-	input.ServerSideEncryptionKMSKeyID = fastly.NullString(service.StringValue(m.ServerSideEncryptionKMSKeyID))
+	input.ServerSideEncryptionKMSKeyID = new(service.StringValue(m.ServerSideEncryptionKMSKeyID))
 
 	fmb := int(service.Int64Value(m.FileMaxBytes))
 	input.FileMaxBytes = &fmb

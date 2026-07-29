@@ -188,6 +188,32 @@ func TestAccFastlyServiceCDNAuto_VCLValidationNoMain(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_VCLValidationInvalidSyntax(t *testing.T) {
+	t.Parallel()
+
+	serviceName := fmt.Sprintf("tf-test-vcl-invalid-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	vclName := fmt.Sprintf("main_%s", acctest.RandString(10))
+	invalidContent := `sub vcl_recv {
+#FASTLY recv
+  this is not valid vcl
+}
+`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigCDNAutoWithVCLInline(serviceName, domainName, backendName, vclName, invalidContent),
+				ExpectError: regexp.MustCompile(`Error validating service version|VCL|invalid`),
+			},
+		},
+	})
+}
+
 func vclFixturePath(t *testing.T, name string) string {
 	t.Helper()
 

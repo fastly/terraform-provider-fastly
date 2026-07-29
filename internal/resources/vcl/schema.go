@@ -88,7 +88,7 @@ func ResourceAttributes() map[string]schema.Attribute {
 
 func NestedBlockSchema() schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		Description: "Custom VCL files attached to this service. This is modeled as a list so Terraform can render changes to `content` as an in-place string diff instead of a whole set element delete/add.",
+		Description: "Custom VCL files attached to this service.",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: CommonAttributes(),
 		},

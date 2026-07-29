@@ -31,7 +31,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
-- `vcl` (Block List) Custom VCL files attached to this service. This is modeled as a list so Terraform can render changes to `content` as an in-place string diff instead of a whole set element delete/add. (see [below for nested schema](#nestedblock--vcl))
+- `vcl` (Block List) Custom VCL files attached to this service. (see [below for nested schema](#nestedblock--vcl))
 
 ### Read-Only
 

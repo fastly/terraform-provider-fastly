@@ -6,6 +6,8 @@
 
 ### BUG FIXES:
 
+- fix(service): update versionless `name` and `comment` attributes regardless of `activate` and `stage` settings ([#1369](https://github.com/fastly/terraform-provider-fastly/pull/1369))
+
 ### Dependencies
 - build(deps): `google.golang.org/grpc` from 1.79.3 to 1.82.1 ([#1360](https://github.com/fastly/terraform-provider-fastly/pull/1360))
 

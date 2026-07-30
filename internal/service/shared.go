@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
+	"github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -72,6 +74,35 @@ func ToGeneratedResourceName(parts ...string) string {
 		return "resource"
 	}
 	return id
+}
+
+// MetadataChanged reports whether versionless service metadata differs between
+// the planned and current Terraform values.
+func MetadataChanged(planName, planComment, stateName, stateComment types.String) bool {
+	return !planName.Equal(stateName) || !planComment.Equal(stateComment)
+}
+
+// UpdateMetadataIfChanged updates versionless service metadata only when the
+// planned name or comment differs from the current Terraform state.
+func UpdateMetadataIfChanged(
+	ctx context.Context,
+	client *fastly.Client,
+	serviceID string,
+	planName, planComment, stateName, stateComment types.String,
+) error {
+	if !MetadataChanged(planName, planComment, stateName, stateComment) {
+		return nil
+	}
+
+	name := planName.ValueString()
+	comment := planComment.ValueString()
+
+	_, err := client.UpdateService(ctx, &fastly.UpdateServiceInput{
+		ServiceID: serviceID,
+		Name:      &name,
+		Comment:   &comment,
+	})
+	return err
 }
 
 func StringValue(v types.String) string {

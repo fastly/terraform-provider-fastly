@@ -40,6 +40,10 @@ set to `true`. While this combination will not cause any harm to the
 service, there is no logical reason to both stage and activate every
 set of applied changes.
 
+The `activate` and `stage` attributes only control version lifecycle operations.
+Versionless service attributes, including `name` and `comment`, are updated
+immediately during `terraform apply` regardless of these settings.
+
 ## Example Usage
 
 Basic usage:
@@ -217,15 +221,15 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- `name` (String) The unique name for the Service to create
+- `name` (String) The unique name for the Service to create. This versionless attribute is updated regardless of the `activate` and `stage` settings
 
 ### Optional
 
 - `acl` (Block Set) (see [below for nested schema](#nestedblock--acl))
-- `activate` (Boolean) Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Controls whether newly created service versions are activated. When versioned configuration changes, the apply step creates a draft version but does not activate it if this is set to `false`. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `cache_setting` (Block Set) (see [below for nested schema](#nestedblock--cache_setting))
-- `comment` (String) Description field for the service. Default `Managed by Terraform`
+- `comment` (String) Description field for the service. This versionless attribute is updated regardless of the `activate` and `stage` settings. Default `Managed by Terraform`
 - `condition` (Block Set) (see [below for nested schema](#nestedblock--condition))
 - `default_host` (String) The default hostname
 - `default_ttl` (Number) The default Time-to-live (TTL) for requests
@@ -273,7 +277,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `response_object` (Block Set) (see [below for nested schema](#nestedblock--response_object))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
 - `snippet` (Block Set) (see [below for nested schema](#nestedblock--snippet))
-- `stage` (Boolean) Conditionally enables new service versions to be staged. If set to `true`, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
+- `stage` (Boolean) Conditionally enables new service versions to be staged. If set to `true`, versioned changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `false`
 - `stale_if_error` (Boolean) Enables serving a stale object if there is an error
 - `stale_if_error_ttl` (Number) The default time-to-live (TTL) for serving the stale object for the version
 - `vcl` (Block Set) (see [below for nested schema](#nestedblock--vcl))

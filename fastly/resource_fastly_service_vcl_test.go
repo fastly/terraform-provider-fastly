@@ -296,6 +296,7 @@ func TestAccFastlyServiceVCL_createServiceWithStaticBackend(t *testing.T) {
 func TestAccFastlyServiceVCL_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	updatedName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	comment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	versionComment1 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	versionComment2 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -323,14 +324,15 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				),
 			},
 			{
-				// updating service comment with "activate = false" will be ignored
-				Config: testAccServiceVCLConfigUpdateServiceComment(name, "new service comment", domainName1, false),
+				// Versionless service metadata is updated even when activation is disabled.
+				Config: testAccServiceVCLConfigUpdateServiceMetadata(updatedName, comment, versionComment1, domainName1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", updatedName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "comment", comment),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "active_version", "1"),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "comment", "Managed by Terraform"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "cloned_version", "1"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccServiceVCLConfigBasicUpdate(name, comment, versionComment2, domainName2),
@@ -770,11 +772,12 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLConfigUpdateServiceComment(name, comment string, domain string, activate bool) string {
+func testAccServiceVCLConfigUpdateServiceMetadata(name, comment, versionComment, domain string, activate bool) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
   comment = "%s"
+  version_comment = "%s"
   http3 = true
 
   domain {
@@ -789,7 +792,7 @@ resource "fastly_service_vcl" "foo" {
 
   activate = %t
   force_destroy = true
-}`, name, comment, domain, activate)
+}`, name, comment, versionComment, domain, activate)
 }
 
 func testAccServiceVCLConfigInitWithVersionComment(name, versionComment, domain string) string {

@@ -38,6 +38,10 @@ set to `true`. While this combination will not cause any harm to the
 service, there is no logical reason to both stage and activate every
 set of applied changes.
 
+The `activate` and `stage` attributes only control version lifecycle operations.
+Versionless service attributes, including `name` and `comment`, are updated
+immediately during `terraform apply` regardless of these settings.
+
 ## Example Usage
 
 Basic usage:

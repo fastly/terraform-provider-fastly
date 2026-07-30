@@ -90,7 +90,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"activate": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`",
+				Description: "Controls whether newly created service versions are activated. When versioned configuration changes, the apply step creates a draft version but does not activate it if this is set to `false`. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `true`",
 				Default:     true,
 				Optional:    true,
 			},
@@ -119,7 +119,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "Managed by Terraform",
-				Description: "Description field for the service. Default `Managed by Terraform`",
+				Description: "Description field for the service. This versionless attribute is updated regardless of the `activate` and `stage` settings. Default `Managed by Terraform`",
 			},
 			"force_destroy": {
 				Type:          schema.TypeBool,
@@ -140,7 +140,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The unique name for the Service to create",
+				Description: "The unique name for the Service to create. This versionless attribute is updated regardless of the `activate` and `stage` settings",
 			},
 			"reuse": {
 				Type:          schema.TypeBool,
@@ -150,7 +150,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 			"stage": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally enables new service versions to be staged. If set to `true`, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
+				Description: "Conditionally enables new service versions to be staged. If set to `true`, versioned changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `false`",
 				Default:     false,
 				Optional:    true,
 			},
@@ -321,8 +321,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*APIClient).conn
 
 	shouldActivate := d.Get("activate").(bool)
-	// Update Name and/or Comment. No new version is required for this.
-	if d.HasChanges("name", "comment") && shouldActivate {
+
+	// Update versionless service attributes independently of version activation
+	// and staging. No new version is required for this.
+	if d.HasChanges("name", "comment") {
 		_, err := conn.UpdateService(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
 			Name:      gofastly.ToPointer(d.Get("name").(string)),
@@ -544,8 +546,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 
 	conn := meta.(*APIClient).conn
 
-	var diags diag.Diagnostics
-
 	s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceDetailsInput{
 		ServiceID: d.Id(),
 	})
@@ -633,18 +633,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 		}
 	}
 
-	// NOTE: service "name" and "comment" are versionless (mutable).
-	// Therefore, we only allow them to be updated if "activate = true".
-	// Unfortunately, with our current resource design, it's not easy to show
-	// a warning message upon plan, and so this warning will only appear upon applying.
-	if d.HasChanges("name", "comment") && !d.Get("activate").(bool) {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "Some changes are ignored",
-			Detail:   "'name' and 'comment' attributes can only be updated with 'activate = true'",
-		})
-	}
-
 	// If cloned_version is not set, and there is no active version, temporarily
 	// set the service.ActiveVersion number to the latest version supplied via
 	// the get service version details call. This is to ensure we still read all
@@ -730,7 +718,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 		return diag.FromErr(err)
 	}
 
-	return diags
+	return nil
 }
 
 // resourceServiceDelete provides service resource Delete functionality.

@@ -51,6 +51,12 @@ func ValidateConfig(vcls []NestedModel) error {
 	allMainKnown := true
 
 	for _, item := range vcls {
+		if item.Main.IsUnknown() || item.Main.IsNull() {
+			allMainKnown = false
+		} else if item.Main.ValueBool() {
+			mainCount++
+		}
+
 		if item.Name.IsUnknown() || item.Name.IsNull() {
 			continue
 		}
@@ -64,15 +70,6 @@ func ValidateConfig(vcls []NestedModel) error {
 			return fmt.Errorf("duplicate custom VCL name %q; names must be unique within a service version", name)
 		}
 		seenNames[name] = struct{}{}
-
-		if item.Main.IsUnknown() || item.Main.IsNull() {
-			allMainKnown = false
-			continue
-		}
-
-		if item.Main.ValueBool() {
-			mainCount++
-		}
 	}
 
 	if mainCount > 1 {

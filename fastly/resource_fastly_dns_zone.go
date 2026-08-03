@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v16/fastly"
-	"github.com/fastly/go-fastly/v16/fastly/dns/v1/dnszones"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/fastly/go-fastly/v17/fastly/dns/v1/dnszones"
 )
 
 func resourceFastlyDNSZone() *schema.Resource {

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // ElasticSearchServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -223,7 +223,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(ctx context.Context, d *sc
 		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
 		opts.TLSCACert = gofastly.ToPointer(v.(string))

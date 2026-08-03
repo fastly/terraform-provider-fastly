@@ -2123,6 +2123,24 @@ func ConfigCDNAutoWithVCLInline(serviceName, domainName, backendName, vclName, c
 	)
 }
 
+// ConfigCDNAutoWithVCLHeredoc returns a CDN auto service with domain, backend,
+// and one nested custom VCL block whose content is defined with a Terraform HEREDOC.
+func ConfigCDNAutoWithVCLHeredoc(serviceName, domainName, backendName, vclName, content string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"BACKEND_NAME":        backendName,
+			"VCL_NAME":            vclName,
+			"VCL_HEREDOC_CONTENT": strings.TrimSuffix(content, "\n"),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/vcl_nested_heredoc.tf",
+	)
+}
+
 // ConfigCDNAutoWithMultipleVCLFiles returns a CDN auto service with a main VCL file
 // and an included library VCL file.
 func ConfigCDNAutoWithMultipleVCLFiles(serviceName, domainName, backendName, mainName, includeName, mainFilePath, includeFilePath string) string {

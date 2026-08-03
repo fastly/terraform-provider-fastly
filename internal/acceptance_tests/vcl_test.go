@@ -142,6 +142,41 @@ func TestAccFastlyServiceCDNAuto_withMultipleVCLFiles(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_withVCLHeredocContent(t *testing.T) {
+	t.Parallel()
+
+	serviceName := fmt.Sprintf("tf-test-vcl-auto-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	vclName := fmt.Sprintf("main_%s", acctest.RandString(10))
+	content := vclBoilerplate("heredoc")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithVCLHeredoc(serviceName, domainName, backendName, vclName, content),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckVCLExistsInFastly("fastly_service_cdn_auto.test", vclName, 1),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "vcl.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "vcl.0.name", vclName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "vcl.0.main", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "vcl.0.content", content),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithVCLHeredoc(serviceName, domainName, backendName, vclName, content),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_VCLValidation(t *testing.T) {
 	t.Parallel()
 

@@ -42,6 +42,7 @@ const imageOptimizerImportedPrivateKey = "image_optimizer_default_settings_impor
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithConfigure = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
+var _ resource.ResourceWithValidateConfig = &Resource{}
 
 func NewResource() resource.Resource {
 	return &Resource{}
@@ -136,6 +137,22 @@ func (r *Resource) Configure(_ context.Context, req resource.ConfigureRequest, r
 	r.providerData = data
 }
 
+func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config Model
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := vcl.ValidateConfig(config.VCL); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("vcl"),
+			"Invalid custom VCL configuration",
+			err.Error(),
+		)
+	}
+}
+
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -144,7 +161,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	if err := vcl.Validate(plan.VCL); err != nil {
-		resp.Diagnostics.AddError("Invalid custom VCL configuration", err.Error())
+		resp.Diagnostics.AddAttributeError(
+			path.Root("vcl"),
+			"Invalid custom VCL configuration",
+			err.Error(),
+		)
 		return
 	}
 
@@ -266,13 +287,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
 	if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.VCL); err != nil {
-		resp.Diagnostics.AddError("Error reconciling custom VCL", err.Error())
+		resp.Diagnostics.AddError("Error reconciling custom VCL files", err.Error())
 		return
 	}
 
 	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
 	if err != nil {
-		resp.Diagnostics.AddError("Error reading custom VCL", err.Error())
+		resp.Diagnostics.AddError("Error reading custom VCL files", err.Error())
 		return
 	}
 	plan.VCL = vcl.MatchOrderPreservePlanContent(vcls, plan.VCL)
@@ -380,12 +401,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
 		return
 	}
-	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading custom VCL", err.Error())
-		return
-	}
-
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
@@ -393,6 +408,12 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
+
+	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading custom VCL files", err.Error())
+		return
+	}
 	state.VCL = vcl.MatchOrder(vcls, state.VCL)
 
 	importedBytes, diags := req.Private.GetKey(ctx, imageOptimizerImportedPrivateKey)
@@ -426,7 +447,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	if err := vcl.Validate(plan.VCL); err != nil {
-		resp.Diagnostics.AddError("Invalid custom VCL configuration", err.Error())
+		resp.Diagnostics.AddAttributeError(
+			path.Root("vcl"),
+			"Invalid custom VCL configuration",
+			err.Error(),
+		)
 		return
 	}
 
@@ -579,13 +604,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
 		if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.VCL); err != nil {
-			resp.Diagnostics.AddError("Error reconciling custom VCL", err.Error())
+			resp.Diagnostics.AddError("Error reconciling custom VCL files", err.Error())
 			return
 		}
 
 		vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
 		if err != nil {
-			resp.Diagnostics.AddError("Error reading custom VCL", err.Error())
+			resp.Diagnostics.AddError("Error reading custom VCL files", err.Error())
 			return
 		}
 		plan.VCL = vcl.MatchOrderPreservePlanContent(vcls, plan.VCL)

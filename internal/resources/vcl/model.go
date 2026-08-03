@@ -37,6 +37,55 @@ func FlattenToNestedModel(api *fastly.VCL) NestedModel {
 	}
 }
 
+// ValidateConfig performs plan-time custom VCL validation while tolerating
+// unknown values. Terraform's schema validation will handle required/null
+// attributes, and apply-time Validate handles fully known values before API
+// reconciliation.
+func ValidateConfig(vcls []NestedModel) error {
+	if len(vcls) == 0 {
+		return nil
+	}
+
+	seenNames := make(map[string]struct{}, len(vcls))
+	mainCount := 0
+	allMainKnown := true
+
+	for _, item := range vcls {
+		if item.Name.IsUnknown() || item.Name.IsNull() {
+			continue
+		}
+
+		name := strings.TrimSpace(item.Name.ValueString())
+		if name == "" {
+			return fmt.Errorf("custom VCL name cannot be empty")
+		}
+
+		if _, ok := seenNames[name]; ok {
+			return fmt.Errorf("duplicate custom VCL name %q; names must be unique within a service version", name)
+		}
+		seenNames[name] = struct{}{}
+
+		if item.Main.IsUnknown() || item.Main.IsNull() {
+			allMainKnown = false
+			continue
+		}
+
+		if item.Main.ValueBool() {
+			mainCount++
+		}
+	}
+
+	if mainCount > 1 {
+		return fmt.Errorf("only one custom VCL file can have main = true")
+	}
+
+	if allMainKnown && mainCount == 0 {
+		return fmt.Errorf("one custom VCL file must have main = true")
+	}
+
+	return nil
+}
+
 func Validate(vcls []NestedModel) error {
 	if len(vcls) == 0 {
 		return nil

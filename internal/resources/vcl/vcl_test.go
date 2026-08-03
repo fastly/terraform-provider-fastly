@@ -232,6 +232,98 @@ func TestValidate(t *testing.T) {
 	}
 }
 
+func TestValidateConfig(t *testing.T) {
+	tests := []struct {
+		name    string
+		vcls    []NestedModel
+		wantErr string
+	}{
+		{
+			name: "empty VCL list is valid",
+			vcls: nil,
+		},
+		{
+			name: "single main VCL is valid",
+			vcls: []NestedModel{minimalNestedModel()},
+		},
+		{
+			name: "duplicate known names are invalid",
+			vcls: []NestedModel{
+				minimalNestedModel(),
+				{
+					Name:    types.StringValue("main"),
+					Content: types.StringValue("different"),
+					Main:    types.BoolValue(false),
+				},
+			},
+			wantErr: `duplicate custom VCL name "main"`,
+		},
+		{
+			name: "missing main is invalid when all main values are known",
+			vcls: []NestedModel{
+				includedNestedModel(),
+			},
+			wantErr: "one custom VCL file must have main = true",
+		},
+		{
+			name: "multiple known mains are invalid",
+			vcls: []NestedModel{
+				minimalNestedModel(),
+				{
+					Name:    types.StringValue("other-main"),
+					Content: types.StringValue("sub vcl_recv {}\n"),
+					Main:    types.BoolValue(true),
+				},
+			},
+			wantErr: "only one custom VCL file can have main = true",
+		},
+		{
+			name: "blank known name is invalid",
+			vcls: []NestedModel{
+				{
+					Name:    types.StringValue("  "),
+					Content: types.StringValue("sub vcl_recv {}\n"),
+					Main:    types.BoolValue(true),
+				},
+			},
+			wantErr: "custom VCL name cannot be empty",
+		},
+		{
+			name: "unknown name is deferred",
+			vcls: []NestedModel{
+				{
+					Name:    types.StringUnknown(),
+					Content: types.StringValue("sub vcl_recv {}\n"),
+					Main:    types.BoolValue(true),
+				},
+			},
+		},
+		{
+			name: "unknown main defers missing main validation",
+			vcls: []NestedModel{
+				{
+					Name:    types.StringValue("include"),
+					Content: types.StringValue("sub helper {}\n"),
+					Main:    types.BoolUnknown(),
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateConfig(tt.vcls)
+			if tt.wantErr == "" {
+				assert.NoError(t, err)
+				return
+			}
+
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
+}
+
 func TestEqual(t *testing.T) {
 	tests := []struct {
 		name     string

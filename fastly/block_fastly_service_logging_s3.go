@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // S3LoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -327,7 +327,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(ctx context.Context, d *schema
 		opts.Redundancy = gofastly.ToPointer(gofastly.S3Redundancy(v.(string)))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.ToPointer(v.(string))

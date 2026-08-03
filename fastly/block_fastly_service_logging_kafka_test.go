@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v16/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 func TestResourceFastlyFlattenKafka(t *testing.T) {

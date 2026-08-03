@@ -10,6 +10,7 @@
 
 ### Dependencies
 - build(deps): `google.golang.org/grpc` from 1.79.3 to 1.82.1 ([#1360](https://github.com/fastly/terraform-provider-fastly/pull/1360))
+- build(deps): `github.com/fastly/go-fastly/v17` from 16.0.1 to 17.1.0 ([#1373](https://github.com/fastly/terraform-provider-fastly/pull/1373))
 
 ## 9.4.0 (July 22, 2026)
 

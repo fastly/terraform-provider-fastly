@@ -1300,6 +1300,23 @@ func ConfigConditionMultiple(serviceName, domainName, conditionName1, conditionN
 	)
 }
 
+// ConfigConditionHeredoc returns a condition resource config whose statement is defined via a
+// HEREDOC, which typically leaves a trailing newline in the configured value.
+func ConfigConditionHeredoc(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit_heredoc.tf",
+	)
+}
+
 // ConfigConditionForImport returns a test configuration for importing a condition
 func ConfigConditionForImport(serviceName, domainName, conditionName string) string {
 	return BuildConfig(

@@ -323,6 +323,20 @@ func TestModelsEqual(t *testing.T) {
 			expected: false,
 		},
 		{
+			name: "statement differing only in surrounding whitespace",
+			a: func() NestedModel {
+				m := minimalNestedModel()
+				m.Statement = types.StringValue("req.url ~ \"^/admin\"")
+				return m
+			}(),
+			b: func() NestedModel {
+				m := minimalNestedModel()
+				m.Statement = types.StringValue("\n  req.url ~ \"^/admin\"  \n")
+				return m
+			}(),
+			expected: true,
+		},
+		{
 			name: "different priority",
 			a: func() NestedModel {
 				m := minimalNestedModel()

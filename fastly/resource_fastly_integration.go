@@ -105,7 +105,17 @@ func resourceFastlyIntegrationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if i.Config != nil {
-		err = d.Set("config", i.Config)
+		// The API treats `config` as write-only for secret fields (e.g. `apikey`,
+		// `token`): it's either entirely absent from the response, or present
+		// with those fields stripped out. Merge the returned fields over the
+		// configured value instead of overwriting it, so write-only fields
+		// that aren't echoed back aren't seen as configuration drift.
+		merged := d.Get("config").(map[string]any)
+		for k, v := range i.Config {
+			merged[k] = v
+		}
+
+		err = d.Set("config", merged)
 		if err != nil {
 			return diag.FromErr(err)
 		}

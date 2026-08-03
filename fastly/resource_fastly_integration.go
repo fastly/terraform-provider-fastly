@@ -42,9 +42,21 @@ func resourceFastlyIntegration() *schema.Resource {
 			"type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Type of the integration. One of: `mailinglist`, `microsoftteams`, `newrelic`, `pagerduty`, `slack`, `webhook`.",
+				Description: "Type of the integration. One of: `datadog`, `jiraissue`, `jsm`, `mailinglist`, `microsoftteams`, `newrelic`, `opsgenie`, `pagerduty`, `slack`, `splunkoncall`, `webhook`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-					[]string{"mailinglist", "microsoftteams", "newrelic", "pagerduty", "slack", "webhook"},
+					[]string{
+						gofastly.IntegrationTypeDatadog,
+						gofastly.IntegrationTypeJiraIssue,
+						gofastly.IntegrationTypeJSM,
+						"mailinglist",
+						"microsoftteams",
+						"newrelic",
+						gofastly.IntegrationTypeOpsGenie,
+						"pagerduty",
+						"slack",
+						gofastly.IntegrationTypeSplunkOnCall,
+						"webhook",
+					},
 					false,
 				)),
 			},

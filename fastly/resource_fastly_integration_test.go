@@ -33,6 +33,76 @@ func TestAccFastlyIntegration_mailinglist(t *testing.T) {
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
 
+func TestAccFastlyIntegration_datadog(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+			"site":   "datadoghq.eu",
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeDatadog),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+			"site":   "datadoghq.com",
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeDatadog),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_jiraissue(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"baseurl":    fmt.Sprintf("https://%s.atlassian.net", acctest.RandString(10)),
+			"username":   fmt.Sprintf("user-%s@fastly.com", acctest.RandString(10)),
+			"token":      acctest.RandString(10),
+			"projectkey": acctest.RandString(5),
+			"issuetype":  "Bug",
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJiraIssue),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"baseurl":    fmt.Sprintf("https://%s.atlassian.net", acctest.RandString(10)),
+			"username":   fmt.Sprintf("user-%s@fastly.com", acctest.RandString(10)),
+			"token":      acctest.RandString(10),
+			"projectkey": acctest.RandString(5),
+			"issuetype":  "Task",
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJiraIssue),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_jsm(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJSM),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJSM),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
 func TestAccFastlyIntegration_microsoftteams(t *testing.T) {
 	createIntegration := gofastly.Integration{
 		Config: map[string]string{
@@ -75,6 +145,26 @@ func TestAccFastlyIntegration_newrelic(t *testing.T) {
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
 
+func TestAccFastlyIntegration_opsgenie(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeOpsGenie),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeOpsGenie),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
 func TestAccFastlyIntegration_pagerduty(t *testing.T) {
 	createIntegration := gofastly.Integration{
 		Config: map[string]string{
@@ -111,6 +201,26 @@ func TestAccFastlyIntegration_slack(t *testing.T) {
 		Description: gofastly.ToPointer("my new description"),
 		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
 		Type:        gofastly.ToPointer("slack"),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_splunkoncall(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"url": fmt.Sprintf("https://alert.victorops.com/integrations/generic/20131114/alert/%s", acctest.RandString(10)),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeSplunkOnCall),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"url": fmt.Sprintf("https://alert.victorops.com/integrations/generic/20131114/alert/%s", acctest.RandString(10)),
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeSplunkOnCall),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }

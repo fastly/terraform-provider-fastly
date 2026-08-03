@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(fastly_integration): add support for `datadog`, `jiraissue`, `jsm`, `opsgenie`, and `splunkoncall` integration types ([#1374](https://github.com/fastly/terraform-provider-fastly/pull/1374))
+
 ### BUG FIXES:
 
 - fix(service): update versionless `name` and `comment` attributes regardless of `activate` and `stage` settings ([#1369](https://github.com/fastly/terraform-provider-fastly/pull/1369))

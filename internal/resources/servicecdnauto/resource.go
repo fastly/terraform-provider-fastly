@@ -400,13 +400,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	serviceID := state.ID.ValueString()
 
-	// Update service metadata in place. Name and comment are versionless service fields.
-	_, err := r.providerData.AutoClient().UpdateService(ctx, &fastly.UpdateServiceInput{
-		ServiceID: serviceID,
-		Name:      new(plan.Name.ValueString()),
-		Comment:   new(plan.Comment.ValueString()),
-	})
-	if err != nil {
+	if err := service.UpdateMetadataIfChanged(
+		ctx,
+		r.providerData.AutoClient(),
+		serviceID,
+		plan.Name,
+		plan.Comment,
+		state.Name,
+		state.Comment,
+	); err != nil {
 		resp.Diagnostics.AddError("Error updating Fastly CDN service", err.Error())
 		return
 	}

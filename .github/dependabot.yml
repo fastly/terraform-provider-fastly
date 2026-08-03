@@ -5,6 +5,10 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+      exclude:
+        - "github.com/fastly/go-fastly/*"
     groups:
       go-dependencies:
         patterns:
@@ -14,6 +18,8 @@ updates:
     directory: "/tools"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels:
       - "tools"
     groups:
@@ -25,6 +31,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels:
       - "github_actions"
     groups:

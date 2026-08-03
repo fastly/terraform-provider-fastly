@@ -160,6 +160,31 @@ func TestAccFastlyServiceBackend_multipleBackends(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceBackend_withRequestCondition(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	conditionName := fmt.Sprintf("condition-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigBackendWithRequestCondition(serviceName, domainName, backendName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_condition.test", "name", conditionName),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "name", backendName),
+					resource.TestCheckResourceAttr("fastly_service_backend.origin", "request_condition", conditionName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceBackend_vclService(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-vcl-%s", acctest.RandString(10))

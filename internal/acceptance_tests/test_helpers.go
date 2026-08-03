@@ -183,6 +183,45 @@ func CheckGzipFieldClearedRemotely(resourceName, gzipName, field, staleValue str
 	}
 }
 
+// CheckConditionTypeInFastly returns a TestCheckFunc that fetches a condition directly from the
+// Fastly API (bypassing Terraform state) and verifies its type matches expectedType. This exists
+// because the Fastly API doesn't support updating a condition's type via PUT (see condition's
+// ops.Update) - the provider works around this with a delete+create, and Terraform state alone
+// wouldn't catch a bug where the recreate silently failed to apply the new type remotely.
+func CheckConditionTypeInFastly(resourceName, conditionName, expectedType string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		version, err := strconv.Atoi(rs.Primary.Attributes["active_version"])
+		if err != nil {
+			return fmt.Errorf("error parsing active_version: %w", err)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		c, err := client.GetCondition(context.Background(), &fastly.GetConditionInput{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+			Name:           conditionName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching condition %q: %w", conditionName, err)
+		}
+
+		if fastly.ToValue(c.Type) != expectedType {
+			return fmt.Errorf("condition %q has type %q in Fastly, expected %q", conditionName, fastly.ToValue(c.Type), expectedType)
+		}
+
+		return nil
+	}
+}
+
 // CheckImageOptimizerDefaultSettingsMatchAPIDefaults returns a TestCheckFunc that fetches Image
 // Optimizer default settings directly from the Fastly API (bypassing Terraform state) and fails
 // if any field still holds a previously-configured, non-default value. This exists because the
@@ -567,6 +606,100 @@ func ConfigCDNAutoWithMultipleGzips(serviceName, domainName, gzipName1, gzipName
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/gzip_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithCondition returns a CDN auto service config with a domain and a condition
+func ConfigCDNAutoWithCondition(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"CONDITION_NAME": conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithConditionUpdated returns a CDN auto service config with the same condition
+// name but an updated statement and priority
+func ConfigCDNAutoWithConditionUpdated(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"CONDITION_NAME": conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithConditionTypeChanged returns a CDN auto service config with the same
+// condition name but a different type, exercising the delete+recreate path the Fastly API
+// requires since it doesn't support updating a condition's type in place.
+func ConfigCDNAutoWithConditionTypeChanged(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"CONDITION_NAME": conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_type_changed.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleConditions returns a CDN auto service config with two conditions
+func ConfigCDNAutoWithMultipleConditions(serviceName, domainName, conditionName1, conditionName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":     serviceName,
+			"DOMAIN_NAME":      domainName,
+			"CONDITION_NAME_1": conditionName1,
+			"CONDITION_NAME_2": conditionName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackendRequestCondition returns a CDN auto service config with a backend
+// whose request_condition references a real nested condition block.
+func ConfigCDNAutoWithBackendRequestCondition(serviceName, domainName, backendName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"BACKEND_NAME":   backendName,
+			"CONDITION_NAME": conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_single.tf",
+		"internal/acceptance_tests/blocks/backend_with_request_condition.tf",
+	)
+}
+
+// ConfigCDNAutoWithGzipCacheCondition returns a CDN auto service config with a gzip
+// configuration whose cache_condition references a real nested CACHE-type condition block.
+func ConfigCDNAutoWithGzipCacheCondition(serviceName, domainName, gzipName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"GZIP_NAME":      gzipName,
+			"CONDITION_NAME": conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_cache.tf",
+		"internal/acceptance_tests/blocks/gzip_with_cache_condition.tf",
 	)
 }
 
@@ -1077,6 +1210,126 @@ func ConfigBackendForImport(serviceName, domainName, backendName string) string 
 		},
 		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
 		"internal/acceptance_tests/blocks/backend_basic.tf",
+	)
+}
+
+// ConfigBackendWithRequestCondition returns an explicit backend resource config whose
+// request_condition references a real explicit fastly_service_condition resource.
+func ConfigBackendWithRequestCondition(serviceName, domainName, backendName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"BACKEND_NAME":    backendName,
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/backend_explicit_with_request_condition.tf",
+	)
+}
+
+// Configuration helpers for condition resources (explicit version management)
+
+// ConfigConditionBasic returns a basic condition resource config
+func ConfigConditionBasic(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit.tf",
+	)
+}
+
+// ConfigConditionUpdated returns a condition resource config with an updated statement and priority
+func ConfigConditionUpdated(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit_updated.tf",
+	)
+}
+
+// ConfigConditionTypeChanged returns a condition resource config with the same name but a
+// different type, exercising the delete+recreate path the Fastly API requires since it
+// doesn't support updating a condition's type in place.
+func ConfigConditionTypeChanged(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit_type_changed.tf",
+	)
+}
+
+// ConfigConditionMultiple returns a config with two condition resources
+func ConfigConditionMultiple(serviceName, domainName, conditionName1, conditionName2 string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":     serviceName,
+			"SERVICE_COMMENT":  "",
+			"DOMAIN_NAME":      domainName,
+			"SERVICE_VERSION":  "1",
+			"CONDITION_NAME_1": conditionName1,
+			"CONDITION_NAME_2": conditionName2,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit_multi.tf",
+	)
+}
+
+// ConfigConditionHeredoc returns a condition resource config whose statement is defined via a
+// HEREDOC, which typically leaves a trailing newline in the configured value.
+func ConfigConditionHeredoc(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit_heredoc.tf",
+	)
+}
+
+// ConfigConditionForImport returns a test configuration for importing a condition
+func ConfigConditionForImport(serviceName, domainName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"CONDITION_NAME":  conditionName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/condition_explicit.tf",
 	)
 }
 

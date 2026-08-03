@@ -27,6 +27,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/kvstore"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
@@ -108,6 +109,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		backend.NewResource,
 		cdnacl.NewResource,
 		cdnaclentries.NewResource,
+		condition.NewResource,
 		domain.NewResource,
 		loggingnewrelicotlp.NewResource,
 		loggings3.NewResource,
@@ -144,6 +146,7 @@ func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListReso
 		backend.NewListResource,
 		cdnacl.NewListResource,
 		cdnaclentries.NewListResource,
+		condition.NewListResource,
 		domain.NewListResource,
 		loggingnewrelicotlp.NewListResource,
 		loggings3.NewListResource,

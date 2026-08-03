@@ -1,0 +1,110 @@
+---
+page_title: "fastly_service_condition Resource - fastly"
+subcategory: ""
+description: |-
+  Fastly service condition resource. Writes directly to the specified writable service version.
+---
+
+# fastly_service_condition (Resource)
+
+Fastly service condition resource. Writes directly to the specified writable service version.
+
+This resource is part of the explicit/default first-class resource family. It
+manages a condition on the configured service version. It does not clone, activate,
+or stage service versions.
+
+## Example Usage
+
+```terraform
+resource "fastly_service_condition" "admin_only" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "admin_only"
+  type       = "REQUEST"
+  statement  = "req.url ~ \"^/admin\""
+}
+
+resource "fastly_service_backend" "origin" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "origin"
+
+  address           = "api.example.com"
+  port              = 443
+  use_ssl           = true
+  request_condition = fastly_service_condition.admin_only.name
+}
+```
+
+## Schema
+
+### Required
+
+- `name` (String) A name to refer to this condition. Changing this attribute will delete and recreate the resource.
+- `service_id` (String) Fastly service ID.
+- `statement` (String) A conditional expression in VCL used to determine if the condition is met.
+- `type` (String) Type of condition. Must be one of `REQUEST`, `RESPONSE`, `CACHE`, or `PREFETCH`.
+- `version` (Number) Writable Fastly service version to modify.
+
+### Optional
+
+- `priority` (Number) A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`.
+
+### Read-Only
+
+- `id` (String) Terraform resource identifier.
+
+## Import
+
+`fastly_service_condition` has a stable Framework identity of `service_id + name`.
+The `version` argument is not part of the stable identity because explicit
+resources can move the same logical condition from one service version to another.
+
+For import-from-scratch with the Terraform CLI, include the service version in
+the import ID so the provider can read the condition from the Fastly API and
+populate full state:
+
+```shell
+terraform import fastly_service_condition.admin_only SERVICE_ID/VERSION/CONDITION_NAME
+```
+
+Example:
+
+```shell
+terraform import fastly_service_condition.admin_only SU1Z0isxPaozGVKXdv0eY/3/admin_only
+```
+
+You can also use Terraform's identity-based import flow with the stable identity
+fields. The resource configuration must still provide the `version` argument
+because the provider needs a service version to read the condition from Fastly:
+
+```terraform
+resource "fastly_service_condition" "admin_only" {
+  service_id = "SU1Z0isxPaozGVKXdv0eY"
+  version    = 3
+  name       = "admin_only"
+  type       = "REQUEST"
+  statement  = "req.url ~ \"^/admin\""
+}
+
+import {
+  to = fastly_service_condition.admin_only
+
+  identity = {
+    service_id = "SU1Z0isxPaozGVKXdv0eY"
+    name       = "admin_only"
+  }
+}
+```
+
+## Version lifecycle
+
+This resource does not clone, activate, or stage service versions. Use explicit
+service-version lifecycle actions to clone, validate, stage, or activate a
+service version.
+
+## Type changes
+
+The Fastly API does not support changing a condition's `type` in place. When
+`type` changes, the provider deletes and recreates the condition on the same
+service version instead of issuing an update.

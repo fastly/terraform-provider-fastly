@@ -28,6 +28,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
 - `image_optimizer_default_settings` (Block List) Image Optimizer default settings for this service. At most one block is supported. The Image Optimizer product must already be enabled on the service (e.g. via `fastly_service_product_image_optimizer`) before these settings can be persisted; enabling the product and configuring this block cannot be done in the same initial `apply`, since this block is reconciled as part of this resource's own create step, before a separate product-enablement resource (which depends on this resource's `id`) can run. Enable the product in a prior `apply` first. (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
+- `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
@@ -155,6 +156,32 @@ Optional:
 - `upscale` (Boolean) Whether or not we should allow output images to render at sizes larger than input. Default `false`.
 - `webp` (Boolean) Controls whether or not to default to WebP output when the client supports it. This is equivalent to adding `auto=webp` to all image optimizer requests. Default `false`.
 - `webp_quality` (Number) The default quality to use with WebP output. This can be overridden with the second option in the `quality` URL parameter on specific image optimizer requests. Default `85`.
+
+
+<a id="nestedblock--logging_datadog"></a>
+### Nested Schema for `logging_datadog`
+
+Required:
+
+- `authentication` (Attributes) Datadog authentication credentials. (see [below for nested schema](#nestedatt--logging_datadog--authentication))
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid JSON that Datadog can ingest.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `region` (String) The region that log data will be sent to. Valid values are `US`, `US3`, `US5`, `EU1`, `AP1`, and `EU` (legacy, equivalent to `EU1`). Default: `US`.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+<a id="nestedatt--logging_datadog--authentication"></a>
+### Nested Schema for `logging_datadog.authentication`
+
+Required:
+
+- `token` (String, Sensitive) The API key from your Datadog account.
+
 
 
 <a id="nestedblock--logging_newrelicotlp"></a>

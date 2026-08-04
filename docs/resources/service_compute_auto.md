@@ -24,6 +24,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `comment` (String) Optional service comment.
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
+- `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `package` (Block List) Compute package attached to this service version. At most one package block is supported. (see [below for nested schema](#nestedblock--package))
@@ -94,6 +95,28 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--logging_datadog"></a>
+### Nested Schema for `logging_datadog`
+
+Required:
+
+- `authentication` (Attributes) Datadog authentication credentials. (see [below for nested schema](#nestedatt--logging_datadog--authentication))
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `region` (String) The region that log data will be sent to. Valid values are `US`, `US3`, `US5`, `EU1`, `AP1`, and `EU` (legacy, equivalent to `EU1`). Default: `US`.
+
+<a id="nestedatt--logging_datadog--authentication"></a>
+### Nested Schema for `logging_datadog.authentication`
+
+Required:
+
+- `token` (String, Sensitive) The API key from your Datadog account.
+
 
 
 <a id="nestedblock--logging_newrelicotlp"></a>

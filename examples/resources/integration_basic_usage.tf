@@ -1,3 +1,46 @@
+resource "fastly_integration" "datadog_example" {
+  name = "my Datadog integration"
+  description = "example Datadog integration"
+  type = "datadog"
+
+  config = {
+    # Datadog API key
+    apikey = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    # Datadog site (optional, defaults to the US site)
+    site = "datadoghq.eu"
+  }
+}
+
+resource "fastly_integration" "jiraissue_example" {
+  name = "my Jira integration"
+  description = "example Jira integration"
+  type = "jiraissue"
+
+  config = {
+    # base URL of the Jira instance
+    baseurl = "https://my-org.atlassian.net"
+    # Jira username (email address) used to authenticate
+    username = "user@my-org.com"
+    # Jira API token
+    token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    # key of the Jira project where issues will be created
+    projectkey = "ABC"
+    # type of Jira issue to create
+    issuetype = "Bug"
+  }
+}
+
+resource "fastly_integration" "jsm_example" {
+  name = "my Jira Service Management integration"
+  description = "example Jira Service Management integration"
+  type = "jsm"
+
+  config = {
+    # Jira Service Management API key
+    apikey = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+
 resource "fastly_integration" "mailinglist_example" {
   name = "my mailing list integration"
   description = "example mailing list integration"
@@ -32,6 +75,17 @@ resource "fastly_integration" "newrelic_example" {
   }
 }
 
+resource "fastly_integration" "opsgenie_example" {
+  name = "my OpsGenie integration"
+  description = "example OpsGenie integration"
+  type = "opsgenie"
+
+  config = {
+    # OpsGenie API key
+    apikey = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+
 resource "fastly_integration" "pagerduty_example" {
   name = "my PagerDuty integration"
   description = "example PagerDuty integration"
@@ -51,6 +105,17 @@ resource "fastly_integration" "slack_example" {
   config = {
     # Slack webhook URL
     webhook = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+
+resource "fastly_integration" "splunkoncall_example" {
+  name = "my Splunk On-Call integration"
+  description = "example Splunk On-Call integration"
+  type = "splunkoncall"
+
+  config = {
+    # Splunk On-Call webhook URL
+    url = "https://alert.victorops.com/integrations/generic/20131114/alert/XXXXXXXXXXXXXXXXXXXXXXXX"
   }
 }
 

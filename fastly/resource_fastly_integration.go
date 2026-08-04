@@ -2,7 +2,9 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,6 +12,44 @@ import (
 
 	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
+
+// go-fastly does not export type constants for these integration types, so
+// they're defined here to sit alongside the ones it does export.
+const (
+	integrationTypeMailingList    = "mailinglist"
+	integrationTypeMicrosoftTeams = "microsoftteams"
+	integrationTypeNewRelic       = "newrelic"
+	integrationTypePagerDuty      = "pagerduty"
+	integrationTypeSlack          = "slack"
+	integrationTypeWebhook        = "webhook"
+)
+
+// integrationTypes is the single source of truth for valid `type` values, so
+// the schema's Description and ValidateDiagFunc can't drift out of sync with
+// one another.
+var integrationTypes = []string{
+	gofastly.IntegrationTypeDatadog,
+	gofastly.IntegrationTypeJiraIssue,
+	gofastly.IntegrationTypeJSM,
+	integrationTypeMailingList,
+	integrationTypeMicrosoftTeams,
+	integrationTypeNewRelic,
+	gofastly.IntegrationTypeOpsGenie,
+	integrationTypePagerDuty,
+	integrationTypeSlack,
+	gofastly.IntegrationTypeSplunkOnCall,
+	integrationTypeWebhook,
+}
+
+// integrationTypeDescription renders integrationTypes into the schema
+// Description text.
+func integrationTypeDescription() string {
+	quoted := make([]string, len(integrationTypes))
+	for i, t := range integrationTypes {
+		quoted[i] = fmt.Sprintf("`%s`", t)
+	}
+	return fmt.Sprintf("Type of the integration. One of: %s.", strings.Join(quoted, ", "))
+}
 
 func resourceFastlyIntegration() *schema.Resource {
 	return &schema.Resource{
@@ -40,13 +80,10 @@ func resourceFastlyIntegration() *schema.Resource {
 				Description: "User submitted name of the integration.",
 			},
 			"type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Type of the integration. One of: `mailinglist`, `microsoftteams`, `newrelic`, `pagerduty`, `slack`, `webhook`.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-					[]string{"mailinglist", "microsoftteams", "newrelic", "pagerduty", "slack", "webhook"},
-					false,
-				)),
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      integrationTypeDescription(),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(integrationTypes, false)),
 			},
 		},
 	}
@@ -93,7 +130,17 @@ func resourceFastlyIntegrationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if i.Config != nil {
-		err = d.Set("config", i.Config)
+		// The API treats `config` as write-only for secret fields (e.g. `apikey`,
+		// `token`): it's either entirely absent from the response, or present
+		// with those fields stripped out. Merge the returned fields over the
+		// configured value instead of overwriting it, so write-only fields
+		// that aren't echoed back aren't seen as configuration drift.
+		merged := d.Get("config").(map[string]any)
+		for k, v := range i.Config {
+			merged[k] = v
+		}
+
+		err = d.Set("config", merged)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -113,7 +160,7 @@ func resourceFastlyIntegrationRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	if i.Type != nil && *i.Type == "mailinglist" && i.Status != nil && *i.Status != "confirmed" {
+	if i.Type != nil && *i.Type == integrationTypeMailingList && i.Status != nil && *i.Status != "confirmed" {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,

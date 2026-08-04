@@ -32,6 +32,16 @@ func FlattenToNestedModel(n *fastly.NewRelicOTLP) NestedModel {
 	return m
 }
 
+// ResetVCLOnlyToDefaults restores the VCL-only fields to their schema defaults
+// after a flatten. On a Compute service they are never sent, so the API's own
+// values are discarded rather than reported as a diff against the plan.
+func ResetVCLOnlyToDefaults(m *NestedModel) {
+	m.Format = types.StringValue(constants.LoggingNewRelicOTLPDefaultFormat)
+	m.FormatVersion = types.Int64Value(DefaultFormatVersion)
+	m.Placement = types.StringNull()
+	m.ResponseCondition = types.StringValue(DefaultResponseCondition)
+}
+
 // FlattenToComputeNestedModel is FlattenToNestedModel for Compute services: it
 // carries over only the attributes ComputeNestedModel exposes.
 func FlattenToComputeNestedModel(n *fastly.NewRelicOTLP) ComputeNestedModel {

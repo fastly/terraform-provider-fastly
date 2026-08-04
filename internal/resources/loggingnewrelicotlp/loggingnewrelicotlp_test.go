@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 
@@ -455,4 +457,64 @@ func TestMatchOrder(t *testing.T) {
 	assert.Len(t, result, 2)
 	assert.Equal(t, "a", result[0].Name.ValueString())
 	assert.Equal(t, "b", result[1].Name.ValueString())
+}
+
+// TestResetVCLOnlyToDefaults covers the Compute read-back path. On a Compute
+// service the VCL-only fields are never sent, so the API reports its own
+// server-side values — notably placement forced to "none" on wasm services.
+// Adopting those breaks consistency-after-apply, so they must be reset to
+// exactly the values a plan produces.
+func TestResetVCLOnlyToDefaults(t *testing.T) {
+	m := FlattenToNestedModel(&fastly.NewRelicOTLP{
+		Name:              new("test-newrelic"),
+		Token:             new("insert-api-key"),
+		Region:            new("US"),
+		URL:               new("https://otlp.nr-data.net"),
+		ProcessingRegion:  new("none"),
+		Format:            new("something-the-server-chose"),
+		FormatVersion:     new(1),
+		Placement:         new("none"),
+		ResponseCondition: new("some-condition"),
+	})
+
+	ResetVCLOnlyToDefaults(&m)
+
+	assert.Equal(t, constants.LoggingNewRelicOTLPDefaultFormat, m.Format.ValueString())
+	assert.Equal(t, int64(DefaultFormatVersion), m.FormatVersion.ValueInt64())
+	assert.True(t, m.Placement.IsNull(), "placement must go back to unset, not the API's forced \"none\"")
+	assert.Equal(t, DefaultResponseCondition, m.ResponseCondition.ValueString())
+
+	// Non-VCL-only fields must survive untouched.
+	assert.Equal(t, "test-newrelic", m.Name.ValueString())
+	assert.Equal(t, "insert-api-key", m.Token.ValueString())
+	assert.Equal(t, "US", m.Region.ValueString())
+	assert.Equal(t, "https://otlp.nr-data.net", m.URL.ValueString())
+	assert.Equal(t, "none", m.ProcessingRegion.ValueString())
+}
+
+// TestResetVCLOnlyToDefaultsMatchesPlannedDefaults ties the reset to the schema
+// itself: the values it writes must equal the schema's declared defaults, or
+// Create/Update would still disagree with the plan.
+func TestResetVCLOnlyToDefaultsMatchesPlannedDefaults(t *testing.T) {
+	var m NestedModel
+	ResetVCLOnlyToDefaults(&m)
+
+	attrs := CommonAttributes()
+
+	var fResp fwdefaults.StringResponse
+	attrs["format"].(schema.StringAttribute).Default.DefaultString(context.Background(), fwdefaults.StringRequest{}, &fResp)
+	assert.Equal(t, fResp.PlanValue, m.Format, "format must match its schema default")
+
+	var fvResp fwdefaults.Int64Response
+	attrs["format_version"].(schema.Int64Attribute).Default.DefaultInt64(context.Background(), fwdefaults.Int64Request{}, &fvResp)
+	assert.Equal(t, fvResp.PlanValue, m.FormatVersion, "format_version must match its schema default")
+
+	var rcResp fwdefaults.StringResponse
+	attrs["response_condition"].(schema.StringAttribute).Default.DefaultString(context.Background(), fwdefaults.StringRequest{}, &rcResp)
+	assert.Equal(t, rcResp.PlanValue, m.ResponseCondition, "response_condition must match its schema default")
+
+	// placement is Optional-only with no Default, so an absent config value plans
+	// as null — the reset has to produce null, not "".
+	assert.Nil(t, attrs["placement"].(schema.StringAttribute).Default)
+	assert.True(t, m.Placement.IsNull())
 }

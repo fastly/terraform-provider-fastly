@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/fastly/go-fastly/v17/fastly"
+	"github.com/fastly/terraform-provider-fastly/internal/constants"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -327,6 +328,76 @@ func TestAccFastlyServiceLoggingDatadog_computeRejectsVCLOnlyFields(t *testing.T
 			},
 		},
 	})
+}
+
+// TestAccFastlyServiceLoggingDatadog_formatDefault catches upstream changes to
+// the format Fastly assigns when none is sent, which would leave
+// constants.LoggingDatadogDefaultFormat stale. Compute is used because it's the
+// only path that omits format from the request - on VCL the schema default is
+// always sent, so the API just echoes our own constant back.
+func TestAccFastlyServiceLoggingDatadog_formatDefault(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	loggerName := fmt.Sprintf("datadog-logger-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_compute"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingDatadogCompute(serviceName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute.test"),
+					CheckLoggingDatadogFormatDefault("fastly_service_compute.test", loggerName, 1),
+				),
+			},
+		},
+	})
+}
+
+// CheckLoggingDatadogFormatDefault fails if the format Fastly reports for a
+// logging endpoint differs from constants.LoggingDatadogDefaultFormat. Reads the
+// API directly, since FlattenToComputeNestedModel writes the constant into state
+// without consulting the response. Only meaningful on an endpoint created
+// without a format in the request.
+func CheckLoggingDatadogFormatDefault(serviceName, loggerName string, version int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[serviceName]
+		if !ok {
+			return fmt.Errorf("service not found: %s", serviceName)
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		logger, err := client.GetDatadog(context.Background(), &fastly.GetDatadogInput{
+			ServiceID:      rs.Primary.ID,
+			ServiceVersion: version,
+			Name:           loggerName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching Datadog logging endpoint from Fastly: %w", err)
+		}
+		if logger == nil {
+			return fmt.Errorf("Datadog logging endpoint %s not found in Fastly", loggerName)
+		}
+
+		if logger.Format == nil {
+			return fmt.Errorf("Fastly returned a null format for Datadog logging endpoint %s, expected its default format", loggerName)
+		}
+
+		if got := *logger.Format; got != constants.LoggingDatadogDefaultFormat {
+			return fmt.Errorf(
+				"constants.LoggingDatadogDefaultFormat no longer matches the format Fastly assigns by default\ngot from API: %q\nconstant:     %q",
+				got, constants.LoggingDatadogDefaultFormat,
+			)
+		}
+
+		return nil
+	}
 }
 
 // CheckLoggingDatadogExistsInFastly verifies a Datadog logging endpoint exists in

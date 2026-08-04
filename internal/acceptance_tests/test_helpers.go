@@ -2126,6 +2126,24 @@ func ConfigLoggingDatadogComputeFormat(serviceName, loggerName string) string {
 	)
 }
 
+// ConfigLoggingDatadogCompute returns a config attaching
+// fastly_service_logging_datadog to an explicit Compute service with no VCL-only
+// attributes set. ClearVCLOnlyCreateFields strips format from the create
+// request, so the endpoint ends up with whatever format the Fastly API defaults
+// to - see TestAccFastlyServiceLoggingDatadog_formatDefault.
+func ConfigLoggingDatadogCompute(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"SERVICE_COMMENT":      "",
+			"SERVICE_VERSION":      "1",
+			"LOGGING_DATADOG_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_datadog_compute.tf",
+	)
+}
+
 func ConfigCDNAutoWithLoggingDatadog(serviceName, domainName, loggerName string) string {
 	return BuildConfig(
 		ServiceCDNAuto,

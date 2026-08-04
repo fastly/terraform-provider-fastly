@@ -2,6 +2,8 @@ package loggingdatadog
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
@@ -635,6 +637,64 @@ func TestTokenAccessor(t *testing.T) {
 			assert.Equal(t, "", m.Token().ValueString())
 		})
 	}
+}
+
+// TestSchemaValidators pins the accepted values for the remaining validators, so
+// a change to an enum member or a bound is a test failure rather than a surprise
+// at plan time. Mirrors the current provider: processing_region none/us/eu,
+// format_version 1-2, placement "none" only, format capped at 12288.
+func TestSchemaValidators(t *testing.T) {
+	attrs := CommonAttributes()
+
+	stringCases := []struct {
+		name  string
+		attr  string
+		value string
+		valid bool
+	}{
+		{"processing_region none", "processing_region", "none", true},
+		{"processing_region us", "processing_region", "us", true},
+		{"processing_region eu", "processing_region", "eu", true},
+		{"processing_region rejects wrong case", "processing_region", "US", false},
+		{"processing_region rejects empty", "processing_region", "", false},
+		{"placement none", "placement", "none", true},
+		{"placement rejects other VCL subroutines", "placement", "waf_debug", false},
+		{"placement rejects empty", "placement", "", false},
+		{"format at max length", "format", strings.Repeat("x", maximumFormatLength), true},
+		{"format over max length", "format", strings.Repeat("x", maximumFormatLength+1), false},
+	}
+	for _, tt := range stringCases {
+		t.Run(tt.name, func(t *testing.T) {
+			a := attrs[tt.attr].(schema.StringAttribute)
+			require.Len(t, a.Validators, 1)
+			resp := &validator.StringResponse{}
+			a.Validators[0].ValidateString(context.Background(),
+				validator.StringRequest{ConfigValue: types.StringValue(tt.value)}, resp)
+			assert.Equal(t, tt.valid, !resp.Diagnostics.HasError())
+		})
+	}
+
+	int64Cases := []struct {
+		value int64
+		valid bool
+	}{{0, false}, {1, true}, {2, true}, {3, false}}
+	for _, tt := range int64Cases {
+		t.Run(fmt.Sprintf("format_version %d", tt.value), func(t *testing.T) {
+			a := attrs["format_version"].(schema.Int64Attribute)
+			require.Len(t, a.Validators, 1)
+			resp := &validator.Int64Response{}
+			a.Validators[0].ValidateInt64(context.Background(),
+				validator.Int64Request{ConfigValue: types.Int64Value(tt.value)}, resp)
+			assert.Equal(t, tt.valid, !resp.Diagnostics.HasError())
+		})
+	}
+
+	// name, token and response_condition are unvalidated in the current provider
+	// too — assert that rather than leaving it implicit.
+	assert.Empty(t, attrs["name"].(schema.StringAttribute).Validators)
+	assert.Empty(t, attrs["response_condition"].(schema.StringAttribute).Validators)
+	auth := attrs["authentication"].(schema.SingleNestedAttribute)
+	assert.Empty(t, auth.Attributes["token"].(schema.StringAttribute).Validators)
 }
 
 // TestRegionValidatorAcceptsDocumentedValues checks the region enum against the

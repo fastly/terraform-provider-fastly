@@ -641,8 +641,8 @@ func TestTokenAccessor(t *testing.T) {
 
 // TestSchemaValidators pins the accepted values for the remaining validators, so
 // a change to an enum member or a bound is a test failure rather than a surprise
-// at plan time. Mirrors the current provider: processing_region none/us/eu,
-// format_version 1-2, placement "none" only, format capped at 12288.
+// at plan time: processing_region none/us/eu, format_version 1-2, placement
+// "none" only, format capped at 12288.
 func TestSchemaValidators(t *testing.T) {
 	attrs := CommonAttributes()
 
@@ -689,8 +689,8 @@ func TestSchemaValidators(t *testing.T) {
 		})
 	}
 
-	// name, token and response_condition are unvalidated in the current provider
-	// too — assert that rather than leaving it implicit.
+	// name, token and response_condition accept any string; assert that rather
+	// than leaving it implicit.
 	assert.Empty(t, attrs["name"].(schema.StringAttribute).Validators)
 	assert.Empty(t, attrs["response_condition"].(schema.StringAttribute).Validators)
 	auth := attrs["authentication"].(schema.SingleNestedAttribute)

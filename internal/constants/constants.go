@@ -1,8 +1,8 @@
 // Package constants holds shared literal values, notably the default log
 // formats used as Computed schema defaults by the logging resources.
 //
-// Whitespace is significant — a Computed value must equal what the API returns
-// after apply — so do not reformat these.
+// Whitespace is significant - a Computed value must equal what the API returns
+// after apply, meaning the values must match exactly.
 package constants
 
 // LoggingNewRelicOTLPDefaultFormat is the default log format for New Relic OTLP logging.

@@ -102,6 +102,9 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	flatten(ctx, d, &plan)
+	if serviceType == service.TypeCompute {
+		ResetVCLOnlyToDefaults(&plan.NestedModel)
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -136,7 +139,18 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
+	// The endpoint Get above succeeded, so the service exists and this is a cached
+	// lookup in all but the first call per service.
+	serviceType, err := r.providerData.ServiceTypeChecker.GetType(ctx, state.Service.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Error determining service type", err.Error())
+		return
+	}
+
 	flatten(ctx, d, &state)
+	if serviceType == service.TypeCompute {
+		ResetVCLOnlyToDefaults(&state.NestedModel)
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -190,6 +204,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	flatten(ctx, d, &plan)
+	if serviceType == service.TypeCompute {
+		ResetVCLOnlyToDefaults(&plan.NestedModel)
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -258,10 +275,19 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		return
 	}
 
+	serviceType, err := r.providerData.ServiceTypeChecker.GetType(ctx, serviceID)
+	if err != nil {
+		resp.Diagnostics.AddError("Error determining service type", err.Error())
+		return
+	}
+
 	var state Model
 	state.Service = types.StringValue(serviceID)
 	state.Version = types.Int64Value(int64(version))
 	flatten(ctx, d, &state)
+	if serviceType == service.TypeCompute {
+		ResetVCLOnlyToDefaults(&state.NestedModel)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

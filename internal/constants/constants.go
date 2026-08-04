@@ -1,17 +1,8 @@
 // Package constants holds shared literal values, notably the default log
 // formats used as Computed schema defaults by the logging resources.
 //
-// The logging resources always send `format` explicitly, and the Fastly API
-// stores and returns it byte-for-byte. Since the plugin framework requires a
-// Computed value's planned value to equal what the API returns after apply, any
-// whitespace difference between the constant here and what actually round-trips
-// fails the first apply with "Provider produced inconsistent result after
-// apply". Trailing newlines are therefore significant and deliberate per
-// constant: LoggingNewRelicOTLPDefaultFormat and LoggingS3DefaultFormat end
-// with one (the closing "}" sits on its own line, followed by a blank line
-// before the closing backtick), while LoggingDatadogDefaultFormat does not,
-// because it is carried over verbatim from the current provider so services
-// migrating across do not see a spurious format diff. Do not "normalize" these.
+// Whitespace is significant — a Computed value must equal what the API returns
+// after apply — so do not reformat these.
 package constants
 
 // LoggingNewRelicOTLPDefaultFormat is the default log format for New Relic OTLP logging.
@@ -57,8 +48,6 @@ const LoggingS3DefaultFormat = `{
 `
 
 // LoggingDatadogDefaultFormat is the default log format for Datadog logging.
-// Carried over verbatim from the current provider (note: no trailing newline,
-// unlike the constants above) so a service migrating from it sees no format diff.
 const LoggingDatadogDefaultFormat = `{
     "ddsource": "fastly",
     "service": "%{req.service_id}V",

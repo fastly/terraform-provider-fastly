@@ -6,6 +6,7 @@ import (
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
@@ -305,6 +306,68 @@ func TestClearVCLOnlyUpdateFields(t *testing.T) {
 	assert.Nil(t, input.FormatVersion)
 	assert.Nil(t, input.Placement)
 	assert.Nil(t, input.ResponseCondition)
+}
+
+// TestResetVCLOnlyToDefaults covers the Compute read-back path. On a Compute
+// service the VCL-only fields are never sent, so the API reports its own
+// server-side values — a different default format, and placement forced to
+// "none". Adopting those breaks consistency-after-apply, so they must be reset
+// to exactly the values a plan produces.
+func TestResetVCLOnlyToDefaults(t *testing.T) {
+	// What the API actually reports back for a Compute service.
+	m := FlattenToNestedModel(&fastly.Datadog{
+		Name:              new("test-datadog"),
+		Token:             new("datadog-api-key"),
+		Region:            new("US"),
+		ProcessingRegion:  new("none"),
+		Format:            new("{\n  \"ddsource\": \"fastly\"\n}\n"),
+		FormatVersion:     new(1),
+		Placement:         new("none"),
+		ResponseCondition: new("some-condition"),
+	})
+
+	ResetVCLOnlyToDefaults(&m)
+
+	assert.Equal(t, constants.LoggingDatadogDefaultFormat, m.Format.ValueString())
+	assert.Equal(t, int64(DefaultFormatVersion), m.FormatVersion.ValueInt64())
+	assert.True(t, m.Placement.IsNull(), "placement must go back to unset, not the API's forced \"none\"")
+	assert.Equal(t, DefaultResponseCondition, m.ResponseCondition.ValueString())
+
+	// Non-VCL-only fields must survive untouched.
+	assert.Equal(t, "test-datadog", m.Name.ValueString())
+	assert.Equal(t, "datadog-api-key", m.Token().ValueString())
+	assert.Equal(t, "US", m.Region.ValueString())
+	assert.Equal(t, "none", m.ProcessingRegion.ValueString())
+}
+
+// TestResetVCLOnlyToDefaultsMatchesPlannedDefaults ties the reset to the schema
+// itself: the values it writes must equal the schema's declared defaults, or
+// Create/Update would still disagree with the plan.
+func TestResetVCLOnlyToDefaultsMatchesPlannedDefaults(t *testing.T) {
+	var m NestedModel
+	ResetVCLOnlyToDefaults(&m)
+
+	attrs := CommonAttributes()
+
+	format := attrs["format"].(schema.StringAttribute)
+	var fResp defaults.StringResponse
+	format.Default.DefaultString(context.Background(), defaults.StringRequest{}, &fResp)
+	assert.Equal(t, fResp.PlanValue, m.Format, "format must match its schema default")
+
+	formatVersion := attrs["format_version"].(schema.Int64Attribute)
+	var fvResp defaults.Int64Response
+	formatVersion.Default.DefaultInt64(context.Background(), defaults.Int64Request{}, &fvResp)
+	assert.Equal(t, fvResp.PlanValue, m.FormatVersion, "format_version must match its schema default")
+
+	responseCondition := attrs["response_condition"].(schema.StringAttribute)
+	var rcResp defaults.StringResponse
+	responseCondition.Default.DefaultString(context.Background(), defaults.StringRequest{}, &rcResp)
+	assert.Equal(t, rcResp.PlanValue, m.ResponseCondition, "response_condition must match its schema default")
+
+	// placement is Optional-only with no Default, so an absent config value plans
+	// as null — the reset has to produce null, not "".
+	assert.Nil(t, attrs["placement"].(schema.StringAttribute).Default)
+	assert.True(t, m.Placement.IsNull())
 }
 
 // Tests for schema.go

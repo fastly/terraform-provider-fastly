@@ -1866,6 +1866,23 @@ func ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName st
 	)
 }
 
+// ConfigLoggingS3Compute returns a config attaching fastly_service_logging_s3 to
+// an explicit Compute service with none of the VCL-only attributes set, which is
+// the only shape a Compute service can be configured in.
+func ConfigLoggingS3Compute(serviceName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/logging_s3_compute.tf",
+	)
+}
+
 // ConfigLoggingS3ComputeFormat returns a config attaching fastly_service_logging_s3
 // to an explicit Compute service with format set, a VCL-only attribute. Unlike the
 // nested blocks, the standalone resource's schema is shared by both service types, so
@@ -1942,6 +1959,23 @@ func ConfigLoggingNewRelicOTLPForImport(serviceName, domainName, loggerName stri
 		},
 		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
 		"internal/acceptance_tests/blocks/logging_newrelicotlp_basic.tf",
+	)
+}
+
+// ConfigLoggingNewRelicOTLPCompute returns a config attaching
+// fastly_service_logging_newrelicotlp to an explicit Compute service with none of
+// the VCL-only attributes set, which is the only shape a Compute service can be
+// configured in.
+func ConfigLoggingNewRelicOTLPCompute(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_newrelicotlp_compute.tf",
 	)
 }
 

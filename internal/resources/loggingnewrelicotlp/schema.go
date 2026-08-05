@@ -167,11 +167,14 @@ func vclOnlyAttributes() map[string]schema.Attribute {
 		"placement": schema.StringAttribute{
 			// Not Computed: unset and explicitly "none" are distinct states on the
 			// API (unset lets the API auto-place the logging call; "none" suppresses
-			// it entirely), and the API always resolves to exactly what was
-			// configured — never some other server-computed value — so there is
-			// nothing for Computed to add. Keeping it plain Optional means removing
-			// placement from config is a real, visible diff from Terraform core's own
-			// plan proposal, with no plan modifier required to force it.
+			// it entirely). Keeping it plain Optional means removing placement from
+			// config is a real, visible diff from Terraform core's own plan proposal,
+			// with no plan modifier required to force it.
+			//
+			// On a VCL service the API resolves this to exactly what was configured.
+			// Compute (wasm) services are the exception — the API forces "none" there
+			// regardless of what was sent, which can never match the planned null, so
+			// ResetVCLOnlyToDefaults discards it after apply for those services.
 			Optional: true,
 			Validators: []validator.String{
 				stringvalidator.OneOf("none"),

@@ -63,6 +63,15 @@ resource "fastly_service_logging_newrelicotlp" "service_1_logging_newrelic" {
   token      = "test-insert-key"
 }
 
+resource "fastly_service_logging_datadog" "service_1_logging_datadog" {
+  service_id = fastly_service_compute.service_1.id
+  version    = var.service_1_version
+  name       = "test-datadog-logger"
+  authentication = {
+    token = "test-datadog-key"
+  }
+}
+
 # Optional domain and backend for testing version writes
 resource "fastly_service_domain" "service_1_new_domain" {
   count      = var.service_1_new_domain != "" ? 1 : 0

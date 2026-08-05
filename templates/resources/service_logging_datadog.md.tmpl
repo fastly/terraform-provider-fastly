@@ -1,0 +1,159 @@
+---
+page_title: "fastly_service_logging_datadog Resource - fastly"
+subcategory: ""
+description: |-
+  Fastly service Datadog logging endpoint resource. Writes directly to the specified writable service version.
+---
+
+# fastly_service_logging_datadog (Resource)
+
+Fastly service Datadog logging endpoint resource. Writes directly to the specified writable service version.
+
+This resource is part of the explicit/default first-class resource family. It
+manages a Datadog real-time logging endpoint on the configured service version.
+It does not clone, activate, or stage service versions.
+
+To have the provider manage the version lifecycle for you instead, use the
+nested `logging_datadog` block on `fastly_service_cdn_auto` or
+`fastly_service_compute_auto` — see "Automatic-lifecycle usage" below.
+
+## Example Usage
+
+```terraform
+resource "fastly_service_logging_datadog" "example" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "datadog-us"
+
+  authentication = {
+    token = var.datadog_api_key
+  }
+  region            = "US"
+  processing_region = "us"
+}
+```
+
+A fully configured endpoint. `format`, `format_version`, `placement`, and
+`response_condition` only affect generated VCL, so they are valid when
+`service_id` refers to a CDN (VCL) service and rejected for a Compute service:
+
+```terraform
+resource "fastly_service_logging_datadog" "eu" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "datadog-eu"
+
+  authentication = {
+    token = var.datadog_api_key
+  }
+  region            = "EU1"
+  processing_region = "eu"
+
+  format             = "%h %l %u %t \"%r\" %>s %b"
+  format_version     = 2
+  placement          = "none"
+  response_condition = fastly_service_condition.errors_only.name
+}
+```
+
+Attaching to a Compute service — the VCL-only attributes must be omitted:
+
+```terraform
+resource "fastly_service_logging_datadog" "compute" {
+  service_id = fastly_service_compute.example.id
+  version    = 1
+  name       = "datadog-compute"
+
+  authentication = {
+    token = var.datadog_api_key
+  }
+  region = "US"
+}
+```
+
+## Automatic-lifecycle usage
+
+Inside the `_auto` service resources, Datadog logging is a nested block and the
+provider clones, validates, and activates a new service version whenever the
+block changes. The nested block takes the same arguments as this resource, minus
+`service_id` and `version`, which the parent service owns.
+
+```terraform
+resource "fastly_service_cdn_auto" "example" {
+  name = "my-service"
+
+  domain {
+    name = "www.example.com"
+  }
+
+  logging_datadog {
+    name = "datadog-us"
+    authentication = {
+      token = var.datadog_api_key
+    }
+    region            = "US"
+    processing_region = "us"
+  }
+}
+```
+
+`fastly_service_compute_auto` supports the same block, without the VCL-only
+arguments (`format`, `format_version`, `placement`, `response_condition`):
+
+```terraform
+resource "fastly_service_compute_auto" "example" {
+  name = "my-compute-service"
+
+  domain {
+    name = "www.example.com"
+  }
+
+  package {
+    filename         = "package.tar.gz"
+    source_code_hash = filesha512("package.tar.gz")
+  }
+
+  logging_datadog {
+    name = "datadog-compute"
+    authentication = {
+      token = var.datadog_api_key
+    }
+    region = "US"
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+For import-from-scratch with the Terraform CLI, include the service version in
+the import ID so the provider can read the endpoint from the Fastly API and
+populate full state:
+
+```shell
+terraform import fastly_service_logging_datadog.example SERVICE_ID/VERSION/ENDPOINT_NAME
+```
+
+Example:
+
+```shell
+terraform import fastly_service_logging_datadog.example SU1Z0isxPaozGVKXdv0eY/3/datadog-us
+```
+
+## Version lifecycle
+
+This resource does not clone, activate, or stage service versions. Use explicit
+service-version lifecycle actions to clone, validate, stage, or activate a
+service version.
+
+## Notes
+
+- `authentication` groups credentials as the other logging endpoints do. It is
+  required — there is no `FASTLY_DATADOG_*` environment variable to default from.
+  `token` is sensitive and never appears in plan output.
+- Leaving `placement` unset is not the same as setting it to `none`: unset lets
+  Fastly place the logging call automatically (`vcl_log` for `format_version` 2,
+  `vcl_deliver` for `format_version` 1), while `none` suppresses the generated
+  log statement entirely so you can write it yourself.
+- `region` accepts `EU` as a legacy alias for `EU1`.

@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/fastly/terraform-provider-fastly/internal/constants"
 )
 
 func TestAccFastlyServiceLoggingS3_basic(t *testing.T) {
@@ -497,6 +499,49 @@ func TestAccFastlyServiceLoggingS3_computeRejectsVCLOnlyFields(t *testing.T) {
 			{
 				Config:      ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName),
 				ExpectError: regexp.MustCompile("VCL-only attributes not supported on Compute services"),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingS3_computeConsistentAfterApply covers the whole
+// plan -> API response -> flatten -> state path on a Compute service, which the
+// unit tests cannot reach. The VCL-only attributes are never sent for Compute,
+// but their schema defaults still land in the plan, so the API's own values
+// (a different default format, and placement forced to "none" on wasm) used to
+// be read back into state and fail Terraform's post-apply consistency check
+// with "Provider produced inconsistent result after apply". The trailing
+// PlanOnly step then proves the same values survive a refresh with no residual
+// diff.
+func TestAccFastlyServiceLoggingS3_computeConsistentAfterApply(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	loggerName := fmt.Sprintf("s3-logger-%s", acctest.RandString(10))
+	bucketName := fmt.Sprintf("tf-test-bucket-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_compute"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingS3Compute(serviceName, loggerName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_compute.test"),
+					CheckLoggingS3ExistsInFastly("fastly_service_compute.test", loggerName, 1),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "name", loggerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "bucket_name", bucketName),
+					// The VCL-only attributes must hold their schema defaults, not
+					// whatever the API returned for the wasm service.
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format", constants.LoggingS3DefaultFormat),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "format_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_logging_s3.test", "response_condition", ""),
+					resource.TestCheckNoResourceAttr("fastly_service_logging_s3.test", "placement"),
+				),
+			},
+			{
+				Config:   ConfigLoggingS3Compute(serviceName, loggerName, bucketName),
+				PlanOnly: true,
 			},
 		},
 	})

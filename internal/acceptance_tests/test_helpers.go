@@ -2670,3 +2670,131 @@ func ConfigProductEnablementServiceIDReplace(serviceName1, domainName1, serviceN
 
 	return joinBlocks(first, second, productEnablementBlock("domain_inspector", target, nil))
 }
+
+// ConfigServiceVCLSnippetWithFile returns a CDN service with one explicit regular VCL snippet
+// whose content is loaded through Terraform's file() function.
+func ConfigServiceVCLSnippetWithFile(serviceName, snippetName, snippetType string, priority int, snippetFilePath string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"SERVICE_COMMENT":   "VCL snippet acceptance test",
+			"SNIPPET_NAME":      snippetName,
+			"SNIPPET_TYPE":      snippetType,
+			"SNIPPET_PRIORITY":  strconv.Itoa(priority),
+			"SNIPPET_FILE_PATH": filepath.ToSlash(snippetFilePath),
+		},
+		"internal/acceptance_tests/blocks/snippet_explicit.tf",
+	)
+}
+
+// ConfigServiceVCLSnippetInline returns an explicit regular VCL snippet whose content
+// is defined inline in HCL.
+func ConfigServiceVCLSnippetInline(serviceName, snippetName, snippetType string, priority int, content string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "VCL snippet acceptance test",
+			"SNIPPET_NAME":           snippetName,
+			"SNIPPET_TYPE":           snippetType,
+			"SNIPPET_PRIORITY":       strconv.Itoa(priority),
+			"SNIPPET_INLINE_CONTENT": strconv.Quote(content),
+		},
+		"internal/acceptance_tests/blocks/snippet_explicit_inline.tf",
+	)
+}
+
+// ConfigCDNAutoWithSnippetFile returns a CDN auto service with domain, backend, and one
+// regular VCL snippet whose content is loaded through Terraform's file() function.
+func ConfigCDNAutoWithSnippetFile(serviceName, domainName, backendName, snippetName, snippetType string, priority int, snippetFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"BACKEND_NAME":      backendName,
+			"SNIPPET_NAME":      snippetName,
+			"SNIPPET_TYPE":      snippetType,
+			"SNIPPET_PRIORITY":  strconv.Itoa(priority),
+			"SNIPPET_FILE_PATH": filepath.ToSlash(snippetFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/snippet_nested_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithSnippetInline returns a CDN auto service with domain, backend, and one
+// regular VCL snippet whose content is defined inline in HCL.
+func ConfigCDNAutoWithSnippetInline(serviceName, domainName, backendName, snippetName, snippetType string, priority int, content string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"BACKEND_NAME":           backendName,
+			"SNIPPET_NAME":           snippetName,
+			"SNIPPET_TYPE":           snippetType,
+			"SNIPPET_PRIORITY":       strconv.Itoa(priority),
+			"SNIPPET_INLINE_CONTENT": strconv.Quote(content),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/snippet_nested_inline.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleSnippets returns a CDN auto service with two regular VCL snippets.
+func ConfigCDNAutoWithMultipleSnippets(serviceName, domainName, backendName, snippetNameOne, snippetNameTwo, snippetFilePathOne, snippetFilePathTwo string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"BACKEND_NAME":          backendName,
+			"SNIPPET_NAME_ONE":      snippetNameOne,
+			"SNIPPET_NAME_TWO":      snippetNameTwo,
+			"SNIPPET_FILE_PATH_ONE": filepath.ToSlash(snippetFilePathOne),
+			"SNIPPET_FILE_PATH_TWO": filepath.ToSlash(snippetFilePathTwo),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/snippet_nested_multiple.tf",
+	)
+}
+
+// ConfigCDNAutoWithDuplicateSnippets returns a CDN auto service with duplicate regular
+// VCL snippet names, exercising provider-side validation.
+func ConfigCDNAutoWithDuplicateSnippets(serviceName, domainName, backendName, snippetFilePathOne, snippetFilePathTwo string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"BACKEND_NAME":          backendName,
+			"SNIPPET_FILE_PATH_ONE": filepath.ToSlash(snippetFilePathOne),
+			"SNIPPET_FILE_PATH_TWO": filepath.ToSlash(snippetFilePathTwo),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/snippet_nested_duplicate_names.tf",
+	)
+}
+
+// ConfigCDNAutoWithInvalidSnippetType returns a CDN auto service with an invalid regular
+// VCL snippet type, exercising schema validation.
+func ConfigCDNAutoWithInvalidSnippetType(serviceName, domainName, backendName, snippetFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"BACKEND_NAME":      backendName,
+			"SNIPPET_FILE_PATH": filepath.ToSlash(snippetFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/snippet_nested_invalid_type.tf",
+	)
+}

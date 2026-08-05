@@ -16,9 +16,9 @@ Fastly service New Relic OTLP logging endpoint resource. Writes directly to the 
 
 ### Required
 
+- `authentication` (Attributes) New Relic OTLP authentication credentials. (see [below for nested schema](#nestedatt--authentication))
 - `name` (String) The name for the real-time logging configuration. Must be unique within the service.
 - `service_id` (String) Fastly service ID.
-- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
 - `version` (Number) Writable Fastly service version to modify.
 
 ### Optional
@@ -34,3 +34,10 @@ Fastly service New Relic OTLP logging endpoint resource. Writes directly to the 
 ### Read-Only
 
 - `id` (String) Terraform resource identifier.
+
+<a id="nestedatt--authentication"></a>
+### Nested Schema for `authentication`
+
+Required:
+
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.

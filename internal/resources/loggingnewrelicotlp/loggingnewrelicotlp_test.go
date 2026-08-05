@@ -28,7 +28,7 @@ func defaultNestedModel() NestedModel {
 func defaultCommonModel() commonModel {
 	return commonModel{
 		Name:             types.StringValue(""),
-		Token:            types.StringValue(""),
+		Authentication:   NewAuthenticationObject(types.StringValue("")),
 		Region:           types.StringValue(DefaultRegion),
 		URL:              types.StringValue(DefaultURL),
 		ProcessingRegion: types.StringValue(DefaultProcessingRegion),
@@ -38,7 +38,7 @@ func defaultCommonModel() commonModel {
 func fullNestedModel() NestedModel {
 	m := defaultNestedModel()
 	m.Name = types.StringValue("test-newrelic")
-	m.Token = types.StringValue("insert-api-key")
+	m.Authentication = NewAuthenticationObject(types.StringValue("insert-api-key"))
 	m.Region = types.StringValue("EU")
 	m.URL = types.StringValue("https://otlp.eu01.nr-data.net")
 	m.ProcessingRegion = types.StringValue("eu")
@@ -52,7 +52,7 @@ func fullNestedModel() NestedModel {
 func minimalNestedModel() NestedModel {
 	m := defaultNestedModel()
 	m.Name = types.StringValue("test-newrelic")
-	m.Token = types.StringValue("insert-api-key")
+	m.Authentication = NewAuthenticationObject(types.StringValue("insert-api-key"))
 	return m
 }
 
@@ -341,12 +341,12 @@ func TestModelsEqual(t *testing.T) {
 			name: "different token",
 			a: func() NestedModel {
 				m := minimalNestedModel()
-				m.Token = types.StringValue("token-1")
+				m.Authentication = NewAuthenticationObject(types.StringValue("token-1"))
 				return m
 			}(),
 			b: func() NestedModel {
 				m := minimalNestedModel()
-				m.Token = types.StringValue("token-2")
+				m.Authentication = NewAuthenticationObject(types.StringValue("token-2"))
 				return m
 			}(),
 			expected: false,
@@ -486,7 +486,7 @@ func TestResetVCLOnlyToDefaults(t *testing.T) {
 
 	// Non-VCL-only fields must survive untouched.
 	assert.Equal(t, "test-newrelic", m.Name.ValueString())
-	assert.Equal(t, "insert-api-key", m.Token.ValueString())
+	assert.Equal(t, "insert-api-key", m.Token().ValueString())
 	assert.Equal(t, "US", m.Region.ValueString())
 	assert.Equal(t, "https://otlp.nr-data.net", m.URL.ValueString())
 	assert.Equal(t, "none", m.ProcessingRegion.ValueString())

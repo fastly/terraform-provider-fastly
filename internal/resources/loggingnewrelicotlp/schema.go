@@ -11,6 +11,7 @@ import (
 	fastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -39,7 +40,7 @@ const (
 // services use ComputeNestedModel, which embeds just this common set.
 type commonModel struct {
 	Name             types.String `tfsdk:"name"`
-	Token            types.String `tfsdk:"token"`
+	Authentication   types.Object `tfsdk:"authentication"`
 	Region           types.String `tfsdk:"region"`
 	URL              types.String `tfsdk:"url"`
 	ProcessingRegion types.String `tfsdk:"processing_region"`
@@ -64,9 +65,41 @@ type ComputeNestedModel struct {
 	commonModel
 }
 
+var authenticationAttributeTypes = map[string]attr.Type{
+	"token": types.StringType,
+}
+
+func NewAuthenticationObject(token types.String) types.Object {
+	return types.ObjectValueMust(
+		authenticationAttributeTypes,
+		map[string]attr.Value{
+			"token": token,
+		},
+	)
+}
+
+func authenticationValue(auth types.Object, name string) types.String {
+	if auth.IsNull() || auth.IsUnknown() {
+		return types.StringValue("")
+	}
+	value, ok := auth.Attributes()[name]
+	if !ok || value == nil || value.IsNull() || value.IsUnknown() {
+		return types.StringValue("")
+	}
+	stringValue, ok := value.(types.String)
+	if !ok {
+		return types.StringValue("")
+	}
+	return stringValue
+}
+
+func (n commonModel) Token() types.String {
+	return authenticationValue(n.Authentication, "token")
+}
+
 func (n commonModel) equal(other commonModel) bool {
 	return service.StringValue(n.Name) == service.StringValue(other.Name) &&
-		service.StringValue(n.Token) == service.StringValue(other.Token) &&
+		service.StringValue(n.Token()) == service.StringValue(other.Token()) &&
 		service.StringValue(n.Region) == service.StringValue(other.Region) &&
 		service.StringValue(n.URL) == service.StringValue(other.URL) &&
 		service.StringValue(n.ProcessingRegion) == service.StringValue(other.ProcessingRegion)
@@ -112,10 +145,18 @@ func sharedAttributes() map[string]schema.Attribute {
 			Required:    true,
 			Description: "The name for the real-time logging configuration. Must be unique within the service.",
 		},
-		"token": schema.StringAttribute{
+		// Grouped under `authentication` to match loggings3/loggingdatadog, even
+		// though New Relic OTLP has a single credential.
+		"authentication": schema.SingleNestedAttribute{
 			Required:    true,
-			Sensitive:   true,
-			Description: "The Insert API key from the Account page of your New Relic account.",
+			Description: "New Relic OTLP authentication credentials.",
+			Attributes: map[string]schema.Attribute{
+				"token": schema.StringAttribute{
+					Required:    true,
+					Sensitive:   true,
+					Description: "The Insert API key from the Account page of your New Relic account.",
+				},
+			},
 		},
 		// Optional
 		"processing_region": schema.StringAttribute{

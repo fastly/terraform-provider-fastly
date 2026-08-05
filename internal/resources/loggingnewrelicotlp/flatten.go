@@ -20,7 +20,9 @@ func FlattenToNestedModel(n *fastly.NewRelicOTLP) NestedModel {
 	}
 
 	m.Name = types.StringValue(fastly.ToValue(n.Name))
-	m.Token = types.StringValue(fastly.ToValue(n.Token))
+	m.Authentication = NewAuthenticationObject(
+		service.StringPointerOrDefault(n.Token, ""),
+	)
 	m.Region = service.StringPointerOrDefault(n.Region, DefaultRegion)
 	m.URL = service.StringPointerOrDefault(n.URL, DefaultURL)
 	m.ProcessingRegion = service.StringPointerOrDefault(n.ProcessingRegion, DefaultProcessingRegion)

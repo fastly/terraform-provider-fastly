@@ -31,7 +31,7 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn.test"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "name", loggerName),
-					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "token", "test-insert-key"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "authentication.token", "test-insert-key"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "region", "US"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "processing_region", "none"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "version", "1"),
@@ -66,7 +66,7 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_update(t *testing.T) {
 				Config: ConfigLoggingNewRelicOTLPUpdated(serviceName, domainName, loggerName),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn.test"),
-					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "token", "updated-insert-key"),
+					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "authentication.token", "updated-insert-key"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "region", "EU"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "url", "https://otlp.eu01.nr-data.net"),
 					resource.TestCheckResourceAttr("fastly_service_logging_newrelicotlp.test", "processing_region", "eu"),

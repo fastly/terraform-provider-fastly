@@ -124,14 +124,22 @@ Required:
 
 Required:
 
+- `authentication` (Attributes) New Relic OTLP authentication credentials. (see [below for nested schema](#nestedatt--logging_newrelicotlp--authentication))
 - `name` (String) The name for the real-time logging configuration. Must be unique within the service.
-- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
 
 Optional:
 
 - `processing_region` (String) Region where logs will be processed before streaming to the destination. Valid values are `none`, `us` and `eu`.
 - `region` (String) The region that log data will be sent to. Default: `US`.
 - `url` (String) The optional New Relic Trace Observer URL to stream logs to for Infinite Tracing.
+
+<a id="nestedatt--logging_newrelicotlp--authentication"></a>
+### Nested Schema for `logging_newrelicotlp.authentication`
+
+Required:
+
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
+
 
 
 <a id="nestedblock--logging_s3"></a>

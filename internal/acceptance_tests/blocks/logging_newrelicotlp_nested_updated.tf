@@ -1,6 +1,8 @@
 logging_newrelicotlp {
-  name              = "{{.LOGGING_NEWRELIC_NAME}}"
-  token             = "updated-insert-key"
+  name = "{{.LOGGING_NEWRELIC_NAME}}"
+  authentication = {
+    token = "updated-insert-key"
+  }
   region            = "EU"
   url               = "https://otlp.eu01.nr-data.net"
   processing_region = "eu"

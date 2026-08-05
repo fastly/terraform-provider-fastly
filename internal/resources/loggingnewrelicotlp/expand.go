@@ -11,7 +11,7 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 		ServiceID:      serviceID,
 		ServiceVersion: version,
 		Name:           new(service.StringValue(m.Name)),
-		Token:          new(service.StringValue(m.Token)),
+		Token:          new(service.StringValue(m.Token())),
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))
@@ -33,7 +33,7 @@ func BuildComputeCreateInput(serviceID string, version int, m ComputeNestedModel
 		ServiceID:      serviceID,
 		ServiceVersion: version,
 		Name:           new(service.StringValue(m.Name)),
-		Token:          new(service.StringValue(m.Token)),
+		Token:          new(service.StringValue(m.Token())),
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))
@@ -49,7 +49,7 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		ServiceVersion: version,
 		Name:           service.StringValue(m.Name),
 		NewName:        new(service.StringValue(m.Name)),
-		Token:          new(service.StringValue(m.Token)),
+		Token:          new(service.StringValue(m.Token())),
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))
@@ -87,7 +87,7 @@ func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel
 		ServiceVersion: version,
 		Name:           service.StringValue(m.Name),
 		NewName:        new(service.StringValue(m.Name)),
-		Token:          new(service.StringValue(m.Token)),
+		Token:          new(service.StringValue(m.Token())),
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))

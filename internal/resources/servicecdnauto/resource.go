@@ -15,6 +15,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/snippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/vcl"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
@@ -66,6 +67,7 @@ type Model struct {
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
+	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
 	VCL                           []vcl.NestedModel                           `tfsdk:"vcl"`
 }
 
@@ -125,6 +127,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
+			"snippet":                          snippet.NestedBlockSchema(),
 			"vcl":                              vcl.NestedBlockSchema(),
 		},
 	}
@@ -147,6 +150,14 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 		return
 	}
 
+	if err := snippet.ValidateConfig(config.Snippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("snippet"),
+			"Invalid VCL snippet configuration",
+			err.Error(),
+		)
+	}
+
 	if err := vcl.ValidateConfig(config.VCL); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("vcl"),
@@ -160,6 +171,15 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := snippet.Validate(plan.Snippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("snippet"),
+			"Invalid VCL snippet configuration",
+			err.Error(),
+		)
 		return
 	}
 
@@ -301,6 +321,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
+	if err := snippet.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Snippet); err != nil {
+		resp.Diagnostics.AddError("Error reconciling VCL snippets", err.Error())
+		return
+	}
+
+	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading VCL snippets", err.Error())
+		return
+	}
+	plan.Snippet = snippet.MatchOrderPreservePlanContent(snippets, plan.Snippet)
+
 	if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.VCL); err != nil {
 		resp.Diagnostics.AddError("Error reconciling custom VCL files", err.Error())
 		return
@@ -430,6 +462,13 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
 	state.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, state.LoggingDatadog)
 
+	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading VCL snippets", err.Error())
+		return
+	}
+	state.Snippet = snippet.MatchOrder(snippets, state.Snippet)
+
 	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading custom VCL files", err.Error())
@@ -467,6 +506,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	if err := snippet.Validate(plan.Snippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("snippet"),
+			"Invalid VCL snippet configuration",
+			err.Error(),
+		)
+		return
+	}
+
 	if err := vcl.Validate(plan.VCL); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("vcl"),
@@ -491,7 +539,17 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !cdnacl.Equal(plan.ACL, state.ACL) || !condition.Equal(plan.Condition, state.Condition) || !gzip.Equal(plan.Gzip, state.Gzip) || !loggings3.Equal(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) || !imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) || !vcl.Equal(plan.VCL, state.VCL)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) ||
+		!backend.Equal(plan.Backend, state.Backend) ||
+		!cdnacl.Equal(plan.ACL, state.ACL) ||
+		!condition.Equal(plan.Condition, state.Condition) ||
+		!gzip.Equal(plan.Gzip, state.Gzip) ||
+		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
+		!loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
+		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
+		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
+		!snippet.Equal(plan.Snippet, state.Snippet) ||
+		!vcl.Equal(plan.VCL, state.VCL)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -636,6 +694,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.ImageOptimizerDefaultSettings = imageOptimizerDefaultSettings
 
+		if err := snippet.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Snippet); err != nil {
+			resp.Diagnostics.AddError("Error reconciling VCL snippets", err.Error())
+			return
+		}
+
+		snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading VCL snippets", err.Error())
+			return
+		}
+		plan.Snippet = snippet.MatchOrderPreservePlanContent(snippets, plan.Snippet)
+
 		if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.VCL); err != nil {
 			resp.Diagnostics.AddError("Error reconciling custom VCL files", err.Error())
 			return
@@ -677,6 +747,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
+		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)
 		plan.VCL = vcl.MatchOrderPreservePlanContent(state.VCL, plan.VCL)
 	}
 

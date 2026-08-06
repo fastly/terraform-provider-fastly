@@ -12,7 +12,7 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 		ServiceVersion: version,
 		Name:           new(service.StringValue(m.Name)),
 		Type:           new(service.StringValue(m.Type)),
-		Statement:      new(trimStatement(service.StringValue(m.Statement))),
+		Statement:      new(service.StringValue(m.Statement)),
 		Priority:       new(int(service.Int64Value(m.Priority))),
 	}
 }
@@ -24,7 +24,7 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		ServiceID:      serviceID,
 		ServiceVersion: version,
 		Name:           service.StringValue(m.Name),
-		Statement:      new(trimStatement(service.StringValue(m.Statement))),
+		Statement:      new(service.StringValue(m.Statement)),
 		Priority:       new(int(service.Int64Value(m.Priority))),
 	}
 }

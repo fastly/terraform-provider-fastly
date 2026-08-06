@@ -24,6 +24,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `comment` (String) Optional service comment.
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
+- `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
@@ -95,6 +96,33 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--logging_bigquery"></a>
+### Nested Schema for `logging_bigquery`
+
+Required:
+
+- `dataset` (String) The ID of your BigQuery dataset.
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `project_id` (String) The ID of your Google Cloud Platform project.
+- `table` (String) The ID of your BigQuery table.
+
+Optional:
+
+- `authentication` (Attributes) Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_BQ_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables. (see [below for nested schema](#nestedatt--logging_bigquery--authentication))
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `template` (String) A template string used to generate a BigQuery table name suffix.
+
+<a id="nestedatt--logging_bigquery--authentication"></a>
+### Nested Schema for `logging_bigquery.authentication`
+
+Optional:
+
+- `account_name` (String) The name of the GCP service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_BQ_ACCOUNT_NAME` environment variable.
+- `email` (String, Sensitive) The `client_email` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_EMAIL` environment variable.
+- `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_SECRET_KEY` environment variable.
+
 
 
 <a id="nestedblock--logging_datadog"></a>

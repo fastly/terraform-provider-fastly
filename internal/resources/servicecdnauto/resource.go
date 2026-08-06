@@ -12,6 +12,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -66,6 +67,7 @@ type Model struct {
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
+	LoggingBigQuery               []loggingbigquery.NestedModel               `tfsdk:"logging_bigquery"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
 	VCL                           []vcl.NestedModel                           `tfsdk:"vcl"`
@@ -126,6 +128,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
+			"logging_bigquery":                 loggingbigquery.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 			"snippet":                          snippet.NestedBlockSchema(),
 			"vcl":                              vcl.NestedBlockSchema(),
@@ -309,6 +312,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, plan.LoggingDatadog)
 
+	if err := loggingbigquery.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingBigQuery); err != nil {
+		resp.Diagnostics.AddError("Error reconciling BigQuery logging endpoints", err.Error())
+		return
+	}
+
+	loggingBigQueries, err := loggingbigquery.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading BigQuery logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, plan.LoggingBigQuery)
+
 	if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ImageOptimizerDefaultSettings); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
 		return
@@ -453,6 +468,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading Datadog logging endpoints", err.Error())
 		return
 	}
+	loggingBigQueries, err := loggingbigquery.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading BigQuery logging endpoints", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
@@ -461,6 +481,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
 	state.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, state.LoggingDatadog)
+	state.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, state.LoggingBigQuery)
 
 	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
@@ -547,6 +568,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
 		!loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
 		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
+		!loggingbigquery.Equal(plan.LoggingBigQuery, state.LoggingBigQuery) ||
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
 		!vcl.Equal(plan.VCL, state.VCL)
@@ -682,6 +704,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, plan.LoggingDatadog)
 
+		if err := loggingbigquery.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingBigQuery); err != nil {
+			resp.Diagnostics.AddError("Error reconciling BigQuery logging endpoints", err.Error())
+			return
+		}
+
+		loggingBigQueries, err := loggingbigquery.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading BigQuery logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, plan.LoggingBigQuery)
+
 		if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.ImageOptimizerDefaultSettings, plan.ImageOptimizerDefaultSettings); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
 			return
@@ -746,6 +780,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)
+		plan.LoggingBigQuery = loggingbigquery.MatchOrder(state.LoggingBigQuery, plan.LoggingBigQuery)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)
 		plan.VCL = vcl.MatchOrderPreservePlanContent(state.VCL, plan.VCL)

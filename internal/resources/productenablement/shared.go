@@ -59,3 +59,21 @@ func isEntitlementError(err error) bool {
 	}
 	return false
 }
+
+// isProductDisabledError reports whether err indicates the product is not
+// enabled on the service (returned when trying to read a disabled product).
+func isProductDisabledError(err error) bool {
+	var httpErr *fastly.HTTPError
+	if !errors.As(err, &httpErr) {
+		return false
+	}
+	if httpErr.StatusCode != http.StatusBadRequest {
+		return false
+	}
+	for _, e := range httpErr.Errors {
+		if strings.Contains(e.Title, "no product on service") {
+			return true
+		}
+	}
+	return false
+}

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -138,6 +139,7 @@ var _ resource.ResourceWithModifyPlan = &simpleProductResource{}
 type simpleProductModel struct {
 	ID        types.String `tfsdk:"id"`
 	ServiceID types.String `tfsdk:"service_id"`
+	Enabled   types.Bool   `tfsdk:"enabled"`
 }
 
 type simpleProductResource struct {
@@ -164,6 +166,12 @@ func (r *simpleProductResource) Schema(_ context.Context, _ resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"id":         idAttribute(),
 			"service_id": serviceIDAttribute(r.spec.displayName),
+			"enabled": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+				Description: fmt.Sprintf("Whether %s is enabled on the service. Defaults to `true`.", r.spec.displayName),
+			},
 		},
 	}
 }
@@ -249,12 +257,25 @@ func (r *simpleProductResource) Create(ctx context.Context, req resource.CreateR
 		}
 	}
 
-	if _, err := r.spec.enable(ctx, r.client, serviceID); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error enabling %s", r.spec.attrName), err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if _, err := r.spec.enable(ctx, r.client, serviceID); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error enabling %s", r.spec.attrName), err.Error())
+			return
+		}
+	} else {
+		if err := r.spec.disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error disabling %s", r.spec.attrName), err.Error())
+			return
+		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -277,36 +298,61 @@ func (r *simpleProductResource) Read(ctx context.Context, req resource.ReadReque
 	})
 
 	if _, err := r.spec.get(ctx, r.client, serviceID); err != nil {
-		if errors.IsNotFound(err) {
-			tflog.Warn(ctx, fmt.Sprintf("%s no longer enabled, removing from state", r.spec.attrName), map[string]any{
+		if errors.IsNotFound(err) || isProductDisabledError(err) {
+			tflog.Debug(ctx, fmt.Sprintf("%s is disabled on service", r.spec.attrName), map[string]any{
 				"service_id": serviceID,
 			})
-			resp.State.RemoveResource(ctx)
+			state.Enabled = types.BoolValue(false)
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error reading %s", r.spec.attrName), err.Error())
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Error reading %s", r.spec.attrName), err.Error())
-		return
+	} else {
+		state.Enabled = types.BoolValue(true)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// Update never runs in practice: service_id is the only attribute besides
-// the computed id, and changing it forces replacement. Implemented only to
-// satisfy the resource.Resource interface.
+// Update handles changes to the enabled attribute.
 func (r *simpleProductResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan simpleProductModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	serviceID := plan.ServiceID.ValueString()
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Updating Fastly Product Enablement (%s)", r.spec.attrName), map[string]any{
+		"service_id": serviceID,
+		"enabled":    enabled,
+	})
+
+	if enabled {
+		if _, err := r.spec.enable(ctx, r.client, serviceID); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error enabling %s", r.spec.attrName), err.Error())
+			return
+		}
+	} else {
+		if err := r.spec.disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error disabling %s", r.spec.attrName), err.Error())
+			return
+		}
+	}
+
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// Delete disables the product. Entitlement-related errors (accounts that
-// can't self-service disable a product) and a since-deleted service are
-// both treated as success so that `terraform destroy` can still complete
-// and leave a clean state.
+// Delete disables the product if enabled was true. Entitlement-related errors
+// (accounts that can't self-service disable a product) and a since-deleted
+// service are both treated as success so that `terraform destroy` can still
+// complete and leave a clean state.
 func (r *simpleProductResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state simpleProductModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -320,8 +366,15 @@ func (r *simpleProductResource) Delete(ctx context.Context, req resource.DeleteR
 		"service_id": serviceID,
 	})
 
-	if err := r.spec.disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error disabling %s", r.spec.attrName), err.Error())
+	enabled := true
+	if !state.Enabled.IsNull() {
+		enabled = state.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if err := r.spec.disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error disabling %s", r.spec.attrName), err.Error())
+		}
 	}
 }
 

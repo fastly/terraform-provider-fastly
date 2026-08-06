@@ -2647,6 +2647,19 @@ func ConfigProductEnablementNGWAFOnly(serviceName, domainName, backendName, work
 		})
 }
 
+// ConfigProductEnablementSimpleEnabledToggle returns a CDN auto service paired
+// with a simple product (origin_inspector) that explicitly sets the enabled
+// attribute to the given value, used to verify that toggling enabled between
+// true and false works correctly.
+func ConfigProductEnablementSimpleEnabledToggle(serviceName, domainName, backendName string, enabled bool) string {
+	enabledStr := "true"
+	if !enabled {
+		enabledStr = "false"
+	}
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("origin_inspector", "fastly_service_cdn_auto.test.id", map[string]string{"ENABLED": enabledStr})
+}
+
 // ConfigProductEnablementServiceIDReplace returns two CDN auto services and
 // a single fastly_service_product_domain_inspector resource whose
 // service_id points at either "first" or "second" depending on useSecond,

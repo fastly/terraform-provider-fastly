@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,6 +29,7 @@ var _ resource.ResourceWithModifyPlan = &NGWAFResource{}
 type NGWAFModel struct {
 	ID          types.String `tfsdk:"id"`
 	ServiceID   types.String `tfsdk:"service_id"`
+	Enabled     types.Bool   `tfsdk:"enabled"`
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 	TrafficRamp types.Int64  `tfsdk:"traffic_ramp"`
 }
@@ -51,6 +53,12 @@ func (r *NGWAFResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 		Attributes: map[string]schema.Attribute{
 			"id":         idAttribute(),
 			"service_id": serviceIDAttribute("Next-Gen WAF"),
+			"enabled": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+				Description: "Whether Next-Gen WAF is enabled on the service. Defaults to `true`.",
+			},
 			"workspace_id": schema.StringAttribute{
 				Required:    true,
 				Description: "The Next-Gen WAF workspace to link.",
@@ -125,35 +133,48 @@ func (r *NGWAFResource) Create(ctx context.Context, req resource.CreateRequest, 
 	serviceID := plan.ServiceID.ValueString()
 	tflog.Debug(ctx, "Creating Fastly Product Enablement (ngwaf)", map[string]any{"service_id": serviceID})
 
-	serviceType, err := r.typeChecker.GetType(ctx, serviceID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error looking up service type", err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
 	}
 
-	resp.Diagnostics.Append(validateNGWAFTrafficRamp(&plan, serviceType)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	if enabled {
+		serviceType, err := r.typeChecker.GetType(ctx, serviceID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error looking up service type", err.Error())
+			return
+		}
 
-	if _, err := ngwafproduct.Enable(ctx, r.client, serviceID, ngwafproduct.EnableInput{
-		WorkspaceID: plan.WorkspaceID.ValueString(),
-	}); err != nil {
-		resp.Diagnostics.AddError("Error enabling ngwaf", err.Error())
-		return
-	}
+		resp.Diagnostics.Append(validateNGWAFTrafficRamp(&plan, serviceType)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	if serviceType == service.TypeVCL && !plan.TrafficRamp.IsNull() && plan.TrafficRamp.ValueInt64() != 100 {
-		if _, err := ngwafproduct.UpdateConfiguration(ctx, r.client, serviceID, ngwafproduct.ConfigureInput{
+		if _, err := ngwafproduct.Enable(ctx, r.client, serviceID, ngwafproduct.EnableInput{
 			WorkspaceID: plan.WorkspaceID.ValueString(),
-			TrafficRamp: strconv.FormatInt(plan.TrafficRamp.ValueInt64(), 10),
 		}); err != nil {
-			resp.Diagnostics.AddError("Error configuring ngwaf", err.Error())
+			resp.Diagnostics.AddError("Error enabling ngwaf", err.Error())
+			return
+		}
+
+		if serviceType == service.TypeVCL && !plan.TrafficRamp.IsNull() && plan.TrafficRamp.ValueInt64() != 100 {
+			if _, err := ngwafproduct.UpdateConfiguration(ctx, r.client, serviceID, ngwafproduct.ConfigureInput{
+				WorkspaceID: plan.WorkspaceID.ValueString(),
+				TrafficRamp: strconv.FormatInt(plan.TrafficRamp.ValueInt64(), 10),
+			}); err != nil {
+				resp.Diagnostics.AddError("Error configuring ngwaf", err.Error())
+				return
+			}
+		}
+	} else {
+		if err := ngwafproduct.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling ngwaf", err.Error())
 			return
 		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -169,45 +190,47 @@ func (r *NGWAFResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	if _, err := ngwafproduct.Get(ctx, r.client, serviceID); err != nil {
 		if errors.IsNotFound(err) {
-			resp.State.RemoveResource(ctx)
+			tflog.Debug(ctx, "ngwaf is disabled on service", map[string]any{"service_id": serviceID})
+			state.Enabled = types.BoolValue(false)
+		} else {
+			resp.Diagnostics.AddError("Error reading ngwaf", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading ngwaf", err.Error())
-		return
-	}
-
-	serviceType, err := r.typeChecker.GetType(ctx, serviceID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error looking up service type", err.Error())
-		return
-	}
-
-	cfg, err := ngwafproduct.GetConfiguration(ctx, r.client, serviceID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading ngwaf configuration", err.Error())
-		return
-	}
-
-	if cfg.Configuration.WorkspaceID != nil {
-		state.WorkspaceID = types.StringValue(*cfg.Configuration.WorkspaceID)
-	}
-
-	// traffic_ramp is schema-defaulted to 100 regardless of service type
-	// (Terraform Core applies the default before Create/Update ever runs),
-	// but it only has an effect for CDN services. Pinning it to 100 for
-	// Compute rather than leaving it null keeps refresh consistent with
-	// that plan-time default and avoids perpetual drift; ModifyPlan already
-	// rejects any other value on a Compute service.
-	switch {
-	case serviceType == service.TypeVCL && cfg.Configuration.TrafficRamp != nil:
-		tr, err := strconv.ParseInt(*cfg.Configuration.TrafficRamp, 10, 64)
+	} else {
+		state.Enabled = types.BoolValue(true)
+		serviceType, err := r.typeChecker.GetType(ctx, serviceID)
 		if err != nil {
-			resp.Diagnostics.AddError("Error parsing ngwaf traffic_ramp", err.Error())
+			resp.Diagnostics.AddError("Error looking up service type", err.Error())
 			return
 		}
-		state.TrafficRamp = types.Int64Value(tr)
-	case serviceType != service.TypeVCL:
-		state.TrafficRamp = types.Int64Value(100)
+
+		cfg, err := ngwafproduct.GetConfiguration(ctx, r.client, serviceID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading ngwaf configuration", err.Error())
+			return
+		}
+
+		if cfg.Configuration.WorkspaceID != nil {
+			state.WorkspaceID = types.StringValue(*cfg.Configuration.WorkspaceID)
+		}
+
+		// traffic_ramp is schema-defaulted to 100 regardless of service type
+		// (Terraform Core applies the default before Create/Update ever runs),
+		// but it only has an effect for CDN services. Pinning it to 100 for
+		// Compute rather than leaving it null keeps refresh consistent with
+		// that plan-time default and avoids perpetual drift; ModifyPlan already
+		// rejects any other value on a Compute service.
+		switch {
+		case serviceType == service.TypeVCL && cfg.Configuration.TrafficRamp != nil:
+			tr, err := strconv.ParseInt(*cfg.Configuration.TrafficRamp, 10, 64)
+			if err != nil {
+				resp.Diagnostics.AddError("Error parsing ngwaf traffic_ramp", err.Error())
+				return
+			}
+			state.TrafficRamp = types.Int64Value(tr)
+		case serviceType != service.TypeVCL:
+			state.TrafficRamp = types.Int64Value(100)
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -223,31 +246,44 @@ func (r *NGWAFResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	serviceID := plan.ServiceID.ValueString()
 	tflog.Debug(ctx, "Updating Fastly Product Enablement (ngwaf)", map[string]any{"service_id": serviceID})
 
-	serviceType, err := r.typeChecker.GetType(ctx, serviceID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error looking up service type", err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
 	}
 
-	resp.Diagnostics.Append(validateNGWAFTrafficRamp(&plan, serviceType)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	if enabled {
+		serviceType, err := r.typeChecker.GetType(ctx, serviceID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error looking up service type", err.Error())
+			return
+		}
 
-	trafficRamp := "100"
-	if serviceType == service.TypeVCL && !plan.TrafficRamp.IsNull() {
-		trafficRamp = strconv.FormatInt(plan.TrafficRamp.ValueInt64(), 10)
-	}
+		resp.Diagnostics.Append(validateNGWAFTrafficRamp(&plan, serviceType)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	if _, err := ngwafproduct.UpdateConfiguration(ctx, r.client, serviceID, ngwafproduct.ConfigureInput{
-		WorkspaceID: plan.WorkspaceID.ValueString(),
-		TrafficRamp: trafficRamp,
-	}); err != nil {
-		resp.Diagnostics.AddError("Error configuring ngwaf", err.Error())
-		return
+		trafficRamp := "100"
+		if serviceType == service.TypeVCL && !plan.TrafficRamp.IsNull() {
+			trafficRamp = strconv.FormatInt(plan.TrafficRamp.ValueInt64(), 10)
+		}
+
+		if _, err := ngwafproduct.UpdateConfiguration(ctx, r.client, serviceID, ngwafproduct.ConfigureInput{
+			WorkspaceID: plan.WorkspaceID.ValueString(),
+			TrafficRamp: trafficRamp,
+		}); err != nil {
+			resp.Diagnostics.AddError("Error configuring ngwaf", err.Error())
+			return
+		}
+	} else {
+		if err := ngwafproduct.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling ngwaf", err.Error())
+			return
+		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -261,8 +297,15 @@ func (r *NGWAFResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	serviceID := state.ServiceID.ValueString()
 	tflog.Debug(ctx, "Deleting Fastly Product Enablement (ngwaf)", map[string]any{"service_id": serviceID})
 
-	if err := ngwafproduct.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
-		resp.Diagnostics.AddError("Error disabling ngwaf", err.Error())
+	enabled := true
+	if !state.Enabled.IsNull() {
+		enabled = state.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if err := ngwafproduct.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling ngwaf", err.Error())
+		}
 	}
 }
 

@@ -513,3 +513,50 @@ func TestAccFastlyProductEnablement_serviceIDForcesReplace(t *testing.T) {
 		},
 	})
 }
+
+// TestAccFastlyProductEnablement_simpleProductEnabledToggle verifies that
+// toggling the enabled attribute on a simple product (origin_inspector)
+// between false and true correctly disables and re-enables the product.
+func TestAccFastlyProductEnablement_simpleProductEnabledToggle(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigProductEnablementSimpleEnabledToggle(serviceName, domainName, backendName, true),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_product_origin_inspector.test", "enabled", "true"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementSimpleEnabledToggle(serviceName, domainName, backendName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_origin_inspector.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_origin_inspector.test", "enabled", "false"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementSimpleEnabledToggle(serviceName, domainName, backendName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_origin_inspector.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_origin_inspector.test", "enabled", "true"),
+				),
+			},
+		},
+	})
+}

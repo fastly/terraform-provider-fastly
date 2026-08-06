@@ -86,7 +86,10 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	plannedContent := plan.Content
-	flatten(ctx, s, &plan)
+	if err := flatten(ctx, s, &plan); err != nil {
+		resp.Diagnostics.AddError("Error reading VCL snippet", err.Error())
+		return
+	}
 	plan.Content = plannedContent
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -137,7 +140,10 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	flatten(ctx, s, &state)
+	if err := flatten(ctx, s, &state); err != nil {
+		resp.Diagnostics.AddError("Error reading VCL snippet", err.Error())
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -174,7 +180,10 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	plannedContent := plan.Content
-	flatten(ctx, s, &plan)
+	if err := flatten(ctx, s, &plan); err != nil {
+		resp.Diagnostics.AddError("Error reading VCL snippet", err.Error())
+		return
+	}
 	plan.ID = state.ID
 	plan.Content = plannedContent
 
@@ -262,7 +271,10 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	var state Model
 	state.Service = types.StringValue(serviceID)
 	state.Version = types.Int64Value(int64(version))
-	flatten(ctx, s, &state)
+	if err := flatten(ctx, s, &state); err != nil {
+		resp.Diagnostics.AddError("Error importing VCL snippet", err.Error())
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

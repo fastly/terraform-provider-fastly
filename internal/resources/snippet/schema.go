@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -190,8 +191,11 @@ func (o ops) List(ctx context.Context, client *fastly.Client, serviceID string, 
 		if item == nil {
 			continue
 		}
-		if item.Dynamic != nil && *item.Dynamic == 1 {
+		if IsDynamic(item) {
 			continue
+		}
+		if _, err := parsePriority(item.Priority); err != nil {
+			return nil, err
 		}
 		regular = append(regular, item)
 	}
@@ -216,7 +220,11 @@ func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string
 }
 
 func (o ops) Equal(desired NestedModel, remote *fastly.Snippet) bool {
-	return desired.ModelsEqual(FlattenToNestedModel(remote))
+	remoteModel, err := FlattenToNestedModel(remote)
+	if err != nil {
+		return false
+	}
+	return desired.ModelsEqual(remoteModel)
 }
 
 func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Snippet, error) {
@@ -224,7 +232,8 @@ func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string
 }
 
 func (o ops) ToModel(api *fastly.Snippet) NestedModel {
-	return FlattenToNestedModel(api)
+	model, _ := FlattenToNestedModel(api)
+	return model
 }
 
 var reconciler = &reconcile.Resource[NestedModel, fastly.Snippet]{
@@ -236,7 +245,25 @@ var reconciler = &reconcile.Resource[NestedModel, fastly.Snippet]{
 }
 
 func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
-	return reconciler.ReadForVersion(ctx, client, serviceID, version)
+	remote, err := ops{}.List(ctx, client, serviceID, version)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]NestedModel, 0, len(remote))
+	for _, item := range remote {
+		model, err := FlattenToNestedModel(item)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, model)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return service.StringValue(result[i].Name) < service.StringValue(result[j].Name)
+	})
+
+	return result, nil
 }
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
@@ -280,17 +307,17 @@ func MatchOrderPreservePlanContent(items, plan []NestedModel) []NestedModel {
 	return ordered
 }
 
-func parsePriority(value *string) int64 {
+func parsePriority(value *string) (int64, error) {
 	if value == nil || *value == "" {
-		return DefaultPriority
+		return DefaultPriority, nil
 	}
 
 	priority, err := strconv.ParseInt(*value, 10, 64)
 	if err != nil {
-		return DefaultPriority
+		return 0, fmt.Errorf("error parsing VCL snippet priority %q: %w", *value, err)
 	}
 
-	return priority
+	return priority, nil
 }
 
 func normalizeType(value string) string {

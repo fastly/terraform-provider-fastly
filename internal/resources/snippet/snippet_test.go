@@ -15,7 +15,10 @@ func TestFlattenToNestedModel(t *testing.T) {
 		Content:  fastly.ToPointer(`set req.http.X-Test = "true";`),
 	}
 
-	got := FlattenToNestedModel(api)
+	got, err := FlattenToNestedModel(api)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
 	if got.Name.ValueString() != "recv_test" {
 		t.Fatalf("name mismatch: %q", got.Name.ValueString())
@@ -28,6 +31,20 @@ func TestFlattenToNestedModel(t *testing.T) {
 	}
 	if got.Content.ValueString() != `set req.http.X-Test = "true";` {
 		t.Fatalf("content mismatch: %q", got.Content.ValueString())
+	}
+}
+
+func TestFlattenToNestedModelInvalidPriority(t *testing.T) {
+	api := &fastly.Snippet{
+		Name:     fastly.ToPointer("recv_test"),
+		Type:     fastly.ToPointer(fastly.SnippetTypeRecv),
+		Priority: fastly.ToPointer("invalid"),
+		Content:  fastly.ToPointer(`set req.http.X-Test = "true";`),
+	}
+
+	_, err := FlattenToNestedModel(api)
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 

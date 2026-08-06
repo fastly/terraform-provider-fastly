@@ -742,7 +742,7 @@ func TestAuthenticationAccessors(t *testing.T) {
 // version.
 func TestAuthenticationEnvDefault_DefaultObject(t *testing.T) {
 	t.Run("blank when no env vars set", func(t *testing.T) {
-		t.Setenv("FASTLY_BQ_ACCOUNT_NAME", "")
+		t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "")
 		t.Setenv("FASTLY_BQ_EMAIL", "")
 		t.Setenv("FASTLY_BQ_SECRET_KEY", "")
 
@@ -753,7 +753,7 @@ func TestAuthenticationEnvDefault_DefaultObject(t *testing.T) {
 	})
 
 	t.Run("account name from env", func(t *testing.T) {
-		t.Setenv("FASTLY_BQ_ACCOUNT_NAME", "test-service-account")
+		t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "test-service-account")
 		t.Setenv("FASTLY_BQ_EMAIL", "")
 		t.Setenv("FASTLY_BQ_SECRET_KEY", "")
 
@@ -768,7 +768,7 @@ func TestAuthenticationEnvDefault_DefaultObject(t *testing.T) {
 	})
 
 	t.Run("email and secret key from env", func(t *testing.T) {
-		t.Setenv("FASTLY_BQ_ACCOUNT_NAME", "")
+		t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "")
 		t.Setenv("FASTLY_BQ_EMAIL", "test-bigquery@example-fastly-log.iam.gserviceaccount.com")
 		t.Setenv("FASTLY_BQ_SECRET_KEY", "test-secret-key")
 

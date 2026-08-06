@@ -110,7 +110,7 @@ Required:
 
 Optional:
 
-- `authentication` (Attributes) Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_BQ_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables. (see [below for nested schema](#nestedatt--logging_bigquery--authentication))
+- `authentication` (Attributes) Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables. (see [below for nested schema](#nestedatt--logging_bigquery--authentication))
 - `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
 - `template` (String) A template string used to generate a BigQuery table name suffix.
 
@@ -119,7 +119,7 @@ Optional:
 
 Optional:
 
-- `account_name` (String) The name of the GCP service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_BQ_ACCOUNT_NAME` environment variable.
+- `account_name` (String) The name of the Google Cloud IAM service account used for impersonation-based authentication, associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` environment variable, shared with Fastly's GCS and Pub/Sub logging endpoints.
 - `email` (String, Sensitive) The `client_email` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_EMAIL` environment variable.
 - `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_SECRET_KEY` environment variable.
 

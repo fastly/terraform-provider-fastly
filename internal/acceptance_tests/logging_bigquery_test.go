@@ -54,7 +54,7 @@ func TestAccFastlyServiceLoggingBigQuery_basic(t *testing.T) {
 }
 
 // TestAccFastlyServiceLoggingBigQuery_authEnvDefaults verifies that
-// account_name, email, and secret_key still pick up FASTLY_BQ_ACCOUNT_NAME /
+// account_name, email, and secret_key still pick up FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME /
 // FASTLY_BQ_EMAIL / FASTLY_BQ_SECRET_KEY when the entire authentication object
 // is omitted from config. This exercises the parent-level
 // authenticationEnvDefault{} (schema.go): it confirms the default populates
@@ -68,7 +68,7 @@ func TestAccFastlyServiceLoggingBigQuery_authEnvDefaults(t *testing.T) {
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
 	loggerName := fmt.Sprintf("bigquery-logger-%s", acctest.RandString(10))
 
-	t.Setenv("FASTLY_BQ_ACCOUNT_NAME", "test-service-account")
+	t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "test-service-account")
 	t.Setenv("FASTLY_BQ_EMAIL", "")
 	t.Setenv("FASTLY_BQ_SECRET_KEY", "")
 

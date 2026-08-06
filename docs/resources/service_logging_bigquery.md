@@ -158,7 +158,7 @@ resource "fastly_service_compute_auto" "example" {
 
 ### Optional
 
-- `authentication` (Attributes) Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_BQ_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables. (see [below for nested schema](#nestedatt--authentication))
+- `authentication` (Attributes) Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables. (see [below for nested schema](#nestedatt--authentication))
 - `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid JSON that matches the schema of your BigQuery table.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
 - `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with format_version of 2 are placed in vcl_log and those with format_version of 1 are placed in vcl_deliver. Valid value is `none`.
@@ -175,7 +175,7 @@ resource "fastly_service_compute_auto" "example" {
 
 Optional:
 
-- `account_name` (String) The name of the GCP service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_BQ_ACCOUNT_NAME` environment variable.
+- `account_name` (String) The name of the Google Cloud IAM service account used for impersonation-based authentication, associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` environment variable, shared with Fastly's GCS and Pub/Sub logging endpoints.
 - `email` (String, Sensitive) The `client_email` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_EMAIL` environment variable.
 - `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_SECRET_KEY` environment variable.
 
@@ -204,10 +204,13 @@ activate a service version.
 ## Notes
 
 - `authentication` groups credentials as the other logging endpoints do.
-  Provide either `account_name` (a GCP service account already linked to the
-  Fastly account), or `email` and `secret_key`. When the block is omitted
-  entirely, defaults to the `FASTLY_BQ_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and
-  `FASTLY_BQ_SECRET_KEY` environment variables. `email` and `secret_key` are
+  Provide either `account_name` (the name of a Google Cloud IAM service
+  account set up for [impersonation](https://www.fastly.com/documentation/guides/integrations/streaming-logs/configuring-google-iam-service-account-impersonation-for-fastly-logging/)),
+  or `email` and `secret_key`. When the block is omitted entirely, defaults to
+  the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and
+  `FASTLY_BQ_SECRET_KEY` environment variables — `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME`
+  is shared with Fastly's GCS and Pub/Sub logging endpoints, since all three use
+  the same Google Cloud service account. `email` and `secret_key` are
   sensitive and never appear in plan output. Once `account_name` is set, it
   can only be changed to a different value — not cleared back to unset —
   since the Fastly API rejects an explicit empty `account_name` on update.

@@ -86,19 +86,20 @@ func NewAuthenticationObject(accountName, email, secretKey types.String) types.O
 }
 
 // authenticationEnvDefault populates the authentication object from the
-// FASTLY_BQ_ACCOUNT_NAME, FASTLY_BQ_EMAIL, and FASTLY_BQ_SECRET_KEY
-// environment variables when the practitioner omits the whole `authentication`
-// block. The framework only walks into an object attribute's per-field
-// Default handlers (like email's) once the object itself already resolves to
-// a known value; a Computed object attribute with no Default of its own is
-// instead marked wholesale unknown, and its children's Defaults are never
-// evaluated. Setting this Default on the parent gives the object a known
-// value up front so the per-field defaults still run for a
-// partially-configured object (e.g. only `account_name` set).
+// FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME, FASTLY_BQ_EMAIL, and
+// FASTLY_BQ_SECRET_KEY environment variables when the practitioner omits the
+// whole `authentication` block. The framework only walks into an object
+// attribute's per-field Default handlers (like email's) once the object
+// itself already resolves to a known value; a Computed object attribute with
+// no Default of its own is instead marked wholesale unknown, and its
+// children's Defaults are never evaluated. Setting this Default on the
+// parent gives the object a known value up front so the per-field defaults
+// still run for a partially-configured object (e.g. only `account_name`
+// set).
 type authenticationEnvDefault struct{}
 
 func (authenticationEnvDefault) Description(_ context.Context) string {
-	return "value defaults to the FASTLY_BQ_ACCOUNT_NAME, FASTLY_BQ_EMAIL, and FASTLY_BQ_SECRET_KEY environment variables"
+	return "value defaults to the FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME, FASTLY_BQ_EMAIL, and FASTLY_BQ_SECRET_KEY environment variables"
 }
 
 func (d authenticationEnvDefault) MarkdownDescription(ctx context.Context) string {
@@ -107,7 +108,7 @@ func (d authenticationEnvDefault) MarkdownDescription(ctx context.Context) strin
 
 func (authenticationEnvDefault) DefaultObject(ctx context.Context, _ fwdefaults.ObjectRequest, resp *fwdefaults.ObjectResponse) {
 	resp.PlanValue = NewAuthenticationObject(
-		envStringDefault(ctx, "FASTLY_BQ_ACCOUNT_NAME"),
+		envStringDefault(ctx, "FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME"),
 		envStringDefault(ctx, "FASTLY_BQ_EMAIL"),
 		envStringDefault(ctx, "FASTLY_BQ_SECRET_KEY"),
 	)
@@ -213,13 +214,13 @@ func sharedAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Default:     authenticationEnvDefault{},
-			Description: "Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_BQ_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables.",
+			Description: "Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables.",
 			Attributes: map[string]schema.Attribute{
 				"account_name": schema.StringAttribute{
 					Optional:    true,
 					Computed:    true,
-					Default:     defaults.EnvString("FASTLY_BQ_ACCOUNT_NAME", ""),
-					Description: "The name of the GCP service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_BQ_ACCOUNT_NAME` environment variable.",
+					Default:     defaults.EnvString("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", ""),
+					Description: "The name of the Google Cloud Platform service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` environment variable, shared with Fastly's GCS and Pub/Sub logging endpoints.",
 				},
 				"email": schema.StringAttribute{
 					Optional:    true,

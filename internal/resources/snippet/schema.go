@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"maps"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -232,6 +231,8 @@ func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string
 }
 
 func (o ops) ToModel(api *fastly.Snippet) NestedModel {
+	// ops.List validates snippet priority before the reconciler calls ToModel,
+	// so this should only fail if ToModel is called outside the reconciler path.
 	model, _ := FlattenToNestedModel(api)
 	return model
 }
@@ -245,25 +246,7 @@ var reconciler = &reconcile.Resource[NestedModel, fastly.Snippet]{
 }
 
 func ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]NestedModel, error) {
-	remote, err := ops{}.List(ctx, client, serviceID, version)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]NestedModel, 0, len(remote))
-	for _, item := range remote {
-		model, err := FlattenToNestedModel(item)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, model)
-	}
-
-	sort.Slice(result, func(i, j int) bool {
-		return service.StringValue(result[i].Name) < service.StringValue(result[j].Name)
-	})
-
-	return result, nil
+	return reconciler.ReadForVersion(ctx, client, serviceID, version)
 }
 
 func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
@@ -312,12 +295,12 @@ func parsePriority(value *string) (int64, error) {
 		return DefaultPriority, nil
 	}
 
-	priority, err := strconv.ParseInt(*value, 10, 64)
+	priority, err := strconv.Atoi(*value)
 	if err != nil {
 		return 0, fmt.Errorf("error parsing VCL snippet priority %q: %w", *value, err)
 	}
 
-	return priority, nil
+	return int64(priority), nil
 }
 
 func normalizeType(value string) string {

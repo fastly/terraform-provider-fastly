@@ -44,6 +44,10 @@ type NestedModel struct {
 	Content  types.String `tfsdk:"content"`
 }
 
+func IsDynamic(api *fastly.Snippet) bool {
+	return api != nil && api.Dynamic != nil && *api.Dynamic == 1
+}
+
 func ContentEqual(a, b string) bool {
 	return strings.TrimRight(a, "\n") == strings.TrimRight(b, "\n")
 }

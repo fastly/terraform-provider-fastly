@@ -2,6 +2,7 @@ package snippet
 
 import (
 	"context"
+	"fmt"
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -123,6 +124,19 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
+	if IsDynamic(s) {
+		resp.Diagnostics.AddError(
+			"Unexpected dynamic VCL snippet",
+			fmt.Sprintf(
+				"VCL snippet %q in service %s version %d is dynamic. This resource only manages regular VCL snippets.",
+				state.Name.ValueString(),
+				state.Service.ValueString(),
+				int(state.Version.ValueInt64()),
+			),
+		)
+		return
+	}
+
 	flatten(ctx, s, &state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -229,6 +243,19 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error importing VCL snippet", err.Error())
+		return
+	}
+
+	if IsDynamic(s) {
+		resp.Diagnostics.AddError(
+			"Unexpected dynamic VCL snippet",
+			fmt.Sprintf(
+				"VCL snippet %q in service %s version %d is dynamic. This resource only manages regular VCL snippets.",
+				name,
+				serviceID,
+				version,
+			),
+		)
 		return
 	}
 

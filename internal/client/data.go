@@ -1,10 +1,12 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/fastly/go-fastly/v17/fastly"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -30,7 +32,7 @@ func NewData(client *fastly.Client, userAgentPrefix string) *Data {
 	wrapped := *client
 	wrapped.HTTPClient = &http.Client{
 		Transport: &userAgentTransport{
-			base:   baseTransport,
+			base:   newRetryTransport(baseTransport),
 			prefix: userAgentPrefix,
 		},
 		Timeout: baseHTTPClient.Timeout,
@@ -41,6 +43,49 @@ func NewData(client *fastly.Client, userAgentPrefix string) *Data {
 		VersionChecker:     service.NewVersionChecker(&wrapped),
 		ServiceTypeChecker: service.NewServiceTypeChecker(&wrapped),
 	}
+}
+
+// newRetryTransport retries requests using HTTP methods that are idempotent
+// per RFC 7231 (GET, HEAD, PUT, DELETE) on transient 5xx responses and
+// connection errors, with exponential backoff. POST and PATCH are passed
+// through untouched, since the API doesn't guarantee that repeating them
+// has no additional effect (e.g. a POST could create a duplicate resource
+// if the original request actually succeeded server-side). 429 responses
+// are not retried: the account-level rate limit window doesn't reset soon
+// enough for a retry to help, so retrying would just add to the limit.
+func newRetryTransport(base http.RoundTripper) http.RoundTripper {
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient.Transport = base
+	retryClient.Logger = nil
+	retryClient.CheckRetry = checkRetry
+	return &retryTransport{base: base, retryClient: retryClient}
+}
+
+func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
+		return false, nil
+	}
+	return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+}
+
+type retryTransport struct {
+	base        http.RoundTripper
+	retryClient *retryablehttp.Client
+}
+
+func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	switch req.Method {
+	case http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete:
+	default:
+		return t.base.RoundTrip(req)
+	}
+
+	retryableReq, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.retryClient.Do(retryableReq)
 }
 
 type userAgentTransport struct {

@@ -21,6 +21,7 @@ Enables Next-Gen WAF on a service. Product Enablement operates on the service di
 
 ### Optional
 
+- `enabled` (Boolean) Whether Next-Gen WAF is enabled on the service. Defaults to `true`.
 - `traffic_ramp` (Number) The percentage of traffic to inspect. Only supported for CDN services; defaults to 100.
 
 ### Read-Only

@@ -18,6 +18,10 @@ Enables Log Explorer & Insights on a service. Product Enablement operates on the
 
 - `service_id` (String) The ID of the service to enable Log Explorer & Insights on. Changing this value will delete and recreate this resource against the new service.
 
+### Optional
+
+- `enabled` (Boolean) Whether Log Explorer & Insights is enabled on the service. Defaults to `true`.
+
 ### Read-Only
 
 - `id` (String) The ID of this resource (identical to `service_id`).

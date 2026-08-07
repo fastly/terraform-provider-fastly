@@ -5,6 +5,12 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+
+### Dependencies
+
+## 9.5.1 (August 07, 2026)
+
+### BUG FIXES:
 - fix(service_compute): process `healthcheck` blocks before `backend` blocks so backends referencing a healthcheck created in the same apply do not fail with `No healthcheck named '<name>'` ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
 - fix(service_vcl): process `dictionary` and `response_object` blocks before `rate_limiter` blocks so a rate limiter referencing a dictionary or response object created in the same apply does not fail ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
 

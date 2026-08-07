@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(fastly_audit_log_event_mapping): add resource and data source for managing Audit Log Event Mappings ([#1394](https://github.com/fastly/terraform-provider-fastly/pull/1394))
+
 ### BUG FIXES:
 
 ### Dependencies

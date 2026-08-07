@@ -1,0 +1,1 @@
+$ terraform import fastly_audit_log_event_mapping.example xxxxxxxxxxxxxxxxxxxx

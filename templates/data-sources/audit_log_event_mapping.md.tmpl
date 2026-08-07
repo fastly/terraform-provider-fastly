@@ -1,0 +1,24 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_audit_log_event_mapping"
+sidebar_current: "docs-fastly-datasource-audit_log_event_mapping"
+description: |-
+Get information on a Fastly Audit Log Event Mapping.
+---
+
+# fastly_audit_log_event_mapping
+
+Use this data source to get information about an existing Audit Log Event
+Mapping for use with other resources.
+
+~> **Warning:** The data source's filters are applied using an **AND** boolean operator, so depending on the combination
+of filters, they may become mutually exclusive. The exception to this is `id` which must not be specified in combination
+with any of the others.
+
+~> **Note:** If more or less than a single match is returned by the search, Terraform will fail. Ensure that your search is specific enough to return a single mapping.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/audit_log_event_mapping.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

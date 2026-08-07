@@ -3,7 +3,6 @@ package condition
 import (
 	"context"
 	"maps"
-	"strings"
 
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -12,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -29,7 +27,7 @@ type NestedModel struct {
 func (n NestedModel) ModelsEqual(other NestedModel) bool {
 	return service.StringValue(n.Name) == service.StringValue(other.Name) &&
 		service.StringValue(n.Type) == service.StringValue(other.Type) &&
-		trimStatement(service.StringValue(n.Statement)) == trimStatement(service.StringValue(other.Statement)) &&
+		service.StringValue(n.Statement) == service.StringValue(other.Statement) &&
 		service.Int64Value(n.Priority) == service.Int64Value(other.Priority)
 }
 
@@ -49,9 +47,6 @@ func CommonAttributes() map[string]schema.Attribute {
 		"statement": schema.StringAttribute{
 			Required:    true,
 			Description: "A conditional expression in VCL used to determine if the condition is met.",
-			PlanModifiers: []planmodifier.String{
-				normalizeStatementModifier{},
-			},
 		},
 		"priority": schema.Int64Attribute{
 			Optional:    true,
@@ -172,10 +167,4 @@ func Equal(a, b []NestedModel) bool {
 
 func MatchOrder(items, order []NestedModel) []NestedModel {
 	return reconcile.MatchOrder(items, order, func(m NestedModel) string { return service.StringValue(m.Name) })
-}
-
-// trimStatement strips leading/trailing whitespace so HEREDOC-formatted VCL statements with a
-// trailing newline don't produce a permanent diff against the API's stored value.
-func trimStatement(s string) string {
-	return strings.TrimSpace(s)
 }

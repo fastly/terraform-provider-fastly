@@ -508,6 +508,16 @@ func TestAccFastlyProductEnablement_ddosEnabledToggle(t *testing.T) {
 				),
 			},
 			{
+				// Exercises Read against a disabled product: the API returns
+				// a 400 "no product on service" rather than a 404, which
+				// Read must recognize via isProductDisabledError rather than
+				// surfacing as a read error.
+				RefreshState: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "enabled", "false"),
+				),
+			},
+			{
 				Config: ConfigProductEnablementDDoSEnabledToggle(serviceName, domainName, backendName, "block", true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -559,6 +569,16 @@ func TestAccFastlyProductEnablement_botManagementEnabledToggle(t *testing.T) {
 				),
 			},
 			{
+				// Exercises Read against a disabled product: the API returns
+				// a 400 "no product on service" rather than a 404, which
+				// Read must recognize via isProductDisabledError rather than
+				// surfacing as a read error.
+				RefreshState: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "enabled", "false"),
+				),
+			},
+			{
 				Config: ConfigProductEnablementBotManagementEnabledToggle(serviceName, domainName, backendName, "on", true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -605,6 +625,16 @@ func TestAccFastlyProductEnablement_ngwafEnabledToggle(t *testing.T) {
 						plancheck.ExpectResourceAction("fastly_service_product_ngwaf.test", plancheck.ResourceActionUpdate),
 					},
 				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "enabled", "false"),
+				),
+			},
+			{
+				// Exercises Read against a disabled product: the API returns
+				// a 400 "no product on service" rather than a 404, which
+				// Read must recognize via isProductDisabledError rather than
+				// surfacing as a read error.
+				RefreshState: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "enabled", "false"),
 				),

@@ -189,7 +189,7 @@ func (r *NGWAFResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (ngwaf)", map[string]any{"service_id": serviceID})
 
 	if _, err := ngwafproduct.Get(ctx, r.client, serviceID); err != nil {
-		if errors.IsNotFound(err) {
+		if errors.IsNotFound(err) || isProductDisabledError(err) {
 			tflog.Debug(ctx, "ngwaf is disabled on service", map[string]any{"service_id": serviceID})
 			state.Enabled = types.BoolValue(false)
 		} else {

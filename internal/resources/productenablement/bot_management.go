@@ -121,7 +121,7 @@ func (r *BotManagementResource) Read(ctx context.Context, req resource.ReadReque
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (bot_management)", map[string]any{"service_id": serviceID})
 
 	if _, err := botmanagement.Get(ctx, r.client, serviceID); err != nil {
-		if errors.IsNotFound(err) {
+		if errors.IsNotFound(err) || isProductDisabledError(err) {
 			tflog.Debug(ctx, "bot_management is disabled on service", map[string]any{"service_id": serviceID})
 			state.Enabled = types.BoolValue(false)
 		} else {

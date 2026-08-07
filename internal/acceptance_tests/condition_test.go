@@ -124,10 +124,10 @@ func TestAccFastlyServiceCondition_multiple(t *testing.T) {
 	})
 }
 
-// TestAccFastlyServiceCondition_heredocWhitespace confirms that a statement written as a HEREDOC
-// (which typically has a trailing newline in configuration) doesn't produce a perpetual diff
-// against the trimmed value Fastly stores and returns.
-func TestAccFastlyServiceCondition_heredocWhitespace(t *testing.T) {
+// TestAccFastlyServiceCondition_heredocContent confirms that a statement written as a HEREDOC
+// (which typically has a trailing newline in configuration) round-trips exactly through the
+// Fastly API, including the trailing newline, with no perpetual diff on a subsequent plan.
+func TestAccFastlyServiceCondition_heredocContent(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -143,7 +143,7 @@ func TestAccFastlyServiceCondition_heredocWhitespace(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn.test"),
 					resource.TestCheckResourceAttr("fastly_service_condition.test", "name", conditionName),
-					resource.TestCheckResourceAttr("fastly_service_condition.test", "statement", `req.url ~ "^/admin"`),
+					resource.TestCheckResourceAttr("fastly_service_condition.test", "statement", "req.url ~ \"^/admin\"\n"),
 				),
 			},
 			{

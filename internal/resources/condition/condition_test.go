@@ -192,7 +192,7 @@ func TestBuildCreateInput(t *testing.T) {
 			},
 		},
 		{
-			name:      "statement with surrounding whitespace is trimmed",
+			name:      "statement with surrounding whitespace is passed through as-is",
 			serviceID: "service-789",
 			version:   1,
 			model: func() NestedModel {
@@ -201,7 +201,7 @@ func TestBuildCreateInput(t *testing.T) {
 				return m
 			}(),
 			validate: func(t *testing.T, input *fastly.CreateConditionInput) {
-				assert.Equal(t, `req.url ~ "^/admin"`, *input.Statement)
+				assert.Equal(t, "\n  req.url ~ \"^/admin\"  \n", *input.Statement)
 			},
 		},
 	}
@@ -237,7 +237,7 @@ func TestBuildUpdateInput(t *testing.T) {
 			},
 		},
 		{
-			name:      "statement with surrounding whitespace is trimmed",
+			name:      "statement with surrounding whitespace is passed through as-is",
 			serviceID: "service-789",
 			version:   1,
 			model: func() NestedModel {
@@ -246,7 +246,7 @@ func TestBuildUpdateInput(t *testing.T) {
 				return m
 			}(),
 			validate: func(t *testing.T, input *fastly.UpdateConditionInput) {
-				assert.Equal(t, `req.url ~ "^/admin"`, *input.Statement)
+				assert.Equal(t, "\n  req.url ~ \"^/admin\"  \n", *input.Statement)
 			},
 		},
 	}
@@ -323,7 +323,7 @@ func TestModelsEqual(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "statement differing only in surrounding whitespace",
+			name: "statement differing only in surrounding whitespace is not equal",
 			a: func() NestedModel {
 				m := minimalNestedModel()
 				m.Statement = types.StringValue("req.url ~ \"^/admin\"")
@@ -334,7 +334,7 @@ func TestModelsEqual(t *testing.T) {
 				m.Statement = types.StringValue("\n  req.url ~ \"^/admin\"  \n")
 				return m
 			}(),
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "different priority",

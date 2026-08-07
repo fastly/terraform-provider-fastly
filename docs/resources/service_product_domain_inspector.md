@@ -18,6 +18,10 @@ Enables Domain Inspector on a service. Product Enablement operates on the servic
 
 - `service_id` (String) The ID of the service to enable Domain Inspector on. Changing this value will delete and recreate this resource against the new service.
 
+### Optional
+
+- `enabled` (Boolean) Whether Domain Inspector is enabled on the service. Defaults to `true`.
+
 ### Read-Only
 
 - `id` (String) The ID of this resource (identical to `service_id`).

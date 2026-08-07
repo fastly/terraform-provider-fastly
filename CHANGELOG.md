@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### Dependencies
+- build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.10.0 to 0.11.0 ([#1392](https://github.com/fastly/terraform-provider-fastly/pull/1392))
 
 ## 9.5.1 (August 07, 2026)
 

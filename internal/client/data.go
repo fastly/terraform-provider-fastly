@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -45,16 +46,26 @@ func NewData(client *fastly.Client, userAgentPrefix string) *Data {
 }
 
 // newRetryTransport retries requests using HTTP methods that are idempotent
-// per RFC 7231 (GET, HEAD, PUT, DELETE) on transient 5xx or 429 responses
-// and connection errors, with exponential backoff. POST and PATCH are
-// passed through untouched, since the API doesn't guarantee that repeating
-// them has no additional effect (e.g. a POST could create a duplicate
-// resource if the original request actually succeeded server-side).
+// per RFC 7231 (GET, HEAD, PUT, DELETE) on transient 5xx responses and
+// connection errors, with exponential backoff. POST and PATCH are passed
+// through untouched, since the API doesn't guarantee that repeating them
+// has no additional effect (e.g. a POST could create a duplicate resource
+// if the original request actually succeeded server-side). 429 responses
+// are not retried: the account-level rate limit window doesn't reset soon
+// enough for a retry to help, so retrying would just add to the limit.
 func newRetryTransport(base http.RoundTripper) http.RoundTripper {
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = base
 	retryClient.Logger = nil
+	retryClient.CheckRetry = checkRetry
 	return &retryTransport{base: base, retryClient: retryClient}
+}
+
+func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
+		return false, nil
+	}
+	return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
 }
 
 type retryTransport struct {

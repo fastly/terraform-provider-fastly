@@ -6,7 +6,7 @@
 
 ### BUG FIXES:
 - fix(service_compute): process `healthcheck` blocks before `backend` blocks so backends referencing a healthcheck created in the same apply do not fail with `No healthcheck named '<name>'` ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
-- fix(service_vcl): process `dictionary` and `response_object` blocks before `rate_limiter` blocks so a rate limiter referencing a dictionary or response object created in the same apply does not fail with a 400 error ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
+- fix(service_vcl): process `dictionary` and `response_object` blocks before `rate_limiter` blocks so a rate limiter referencing a dictionary or response object created in the same apply does not fail ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
 
 ### Dependencies
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.1.0 to 17.2.0 ([#1382](https://github.com/fastly/terraform-provider-fastly/pull/1382))

@@ -1,5 +1,9 @@
 # Fastly Terraform Provider
 
+<!-- hy-mt2-i18n:start -->
+**English** · [中文](./README_zh-CN.md) · [日本語](./README_ja.md) · [Español](./README_es.md)
+<!-- hy-mt2-i18n:end -->
+
 - Website: https://www.terraform.io
 - Documentation: https://registry.terraform.io/providers/fastly/fastly/latest/docs
 - Issues: https://github.com/fastly/terraform-provider-fastly/blob/main/ISSUES.md 

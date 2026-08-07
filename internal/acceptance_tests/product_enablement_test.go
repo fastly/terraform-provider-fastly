@@ -472,6 +472,159 @@ func TestAccFastlyProductEnablement_ngwafUpdateWorkspaceAndRamp(t *testing.T) {
 	})
 }
 
+// TestAccFastlyProductEnablement_ddosEnabledToggle verifies that toggling
+// the enabled attribute on fastly_service_product_ddos_protection through
+// true -> false -> true re-enables the product via the Enable API on the
+// false -> true transition, rather than leaving it disabled because Update
+// only called UpdateConfiguration.
+func TestAccFastlyProductEnablement_ddosEnabledToggle(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigProductEnablementDDoSEnabledToggle(serviceName, domainName, backendName, "block", true),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "mode", "block"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementDDoSEnabledToggle(serviceName, domainName, backendName, "block", false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_ddos_protection.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "enabled", "false"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementDDoSEnabledToggle(serviceName, domainName, backendName, "block", true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_ddos_protection.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_service_product_ddos_protection.test", "mode", "block"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyProductEnablement_botManagementEnabledToggle verifies that
+// toggling the enabled attribute on fastly_service_product_bot_management
+// through true -> false -> true re-enables the product via the Enable API
+// on the false -> true transition, rather than leaving it disabled because
+// Update only called UpdateConfiguration.
+func TestAccFastlyProductEnablement_botManagementEnabledToggle(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigProductEnablementBotManagementEnabledToggle(serviceName, domainName, backendName, "on", true),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "contentguard", "on"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementBotManagementEnabledToggle(serviceName, domainName, backendName, "on", false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_bot_management.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "enabled", "false"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementBotManagementEnabledToggle(serviceName, domainName, backendName, "on", true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_bot_management.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_service_product_bot_management.test", "contentguard", "on"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyProductEnablement_ngwafEnabledToggle verifies that toggling
+// the enabled attribute on fastly_service_product_ngwaf through
+// true -> false -> true re-enables the product via the Enable API on the
+// false -> true transition, rather than leaving it disabled because Update
+// only called UpdateConfiguration.
+func TestAccFastlyProductEnablement_ngwafEnabledToggle(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigProductEnablementNGWAFEnabledToggle(serviceName, domainName, backendName, testNGWAFWorkspaceID, true),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "workspace_id", testNGWAFWorkspaceID),
+				),
+			},
+			{
+				Config: ConfigProductEnablementNGWAFEnabledToggle(serviceName, domainName, backendName, testNGWAFWorkspaceID, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_ngwaf.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "enabled", "false"),
+				),
+			},
+			{
+				Config: ConfigProductEnablementNGWAFEnabledToggle(serviceName, domainName, backendName, testNGWAFWorkspaceID, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("fastly_service_product_ngwaf.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_service_product_ngwaf.test", "workspace_id", testNGWAFWorkspaceID),
+				),
+			},
+		},
+	})
+}
+
 // TestAccFastlyProductEnablement_serviceIDForcesReplace verifies that
 // changing service_id forces replacement of the resource (destroy against
 // the old service, create against the new one) rather than an in-place

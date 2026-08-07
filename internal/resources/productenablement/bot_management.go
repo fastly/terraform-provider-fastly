@@ -157,6 +157,10 @@ func (r *BotManagementResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	if enabled {
+		if _, err := botmanagement.Enable(ctx, r.client, serviceID); err != nil {
+			resp.Diagnostics.AddError("Error enabling bot_management", err.Error())
+			return
+		}
 		if _, err := botmanagement.UpdateConfiguration(ctx, r.client, serviceID, botmanagement.ConfigureInput{
 			ContentGuard: plan.ContentGuard.ValueString(),
 		}); err != nil {

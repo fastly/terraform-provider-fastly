@@ -263,6 +263,13 @@ func (r *NGWAFResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
+		if _, err := ngwafproduct.Enable(ctx, r.client, serviceID, ngwafproduct.EnableInput{
+			WorkspaceID: plan.WorkspaceID.ValueString(),
+		}); err != nil {
+			resp.Diagnostics.AddError("Error enabling ngwaf", err.Error())
+			return
+		}
+
 		trafficRamp := "100"
 		if serviceType == service.TypeVCL && !plan.TrafficRamp.IsNull() {
 			trafficRamp = strconv.FormatInt(plan.TrafficRamp.ValueInt64(), 10)

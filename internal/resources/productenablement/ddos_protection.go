@@ -153,10 +153,10 @@ func (r *DDoSProtectionResource) Update(ctx context.Context, req resource.Update
 	}
 
 	if enabled {
-		if _, err := ddosprotection.UpdateConfiguration(ctx, r.client, serviceID, ddosprotection.ConfigureInput{
+		if _, err := ddosprotection.Enable(ctx, r.client, serviceID, ddosprotection.EnableInput{
 			Mode: plan.Mode.ValueString(),
 		}); err != nil {
-			resp.Diagnostics.AddError("Error configuring ddos_protection", err.Error())
+			resp.Diagnostics.AddError("Error enabling ddos_protection", err.Error())
 			return
 		}
 	} else {

@@ -2647,6 +2647,46 @@ func ConfigProductEnablementNGWAFOnly(serviceName, domainName, backendName, work
 		})
 }
 
+// ConfigProductEnablementDDoSEnabledToggle returns a CDN auto service paired
+// with fastly_service_product_ddos_protection at the given mode, explicitly
+// setting the enabled attribute, used to verify that toggling enabled
+// between true and false re-enables the product (via the Enable API) rather
+// than leaving it disabled after a false -> true transition.
+func ConfigProductEnablementDDoSEnabledToggle(serviceName, domainName, backendName, mode string, enabled bool) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("ddos_protection", "fastly_service_cdn_auto.test.id", map[string]string{
+			"DDOS_MODE": mode,
+			"ENABLED":   strconv.FormatBool(enabled),
+		})
+}
+
+// ConfigProductEnablementBotManagementEnabledToggle returns a CDN auto
+// service paired with fastly_service_product_bot_management at the given
+// contentguard value, explicitly setting the enabled attribute, used to
+// verify that toggling enabled between true and false re-enables the
+// product (via the Enable API) rather than leaving it disabled after a
+// false -> true transition.
+func ConfigProductEnablementBotManagementEnabledToggle(serviceName, domainName, backendName, contentGuard string, enabled bool) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("bot_management", "fastly_service_cdn_auto.test.id", map[string]string{
+			"CONTENT_GUARD": contentGuard,
+			"ENABLED":       strconv.FormatBool(enabled),
+		})
+}
+
+// ConfigProductEnablementNGWAFEnabledToggle returns a CDN auto service
+// paired with fastly_service_product_ngwaf at the given workspace_id,
+// explicitly setting the enabled attribute, used to verify that toggling
+// enabled between true and false re-enables the product (via the Enable
+// API) rather than leaving it disabled after a false -> true transition.
+func ConfigProductEnablementNGWAFEnabledToggle(serviceName, domainName, backendName, workspaceID string, enabled bool) string {
+	return ConfigProductEnablementCDNEmpty(serviceName, domainName, backendName) + "\n" +
+		productEnablementBlock("ngwaf", "fastly_service_cdn_auto.test.id", map[string]string{
+			"NGWAF_WORKSPACE_ID": workspaceID,
+			"ENABLED":            strconv.FormatBool(enabled),
+		})
+}
+
 // ConfigProductEnablementSimpleEnabledToggle returns a CDN auto service paired
 // with a simple product (origin_inspector) that explicitly sets the enabled
 // attribute to the given value, used to verify that toggling enabled between

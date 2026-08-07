@@ -203,6 +203,71 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceVCLRateLimiter_orderingRegression verifies that a
+// rate_limiter can reference a response_object (via response_object_name) and
+// a dictionary (via uri_dictionary_name) created in the same apply.
+func TestAccFastlyServiceVCLRateLimiter_orderingRegression(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate_limiter_tf_%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLRateLimiterOrderingRegression(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.example", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.example", "rate_limiter.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.example", "rate_limiter.0.response_object_name", rateLimiterName+"_robj"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.example", "rate_limiter.0.uri_dictionary_name", rateLimiterName+"_dict"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceVCLRateLimiterOrderingRegression(serviceName, domainName, rateLimiterName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "example" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  dictionary {
+    name = "%s_dict"
+  }
+
+  response_object {
+    name    = "%s_robj"
+    status  = 429
+    content = "rate limited"
+  }
+
+  rate_limiter {
+    action                = "response_object"
+    client_key             = "req.http.Fastly-Client-IP"
+    http_methods           = "GET"
+    name                   = "%s"
+    penalty_box_duration   = 30
+    response_object_name   = "%s_robj"
+    uri_dictionary_name    = "%s_dict"
+    rps_limit              = 100
+    window_size            = 60
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, rateLimiterName, rateLimiterName, rateLimiterName, rateLimiterName, rateLimiterName)
+}
+
 func testAccServiceVCLRateLimiter(serviceName, domainName, rateLimiterName string) string {
 	return fmt.Sprintf(`
 variable "mydict" {

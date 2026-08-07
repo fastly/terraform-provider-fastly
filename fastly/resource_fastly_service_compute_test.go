@@ -100,8 +100,9 @@ resource "fastly_service_compute" "foo" {
 
   {{ range .Backends }}
   backend {
-    address = "{{ . }}"
-    name    = "tf-test backend {{ . }}"
+    address     = "{{ . }}"
+    name        = "tf-test backend {{ . }}"
+    healthcheck = "{{ $.HealthcheckName }}"
   }
   {{ end }}
 
@@ -238,8 +239,9 @@ resource "fastly_service_compute" "foo" {
     comment = "tf-testing-domain"
   }
   backend {
-    address = "aws.amazon.com"
-    name    = "amazon docs"
+    address     = "test.mytest.com"
+    name        = "my testing site"
+    healthcheck = "healthCheckTest"
   }
   healthcheck {
     name = "healthCheckTest"

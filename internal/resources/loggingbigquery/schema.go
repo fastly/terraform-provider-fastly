@@ -215,6 +215,9 @@ func sharedAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Default:     authenticationEnvDefault{},
 			Description: "Google Cloud Platform authentication credentials for BigQuery access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME`, `FASTLY_BQ_EMAIL`, and `FASTLY_BQ_SECRET_KEY` environment variables.",
+			Validators: []validator.Object{
+				authenticationEitherOr{},
+			},
 			Attributes: map[string]schema.Attribute{
 				"account_name": schema.StringAttribute{
 					Optional:    true,

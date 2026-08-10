@@ -39,6 +39,61 @@ func (notTrimmed) ValidateString(_ context.Context, req validator.StringRequest,
 	}
 }
 
+// authenticationEitherOr enforces that the authentication block resolves to
+// either account_name, or both email and secret_key. The Fastly API accepts
+// account_name as an alternative to the email/secret_key pair, but rejects a
+// request providing neither or only one of email/secret_key, so this is
+// caught at plan/validate time instead. Each field's effective value falls
+// back to its environment variable default (mirroring the schema Default
+// handlers) so a config that legitimately relies on the environment for one
+// or more fields is not flagged.
+type authenticationEitherOr struct{}
+
+func (authenticationEitherOr) Description(_ context.Context) string {
+	return "authentication must set account_name, or both email and secret_key"
+}
+
+func (v authenticationEitherOr) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (authenticationEitherOr) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if effectiveAuthValue(ctx, req.ConfigValue, "account_name", "FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME") != "" {
+		return
+	}
+
+	email := effectiveAuthValue(ctx, req.ConfigValue, "email", "FASTLY_BQ_EMAIL")
+	secretKey := effectiveAuthValue(ctx, req.ConfigValue, "secret_key", "FASTLY_BQ_SECRET_KEY")
+	if email != "" && secretKey != "" {
+		return
+	}
+
+	resp.Diagnostics.AddAttributeError(
+		req.Path,
+		"Missing BigQuery authentication credentials",
+		"`authentication` must set `account_name`, or both `email` and `secret_key` — directly or via the "+
+			"FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME, FASTLY_BQ_EMAIL, and FASTLY_BQ_SECRET_KEY environment variables.",
+	)
+}
+
+// effectiveAuthValue returns the configured value of attrName within the
+// authentication object, or its environment variable default when the
+// config leaves that field unset.
+func effectiveAuthValue(ctx context.Context, obj types.Object, attrName, envVar string) string {
+	if !obj.IsNull() && !obj.IsUnknown() {
+		if v, ok := obj.Attributes()[attrName]; ok {
+			if sv, ok := v.(types.String); ok && !sv.IsNull() && !sv.IsUnknown() && sv.ValueString() != "" {
+				return sv.ValueString()
+			}
+		}
+	}
+	return envStringDefault(ctx, envVar).ValueString()
+}
+
 // ValidateNoVCLOnlyAttributesForCompute returns an error diagnostic if format,
 // format_version, placement, or response_condition are explicitly configured on
 // a Compute service. The standalone fastly_service_logging_bigquery resource

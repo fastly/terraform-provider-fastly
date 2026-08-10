@@ -127,6 +127,53 @@ func TestAccFastlyServiceLoggingBigQuery_update(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingBigQuery_accountNameToEmailSecretKey verifies that
+// switching an existing endpoint's authentication from account_name to
+// email/secret_key actually clears account_name on the API side. The API
+// rejects an explicit empty account_name on update, so BuildUpdateInput omits
+// it — which by itself would leave the old account_name in place and diverge
+// from the plan (and previously caused "Provider produced inconsistent result
+// after apply" on the sensitive authentication object). UpdateOrRecreate
+// handles this by deleting and recreating the endpoint instead.
+func TestAccFastlyServiceLoggingBigQuery_accountNameToEmailSecretKey(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("bigquery-logger-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingBigQueryAccountName(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.account_name", "test-service-account"),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.email", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.secret_key", ""),
+				),
+			},
+			{
+				Config: ConfigLoggingBigQueryBasic(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.account_name", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.email", "test-bigquery@fastly-test-project.iam.gserviceaccount.com"),
+					resource.TestCheckResourceAttrSet("fastly_service_logging_bigquery.test", "authentication.secret_key"),
+				),
+			},
+			{
+				// The recreated endpoint's own state must leave no residual diff
+				// against the same config on a subsequent refresh.
+				Config:   ConfigLoggingBigQueryBasic(serviceName, domainName, loggerName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceLoggingBigQuery_importBasic(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

@@ -398,8 +398,11 @@ func (o ops) Equal(desired NestedModel, remote *fastly.BigQuery) bool {
 }
 
 func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.BigQuery, error) {
-	input := BuildUpdateInput(serviceID, version, desired)
-	return client.UpdateBigQuery(ctx, input)
+	recreate, err := needsRecreateForAccountNameClear(ctx, client, serviceID, version, desired.Name, desired.AccountName())
+	if err != nil {
+		return nil, err
+	}
+	return UpdateOrRecreate(ctx, client, recreate, BuildUpdateInput(serviceID, version, desired), BuildCreateInput(serviceID, version, desired))
 }
 
 func (o ops) ToModel(api *fastly.BigQuery) NestedModel {
@@ -461,8 +464,11 @@ func (o computeOps) Equal(desired ComputeNestedModel, remote *fastly.BigQuery) b
 }
 
 func (o computeOps) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired ComputeNestedModel) (*fastly.BigQuery, error) {
-	input := BuildComputeUpdateInput(serviceID, version, desired)
-	return client.UpdateBigQuery(ctx, input)
+	recreate, err := needsRecreateForAccountNameClear(ctx, client, serviceID, version, desired.Name, desired.AccountName())
+	if err != nil {
+		return nil, err
+	}
+	return UpdateOrRecreate(ctx, client, recreate, BuildComputeUpdateInput(serviceID, version, desired), BuildComputeCreateInput(serviceID, version, desired))
 }
 
 func (o computeOps) ToModel(api *fastly.BigQuery) ComputeNestedModel {

@@ -2394,6 +2394,26 @@ func ConfigLoggingBigQueryNoAuth(serviceName, domainName, loggerName string) str
 	)
 }
 
+// ConfigLoggingBigQueryAccountName returns a config authenticating with
+// authentication.account_name rather than email/secret_key. Paired with
+// ConfigLoggingBigQueryBasic in
+// TestAccFastlyServiceLoggingBigQuery_accountNameToEmailSecretKey to exercise
+// clearing account_name on update.
+func ConfigLoggingBigQueryAccountName(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_BIGQUERY_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_bigquery_account_name.tf",
+	)
+}
+
 func ConfigCDNAutoWithLoggingBigQuery(serviceName, domainName, loggerName string) string {
 	return BuildConfig(
 		ServiceCDNAuto,
@@ -2404,6 +2424,24 @@ func ConfigCDNAutoWithLoggingBigQuery(serviceName, domainName, loggerName string
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/logging_bigquery_nested.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingBigQueryAccountName is ConfigCDNAutoWithLoggingBigQuery
+// authenticating with authentication.account_name rather than
+// email/secret_key. Paired with ConfigCDNAutoWithLoggingBigQuery in
+// TestAccFastlyServiceCDNAuto_loggingBigQueryAccountNameToEmailSecretKey to
+// exercise clearing account_name through the nested-block reconcile path.
+func ConfigCDNAutoWithLoggingBigQueryAccountName(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_BIGQUERY_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_bigquery_nested_account_name.tf",
 	)
 }
 

@@ -187,17 +187,25 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	opts := BuildUpdateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel)
+	createInput := BuildCreateInput(plan.Service.ValueString(), int(plan.Version.ValueInt64()), plan.NestedModel)
 	if serviceType == service.TypeCompute {
 		ClearVCLOnlyUpdateFields(opts)
+		ClearVCLOnlyCreateFields(createInput)
 	}
+
+	// Clearing account_name (switching from account_name auth to email/secret_key)
+	// can't be done via UpdateBigQuery — see UpdateOrRecreate — so it goes through
+	// a delete+create instead.
+	recreate := service.StringValue(plan.AccountName()) == "" && service.StringValue(state.AccountName()) != ""
 
 	tflog.Debug(ctx, "Updating Fastly BigQuery logging endpoint", map[string]any{
 		"service_id": opts.ServiceID,
 		"version":    opts.ServiceVersion,
 		"name":       opts.Name,
+		"recreate":   recreate,
 	})
 
-	bq, err := r.providerData.Client.UpdateBigQuery(ctx, opts)
+	bq, err := UpdateOrRecreate(ctx, r.providerData.Client, recreate, opts, createInput)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating BigQuery logging endpoint", err.Error())
 		return

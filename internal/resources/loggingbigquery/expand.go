@@ -1,7 +1,10 @@
 package loggingbigquery
 
 import (
+	"context"
+
 	fastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
@@ -131,4 +134,49 @@ func ClearVCLOnlyUpdateFields(input *fastly.UpdateBigQueryInput) {
 	input.FormatVersion = nil
 	input.Placement = nil
 	input.ResponseCondition = nil
+}
+
+// UpdateOrRecreate applies opts via UpdateBigQuery, unless recreate is true,
+// in which case it deletes and recreates the endpoint via createInput
+// instead. recreate must be true exactly when the desired account_name is
+// empty but the endpoint currently being changed has a non-empty one: the API
+// rejects an explicit empty account_name on update (see BuildUpdateInput), so
+// omitting it there just leaves the old account_name in place, silently
+// diverging from a plan that shows it cleared in favor of email/secret_key.
+func UpdateOrRecreate(ctx context.Context, client *fastly.Client, recreate bool, opts *fastly.UpdateBigQueryInput, createInput *fastly.CreateBigQueryInput) (*fastly.BigQuery, error) {
+	if !recreate {
+		return client.UpdateBigQuery(ctx, opts)
+	}
+
+	if err := client.DeleteBigQuery(ctx, &fastly.DeleteBigQueryInput{
+		ServiceID:      opts.ServiceID,
+		ServiceVersion: opts.ServiceVersion,
+		Name:           opts.Name,
+	}); err != nil {
+		return nil, err
+	}
+	return client.CreateBigQuery(ctx, createInput)
+}
+
+// needsRecreateForAccountNameClear reports whether clearing account_name to
+// desiredAccountName requires UpdateOrRecreate to delete+recreate this
+// endpoint rather than update it in place. The reconcile path (unlike the
+// standalone resource's Update, which already has the prior state on hand)
+// only has the desired model, so the endpoint's current account_name is
+// looked up directly.
+func needsRecreateForAccountNameClear(ctx context.Context, client *fastly.Client, serviceID string, version int, name, desiredAccountName types.String) (bool, error) {
+	if service.StringValue(desiredAccountName) != "" {
+		return false, nil
+	}
+
+	remote, err := client.GetBigQuery(ctx, &fastly.GetBigQueryInput{
+		ServiceID:      serviceID,
+		ServiceVersion: version,
+		Name:           service.StringValue(name),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return fastly.ToValue(remote.AccountName) != "", nil
 }

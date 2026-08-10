@@ -104,6 +104,54 @@ func TestAccFastlyServiceCDNAuto_withLoggingBigQueryUpdate(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceCDNAuto_loggingBigQueryAccountNameToEmailSecretKey is the
+// nested-block counterpart to
+// TestAccFastlyServiceLoggingBigQuery_accountNameToEmailSecretKey: it exercises
+// the same account_name-clearing delete+recreate through
+// loggingbigquery.Reconcile's ops.Update, rather than through the standalone
+// resource's own Update method.
+func TestAccFastlyServiceCDNAuto_loggingBigQueryAccountNameToEmailSecretKey(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("bigquery-logger-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithLoggingBigQueryAccountName(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_bigquery.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_bigquery.0.authentication.account_name", "test-service-account"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_bigquery.0.authentication.email", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithLoggingBigQuery(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					CheckLoggingBigQueryExistsInFastly("fastly_service_cdn_auto.test", loggerName, 2),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_bigquery.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_bigquery.0.authentication.account_name", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "logging_bigquery.0.authentication.email", "test-bigquery@fastly-test-project.iam.gserviceaccount.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithLoggingBigQuery(serviceName, domainName, loggerName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 // TestAccFastlyServiceCDNAuto_withLoggingBigQueryRemoved verifies that
 // deleting the nested block removes the endpoint from the Fastly API in a
 // newly activated version, rather than leaving it orphaned.

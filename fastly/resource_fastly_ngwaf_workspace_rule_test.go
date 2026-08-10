@@ -219,6 +219,45 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 	require.Equal(t, "X-API-Key", multivalConds[1].(map[string]any)["value"])
 }
 
+// TestExpandNGWAFRuleUpdateActions_Deception guards against a regression where
+// deception_type (and allow_interactive) were dropped from update requests,
+// causing the API to reject a second apply with "invalid deception type: ".
+func TestExpandNGWAFRuleUpdateActions_Deception(t *testing.T) {
+	raw := []any{
+		map[string]any{
+			"type":              "deception",
+			"deception_type":    "invalid_login_response",
+			"allow_interactive": false,
+			"signal":            "",
+			"redirect_url":      "",
+			"response_code":     0,
+		},
+	}
+
+	actions := expandNGWAFRuleUpdateActions(raw, "workspace")
+	require.Len(t, actions, 1)
+	require.NotNil(t, actions[0].DeceptionType)
+	require.Equal(t, "invalid_login_response", *actions[0].DeceptionType)
+}
+
+func TestExpandNGWAFRuleUpdateActions_AllowInteractive(t *testing.T) {
+	raw := []any{
+		map[string]any{
+			"type":              "browser_challenge",
+			"allow_interactive": true,
+			"deception_type":    "",
+			"signal":            "",
+			"redirect_url":      "",
+			"response_code":     0,
+		},
+	}
+
+	actions := expandNGWAFRuleUpdateActions(raw, "workspace")
+	require.Len(t, actions, 1)
+	require.NotNil(t, actions[0].AllowInteractive)
+	require.True(t, *actions[0].AllowInteractive)
+}
+
 func TestAccFastlyNGWAFWorkspaceRule_basic(t *testing.T) {
 	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
 	ruleDescription := fmt.Sprintf("Terraform Rule %s", acctest.RandString(5))

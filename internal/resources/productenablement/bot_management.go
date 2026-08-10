@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -23,6 +24,7 @@ var _ resource.ResourceWithImportState = &BotManagementResource{}
 type BotManagementModel struct {
 	ID           types.String `tfsdk:"id"`
 	ServiceID    types.String `tfsdk:"service_id"`
+	Enabled      types.Bool   `tfsdk:"enabled"`
 	ContentGuard types.String `tfsdk:"contentguard"`
 }
 
@@ -44,6 +46,12 @@ func (r *BotManagementResource) Schema(_ context.Context, _ resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"id":         idAttribute(),
 			"service_id": serviceIDAttribute("Bot Management"),
+			"enabled": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+				Description: "Whether Bot Management is enabled on the service. Defaults to `true`.",
+			},
 			"contentguard": schema.StringAttribute{
 				Required:    true,
 				Description: "ContentGuard status. Can be either `off` or `on`.",
@@ -74,18 +82,31 @@ func (r *BotManagementResource) Create(ctx context.Context, req resource.CreateR
 	serviceID := plan.ServiceID.ValueString()
 	tflog.Debug(ctx, "Creating Fastly Product Enablement (bot_management)", map[string]any{"service_id": serviceID})
 
-	if _, err := botmanagement.Enable(ctx, r.client, serviceID); err != nil {
-		resp.Diagnostics.AddError("Error enabling bot_management", err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
 	}
-	if _, err := botmanagement.UpdateConfiguration(ctx, r.client, serviceID, botmanagement.ConfigureInput{
-		ContentGuard: plan.ContentGuard.ValueString(),
-	}); err != nil {
-		resp.Diagnostics.AddError("Error configuring bot_management", err.Error())
-		return
+
+	if enabled {
+		if _, err := botmanagement.Enable(ctx, r.client, serviceID); err != nil {
+			resp.Diagnostics.AddError("Error enabling bot_management", err.Error())
+			return
+		}
+		if _, err := botmanagement.UpdateConfiguration(ctx, r.client, serviceID, botmanagement.ConfigureInput{
+			ContentGuard: plan.ContentGuard.ValueString(),
+		}); err != nil {
+			resp.Diagnostics.AddError("Error configuring bot_management", err.Error())
+			return
+		}
+	} else {
+		if err := botmanagement.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling bot_management", err.Error())
+			return
+		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -100,20 +121,22 @@ func (r *BotManagementResource) Read(ctx context.Context, req resource.ReadReque
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (bot_management)", map[string]any{"service_id": serviceID})
 
 	if _, err := botmanagement.Get(ctx, r.client, serviceID); err != nil {
-		if errors.IsNotFound(err) {
-			resp.State.RemoveResource(ctx)
+		if errors.IsNotFound(err) || isProductDisabledError(err) {
+			tflog.Debug(ctx, "bot_management is disabled on service", map[string]any{"service_id": serviceID})
+			state.Enabled = types.BoolValue(false)
+		} else {
+			resp.Diagnostics.AddError("Error reading bot_management", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading bot_management", err.Error())
-		return
+	} else {
+		state.Enabled = types.BoolValue(true)
+		cfg, err := botmanagement.GetConfiguration(ctx, r.client, serviceID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading bot_management configuration", err.Error())
+			return
+		}
+		state.ContentGuard = types.StringPointerValue(cfg.Configuration.ContentGuard)
 	}
-
-	cfg, err := botmanagement.GetConfiguration(ctx, r.client, serviceID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading bot_management configuration", err.Error())
-		return
-	}
-	state.ContentGuard = types.StringPointerValue(cfg.Configuration.ContentGuard)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -128,14 +151,31 @@ func (r *BotManagementResource) Update(ctx context.Context, req resource.UpdateR
 	serviceID := plan.ServiceID.ValueString()
 	tflog.Debug(ctx, "Updating Fastly Product Enablement (bot_management)", map[string]any{"service_id": serviceID})
 
-	if _, err := botmanagement.UpdateConfiguration(ctx, r.client, serviceID, botmanagement.ConfigureInput{
-		ContentGuard: plan.ContentGuard.ValueString(),
-	}); err != nil {
-		resp.Diagnostics.AddError("Error configuring bot_management", err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if _, err := botmanagement.Enable(ctx, r.client, serviceID); err != nil {
+			resp.Diagnostics.AddError("Error enabling bot_management", err.Error())
+			return
+		}
+		if _, err := botmanagement.UpdateConfiguration(ctx, r.client, serviceID, botmanagement.ConfigureInput{
+			ContentGuard: plan.ContentGuard.ValueString(),
+		}); err != nil {
+			resp.Diagnostics.AddError("Error configuring bot_management", err.Error())
+			return
+		}
+	} else {
+		if err := botmanagement.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling bot_management", err.Error())
+			return
+		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -149,8 +189,15 @@ func (r *BotManagementResource) Delete(ctx context.Context, req resource.DeleteR
 	serviceID := state.ServiceID.ValueString()
 	tflog.Debug(ctx, "Deleting Fastly Product Enablement (bot_management)", map[string]any{"service_id": serviceID})
 
-	if err := botmanagement.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
-		resp.Diagnostics.AddError("Error disabling bot_management", err.Error())
+	enabled := true
+	if !state.Enabled.IsNull() {
+		enabled = state.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if err := botmanagement.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling bot_management", err.Error())
+		}
 	}
 }
 

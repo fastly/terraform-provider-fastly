@@ -10,6 +10,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
@@ -68,6 +69,7 @@ type Model struct {
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
+	DynamicSnippet                []dynamicsnippet.NestedModel                `tfsdk:"dynamic_snippet"`
 	VCL                           []vcl.NestedModel                           `tfsdk:"vcl"`
 }
 
@@ -128,6 +130,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 			"snippet":                          snippet.NestedBlockSchema(),
+			"dynamic_snippet":                  dynamicsnippet.NestedBlockSchema(),
 			"vcl":                              vcl.NestedBlockSchema(),
 		},
 	}
@@ -158,6 +161,22 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 		)
 	}
 
+	if err := dynamicsnippet.ValidateConfig(config.DynamicSnippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("dynamic_snippet"),
+			"Invalid dynamic VCL snippet configuration",
+			err.Error(),
+		)
+	}
+
+	if err := dynamicsnippet.ValidateNoNameConflicts(config.DynamicSnippet, config.Snippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("dynamic_snippet"),
+			"Invalid VCL snippet configuration",
+			err.Error(),
+		)
+	}
+
 	if err := vcl.ValidateConfig(config.VCL); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("vcl"),
@@ -177,6 +196,24 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if err := snippet.Validate(plan.Snippet); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("snippet"),
+			"Invalid VCL snippet configuration",
+			err.Error(),
+		)
+		return
+	}
+
+	if err := dynamicsnippet.Validate(plan.DynamicSnippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("dynamic_snippet"),
+			"Invalid dynamic VCL snippet configuration",
+			err.Error(),
+		)
+		return
+	}
+
+	if err := dynamicsnippet.ValidateNoNameConflicts(plan.DynamicSnippet, plan.Snippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("dynamic_snippet"),
 			"Invalid VCL snippet configuration",
 			err.Error(),
 		)
@@ -333,6 +370,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Snippet = snippet.MatchOrderPreservePlanContent(snippets, plan.Snippet)
 
+	if err := dynamicsnippet.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.DynamicSnippet); err != nil {
+		resp.Diagnostics.AddError("Error reconciling dynamic VCL snippets", err.Error())
+		return
+	}
+
+	dynamicSnippets, err := dynamicsnippet.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading dynamic VCL snippets", err.Error())
+		return
+	}
+	plan.DynamicSnippet = dynamicsnippet.MatchOrderPreservePlanFields(dynamicSnippets, plan.DynamicSnippet)
+
 	if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.VCL); err != nil {
 		resp.Diagnostics.AddError("Error reconciling custom VCL files", err.Error())
 		return
@@ -469,6 +518,13 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 	state.Snippet = snippet.MatchOrder(snippets, state.Snippet)
 
+	dynamicSnippets, err := dynamicsnippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading dynamic VCL snippets", err.Error())
+		return
+	}
+	state.DynamicSnippet = dynamicsnippet.MatchOrder(dynamicSnippets, state.DynamicSnippet)
+
 	vcls, err := vcl.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading custom VCL files", err.Error())
@@ -515,6 +571,24 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	if err := dynamicsnippet.Validate(plan.DynamicSnippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("dynamic_snippet"),
+			"Invalid dynamic VCL snippet configuration",
+			err.Error(),
+		)
+		return
+	}
+
+	if err := dynamicsnippet.ValidateNoNameConflicts(plan.DynamicSnippet, plan.Snippet); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("dynamic_snippet"),
+			"Invalid VCL snippet configuration",
+			err.Error(),
+		)
+		return
+	}
+
 	if err := vcl.Validate(plan.VCL); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("vcl"),
@@ -549,6 +623,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
+		!dynamicsnippet.Equal(plan.DynamicSnippet, state.DynamicSnippet) ||
 		!vcl.Equal(plan.VCL, state.VCL)
 	needsVersionChange := nestedChanged
 
@@ -706,6 +781,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(snippets, plan.Snippet)
 
+		if err := dynamicsnippet.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.DynamicSnippet); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dynamic VCL snippets", err.Error())
+			return
+		}
+
+		dynamicSnippets, err := dynamicsnippet.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading dynamic VCL snippets", err.Error())
+			return
+		}
+		plan.DynamicSnippet = dynamicsnippet.MatchOrderPreservePlanFields(dynamicSnippets, plan.DynamicSnippet)
+
 		if err := vcl.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.VCL); err != nil {
 			resp.Diagnostics.AddError("Error reconciling custom VCL files", err.Error())
 			return
@@ -748,6 +835,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)
+		plan.DynamicSnippet = dynamicsnippet.MatchOrderPreservePlanFields(state.DynamicSnippet, plan.DynamicSnippet)
 		plan.VCL = vcl.MatchOrderPreservePlanContent(state.VCL, plan.VCL)
 	}
 

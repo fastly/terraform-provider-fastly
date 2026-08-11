@@ -1,0 +1,115 @@
+---
+page_title: "fastly_service_dynamic_snippet_content Resource - fastly"
+subcategory: ""
+description: |-
+  Fastly dynamic VCL snippet content resource. Updates versionless dynamic snippet code directly by service ID and snippet ID.
+---
+
+# fastly_service_dynamic_snippet_content (Resource)
+
+Fastly dynamic VCL snippet content resource. Updates versionless dynamic snippet
+code directly by service ID and snippet ID.
+
+Dynamic VCL snippets have two lifecycle parts:
+
+- metadata such as `name`, `type`, and `priority`, which is versioned service
+  configuration
+- content, which is versionless and is managed by this resource
+
+In the automatic compatibility family, dynamic snippet metadata is managed by
+the `dynamic_snippet` block on `fastly_service_cdn_auto`.
+
+In the explicit/default first-class resource family, dynamic snippet metadata is
+managed by `fastly_service_dynamic_vcl_snippet`.
+
+Updating this resource's `content` does not clone, validate, stage, or activate a
+service version. Changes are applied immediately to the dynamic snippet.
+
+## Example Usage with automatic compatibility metadata
+
+```terraform
+resource "fastly_service_cdn_auto" "example" {
+  name = "example"
+
+  domain {
+    name = "www.example.com"
+  }
+
+  backend {
+    name    = "origin"
+    address = "origin.example.com"
+    port    = 443
+    use_ssl = true
+  }
+
+  dynamic_snippet {
+    name     = "block_scrapers"
+    type     = "recv"
+    priority = 100
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_service_dynamic_snippet_content" "block_scrapers" {
+  service_id = fastly_service_cdn_auto.example.id
+  snippet_id = {
+    for s in fastly_service_cdn_auto.example.dynamic_snippet : s.name => s.snippet_id
+  }["block_scrapers"]
+
+  content = file("${path.module}/block_scrapers.vcl")
+}
+```
+
+## Example Usage with explicit/default metadata
+
+In the explicit/default workflow, dynamic snippet metadata is managed by
+`fastly_service_dynamic_vcl_snippet`. The content resource depends on the
+computed `snippet_id`, so Terraform creates the metadata container first and then
+applies versionless content.
+
+```terraform
+resource "fastly_service_cdn" "example" {
+  name = "example"
+
+  force_destroy = true
+}
+
+resource "fastly_service_dynamic_vcl_snippet" "block_scrapers" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+
+  name     = "block_scrapers"
+  type     = "recv"
+  priority = 100
+}
+
+resource "fastly_service_dynamic_snippet_content" "block_scrapers" {
+  service_id = fastly_service_cdn.example.id
+  snippet_id = fastly_service_dynamic_vcl_snippet.block_scrapers.snippet_id
+
+  content = file("${path.module}/block_scrapers.vcl")
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import requires the service ID and dynamic snippet ID:
+
+```shell
+terraform import fastly_service_dynamic_snippet_content.block_scrapers SERVICE_ID/SNIPPET_ID
+```
+
+Example:
+
+```shell
+terraform import fastly_service_dynamic_snippet_content.block_scrapers SU1Z0isxPaozGVKXdv0eY/abc123
+```
+
+## Version lifecycle
+
+This resource does not clone, activate, or stage service versions. Dynamic
+snippet content is versionless and updates are applied directly to the dynamic
+snippet.

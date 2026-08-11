@@ -29,6 +29,8 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnaclentries"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippetcontent"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicvclsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/kvstore"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
@@ -120,6 +122,8 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		kvstore.NewResource,
 		vcl.NewResource,
 		snippet.NewResource,
+		dynamicvclsnippet.NewResource,
+		dynamicsnippetcontent.NewResource,
 		productenablement.NewFanoutResource,
 		productenablement.NewBrotliCompressionResource,
 		productenablement.NewImageOptimizerResource,

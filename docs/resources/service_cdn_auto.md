@@ -25,6 +25,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `comment` (String) Optional service comment.
 - `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
+- `dynamic_snippet` (Block List) Dynamic VCL snippet metadata attached to this service version. Dynamic snippet content is managed separately by `fastly_service_dynamic_snippet_content`. (see [below for nested schema](#nestedblock--dynamic_snippet))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
 - `image_optimizer_default_settings` (Block List) Image Optimizer default settings for this service. At most one block is supported. The Image Optimizer product must already be enabled on the service (e.g. via `fastly_service_product_image_optimizer`) before these settings can be persisted; enabling the product and configuring this block cannot be done in the same initial `apply`, since this block is reconciled as part of this resource's own create step, before a separate product-enablement resource (which depends on this resource's `id`) can run. Enable the product in a prior `apply` first. (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
@@ -129,6 +130,23 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--dynamic_snippet"></a>
+### Nested Schema for `dynamic_snippet`
+
+Required:
+
+- `name` (String) A name that is unique across regular and dynamic VCL snippet configuration blocks. Changing this attribute will delete and recreate the snippet.
+- `type` (String) The location in generated VCL where the dynamic snippet should be placed. Must be one of `init`, `recv`, `hash`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log`, or `none`.
+
+Optional:
+
+- `priority` (Number) Priority determines execution order. Lower numbers execute first. Default `100`.
+
+Read-Only:
+
+- `snippet_id` (String) The Fastly-generated dynamic snippet ID. Use this value with `fastly_service_dynamic_snippet_content` to manage versionless snippet code.
 
 
 <a id="nestedblock--gzip"></a>

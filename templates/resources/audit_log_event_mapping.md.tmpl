@@ -1,0 +1,24 @@
+---
+layout: "fastly"
+page_title: "Fastly: audit_log_event_mapping"
+sidebar_current: "docs-fastly-resource-audit-log-event-mapping"
+description: |-
+  Provides a Fastly Audit Log Event Mapping.
+---
+
+# fastly_audit_log_event_mapping
+
+Provides a Fastly Audit Log Event Mapping, which routes audit log events to
+one or more notification integrations based on scope and event type.
+
+## Example Usage
+
+{{ tffile "examples/resources/audit_log_event_mapping_basic_usage.tf" }}
+
+## Import
+
+Fastly Audit Log Event Mappings can be imported using their mapping ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/audit_log_event_mapping_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

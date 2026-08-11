@@ -8,7 +8,7 @@
 
 ### Dependencies
 
-## 9.5.1 (August 07, 2026)
+## 9.6.0 (August 11, 2026)
 
 ### ENHANCEMENTS:
 

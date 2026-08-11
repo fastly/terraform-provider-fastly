@@ -2,7 +2,9 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,6 +23,20 @@ var auditLogEventMappingScopeTypes = []string{
 	eventmappings.ScopeTypeVCL,
 	eventmappings.ScopeTypeWasm,
 	eventmappings.ScopeTypeNGWAF,
+}
+
+// auditLogEventMappingScopeTypesList renders auditLogEventMappingScopeTypes as a
+// backtick-quoted, comma-separated list (e.g. "`account`, `vcl`, `wasm`, or `ngwaf`")
+// for use in schema descriptions.
+func auditLogEventMappingScopeTypesList() string {
+	quoted := make([]string, len(auditLogEventMappingScopeTypes))
+	for i, t := range auditLogEventMappingScopeTypes {
+		quoted[i] = "`" + t + "`"
+	}
+	if len(quoted) == 1 {
+		return quoted[0]
+	}
+	return strings.Join(quoted[:len(quoted)-1], ", ") + ", or " + quoted[len(quoted)-1]
 }
 
 func resourceFastlyAuditLogEventMapping() *schema.Resource {
@@ -77,7 +93,7 @@ func resourceFastlyAuditLogEventMapping() *schema.Resource {
 			"scope_type": {
 				Type:             schema.TypeString,
 				Required:         true,
-				Description:      "The category of Fastly resource the mapping applies to. One of `account`, `vcl`, `wasm`, or `ngwaf`.",
+				Description:      fmt.Sprintf("The category of Fastly resource the mapping applies to. One of %s.", auditLogEventMappingScopeTypesList()),
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(auditLogEventMappingScopeTypes, false)),
 			},
 			"updated_at": {

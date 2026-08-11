@@ -15,7 +15,7 @@ Mapping for use with other resources.
 of filters, they may become mutually exclusive. The exception to this is `id` which must not be specified in combination
 with any of the others.
 
-~> **Note:** If more or less than a single match is returned by the search, Terraform will fail. Ensure that your search is specific enough to return a single mapping.
+~> **Note:** If more or less than a single match is returned by the search, an error will be reported. Ensure that your search is specific enough to return a single mapping.
 
 ## Example Usage
 

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -81,7 +82,7 @@ func dataSourceFastlyAuditLogEventMapping() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				Description:   "Filters results to the given scope type: `account`, `vcl`, `wasm`, or `ngwaf`.",
+				Description:   fmt.Sprintf("Filters results to the given scope type: %s.", auditLogEventMappingScopeTypesList()),
 				ConflictsWith: []string{"id"},
 			},
 			"updated_at": {

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -23,6 +24,7 @@ var _ resource.ResourceWithImportState = &DDoSProtectionResource{}
 type DDoSProtectionModel struct {
 	ID        types.String `tfsdk:"id"`
 	ServiceID types.String `tfsdk:"service_id"`
+	Enabled   types.Bool   `tfsdk:"enabled"`
 	Mode      types.String `tfsdk:"mode"`
 }
 
@@ -44,6 +46,12 @@ func (r *DDoSProtectionResource) Schema(_ context.Context, _ resource.SchemaRequ
 		Attributes: map[string]schema.Attribute{
 			"id":         idAttribute(),
 			"service_id": serviceIDAttribute("DDoS Protection"),
+			"enabled": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+				Description: "Whether DDoS Protection is enabled on the service. Defaults to `true`.",
+			},
 			"mode": schema.StringAttribute{
 				Required:    true,
 				Description: "Operation mode. Can be `off`, `log`, or `block`.",
@@ -74,14 +82,27 @@ func (r *DDoSProtectionResource) Create(ctx context.Context, req resource.Create
 	serviceID := plan.ServiceID.ValueString()
 	tflog.Debug(ctx, "Creating Fastly Product Enablement (ddos_protection)", map[string]any{"service_id": serviceID})
 
-	if _, err := ddosprotection.Enable(ctx, r.client, serviceID, ddosprotection.EnableInput{
-		Mode: plan.Mode.ValueString(),
-	}); err != nil {
-		resp.Diagnostics.AddError("Error enabling ddos_protection", err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if _, err := ddosprotection.Enable(ctx, r.client, serviceID, ddosprotection.EnableInput{
+			Mode: plan.Mode.ValueString(),
+		}); err != nil {
+			resp.Diagnostics.AddError("Error enabling ddos_protection", err.Error())
+			return
+		}
+	} else {
+		if err := ddosprotection.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling ddos_protection", err.Error())
+			return
+		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -96,20 +117,22 @@ func (r *DDoSProtectionResource) Read(ctx context.Context, req resource.ReadRequ
 	tflog.Debug(ctx, "Reading Fastly Product Enablement (ddos_protection)", map[string]any{"service_id": serviceID})
 
 	if _, err := ddosprotection.Get(ctx, r.client, serviceID); err != nil {
-		if errors.IsNotFound(err) {
-			resp.State.RemoveResource(ctx)
+		if errors.IsNotFound(err) || isProductDisabledError(err) {
+			tflog.Debug(ctx, "ddos_protection is disabled on service", map[string]any{"service_id": serviceID})
+			state.Enabled = types.BoolValue(false)
+		} else {
+			resp.Diagnostics.AddError("Error reading ddos_protection", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading ddos_protection", err.Error())
-		return
+	} else {
+		state.Enabled = types.BoolValue(true)
+		cfg, err := ddosprotection.GetConfiguration(ctx, r.client, serviceID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading ddos_protection configuration", err.Error())
+			return
+		}
+		state.Mode = types.StringPointerValue(cfg.Configuration.Mode)
 	}
-
-	cfg, err := ddosprotection.GetConfiguration(ctx, r.client, serviceID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading ddos_protection configuration", err.Error())
-		return
-	}
-	state.Mode = types.StringPointerValue(cfg.Configuration.Mode)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -124,14 +147,27 @@ func (r *DDoSProtectionResource) Update(ctx context.Context, req resource.Update
 	serviceID := plan.ServiceID.ValueString()
 	tflog.Debug(ctx, "Updating Fastly Product Enablement (ddos_protection)", map[string]any{"service_id": serviceID})
 
-	if _, err := ddosprotection.UpdateConfiguration(ctx, r.client, serviceID, ddosprotection.ConfigureInput{
-		Mode: plan.Mode.ValueString(),
-	}); err != nil {
-		resp.Diagnostics.AddError("Error configuring ddos_protection", err.Error())
-		return
+	enabled := true
+	if !plan.Enabled.IsNull() {
+		enabled = plan.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if _, err := ddosprotection.Enable(ctx, r.client, serviceID, ddosprotection.EnableInput{
+			Mode: plan.Mode.ValueString(),
+		}); err != nil {
+			resp.Diagnostics.AddError("Error enabling ddos_protection", err.Error())
+			return
+		}
+	} else {
+		if err := ddosprotection.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling ddos_protection", err.Error())
+			return
+		}
 	}
 
 	plan.ID = plan.ServiceID
+	plan.Enabled = types.BoolValue(enabled)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -145,8 +181,15 @@ func (r *DDoSProtectionResource) Delete(ctx context.Context, req resource.Delete
 	serviceID := state.ServiceID.ValueString()
 	tflog.Debug(ctx, "Deleting Fastly Product Enablement (ddos_protection)", map[string]any{"service_id": serviceID})
 
-	if err := ddosprotection.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
-		resp.Diagnostics.AddError("Error disabling ddos_protection", err.Error())
+	enabled := true
+	if !state.Enabled.IsNull() {
+		enabled = state.Enabled.ValueBool()
+	}
+
+	if enabled {
+		if err := ddosprotection.Disable(ctx, r.client, serviceID); err != nil && !isEntitlementError(err) && !errors.IsNotFound(err) {
+			resp.Diagnostics.AddError("Error disabling ddos_protection", err.Error())
+		}
 	}
 }
 

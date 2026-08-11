@@ -18,6 +18,10 @@ Enables Brotli Compression on a service. Product Enablement operates on the serv
 
 - `service_id` (String) The ID of the service to enable Brotli Compression on. Changing this value will delete and recreate this resource against the new service.
 
+### Optional
+
+- `enabled` (Boolean) Whether Brotli Compression is enabled on the service. Defaults to `true`.
+
 ### Read-Only
 
 - `id` (String) The ID of this resource (identical to `service_id`).

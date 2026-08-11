@@ -7,6 +7,7 @@
 - feat(fastly_audit_log_event_mapping): add resource and data source for managing Audit Log Event Mappings ([#1394](https://github.com/fastly/terraform-provider-fastly/pull/1394))
 
 ### BUG FIXES:
+- fix(ngwaf/rules):  corrects a bug where rules with a `deception` action had their `deception_type` and `allow_interactive` fields omitted from update operations, causing an error on subsequent applies ([#1396](https://github.com/fastly/terraform-provider-fastly/pull/1396))
 
 ### Dependencies
 - build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.10.0 to 0.11.0 ([#1392](https://github.com/fastly/terraform-provider-fastly/pull/1392))

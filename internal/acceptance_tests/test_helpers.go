@@ -2956,6 +2956,40 @@ func ConfigServiceDynamicVCLSnippetContent(serviceName, snippetName, snippetType
 	return joinBlocks(serviceConfig, contentResource)
 }
 
+// ConfigDataSourceVCLSnippets returns a CDN auto service with regular and dynamic
+// VCL snippets plus a fastly_vcl_snippets data source that reads the active version.
+func ConfigDataSourceVCLSnippets(serviceName, domainName, backendName, regularNameOne, regularNameTwo, dynamicName, snippetFilePathOne, snippetFilePathTwo string) string {
+	serviceConfig := BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"BACKEND_NAME":             backendName,
+			"SNIPPET_NAME_ONE":         regularNameOne,
+			"SNIPPET_NAME_TWO":         regularNameTwo,
+			"SNIPPET_FILE_PATH_ONE":    filepath.ToSlash(snippetFilePathOne),
+			"SNIPPET_FILE_PATH_TWO":    filepath.ToSlash(snippetFilePathTwo),
+			"DYNAMIC_SNIPPET_NAME":     dynamicName,
+			"DYNAMIC_SNIPPET_TYPE":     "recv",
+			"DYNAMIC_SNIPPET_PRIORITY": "25",
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/snippet_nested_multiple.tf",
+		"internal/acceptance_tests/blocks/dynamic_snippet_nested.tf",
+	)
+
+	dataSource := `
+data "fastly_vcl_snippets" "example" {
+  depends_on      = [fastly_service_cdn_auto.test]
+  service_id      = fastly_service_cdn_auto.test.id
+  service_version = fastly_service_cdn_auto.test.active_version
+}
+`
+
+	return joinBlocks(serviceConfig, dataSource)
+}
+
 func renderFixtureBlock(path string, values map[string]string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {

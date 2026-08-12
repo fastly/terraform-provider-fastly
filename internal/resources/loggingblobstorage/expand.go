@@ -6,7 +6,10 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
-func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateBlobStorageInput {
+// buildCommonCreateInput sets the Create fields shared by VCL and Compute
+// services. BuildCreateInput and BuildComputeCreateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonCreateInput(serviceID string, version int, m commonModel) *fastly.CreateBlobStorageInput {
 	input := &fastly.CreateBlobStorageInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -27,12 +30,8 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
 		input.GzipLevel = new(int(gl))
 	}
-	input.Format = fastly.NullString(service.StringValue(m.Format))
-	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
 	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))
-	input.Placement = fastly.NullString(service.StringValue(m.Placement))
-	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
 	input.PublicKey = fastly.NullString(service.StringValue(m.PublicKey))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 
@@ -41,6 +40,15 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 		input.FileMaxBytes = &v
 	}
 
+	return input
+}
+
+func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateBlobStorageInput {
+	input := buildCommonCreateInput(serviceID, version, m.commonModel)
+	input.Format = fastly.NullString(service.StringValue(m.Format))
+	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
+	input.Placement = fastly.NullString(service.StringValue(m.Placement))
+	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
 	return input
 }
 
@@ -69,43 +77,13 @@ func ClearVCLOnlyUpdateFields(input *fastly.UpdateBlobStorageInput) {
 // sets format, format_version, placement, or response_condition, since those
 // only affect generated VCL and Compute services don't have any.
 func BuildComputeCreateInput(serviceID string, version int, m ComputeNestedModel) *fastly.CreateBlobStorageInput {
-	input := &fastly.CreateBlobStorageInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           new(service.StringValue(m.Name)),
-		Container:      new(service.StringValue(m.Container)),
-	}
-
-	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
-	input.SASToken = fastly.NullString(service.StringValue(m.SASToken()))
-	input.Path = new(service.StringValue(m.Path))
-	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
-	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))
-	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
-	// unset: the API rejects requests that set both compression_codec and
-	// gzip_level, and it auto-manages the level when omitted. fastly.NullInt is
-	// not used here because it treats 0 as unset too, which would silently drop
-	// an explicit "no compression" (gzip_level = 0).
-	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
-		input.GzipLevel = new(int(gl))
-	}
-	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
-	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))
-	input.PublicKey = fastly.NullString(service.StringValue(m.PublicKey))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-
-	if fmb := service.Int64Value(m.FileMaxBytes); fmb != 0 {
-		v := int(fmb)
-		input.FileMaxBytes = &v
-	}
-
-	return input
+	return buildCommonCreateInput(serviceID, version, m.commonModel)
 }
 
-// BuildComputeUpdateInput is BuildUpdateInput for Compute services: it never
-// sets format, format_version, placement, or response_condition, since those
-// only affect generated VCL and Compute services don't have any.
-func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateBlobStorageInput {
+// buildCommonUpdateInput sets the Update fields shared by VCL and Compute
+// services. BuildUpdateInput and BuildComputeUpdateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonUpdateInput(serviceID string, version int, m commonModel) *fastly.UpdateBlobStorageInput {
 	input := &fastly.UpdateBlobStorageInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -136,30 +114,17 @@ func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel
 	return input
 }
 
-func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateBlobStorageInput {
-	input := &fastly.UpdateBlobStorageInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           service.StringValue(m.Name),
-		NewName:        new(service.StringValue(m.Name)),
-		Container:      new(service.StringValue(m.Container)),
-	}
+// BuildComputeUpdateInput is BuildUpdateInput for Compute services: it never
+// sets format, format_version, placement, or response_condition, since those
+// only affect generated VCL and Compute services don't have any.
+func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateBlobStorageInput {
+	return buildCommonUpdateInput(serviceID, version, m.commonModel)
+}
 
-	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
-	input.SASToken = fastly.NullString(service.StringValue(m.SASToken()))
-	input.Path = new(service.StringValue(m.Path))
-	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
-	input.CompressionCodec = new(service.StringValue(m.CompressionCodec))
-	// Only send an explicitly configured gzip_level. DefaultGzipLevel (-1) means
-	// unset: the API rejects requests that set both compression_codec and
-	// gzip_level, and it auto-manages the level when omitted.
-	if gl := service.Int64Value(m.GzipLevel); gl != DefaultGzipLevel {
-		input.GzipLevel = new(int(gl))
-	}
+func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateBlobStorageInput {
+	input := buildCommonUpdateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
-	input.MessageType = fastly.NullString(service.StringValue(m.MessageType))
-	input.TimestampFormat = fastly.NullString(service.StringValue(m.TimestampFormat))
 	// placement can be cleared back to unset / nil (distinct from "none" — see
 	// schema.go). UpdateBlobStorageInput.Placement is a *Nullable[string]
 	// specifically so this can be sent as a real JSON null: omitting the field
@@ -172,11 +137,5 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		input.Placement = fastly.NullValue[string]()
 	}
 	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
-	input.PublicKey = new(service.StringValue(m.PublicKey))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-
-	fmb := int(service.Int64Value(m.FileMaxBytes))
-	input.FileMaxBytes = &fmb
-
 	return input
 }

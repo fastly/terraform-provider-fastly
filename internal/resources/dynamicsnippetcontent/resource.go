@@ -7,6 +7,8 @@ import (
 
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
+	"github.com/fastly/terraform-provider-fastly/internal/service"
+	"github.com/fastly/terraform-provider-fastly/internal/validation"
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -48,10 +50,19 @@ func (r *Resource) Configure(_ context.Context, req resource.ConfigureRequest, r
 	r.providerData = data
 }
 
+func (r *Resource) ensureServiceTypeSupported(ctx context.Context, serviceID string) error {
+	return validation.EnsureServiceTypeSupported(ctx, r.providerData.ServiceTypeChecker, serviceID, "fastly_service_dynamic_snippet_content", service.TypeVCL)
+}
+
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan Model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := r.ensureServiceTypeSupported(ctx, plan.Service.ValueString()); err != nil {
+		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 
@@ -73,6 +84,15 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := r.ensureServiceTypeSupported(ctx, state.Service.ValueString()); err != nil {
+		if errors.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 
@@ -109,6 +129,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	if err := r.ensureServiceTypeSupported(ctx, plan.Service.ValueString()); err != nil {
+		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
+		return
+	}
+
 	tflog.Debug(ctx, "Updating Fastly dynamic VCL snippet content", map[string]any{
 		"service_id": plan.Service.ValueString(),
 		"snippet_id": plan.SnippetID.ValueString(),
@@ -127,6 +152,14 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	var state Model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := r.ensureServiceTypeSupported(ctx, state.Service.ValueString()); err != nil {
+		if errors.IsNotFound(err) {
+			return
+		}
+		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 
@@ -152,6 +185,11 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 				"For example: service123/abc123\n\n"+
 				"Error: "+err.Error(),
 		)
+		return
+	}
+
+	if err := r.ensureServiceTypeSupported(ctx, serviceID); err != nil {
+		resp.Diagnostics.AddError("Unsupported Fastly service type", err.Error())
 		return
 	}
 

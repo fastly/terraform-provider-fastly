@@ -1674,6 +1674,147 @@ func ConfigComputeAutoWithLoggingS3Format(serviceName, domainName, loggerName, b
 	)
 }
 
+// ConfigCDNAutoWithLoggingBlobStorage returns a CDN auto service config with a nested Blob
+// Storage logging block, exercising the reconcile path (clone + activate a new version).
+func ConfigCDNAutoWithLoggingBlobStorage(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingBlobStorageAll returns a CDN auto service config with a nested
+// Blob Storage logging block that sets the full set of optional attributes.
+func ConfigCDNAutoWithLoggingBlobStorageAll(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested_all.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingBlobStorageGzipCodec returns a CDN auto service config with a
+// nested Blob Storage logging block that sets compression_codec = "gzip" and leaves
+// gzip_level unset, exercising the auto read-back sentinel handling that must avoid a
+// perpetual diff.
+func ConfigCDNAutoWithLoggingBlobStorageGzipCodec(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested_gzip_codec.tf",
+	)
+}
+
+// ConfigCDNAutoWithLoggingBlobStorageUpdated returns a CDN auto service config with a nested
+// Blob Storage logging block whose optional attributes have been changed, exercising the
+// reconcile update path.
+func ConfigCDNAutoWithLoggingBlobStorageUpdated(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleLoggingBlobStorage returns a CDN auto service config with two
+// nested Blob Storage logging blocks.
+func ConfigCDNAutoWithMultipleLoggingBlobStorage(serviceName, domainName, loggerName1, loggerName2, containerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":               serviceName,
+			"DOMAIN_NAME":                domainName,
+			"LOGGING_BLOBSTORAGE_NAME_1": loggerName1,
+			"LOGGING_BLOBSTORAGE_NAME_2": loggerName2,
+			"CONTAINER_NAME":             containerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithBackendAndLoggingBlobStorage returns a CDN auto service config with a
+// domain, backend, and nested Blob Storage logging block.
+func ConfigCDNAutoWithBackendAndLoggingBlobStorage(serviceName, domainName, backendName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"BACKEND_NAME":             backendName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingBlobStorage returns a Compute auto service config with a
+// domain, package, and nested Blob Storage logging block.
+func ConfigComputeAutoWithLoggingBlobStorage(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+			"PACKAGE_PATH":             GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingBlobStorageFormat returns a Compute auto service config whose
+// nested Blob Storage logging block sets format, a VCL-only attribute.
+// service_compute_auto's logging_blobstorage schema (ComputeNestedBlockSchema) omits
+// format/format_version/placement/response_condition entirely, so this is expected to fail
+// Terraform's own schema validation ("Unsupported argument") rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingBlobStorageFormat(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+			"PACKAGE_PATH":             GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 func ConfigLoggingS3Basic(serviceName, domainName, loggerName, bucketName string) string {
 	return BuildConfig(
 		ServiceCDN,
@@ -1899,6 +2040,219 @@ func ConfigLoggingS3ComputeFormat(serviceName, loggerName, bucketName string) st
 			"BUCKET_NAME":     bucketName,
 		},
 		"internal/acceptance_tests/blocks/logging_s3_compute_format.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageBasic(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_basic.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageAtVersion(serviceName, domainName, loggerName, containerName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          fmt.Sprintf("%d", version),
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_basic.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageNoAuth(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_no_auth.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageMissingAuth(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_missing_auth.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageFileMaxBytesInvalid(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_file_max_bytes_invalid.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageAll(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_all.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageDefaults(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_defaults.tf",
+	)
+}
+
+func ConfigLoggingBlobStoragePlacementNone(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_placement_none.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageCodecConflict(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_codec_conflict.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageForImport(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_basic.tf",
+	)
+}
+
+// ConfigLoggingBlobStorageCompute returns a config attaching
+// fastly_service_logging_blobstorage to an explicit Compute service with none of the
+// VCL-only attributes set, which is the only shape a Compute service can be configured in.
+func ConfigLoggingBlobStorageCompute(serviceName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/logging_blobstorage_compute.tf",
+	)
+}
+
+// ConfigLoggingBlobStorageComputeFormat returns a config attaching
+// fastly_service_logging_blobstorage to an explicit Compute service with format set, a
+// VCL-only attribute. Unlike the nested blocks, the standalone resource's schema is
+// shared by both service types, so this is expected to fail at apply time via
+// ValidateNoVCLOnlyAttributesForCompute rather than at Terraform's own schema-validation
+// stage.
+func ConfigLoggingBlobStorageComputeFormat(serviceName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/logging_blobstorage_compute_format.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageUpdated(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_updated.tf",
 	)
 }
 

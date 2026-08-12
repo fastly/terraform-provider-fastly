@@ -12,6 +12,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -63,6 +64,7 @@ type Model struct {
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
+	LoggingBlobStorage            []loggingblobstorage.NestedModel            `tfsdk:"logging_blobstorage"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
@@ -123,6 +125,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
+			"logging_blobstorage":              loggingblobstorage.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
@@ -272,6 +275,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
+
+	if err := loggingblobstorage.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingBlobStorage); err != nil {
+		resp.Diagnostics.AddError("Error reconciling Blob Storage logging endpoints", err.Error())
+		return
+	}
+
+	loggingBlobStorages, err := loggingblobstorage.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading Blob Storage logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, plan.LoggingBlobStorage)
 
 	if err := loggings3.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingS3); err != nil {
 		resp.Diagnostics.AddError("Error reconciling S3 logging endpoints", err.Error())
@@ -438,6 +453,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
 		return
 	}
+	loggingBlobStorages, err := loggingblobstorage.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading Blob Storage logging endpoints", err.Error())
+		return
+	}
 	loggingS3s, err := loggings3.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
@@ -458,6 +478,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
+	state.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
 	state.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, state.LoggingDatadog)
@@ -544,6 +565,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
+		!loggingblobstorage.Equal(plan.LoggingBlobStorage, state.LoggingBlobStorage) ||
 		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
 		!loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
 		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
@@ -646,6 +668,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
 
+		if err := loggingblobstorage.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingBlobStorage); err != nil {
+			resp.Diagnostics.AddError("Error reconciling Blob Storage logging endpoints", err.Error())
+			return
+		}
+
+		loggingBlobStorages, err := loggingblobstorage.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading Blob Storage logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, plan.LoggingBlobStorage)
+
 		if err := loggings3.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingS3); err != nil {
 			resp.Diagnostics.AddError("Error reconciling S3 logging endpoints", err.Error())
 			return
@@ -743,6 +777,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
+		plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(state.LoggingBlobStorage, plan.LoggingBlobStorage)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)

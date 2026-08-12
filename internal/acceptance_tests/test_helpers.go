@@ -2889,27 +2889,13 @@ func ConfigCDNAutoWithDynamicSnippetContent(serviceName, domainName, backendName
 		"internal/acceptance_tests/blocks/dynamic_snippet_nested.tf",
 	)
 
-	contentResource := renderDynamicSnippetContentBlock(map[string]string{
+	contentResource := renderFixtureBlock("blocks/dynamic_snippet_content.tf", map[string]string{
 		"DYNAMIC_SNIPPET_NAME":           snippetName,
 		"DYNAMIC_SNIPPET_INLINE_CONTENT": strconv.Quote(content),
 		"MANAGE_SNIPPETS":                strconv.FormatBool(manageSnippets),
 	})
 
 	return joinBlocks(serviceConfig, contentResource)
-}
-
-func renderDynamicSnippetContentBlock(values map[string]string) string {
-	data, err := os.ReadFile("blocks/dynamic_snippet_content.tf")
-	if err != nil {
-		panic(fmt.Sprintf("error reading dynamic snippet content fixture: %s", err))
-	}
-
-	replacements := make([]string, 0, len(values)*2)
-	for key, value := range values {
-		replacements = append(replacements, "{{."+key+"}}", value)
-	}
-
-	return strings.NewReplacer(replacements...).Replace(string(data))
 }
 
 // ConfigCDNAutoWithRegularAndDynamicSnippetConflict returns a CDN auto service
@@ -2962,7 +2948,7 @@ func ConfigServiceDynamicVCLSnippetContent(serviceName, snippetName, snippetType
 		"internal/acceptance_tests/blocks/dynamic_snippet_explicit.tf",
 	)
 
-	contentResource := renderDynamicSnippetExplicitContentBlock(map[string]string{
+	contentResource := renderFixtureBlock("blocks/dynamic_snippet_explicit_content.tf", map[string]string{
 		"DYNAMIC_SNIPPET_INLINE_CONTENT": strconv.Quote(content),
 		"MANAGE_SNIPPETS":                strconv.FormatBool(manageSnippets),
 	})
@@ -2970,10 +2956,10 @@ func ConfigServiceDynamicVCLSnippetContent(serviceName, snippetName, snippetType
 	return joinBlocks(serviceConfig, contentResource)
 }
 
-func renderDynamicSnippetExplicitContentBlock(values map[string]string) string {
-	data, err := os.ReadFile("blocks/dynamic_snippet_explicit_content.tf")
+func renderFixtureBlock(path string, values map[string]string) string {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		panic(fmt.Sprintf("error reading explicit dynamic snippet content fixture: %s", err))
+		panic(fmt.Sprintf("error reading fixture %s: %s", path, err))
 	}
 
 	replacements := make([]string, 0, len(values)*2)

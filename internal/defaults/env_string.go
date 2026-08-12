@@ -35,3 +35,43 @@ func (d envStringDefault) DefaultString(_ context.Context, _ defaults.StringRequ
 	}
 	resp.PlanValue = types.StringValue(d.fallback)
 }
+
+// EnvStringDeprecatedFallback returns a default handler that reads from
+// envVar, falling back to deprecatedEnvVar when envVar is unset, and to
+// fallback if neither is set. Reading from deprecatedEnvVar adds a warning
+// diagnostic pointing at envVar as the replacement, so practitioners relying
+// on the deprecated variable are not silently left uninformed.
+func EnvStringDeprecatedFallback(envVar, deprecatedEnvVar, fallback string) defaults.String {
+	return envStringDeprecatedFallbackDefault{envVar: envVar, deprecatedEnvVar: deprecatedEnvVar, fallback: fallback}
+}
+
+type envStringDeprecatedFallbackDefault struct {
+	envVar           string
+	deprecatedEnvVar string
+	fallback         string
+}
+
+func (d envStringDeprecatedFallbackDefault) Description(_ context.Context) string {
+	return fmt.Sprintf("value defaults to the %s environment variable, falling back to the deprecated %s if unset, or %q if neither is set", d.envVar, d.deprecatedEnvVar, d.fallback)
+}
+
+func (d envStringDeprecatedFallbackDefault) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("value defaults to the `%s` environment variable, falling back to the deprecated `%s` if unset, or `%s` if neither is set", d.envVar, d.deprecatedEnvVar, d.fallback)
+}
+
+func (d envStringDeprecatedFallbackDefault) DefaultString(_ context.Context, req defaults.StringRequest, resp *defaults.StringResponse) {
+	if v := os.Getenv(d.envVar); v != "" {
+		resp.PlanValue = types.StringValue(v)
+		return
+	}
+	if v := os.Getenv(d.deprecatedEnvVar); v != "" {
+		resp.Diagnostics.AddAttributeWarning(
+			req.Path,
+			"Deprecated environment variable",
+			fmt.Sprintf("%s is deprecated and will be removed in a future release. Use %s instead.", d.deprecatedEnvVar, d.envVar),
+		)
+		resp.PlanValue = types.StringValue(v)
+		return
+	}
+	resp.PlanValue = types.StringValue(d.fallback)
+}

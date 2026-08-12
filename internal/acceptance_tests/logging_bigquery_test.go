@@ -90,6 +90,44 @@ func TestAccFastlyServiceLoggingBigQuery_authEnvDefaults(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingBigQuery_authEnvDefaultsDeprecatedFallback
+// verifies that account_name still picks up the deprecated
+// FASTLY_GCS_ACCOUNT_NAME environment variable (used by the live provider)
+// when FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME is unset and the entire
+// authentication object is omitted from config. See
+// authenticationEnvDefault (schema.go) and defaults.EnvStringDeprecatedFallback
+// (internal/defaults/env_string.go).
+//
+// Not run in parallel: t.Setenv panics if the test also calls t.Parallel, and
+// this test needs the env vars set for its own duration only.
+func TestAccFastlyServiceLoggingBigQuery_authEnvDefaultsDeprecatedFallback(t *testing.T) {
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("bigquery-logger-%s", acctest.RandString(10))
+
+	t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "")
+	t.Setenv("FASTLY_GCS_ACCOUNT_NAME", "test-legacy-service-account")
+	t.Setenv("FASTLY_BQ_EMAIL", "")
+	t.Setenv("FASTLY_BQ_SECRET_KEY", "")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingBigQueryNoAuth(serviceName, domainName, loggerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.account_name", "test-legacy-service-account"),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.email", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_bigquery.test", "authentication.secret_key", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceLoggingBigQuery_update(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

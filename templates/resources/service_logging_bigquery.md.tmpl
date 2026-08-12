@@ -182,6 +182,10 @@ activate a service version.
   sensitive and never appear in plan output. Once `account_name` is set, it
   can only be changed to a different value — not cleared back to unset —
   since the Fastly API rejects an explicit empty `account_name` on update.
+  `account_name` also falls back to the deprecated `FASTLY_GCS_ACCOUNT_NAME`
+  environment variable (used by the live provider) when
+  `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` is unset, emitting a deprecation
+  warning so upgrading practitioners are not silently broken.
 - `secret_key` must be a real PEM-encoded private key (PKCS8 or PKCS1) and
   must not contain leading or trailing whitespace — the Fastly API validates
   the credential and rejects both.

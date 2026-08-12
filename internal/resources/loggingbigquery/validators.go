@@ -62,7 +62,7 @@ func (authenticationEitherOr) ValidateObject(ctx context.Context, req validator.
 		return
 	}
 
-	if effectiveAuthValue(ctx, req.ConfigValue, "account_name", "FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME") != "" {
+	if effectiveAccountName(ctx, req.ConfigValue) != "" {
 		return
 	}
 
@@ -82,16 +82,38 @@ func (authenticationEitherOr) ValidateObject(ctx context.Context, req validator.
 
 // effectiveAuthValue returns the configured value of attrName within the
 // authentication object, or its environment variable default when the
-// config leaves that field unset.
+// config leaves that field unset. obj is req.ConfigValue — the raw,
+// pre-Default config — so IsNull()/IsUnknown() alone correctly distinguish
+// "omitted" (falls through to the env var) from "present, even if blank"
+// (returned verbatim); a field explicitly set to "" is not the same as an
+// unconfigured one, since Terraform's schema Default only fills attributes
+// that are truly null, not ones explicitly set to a zero value.
 func effectiveAuthValue(ctx context.Context, obj types.Object, attrName, envVar string) string {
 	if !obj.IsNull() && !obj.IsUnknown() {
 		if v, ok := obj.Attributes()[attrName]; ok {
-			if sv, ok := v.(types.String); ok && !sv.IsNull() && !sv.IsUnknown() && sv.ValueString() != "" {
+			if sv, ok := v.(types.String); ok && !sv.IsNull() && !sv.IsUnknown() {
 				return sv.ValueString()
 			}
 		}
 	}
 	return envStringDefault(ctx, envVar).ValueString()
+}
+
+// effectiveAccountName returns the configured account_name within the
+// authentication object, or its environment variable default (preferring
+// FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME, falling back to the deprecated
+// FASTLY_GCS_ACCOUNT_NAME) when the config leaves it unset. See
+// effectiveAuthValue for why IsNull()/IsUnknown() alone — not also checking
+// for a blank string — is the correct test here.
+func effectiveAccountName(ctx context.Context, obj types.Object) string {
+	if !obj.IsNull() && !obj.IsUnknown() {
+		if v, ok := obj.Attributes()["account_name"]; ok {
+			if sv, ok := v.(types.String); ok && !sv.IsNull() && !sv.IsUnknown() {
+				return sv.ValueString()
+			}
+		}
+	}
+	return accountNameEnvValue(ctx).ValueString()
 }
 
 // ValidateNoVCLOnlyAttributesForCompute returns an error diagnostic if format,

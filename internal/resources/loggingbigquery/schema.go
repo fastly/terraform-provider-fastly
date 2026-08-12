@@ -14,6 +14,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	fwdefaults "github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -34,6 +36,16 @@ const (
 	// logging endpoint `format` string. Exceeding it is only rejected by the
 	// API at apply time, so it is enforced at plan/validate time instead.
 	maximumFormatLength = 12288
+
+	// googleServiceAccountNameEnvVar is the current name for the account_name
+	// environment variable default, shared with Fastly's GCS and Pub/Sub
+	// logging endpoints.
+	googleServiceAccountNameEnvVar = "FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME"
+	// deprecatedGCSAccountNameEnvVar is the name used by the live (SDKv2)
+	// provider. Practitioners upgrading without updating their environment
+	// still get an account_name default from it, with a deprecation warning
+	// steering them at googleServiceAccountNameEnvVar.
+	deprecatedGCSAccountNameEnvVar = "FASTLY_GCS_ACCOUNT_NAME"
 )
 
 // commonModel holds the BigQuery logging attributes shared by VCL and Compute
@@ -106,9 +118,12 @@ func (d authenticationEnvDefault) MarkdownDescription(ctx context.Context) strin
 	return d.Description(ctx)
 }
 
-func (authenticationEnvDefault) DefaultObject(ctx context.Context, _ fwdefaults.ObjectRequest, resp *fwdefaults.ObjectResponse) {
+func (authenticationEnvDefault) DefaultObject(ctx context.Context, req fwdefaults.ObjectRequest, resp *fwdefaults.ObjectResponse) {
+	accountName, diags := accountNameEnvDefault(ctx, req.Path.AtName("account_name"))
+	resp.Diagnostics.Append(diags...)
+
 	resp.PlanValue = NewAuthenticationObject(
-		envStringDefault(ctx, "FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME"),
+		accountName,
 		envStringDefault(ctx, "FASTLY_BQ_EMAIL"),
 		envStringDefault(ctx, "FASTLY_BQ_SECRET_KEY"),
 	)
@@ -118,6 +133,34 @@ func envStringDefault(ctx context.Context, envVar string) types.String {
 	var resp fwdefaults.StringResponse
 	defaults.EnvString(envVar, "").DefaultString(ctx, fwdefaults.StringRequest{}, &resp)
 	return resp.PlanValue
+}
+
+// accountNameDefault is the schema.Default for account_name: it prefers
+// googleServiceAccountNameEnvVar, falling back to the deprecated
+// deprecatedGCSAccountNameEnvVar (with a warning) so practitioners upgrading
+// from the live provider are not silently broken.
+func accountNameDefault() fwdefaults.String {
+	return defaults.EnvStringDeprecatedFallback(googleServiceAccountNameEnvVar, deprecatedGCSAccountNameEnvVar, "")
+}
+
+// accountNameEnvDefault runs accountNameDefault at path, returning the
+// resolved value and any diagnostics (the deprecation warning). Used by
+// authenticationEnvDefault.DefaultObject, which must set account_name
+// directly since a Computed object attribute with no per-field config only
+// gets its parent Default evaluated, never account_name's own.
+func accountNameEnvDefault(ctx context.Context, path path.Path) (types.String, diag.Diagnostics) {
+	var resp fwdefaults.StringResponse
+	accountNameDefault().DefaultString(ctx, fwdefaults.StringRequest{Path: path}, &resp)
+	return resp.PlanValue, resp.Diagnostics
+}
+
+// accountNameEnvValue resolves the effective account_name environment
+// default without diagnostics, for contexts like validators that only need
+// the value — the deprecation warning is surfaced once, by the schema
+// Default handlers above.
+func accountNameEnvValue(ctx context.Context) types.String {
+	value, _ := accountNameEnvDefault(ctx, path.Empty())
+	return value
 }
 
 func authenticationValue(auth types.Object, name string) types.String {
@@ -222,7 +265,7 @@ func sharedAttributes() map[string]schema.Attribute {
 				"account_name": schema.StringAttribute{
 					Optional:    true,
 					Computed:    true,
-					Default:     defaults.EnvString("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", ""),
+					Default:     accountNameDefault(),
 					Description: "The name of the Google Cloud Platform service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` environment variable, shared with Fastly's GCS and Pub/Sub logging endpoints.",
 				},
 				"email": schema.StringAttribute{

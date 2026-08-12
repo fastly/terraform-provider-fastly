@@ -781,6 +781,41 @@ func TestAuthenticationEnvDefault_DefaultObject(t *testing.T) {
 			types.StringValue("test-secret-key"),
 		), resp.PlanValue)
 	})
+
+	t.Run("account name falls back to deprecated env var with a warning", func(t *testing.T) {
+		t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "")
+		t.Setenv("FASTLY_GCS_ACCOUNT_NAME", "legacy-service-account")
+		t.Setenv("FASTLY_BQ_EMAIL", "")
+		t.Setenv("FASTLY_BQ_SECRET_KEY", "")
+
+		var resp defaults.ObjectResponse
+		authenticationEnvDefault{}.DefaultObject(context.Background(), defaults.ObjectRequest{}, &resp)
+
+		assert.Equal(t, NewAuthenticationObject(
+			types.StringValue("legacy-service-account"),
+			types.StringValue(""),
+			types.StringValue(""),
+		), resp.PlanValue)
+		require.Len(t, resp.Diagnostics, 1)
+		assert.Equal(t, 1, resp.Diagnostics.WarningsCount())
+	})
+
+	t.Run("account name prefers new env var over deprecated one", func(t *testing.T) {
+		t.Setenv("FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME", "current-service-account")
+		t.Setenv("FASTLY_GCS_ACCOUNT_NAME", "legacy-service-account")
+		t.Setenv("FASTLY_BQ_EMAIL", "")
+		t.Setenv("FASTLY_BQ_SECRET_KEY", "")
+
+		var resp defaults.ObjectResponse
+		authenticationEnvDefault{}.DefaultObject(context.Background(), defaults.ObjectRequest{}, &resp)
+
+		assert.Equal(t, NewAuthenticationObject(
+			types.StringValue("current-service-account"),
+			types.StringValue(""),
+			types.StringValue(""),
+		), resp.PlanValue)
+		assert.Empty(t, resp.Diagnostics)
+	})
 }
 
 // TestSchemaValidators pins the accepted values for the remaining validators, so

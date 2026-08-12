@@ -3205,3 +3205,121 @@ func ConfigCDNAutoWithInvalidSnippetType(serviceName, domainName, backendName, s
 		"internal/acceptance_tests/blocks/snippet_nested_invalid_type.tf",
 	)
 }
+
+// ConfigCDNAutoWithDynamicSnippet returns a CDN auto service with domain, backend,
+// and one dynamic VCL snippet metadata block.
+func ConfigCDNAutoWithDynamicSnippet(serviceName, domainName, backendName, snippetName, snippetType string, priority int) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"BACKEND_NAME":             backendName,
+			"DYNAMIC_SNIPPET_NAME":     snippetName,
+			"DYNAMIC_SNIPPET_TYPE":     snippetType,
+			"DYNAMIC_SNIPPET_PRIORITY": strconv.Itoa(priority),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/dynamic_snippet_nested.tf",
+	)
+}
+
+// ConfigCDNAutoWithDynamicSnippetContent returns a CDN auto service with one
+// dynamic VCL snippet and a separate versionless dynamic snippet content resource.
+func ConfigCDNAutoWithDynamicSnippetContent(serviceName, domainName, backendName, snippetName, snippetType string, priority int, content string, manageSnippets bool) string {
+	serviceConfig := BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"BACKEND_NAME":             backendName,
+			"DYNAMIC_SNIPPET_NAME":     snippetName,
+			"DYNAMIC_SNIPPET_TYPE":     snippetType,
+			"DYNAMIC_SNIPPET_PRIORITY": strconv.Itoa(priority),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/dynamic_snippet_nested.tf",
+	)
+
+	contentResource := renderFixtureBlock("blocks/dynamic_snippet_content.tf", map[string]string{
+		"DYNAMIC_SNIPPET_NAME":           snippetName,
+		"DYNAMIC_SNIPPET_INLINE_CONTENT": strconv.Quote(content),
+		"MANAGE_SNIPPETS":                strconv.FormatBool(manageSnippets),
+	})
+
+	return joinBlocks(serviceConfig, contentResource)
+}
+
+// ConfigCDNAutoWithRegularAndDynamicSnippetConflict returns a CDN auto service
+// with regular and dynamic snippets using the same name.
+func ConfigCDNAutoWithRegularAndDynamicSnippetConflict(serviceName, domainName, backendName, snippetName, snippetFilePath string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"BACKEND_NAME":      backendName,
+			"SNIPPET_NAME":      snippetName,
+			"SNIPPET_FILE_PATH": filepath.ToSlash(snippetFilePath),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/dynamic_snippet_nested_conflict.tf",
+	)
+}
+
+// ConfigServiceDynamicVCLSnippet returns a CDN service with one explicit/default
+// first-class dynamic VCL snippet metadata resource.
+func ConfigServiceDynamicVCLSnippet(serviceName, snippetName, snippetType string, priority int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "Dynamic VCL snippet acceptance test",
+			"DYNAMIC_SNIPPET_NAME":     snippetName,
+			"DYNAMIC_SNIPPET_TYPE":     snippetType,
+			"DYNAMIC_SNIPPET_PRIORITY": strconv.Itoa(priority),
+		},
+		"internal/acceptance_tests/blocks/dynamic_snippet_explicit.tf",
+	)
+}
+
+// ConfigServiceDynamicVCLSnippetContent returns a CDN service with one
+// explicit/default first-class dynamic VCL snippet metadata resource and a
+// separate versionless dynamic snippet content resource.
+func ConfigServiceDynamicVCLSnippetContent(serviceName, snippetName, snippetType string, priority int, content string, manageSnippets bool) string {
+	serviceConfig := BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "Dynamic VCL snippet acceptance test",
+			"DYNAMIC_SNIPPET_NAME":     snippetName,
+			"DYNAMIC_SNIPPET_TYPE":     snippetType,
+			"DYNAMIC_SNIPPET_PRIORITY": strconv.Itoa(priority),
+		},
+		"internal/acceptance_tests/blocks/dynamic_snippet_explicit.tf",
+	)
+
+	contentResource := renderFixtureBlock("blocks/dynamic_snippet_explicit_content.tf", map[string]string{
+		"DYNAMIC_SNIPPET_INLINE_CONTENT": strconv.Quote(content),
+		"MANAGE_SNIPPETS":                strconv.FormatBool(manageSnippets),
+	})
+
+	return joinBlocks(serviceConfig, contentResource)
+}
+
+func renderFixtureBlock(path string, values map[string]string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		panic(fmt.Sprintf("error reading fixture %s: %s", path, err))
+	}
+
+	replacements := make([]string, 0, len(values)*2)
+	for key, value := range values {
+		replacements = append(replacements, "{{."+key+"}}", value)
+	}
+
+	return strings.NewReplacer(replacements...).Replace(string(data))
+}

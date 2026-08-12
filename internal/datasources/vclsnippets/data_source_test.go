@@ -64,7 +64,7 @@ func TestParsePriority(t *testing.T) {
 	}
 
 	value := "25"
-	got, err := parsePriority(&value)
+	got, err = parsePriority(&value)
 	if err != nil {
 		t.Fatalf("parsePriority returned error: %s", err)
 	}

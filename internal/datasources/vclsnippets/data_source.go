@@ -21,6 +21,8 @@ import (
 
 var _ datasource.DataSource = &DataSource{}
 
+const defaultPriority int64 = 100
+
 type DataSource struct {
 	providerData *fastlyclient.Data
 }
@@ -201,7 +203,7 @@ func flattenVCLSnippets(snippets []*fastly.Snippet) (types.Set, []string, diag.D
 
 func parsePriority(value *string) (int64, error) {
 	if value == nil || *value == "" {
-		return 0, nil
+		return defaultPriority, nil
 	}
 
 	priority, err := strconv.ParseInt(*value, 10, 64)

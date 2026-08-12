@@ -55,6 +55,14 @@ func TestFlattenVCLSnippetsInvalidPriority(t *testing.T) {
 }
 
 func TestParsePriority(t *testing.T) {
+	got, err := parsePriority(nil)
+	if err != nil {
+		t.Fatalf("parsePriority nil returned error: %s", err)
+	}
+	if got != defaultPriority {
+		t.Fatalf("parsePriority nil = %d, want %d", got, defaultPriority)
+	}
+
 	value := "25"
 	got, err := parsePriority(&value)
 	if err != nil {
@@ -69,7 +77,7 @@ func TestParsePriority(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parsePriority empty returned error: %s", err)
 	}
-	if got != 0 {
-		t.Fatalf("parsePriority empty = %d, want 0", got)
+	if got != defaultPriority {
+		t.Fatalf("parsePriority empty = %d, want %d", got, defaultPriority)
 	}
 }

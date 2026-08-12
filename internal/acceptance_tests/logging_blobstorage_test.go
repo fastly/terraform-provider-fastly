@@ -121,6 +121,14 @@ func TestAccFastlyServiceLoggingBlobStorage_fileMaxBytesRange(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingBlobStorage_allAttr exercises every attribute of the
+// standalone resource across a create and an update, so a regression in any single
+// setter (e.g. sending an empty value via a Nullable helper that omits rather than
+// clears a field, as opposed to new()) shows up as a wrong post-apply value here
+// rather than only in an untested corner. authentication.account_name/sas_token are
+// rotated between steps to exercise the credential-clearing path in
+// buildCommonUpdateInput; format is deliberately omitted from the update config to
+// confirm it falls back to its schema Default rather than retaining the prior value.
 func TestAccFastlyServiceLoggingBlobStorage_allAttr(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -139,6 +147,8 @@ func TestAccFastlyServiceLoggingBlobStorage_allAttr(t *testing.T) {
 					CheckServiceExists("fastly_service_cdn.test"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "name", loggerName),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "container", containerName),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "authentication.account_name", "teststorageaccount"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "authentication.sas_token", "sv=2020-09-05&sr=b&sig=Z%2FRHIX5Xcg0Mq2rqI3OlWTjEg2tYkboXr1P9ZUXDtkk%3D&se=2050-09-30T02%3A23%3A26Z&sp=rw"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "path", "/logs/"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "period", "7200"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "gzip_level", "5"),
@@ -148,7 +158,31 @@ func TestAccFastlyServiceLoggingBlobStorage_allAttr(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "processing_region", "us"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "file_max_bytes", "1048576"),
+					resource.TestCheckResourceAttrSet("fastly_service_logging_blobstorage.test", "public_key"),
 				),
+			},
+			{
+				Config: ConfigLoggingBlobStorageUpdated(serviceName, domainName, loggerName, containerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "authentication.account_name", "teststorageaccount2"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "authentication.sas_token", "sv=2021-08-06&sr=b&sig=A%2Fx8h5vQ3ZuTn2R9tYkX7wL0mCq1oPzB9dFsEjKa4Uc%3D&se=2051-01-01T00%3A00%3A00Z&sp=rw"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "path", "/updated-logs/"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "period", "1800"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "gzip_level", "9"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "format", constants.LoggingBlobStorageDefaultFormat),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "format_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "message_type", "loggly"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "processing_region", "eu"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "file_max_bytes", "2097152"),
+					resource.TestCheckResourceAttrSet("fastly_service_logging_blobstorage.test", "public_key"),
+				),
+			},
+			{
+				// The update must leave no residual diff against the same config.
+				Config:   ConfigLoggingBlobStorageUpdated(serviceName, domainName, loggerName, containerName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -177,11 +211,16 @@ func TestAccFastlyServiceLoggingBlobStorage_clearToDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "timestamp_format", "%Y-%m-%dT%H:%M:%S%z"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "processing_region", "us"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "file_max_bytes", "1048576"),
+					resource.TestCheckResourceAttrSet("fastly_service_logging_blobstorage.test", "public_key"),
 				),
 			},
 			{
 				Config: ConfigLoggingBlobStorageDefaults(serviceName, domainName, loggerName, containerName),
 				Check: resource.ComposeTestCheckFunc(
+					// public_key must actually clear to "" on update, not be left in
+					// place by a Nullable setter that omits an empty value instead of
+					// sending it.
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "public_key", ""),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "path", ""),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "period", "3600"),
 					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "gzip_level", "-1"),

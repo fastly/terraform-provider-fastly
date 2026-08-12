@@ -92,8 +92,12 @@ func buildCommonUpdateInput(serviceID string, version int, m commonModel) *fastl
 		Container:      new(service.StringValue(m.Container)),
 	}
 
-	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
-	input.SASToken = fastly.NullString(service.StringValue(m.SASToken()))
+	// Credentials default to "" and can be cleared. Always send a concrete
+	// value via new() rather than fastly.NullString, which maps "" to nil,
+	// omits the field (account_name,omitempty / sas_token,omitempty), and
+	// leaves the previously-set credential in place.
+	input.AccountName = new(service.StringValue(m.AccountName()))
+	input.SASToken = new(service.StringValue(m.SASToken()))
 	input.Path = new(service.StringValue(m.Path))
 	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
 	input.CompressionCodec = new(service.StringValue(m.CompressionCodec))

@@ -16,4 +16,5 @@ resource "fastly_service_logging_blobstorage" "test" {
   timestamp_format  = "%Y-%m-%dT%H:%M:%S%z"
   processing_region = "us"
   file_max_bytes    = 1048576
+  public_key        = trimspace(file("{{.PUBLIC_KEY_PATH}}"))
 }

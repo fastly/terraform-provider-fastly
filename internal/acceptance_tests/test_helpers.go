@@ -2123,6 +2123,13 @@ func ConfigLoggingBlobStorageFileMaxBytesInvalid(serviceName, domainName, logger
 	)
 }
 
+// pgpPublicKeyFixturePath returns the absolute path to a shared PGP public
+// key fixture, used to exercise the public_key attribute across logging
+// endpoint acceptance tests without embedding the key block inline in HCL.
+func pgpPublicKeyFixturePath() string {
+	return filepath.ToSlash(filepath.Join(getRepoRoot(), "internal/acceptance_tests/fixtures/pgp/test_public_key.asc"))
+}
+
 func ConfigLoggingBlobStorageAll(serviceName, domainName, loggerName, containerName string) string {
 	return BuildConfig(
 		ServiceCDN,
@@ -2133,6 +2140,7 @@ func ConfigLoggingBlobStorageAll(serviceName, domainName, loggerName, containerN
 			"SERVICE_VERSION":          "1",
 			"LOGGING_BLOBSTORAGE_NAME": loggerName,
 			"CONTAINER_NAME":           containerName,
+			"PUBLIC_KEY_PATH":          pgpPublicKeyFixturePath(),
 		},
 		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
 		"internal/acceptance_tests/blocks/logging_blobstorage_all.tf",
@@ -2250,6 +2258,7 @@ func ConfigLoggingBlobStorageUpdated(serviceName, domainName, loggerName, contai
 			"SERVICE_VERSION":          "1",
 			"LOGGING_BLOBSTORAGE_NAME": loggerName,
 			"CONTAINER_NAME":           containerName,
+			"PUBLIC_KEY_PATH":          pgpPublicKeyFixturePath(),
 		},
 		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
 		"internal/acceptance_tests/blocks/logging_blobstorage_updated.tf",

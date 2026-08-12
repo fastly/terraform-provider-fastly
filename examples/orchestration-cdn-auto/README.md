@@ -13,6 +13,7 @@ The example provisions and manages:
 - one ACL per service (service 1 has an IP allowlist, service 2 has a temporary blocklist)
 - one condition on service 1, referenced by its gzip configuration's `cache_condition`
 - one gzip configuration on service 1
+- one edge dictionary on service 1
 - Image Optimizer enabled on service 1 (default settings added in a follow-up apply - see below)
 
 ## What this example is for
@@ -209,6 +210,52 @@ You should see:
 - `service_1_active_version` move to the new version
 - the new condition appear in the service configuration
 - `service_2_*` outputs remain unchanged
+
+### Add or modify a dictionary
+
+For example, add a second dictionary to `service_1`:
+
+```hcl
+  dictionary {
+    name = "geo_overrides"
+  }
+```
+
+Then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- the new or modified dictionary appear in the service configuration
+- `dictionary_id` outputs reflect the new dictionary IDs
+
+### Remove a dictionary, or change its write_only attribute
+
+Dictionary items are not recoverable once a dictionary is deleted, so both
+removing a `dictionary` block and changing its `write_only` attribute fail by
+default whenever the dictionary still contains items. Changing `write_only`
+hits the same guard because the Fastly API has no in-place update for it -
+the provider deletes and recreates the dictionary, which discards its items
+just like removing the block would.
+
+Either empty the dictionary first (for example with
+`fastly_service_dictionary_items`, once ported to this provider), or set
+`force_destroy = true` on the block before removing it or changing
+`write_only`:
+
+```hcl
+  dictionary {
+    name          = "feature_flags"
+    force_destroy = true
+  }
+```
+
+Apply that change first, then remove the block entirely, or change
+`write_only`, and run `terraform apply` again.
 
 ### Configure Image Optimizer default settings
 

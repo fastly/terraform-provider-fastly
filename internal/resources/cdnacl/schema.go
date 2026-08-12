@@ -178,34 +178,21 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 }
 
 // ReconcileWithPrevious reconciles ACLs while validating force_destroy requirements for deletions.
-// It checks that ACLs being removed either have force_destroy=true in their previous state or are empty.
+// It checks that ACLs being removed either have force_destroy=true in their previous state or are
+// empty. The guard mechanics (map previous/desired by name, check force_destroy, check
+// emptiness, error) are shared with dictionary via reconcile.GuardedRun.
 func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID string, version int, previous, desired []NestedModel) error {
-	previousByName := make(map[string]NestedModel)
-	for _, p := range previous {
-		previousByName[service.StringValue(p.Name)] = p
-	}
-
-	desiredByName := make(map[string]NestedModel)
-	for _, d := range desired {
-		desiredByName[service.StringValue(d.Name)] = d
-	}
-
-	for name, prevACL := range previousByName {
-		if _, exists := desiredByName[name]; !exists {
-			if !service.BoolValue(prevACL.ForceDestroy) {
-				isEmpty, err := isACLEmpty(ctx, serviceID, service.StringValue(prevACL.ACLID), client)
-				if err != nil {
-					return fmt.Errorf("error checking if ACL is empty before removal: %w", err)
-				}
-
-				if !isEmpty {
-					return fmt.Errorf("cannot delete ACL %q (ID: %s): list is not empty. The ACL contains entries that must be removed first, or set force_destroy to true before removing the ACL", name, service.StringValue(prevACL.ACLID))
-				}
-			}
-		}
-	}
-
-	return reconciler.Run(ctx, client, serviceID, version, desired)
+	return reconciler.GuardedRun(
+		ctx, client, serviceID, version, previous, desired,
+		func(m NestedModel) bool { return service.BoolValue(m.ForceDestroy) },
+		func(prev, desired NestedModel, stillPresent bool) bool { return !stillPresent },
+		func(ctx context.Context, prev NestedModel) (bool, error) {
+			return isACLEmpty(ctx, serviceID, service.StringValue(prev.ACLID), client)
+		},
+		func(name string, prev NestedModel) error {
+			return fmt.Errorf("cannot delete ACL %q (ID: %s): list is not empty. The ACL contains entries that must be removed first, or set force_destroy to true before removing the ACL", name, service.StringValue(prev.ACLID))
+		},
+	)
 }
 
 func Equal(a, b []NestedModel) bool {

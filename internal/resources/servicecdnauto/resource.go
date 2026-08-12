@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
@@ -64,6 +65,7 @@ type Model struct {
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
+	Dictionary                    []dictionary.NestedModel                    `tfsdk:"dictionary"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
@@ -125,6 +127,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
+			"dictionary":                       dictionary.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
@@ -310,6 +313,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
 
+	if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.Dictionary); err != nil {
+		resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+		return
+	}
+
+	dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, version, plan.Dictionary)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+		return
+	}
+	plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
+
 	if err := loggings3.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingS3); err != nil {
 		resp.Diagnostics.AddError("Error reconciling S3 logging endpoints", err.Error())
 		return
@@ -487,6 +502,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
 		return
 	}
+	dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Dictionary)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+		return
+	}
 	loggingS3s, err := loggings3.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading S3 logging endpoints", err.Error())
@@ -507,6 +527,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
+	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
 	state.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, state.LoggingDatadog)
@@ -618,6 +639,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
+		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
 		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
 		!loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
 		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
@@ -720,6 +742,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
+
+		if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Dictionary, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+			return
+		}
+		plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
 
 		if err := loggings3.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingS3); err != nil {
 			resp.Diagnostics.AddError("Error reconciling S3 logging endpoints", err.Error())
@@ -830,6 +864,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
+		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)

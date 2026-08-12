@@ -57,6 +57,10 @@ resource "fastly_service_cdn_auto" "service_1" {
     extensions      = ["css", "js", "html"]
     cache_condition = "text_assets_only"
   }
+
+  dictionary {
+    name = "feature_flags"
+  }
 }
 
 # Image Optimizer must be enabled on service_1 before an

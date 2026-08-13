@@ -459,9 +459,6 @@ func TestAccFastlyServiceLoggingS3_gzipCodec(t *testing.T) {
 	})
 }
 
-// TestAccFastlyServiceLoggingS3_codecConflict verifies that configuring both
-// compression_codec and gzip_level fails at plan time with a clear validation
-// error, rather than producing an inconsistent-result error at apply time.
 // TestAccFastlyServiceLoggingS3_gzipLevelRange verifies that an explicitly
 // configured gzip_level outside 0-9 fails at plan time via int64validator.Between,
 // rather than at apply time.
@@ -507,6 +504,9 @@ func TestAccFastlyServiceLoggingS3_gzipLevelSentinelRejected(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingS3_codecConflict verifies that configuring both
+// compression_codec and gzip_level fails at plan time with a clear validation
+// error, rather than producing an inconsistent-result error at apply time.
 func TestAccFastlyServiceLoggingS3_codecConflict(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

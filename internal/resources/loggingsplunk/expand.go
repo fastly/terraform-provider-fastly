@@ -6,7 +6,10 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
-func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateSplunkInput {
+// buildCommonCreateInput sets the Create fields shared by VCL and Compute
+// services. BuildCreateInput and BuildComputeCreateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonCreateInput(serviceID string, version int, m commonModel) *fastly.CreateSplunkInput {
 	input := &fastly.CreateSplunkInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -23,11 +26,16 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
 	input.RequestMaxBytes = fastly.NullInt(int(service.Int64Value(m.RequestMaxBytes)))
 	input.RequestMaxEntries = fastly.NullInt(int(service.Int64Value(m.RequestMaxEntries)))
+
+	return input
+}
+
+func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateSplunkInput {
+	input := buildCommonCreateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.Placement = fastly.NullString(service.StringValue(m.Placement))
 	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
-
 	return input
 }
 
@@ -35,27 +43,13 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 // sets format, format_version, placement, or response_condition, since those
 // only affect generated VCL and Compute services don't have any.
 func BuildComputeCreateInput(serviceID string, version int, m ComputeNestedModel) *fastly.CreateSplunkInput {
-	input := &fastly.CreateSplunkInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           new(service.StringValue(m.Name)),
-		URL:            new(service.StringValue(m.URL)),
-		Token:          new(service.StringValue(m.Token())),
-	}
-
-	input.TLSCACert = fastly.NullString(service.StringValue(m.TLSCACert()))
-	input.TLSClientCert = fastly.NullString(service.StringValue(m.TLSClientCert()))
-	input.TLSClientKey = fastly.NullString(service.StringValue(m.TLSClientKey()))
-	input.TLSHostname = fastly.NullString(service.StringValue(m.TLSHostname()))
-	input.UseTLS = new(fastly.Compatibool(service.BoolValue(m.UseTLS)))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-	input.RequestMaxBytes = fastly.NullInt(int(service.Int64Value(m.RequestMaxBytes)))
-	input.RequestMaxEntries = fastly.NullInt(int(service.Int64Value(m.RequestMaxEntries)))
-
-	return input
+	return buildCommonCreateInput(serviceID, version, m.commonModel)
 }
 
-func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateSplunkInput {
+// buildCommonUpdateInput sets the Update fields shared by VCL and Compute
+// services. BuildUpdateInput and BuildComputeUpdateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonUpdateInput(serviceID string, version int, m commonModel) *fastly.UpdateSplunkInput {
 	input := &fastly.UpdateSplunkInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -82,6 +76,12 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	// omitted when zero (fastly.NullInt maps 0 to nil).
 	input.RequestMaxBytes = new(int(service.Int64Value(m.RequestMaxBytes)))
 	input.RequestMaxEntries = new(int(service.Int64Value(m.RequestMaxEntries)))
+
+	return input
+}
+
+func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateSplunkInput {
+	input := buildCommonUpdateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	// placement can be cleared back to unset / nil (distinct from "none" — see
@@ -96,7 +96,6 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		input.Placement = fastly.NullValue[string]()
 	}
 	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
-
 	return input
 }
 
@@ -104,27 +103,7 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 // sets format, format_version, placement, or response_condition, since those
 // only affect generated VCL and Compute services don't have any.
 func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateSplunkInput {
-	input := &fastly.UpdateSplunkInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           service.StringValue(m.Name),
-		NewName:        new(service.StringValue(m.Name)),
-		URL:            new(service.StringValue(m.URL)),
-		Token:          new(service.StringValue(m.Token())),
-	}
-
-	// See BuildUpdateInput for why these are always sent rather than omitted
-	// when empty/zero.
-	input.TLSCACert = new(service.StringValue(m.TLSCACert()))
-	input.TLSClientCert = new(service.StringValue(m.TLSClientCert()))
-	input.TLSClientKey = new(service.StringValue(m.TLSClientKey()))
-	input.TLSHostname = new(service.StringValue(m.TLSHostname()))
-	input.UseTLS = new(fastly.Compatibool(service.BoolValue(m.UseTLS)))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-	input.RequestMaxBytes = new(int(service.Int64Value(m.RequestMaxBytes)))
-	input.RequestMaxEntries = new(int(service.Int64Value(m.RequestMaxEntries)))
-
-	return input
+	return buildCommonUpdateInput(serviceID, version, m.commonModel)
 }
 
 // ClearVCLOnlyCreateFields nils out format, format_version, placement, and

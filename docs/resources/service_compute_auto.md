@@ -125,6 +125,7 @@ Optional:
 - `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_BQ_SECRET_KEY` environment variable.
 
 
+
 <a id="nestedblock--logging_blobstorage"></a>
 ### Nested Schema for `logging_blobstorage`
 

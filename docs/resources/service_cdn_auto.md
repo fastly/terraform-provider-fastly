@@ -22,6 +22,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 
 - `acl` (Block List) ACLs attached to this service. (see [below for nested schema](#nestedblock--acl))
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
+- `cache_setting` (Block List) Cache settings attached to this service. (see [below for nested schema](#nestedblock--cache_setting))
 - `comment` (String) Optional service comment.
 - `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
 - `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
@@ -107,6 +108,21 @@ Optional:
 - `ssl_client_cert` (String, Sensitive) Client certificate used when connecting to the backend.
 - `ssl_client_key` (String, Sensitive) Client key used when connecting to the backend.
 
+
+
+<a id="nestedblock--cache_setting"></a>
+### Nested Schema for `cache_setting`
+
+Required:
+
+- `name` (String) Unique name for this Cache Setting. Changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `action` (String) One of `cache`, `pass`, or `restart`, as defined on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).
+- `cache_condition` (String) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
+- `stale_ttl` (Number) Max "Time To Live" (in seconds) for stale (unreachable) objects. Default `0`.
+- `ttl` (Number) The Time-To-Live (TTL, in seconds) for the object. Default `0`.
 
 
 <a id="nestedblock--condition"></a>

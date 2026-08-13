@@ -813,6 +813,83 @@ func ConfigCDNAutoWithGzipCacheCondition(serviceName, domainName, gzipName, cond
 	)
 }
 
+// ConfigCDNAutoWithCacheSetting returns a CDN auto service config with a domain and a cache
+// setting
+func ConfigCDNAutoWithCacheSetting(serviceName, domainName, cacheSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithCacheSettingMinimal returns a CDN auto service config with a cache setting
+// that leaves action, ttl, and stale_ttl unset
+func ConfigCDNAutoWithCacheSettingMinimal(serviceName, domainName, cacheSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_minimal.tf",
+	)
+}
+
+// ConfigCDNAutoWithCacheSettingUpdated returns a CDN auto service config with the same cache
+// setting name but different action, ttl, and stale_ttl values
+func ConfigCDNAutoWithCacheSettingUpdated(serviceName, domainName, cacheSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleCacheSettings returns a CDN auto service config with two cache settings
+func ConfigCDNAutoWithMultipleCacheSettings(serviceName, domainName, cacheSettingName1, cacheSettingName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"CACHE_SETTING_NAME_1": cacheSettingName1,
+			"CACHE_SETTING_NAME_2": cacheSettingName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithCacheSettingCacheCondition returns a CDN auto service config with a cache
+// setting whose cache_condition references a real nested CACHE-type condition block.
+func ConfigCDNAutoWithCacheSettingCacheCondition(serviceName, domainName, cacheSettingName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+			"CONDITION_NAME":     conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_cache.tf",
+		"internal/acceptance_tests/blocks/cache_setting_with_cache_condition.tf",
+	)
+}
+
 // ConfigACLForImport returns a test configuration for importing an ACL
 func ConfigACLForImport(serviceName, domainName, aclName string) string {
 	return BuildConfig(

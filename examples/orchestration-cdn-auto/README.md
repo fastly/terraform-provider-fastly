@@ -11,8 +11,10 @@ The example provisions and manages:
 - one service-specific backend on only service 1
 - one domain per service
 - one ACL per service (service 1 has an IP allowlist, service 2 has a temporary blocklist)
-- one condition on service 1, referenced by its gzip configuration's `cache_condition`
+- one condition on service 1, referenced by its gzip and cache setting
+  configurations' `cache_condition`
 - one gzip configuration on service 1
+- one cache setting on service 1
 - one edge dictionary on service 1
 - Image Optimizer enabled on service 1 (default settings added in a follow-up apply - see below)
 
@@ -52,10 +54,10 @@ Expected bootstrap behavior:
 1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
 3. The provider reconciles the nested `domain`, `backend`, `acl`, `condition`,
-   and `gzip` blocks to version `1`. `condition` is reconciled before `backend`
-   and `gzip` since both can reference a condition by name, and the Fastly API
-   rejects a backend or gzip config that names a condition which doesn't exist
-   yet in that version.
+   `gzip`, and `cache_setting` blocks to version `1`. `condition` is
+   reconciled before `backend`, `gzip`, and `cache_setting` since all three
+   can reference a condition by name, and the Fastly API rejects a config
+   that names a condition which doesn't exist yet in that version.
 4. The provider validates and activates version `1`.
 5. `fastly_service_product_image_optimizer.service_1` enables the Image
    Optimizer product on `service_1`.
@@ -183,6 +185,32 @@ You should see:
 - `service_1_managed_version` increase
 - `service_1_active_version` move to the new version
 - the updated `content_types` reflected in the service configuration
+- `service_2_*` outputs remain unchanged
+
+### Add or modify a cache setting
+
+For example, change service 1's cache setting `action` from `cache` to `pass`:
+
+```hcl
+  cache_setting {
+    name            = "text_assets_ttl"
+    action          = "pass"
+    ttl             = 3600
+    cache_condition = "text_assets_only"
+  }
+```
+
+Then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- `service_1_active_version` move to the new version
+- the updated `action` reflected in the service configuration
 - `service_2_*` outputs remain unchanged
 
 ### Add or modify a condition

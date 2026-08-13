@@ -7,6 +7,7 @@ import (
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/cachesetting"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
@@ -67,6 +68,7 @@ type Model struct {
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
+	CacheSetting                  []cachesetting.NestedModel                  `tfsdk:"cache_setting"`
 	Dictionary                    []dictionary.NestedModel                    `tfsdk:"dictionary"`
 	LoggingBlobStorage            []loggingblobstorage.NestedModel            `tfsdk:"logging_blobstorage"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
@@ -131,6 +133,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
+			"cache_setting":                    cachesetting.NestedBlockSchema(),
 			"dictionary":                       dictionary.NestedBlockSchema(),
 			"logging_blobstorage":              loggingblobstorage.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
@@ -268,8 +271,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-	// Conditions must be reconciled before backend/gzip: both can reference a condition by
-	// name (request_condition, cache_condition), and the Fastly API rejects a backend/gzip
+	// Conditions must be reconciled before backend/gzip/cache_setting: all three can reference
+	// a condition by name (request_condition, cache_condition), and the Fastly API rejects a
 	// create that names a condition which doesn't exist yet in this version.
 	if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Condition); err != nil {
 		resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
@@ -318,6 +321,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
+
+	if err := cachesetting.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.CacheSetting); err != nil {
+		resp.Diagnostics.AddError("Error reconciling cache settings", err.Error())
+		return
+	}
+
+	cacheSettings, err := cachesetting.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service cache settings", err.Error())
+		return
+	}
+	plan.CacheSetting = cachesetting.MatchOrder(cacheSettings, plan.CacheSetting)
 
 	if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.Dictionary); err != nil {
 		resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
@@ -532,6 +547,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
 		return
 	}
+	cacheSettings, err := cachesetting.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service cache settings", err.Error())
+		return
+	}
 	dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Dictionary)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
@@ -567,6 +587,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
+	state.CacheSetting = cachesetting.MatchOrder(cacheSettings, state.CacheSetting)
 	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
 	state.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
@@ -681,6 +702,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
+		!cachesetting.Equal(plan.CacheSetting, state.CacheSetting) ||
 		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
 		!loggingblobstorage.Equal(plan.LoggingBlobStorage, state.LoggingBlobStorage) ||
 		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
@@ -736,9 +758,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-		// Conditions must be reconciled before backend/gzip: both can reference a condition by
-		// name (request_condition, cache_condition), and the Fastly API rejects a backend/gzip
-		// create that names a condition which doesn't exist yet in this version.
+		// Conditions must be reconciled before backend/gzip/cache_setting: all three can
+		// reference a condition by name (request_condition, cache_condition), and the Fastly
+		// API rejects a create that names a condition which doesn't exist yet in this version.
 		if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Condition); err != nil {
 			resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
 			return
@@ -786,6 +808,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
+
+		if err := cachesetting.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.CacheSetting); err != nil {
+			resp.Diagnostics.AddError("Error reconciling cache settings", err.Error())
+			return
+		}
+
+		cacheSettings, err := cachesetting.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service cache settings", err.Error())
+			return
+		}
+		plan.CacheSetting = cachesetting.MatchOrder(cacheSettings, plan.CacheSetting)
 
 		if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Dictionary, plan.Dictionary); err != nil {
 			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
@@ -932,6 +966,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
+		plan.CacheSetting = cachesetting.MatchOrder(state.CacheSetting, plan.CacheSetting)
 		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
 		plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(state.LoggingBlobStorage, plan.LoggingBlobStorage)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)

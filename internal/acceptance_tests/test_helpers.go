@@ -600,6 +600,21 @@ func ConfigCDNAutoWithDictionaryWriteOnly(serviceName, domainName, dictionaryNam
 	)
 }
 
+// ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy returns a CDN auto service config with a
+// domain and a write_only dictionary that has force_destroy enabled
+func ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_write_only_force_destroy.tf",
+	)
+}
+
 // ConfigCDNAutoWithMultipleDictionaries returns a CDN auto service config with multiple dictionaries
 func ConfigCDNAutoWithMultipleDictionaries(serviceName, domainName, dictionaryName1, dictionaryName2 string) string {
 	return BuildConfig(

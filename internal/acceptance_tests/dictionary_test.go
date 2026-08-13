@@ -117,6 +117,66 @@ func TestAccFastlyServiceCDNAuto_withDictionaryUpdate(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceCDNAuto_withWriteOnlyDictionaryForceDestroy verifies that a non-empty
+// write_only dictionary cannot have write_only toggled off (implemented as delete-then-create,
+// see dictionary.ops.Update) without force_destroy, even though its items can't be inspected
+// via the API to run the usual emptiness check.
+func TestAccFastlyServiceCDNAuto_withWriteOnlyDictionaryForceDestroy(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	dictionaryName := fmt.Sprintf("dict_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithDictionaryWriteOnly(serviceName, domainName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.write_only", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.force_destroy", "false"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithDictionaryWriteOnly(serviceName, domainName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					AddDictionaryItem("fastly_service_cdn_auto.test", "dictionary.0"),
+				),
+			},
+			{
+				Config:      ConfigCDNAutoWithDictionary(serviceName, domainName, dictionaryName),
+				ExpectError: regexp.MustCompile("cannot delete or change write_only"),
+			},
+			{
+				// force_destroy is persisted here without touching write_only, so this step
+				// doesn't trigger the guard - it just sets prev.ForceDestroy=true in state
+				// so the following step's write_only toggle is permitted.
+				Config: ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy(serviceName, domainName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.write_only", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.force_destroy", "true"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithDictionaryForceDestroy(serviceName, domainName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.write_only", "false"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.force_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_withDictionaryForceDestroy(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

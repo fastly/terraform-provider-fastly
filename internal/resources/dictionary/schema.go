@@ -180,6 +180,10 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 // the previous state or the dictionary must contain no items, since its items are not
 // recoverable once deleted. The guard mechanics (map previous/desired by name, check
 // force_destroy, check emptiness, error) are shared with cdnacl via reconcile.GuardedRun.
+//
+// A write_only dictionary can't be inspected for items via the API, so the emptiness check
+// is skipped for it - it's treated as non-empty and force_destroy is required unconditionally,
+// matching the old SDKv2 provider's behavior.
 func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID string, version int, previous, desired []NestedModel) error {
 	return reconciler.GuardedRun(
 		ctx, client, serviceID, version, previous, desired,
@@ -188,9 +192,15 @@ func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID
 			return !stillPresent || service.BoolValue(prev.WriteOnly) != service.BoolValue(desired.WriteOnly)
 		},
 		func(ctx context.Context, prev NestedModel) (bool, error) {
+			if service.BoolValue(prev.WriteOnly) {
+				return false, nil
+			}
 			return isDictionaryEmpty(ctx, client, serviceID, service.StringValue(prev.DictionaryID))
 		},
 		func(name string, prev NestedModel) error {
+			if service.BoolValue(prev.WriteOnly) {
+				return fmt.Errorf("cannot delete or change write_only for dictionary %q (ID: %s): it is write_only, so its contents cannot be inspected to verify it is empty; set force_destroy to true for this change to be applied", name, service.StringValue(prev.DictionaryID))
+			}
 			return fmt.Errorf("cannot delete dictionary %q (ID: %s): it contains items that must be removed first, or set force_destroy to true for this change to be applied", name, service.StringValue(prev.DictionaryID))
 		},
 	)

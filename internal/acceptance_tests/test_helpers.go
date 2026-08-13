@@ -3004,6 +3004,207 @@ func ConfigComputeAutoWithLoggingBigQueryFormat(serviceName, domainName, loggerN
 	)
 }
 
+func ConfigLoggingSplunkBasic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"SERVICE_COMMENT":     "",
+			"DOMAIN_NAME":         domainName,
+			"SERVICE_VERSION":     "1",
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_basic.tf",
+	)
+}
+
+func ConfigLoggingSplunkUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"SERVICE_COMMENT":     "",
+			"DOMAIN_NAME":         domainName,
+			"SERVICE_VERSION":     "1",
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_updated.tf",
+	)
+}
+
+func ConfigLoggingSplunkAtVersion(serviceName, domainName, loggerName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"SERVICE_COMMENT":     "",
+			"DOMAIN_NAME":         domainName,
+			"SERVICE_VERSION":     fmt.Sprintf("%d", version),
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_basic.tf",
+	)
+}
+
+func ConfigLoggingSplunkForImport(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"SERVICE_COMMENT":     "",
+			"DOMAIN_NAME":         domainName,
+			"SERVICE_VERSION":     "1",
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_basic.tf",
+	)
+}
+
+// ConfigLoggingSplunkComputeFormat returns a config attaching
+// fastly_service_logging_splunk to an explicit Compute service with format set,
+// a VCL-only attribute. The standalone resource's schema is shared by both
+// service types, so this is expected to fail at apply time via
+// ValidateNoVCLOnlyAttributesForCompute rather than at Terraform's own
+// schema-validation stage.
+func ConfigLoggingSplunkComputeFormat(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"SERVICE_COMMENT":     "",
+			"SERVICE_VERSION":     "1",
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_splunk_compute_format.tf",
+	)
+}
+
+// ConfigLoggingSplunkCompute returns a config attaching
+// fastly_service_logging_splunk to an explicit Compute service with no VCL-only
+// attributes set. ClearVCLOnlyCreateFields strips format from the create
+// request, so the endpoint ends up with whatever format the Fastly API defaults
+// to - see TestAccFastlyServiceLoggingSplunk_formatDefault.
+func ConfigLoggingSplunkCompute(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"SERVICE_COMMENT":     "",
+			"SERVICE_VERSION":     "1",
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_splunk_compute.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingSplunk(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingSplunkPlacementNone(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested_placement_none.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingSplunkUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested_updated.tf",
+	)
+}
+
+func ConfigCDNAutoWithMultipleLoggingSplunk(serviceName, domainName, loggerName1, loggerName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_SPLUNK_NAME_1": loggerName1,
+			"LOGGING_SPLUNK_NAME_2": loggerName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested_multi.tf",
+	)
+}
+
+func ConfigCDNAutoWithBackendAndLoggingSplunk(serviceName, domainName, backendName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"BACKEND_NAME":        backendName,
+			"LOGGING_SPLUNK_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested.tf",
+	)
+}
+
+func ConfigComputeAutoWithLoggingSplunk(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"LOGGING_SPLUNK_NAME": loggerName,
+			"PACKAGE_PATH":        GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingSplunkFormat returns a Compute auto service
+// config whose nested logging_splunk block sets format, a VCL-only attribute.
+// service_compute_auto's logging_splunk schema (ComputeNestedBlockSchema) omits
+// format/format_version/placement/response_condition entirely, so this is
+// expected to fail Terraform's own schema validation ("Unsupported argument")
+// rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingSplunkFormat(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"LOGGING_SPLUNK_NAME": loggerName,
+			"PACKAGE_PATH":        GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_splunk_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 // productEnablementBlock renders a single "internal/acceptance_tests/blocks/service_product_<product>.tf"
 // template, merging SERVICE_ID_REF (the Terraform expression for the owning
 // service's id, e.g. "fastly_service_cdn_auto.test.id") with any

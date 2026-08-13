@@ -13,6 +13,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/healthcheck"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
@@ -66,6 +67,7 @@ type Model struct {
 	Backend                       []backend.NestedModel                       `tfsdk:"backend"`
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
+	HealthCheck                   []healthcheck.NestedModel                   `tfsdk:"healthcheck"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
 	Dictionary                    []dictionary.NestedModel                    `tfsdk:"dictionary"`
 	LoggingBlobStorage            []loggingblobstorage.NestedModel            `tfsdk:"logging_blobstorage"`
@@ -130,6 +132,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"backend":                          backend.NestedBlockSchema(),
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
+			"healthcheck":                      healthcheck.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
 			"dictionary":                       dictionary.NestedBlockSchema(),
 			"logging_blobstorage":              loggingblobstorage.NestedBlockSchema(),
@@ -282,6 +285,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Condition = condition.MatchOrder(conditions, plan.Condition)
+
+	// Health checks must be reconciled before backend: a backend can reference a health check
+	// by name, and the Fastly API rejects a backend create that names a health check which
+	// doesn't exist yet in this version.
+	if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.HealthCheck); err != nil {
+		resp.Diagnostics.AddError("Error reconciling health checks", err.Error())
+		return
+	}
+
+	healthChecks, err := healthcheck.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service health checks", err.Error())
+		return
+	}
+	plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
 	if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -527,6 +545,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service conditions", err.Error())
 		return
 	}
+	healthChecks, err := healthcheck.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service health checks", err.Error())
+		return
+	}
 	gzips, err := gzip.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Gzip)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
@@ -566,6 +589,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
+	state.HealthCheck = healthcheck.MatchOrder(healthChecks, state.HealthCheck)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
 	state.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
@@ -680,6 +704,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!backend.Equal(plan.Backend, state.Backend) ||
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
+		!healthcheck.Equal(plan.HealthCheck, state.HealthCheck) ||
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
 		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
 		!loggingblobstorage.Equal(plan.LoggingBlobStorage, state.LoggingBlobStorage) ||
@@ -750,6 +775,21 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.Condition = condition.MatchOrder(conditions, plan.Condition)
+
+		// Health checks must be reconciled before backend: a backend can reference a health
+		// check by name, and the Fastly API rejects a backend create that names a health check
+		// which doesn't exist yet in this version.
+		if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.HealthCheck); err != nil {
+			resp.Diagnostics.AddError("Error reconciling health checks", err.Error())
+			return
+		}
+
+		healthChecks, err := healthcheck.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service health checks", err.Error())
+			return
+		}
+		plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
 		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -931,6 +971,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
+		plan.HealthCheck = healthcheck.MatchOrder(state.HealthCheck, plan.HealthCheck)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
 		plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(state.LoggingBlobStorage, plan.LoggingBlobStorage)

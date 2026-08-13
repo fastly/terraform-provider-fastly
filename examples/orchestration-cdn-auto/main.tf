@@ -61,6 +61,12 @@ resource "fastly_service_cdn_auto" "service_1" {
   dictionary {
     name = "feature_flags"
   }
+
+  healthcheck {
+    name = "origin_health"
+    host = "unique1.origin.example.foo.com"
+    path = "/healthz"
+  }
 }
 
 # Image Optimizer must be enabled on service_1 before an

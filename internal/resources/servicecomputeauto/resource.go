@@ -8,6 +8,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/computepackage"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
@@ -52,6 +53,7 @@ type Model struct {
 	ManagedVersion      types.Int64                              `tfsdk:"managed_version"`
 	Domain              []domain.NestedModel                     `tfsdk:"domain"`
 	Backend             []backend.NestedModel                    `tfsdk:"backend"`
+	Dictionary          []dictionary.NestedModel                 `tfsdk:"dictionary"`
 	ResourceLink        []resourcelink.NestedModel               `tfsdk:"resource_link"`
 	Package             []computepackage.Model                   `tfsdk:"package"`
 	LoggingBlobStorage  []loggingblobstorage.ComputeNestedModel  `tfsdk:"logging_blobstorage"`
@@ -111,6 +113,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 		Blocks: map[string]schema.Block{
 			"domain":               domain.NestedBlockSchema(),
 			"backend":              backend.NestedBlockSchema(),
+			"dictionary":           dictionary.NestedBlockSchema(),
 			"resource_link":        resourcelink.NestedBlockSchema(),
 			"package":              computepackage.NestedBlockSchema(),
 			"logging_blobstorage":  loggingblobstorage.ComputeNestedBlockSchema(),
@@ -194,6 +197,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+	if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.Dictionary); err != nil {
+		resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+		return
+	}
+
+	dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, version, plan.Dictionary)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+		return
+	}
+	plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
 
 	if err := resourcelink.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.ResourceLink); err != nil {
 		resp.Diagnostics.AddError("Error reconciling resource links", err.Error())
@@ -369,6 +384,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
+	dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Dictionary)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+		return
+	}
 	loggingBlobStorages, err := loggingblobstorage.ComputeReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Blob Storage logging endpoints", err.Error())
@@ -401,6 +421,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
+	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
 	state.LoggingBlobStorage = loggingblobstorage.ComputeMatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
 	state.LoggingS3 = loggings3.ComputeMatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.ComputeMatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
@@ -450,7 +471,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !resourcelink.Equal(plan.ResourceLink, state.ResourceLink) || !computepackage.Equal(plan.Package, state.Package) || !loggingblobstorage.ComputeEqual(plan.LoggingBlobStorage, state.LoggingBlobStorage) || !loggings3.ComputeEqual(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.ComputeEqual(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !loggingnewrelic.ComputeEqual(plan.LoggingNewRelic, state.LoggingNewRelic) || !loggingdatadog.ComputeEqual(plan.LoggingDatadog, state.LoggingDatadog) || !loggingbigquery.ComputeEqual(plan.LoggingBigQuery, state.LoggingBigQuery)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !dictionary.Equal(plan.Dictionary, state.Dictionary) || !resourcelink.Equal(plan.ResourceLink, state.ResourceLink) || !computepackage.Equal(plan.Package, state.Package) || !loggingblobstorage.ComputeEqual(plan.LoggingBlobStorage, state.LoggingBlobStorage) || !loggings3.ComputeEqual(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.ComputeEqual(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !loggingnewrelic.ComputeEqual(plan.LoggingNewRelic, state.LoggingNewRelic) || !loggingdatadog.ComputeEqual(plan.LoggingDatadog, state.LoggingDatadog) || !loggingbigquery.ComputeEqual(plan.LoggingBigQuery, state.LoggingBigQuery)
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -507,6 +528,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+		if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Dictionary, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+			return
+		}
+		plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
 
 		if err := resourcelink.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.ResourceLink); err != nil {
 			resp.Diagnostics.AddError("Error reconciling resource links", err.Error())
@@ -633,6 +666,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ActiveVersion = state.ActiveVersion
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
+		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
 		plan.ResourceLink = resourcelink.MatchOrder(state.ResourceLink, plan.ResourceLink)
 		plan.Package = state.Package
 		plan.LoggingBlobStorage = loggingblobstorage.ComputeMatchOrder(state.LoggingBlobStorage, plan.LoggingBlobStorage)

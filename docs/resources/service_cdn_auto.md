@@ -24,6 +24,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Optional service comment.
 - `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
+- `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `dynamic_snippet` (Block List) Dynamic VCL snippet metadata attached to this service version. Dynamic snippet content is managed separately by `fastly_service_dynamic_snippet_content`. (see [below for nested schema](#nestedblock--dynamic_snippet))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
@@ -121,6 +122,23 @@ Required:
 Optional:
 
 - `priority` (Number) A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`.
+
+
+<a id="nestedblock--dictionary"></a>
+### Nested Schema for `dictionary`
+
+Required:
+
+- `name` (String) A unique name to identify this dictionary. Must be unique within the service.
+
+Optional:
+
+- `force_destroy` (Boolean) Allow the dictionary to be deleted or have `write_only` changed, even if it still contains items. Dictionary items are not recoverable once deleted, so this defaults to `false`.
+- `write_only` (Boolean) Determines if items in the dictionary are readable or not. Default `false`. Changing this attribute deletes and recreates the dictionary, discarding its current items, so it is subject to the same `force_destroy` requirement as removing the dictionary.
+
+Read-Only:
+
+- `dictionary_id` (String) The ID of the dictionary.
 
 
 <a id="nestedblock--domain"></a>

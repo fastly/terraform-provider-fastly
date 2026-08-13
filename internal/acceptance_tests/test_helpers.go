@@ -349,6 +349,42 @@ func AddACLEntry(resourceName string) resource.TestCheckFunc {
 	}
 }
 
+// AddDictionaryItem adds an item to the dictionary at the given state attribute prefix
+// (e.g. "dictionary.0"). This is used as a test side-effect to populate a dictionary for
+// testing force_destroy behavior. Returns a TestCheckFunc.
+func AddDictionaryItem(resourceName, dictionaryAttrPrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		serviceID := rs.Primary.ID
+		dictionaryID := rs.Primary.Attributes[dictionaryAttrPrefix+".dictionary_id"]
+
+		if serviceID == "" || dictionaryID == "" {
+			return fmt.Errorf("service_id or dictionary_id not set in state")
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		_, err = client.CreateDictionaryItem(context.Background(), &fastly.CreateDictionaryItemInput{
+			ServiceID:    serviceID,
+			DictionaryID: dictionaryID,
+			ItemKey:      new("test-key"),
+			ItemValue:    new("test-value"),
+		})
+		if err != nil {
+			return fmt.Errorf("error adding item to dictionary %s on service %s: %w", dictionaryID, serviceID, err)
+		}
+
+		return nil
+	}
+}
+
 // Configuration helpers for CDN Auto service
 
 // ConfigCDNAutoBasic returns a basic CDN auto service config with a single domain
@@ -532,6 +568,80 @@ func ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclName string) s
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/acl_with_force_destroy.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionary returns a CDN auto service config with a domain and a dictionary
+func ConfigCDNAutoWithDictionary(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionaryWriteOnly returns a CDN auto service config with a domain and a
+// write_only dictionary
+func ConfigCDNAutoWithDictionaryWriteOnly(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_write_only.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy returns a CDN auto service config with a
+// domain and a write_only dictionary that has force_destroy enabled
+func ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_write_only_force_destroy.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleDictionaries returns a CDN auto service config with multiple dictionaries
+func ConfigCDNAutoWithMultipleDictionaries(serviceName, domainName, dictionaryName1, dictionaryName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"DICTIONARY_NAME_1": dictionaryName1,
+			"DICTIONARY_NAME_2": dictionaryName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionaryForceDestroy returns a CDN auto service config with a dictionary
+// that has force_destroy enabled
+func ConfigCDNAutoWithDictionaryForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_with_force_destroy.tf",
 	)
 }
 
@@ -764,6 +874,39 @@ func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) s
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithDictionary returns a Compute auto service config with a domain, package, and a dictionary
+func ConfigComputeAutoWithDictionary(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithDictionaryForceDestroy returns a Compute auto service config with a
+// domain, package, and a dictionary that has force_destroy enabled
+func ConfigComputeAutoWithDictionaryForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_with_force_destroy.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

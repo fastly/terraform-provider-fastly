@@ -310,9 +310,14 @@ func sharedAttributes() map[string]schema.Attribute {
 			// compression_codec and gzip_level are mutually exclusive; the API
 			// rejects a request that sets both. Validation runs against config,
 			// where an unset gzip_level is null rather than the -1 default, so
-			// this correctly fires only when both are set.
+			// this correctly fires only when both are set. int64validator.Between
+			// likewise skips a null (omitted) config value, so it only rejects an
+			// explicitly configured value outside 0-9 — including the internal -1
+			// sentinel itself, which a user should never configure directly (omit
+			// the attribute instead to get the same "unset" behavior).
 			Validators: []validator.Int64{
 				gzipLevelCodecConflict{},
+				int64validator.Between(0, 9),
 			},
 			Description: "The level of gzip encoding when sending logs. Valid values are `0` (no compression) through `9`. To compress at a specific gzip level, leave `compression_codec` unset and set this. Conflicts with `compression_codec`: setting both in the same request will result in an error.",
 		},

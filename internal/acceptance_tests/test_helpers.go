@@ -1991,6 +1991,42 @@ func ConfigLoggingS3CodecConflict(serviceName, domainName, loggerName, bucketNam
 	)
 }
 
+func ConfigLoggingS3GzipLevelInvalid(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_gzip_level_invalid.tf",
+	)
+}
+
+// ConfigLoggingS3GzipLevelSentinel returns a config that explicitly sets
+// gzip_level = -1, the internal "unset" sentinel. This should fail plan-time
+// validation via int64validator.Between(0, 9) rather than being silently accepted
+// and reinterpreted as "unset" - a user should omit the attribute for that.
+func ConfigLoggingS3GzipLevelSentinel(serviceName, domainName, loggerName, bucketName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"SERVICE_COMMENT": "",
+			"DOMAIN_NAME":     domainName,
+			"SERVICE_VERSION": "1",
+			"LOGGING_S3_NAME": loggerName,
+			"BUCKET_NAME":     bucketName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_s3_gzip_level_sentinel.tf",
+	)
+}
+
 func ConfigLoggingS3ForImport(serviceName, domainName, loggerName, bucketName string) string {
 	return BuildConfig(
 		ServiceCDN,

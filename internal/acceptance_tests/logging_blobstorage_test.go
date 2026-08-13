@@ -121,6 +121,51 @@ func TestAccFastlyServiceLoggingBlobStorage_fileMaxBytesRange(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceLoggingBlobStorage_gzipLevelRange verifies that an explicitly
+// configured gzip_level outside 0-9 fails at plan time via int64validator.Between,
+// rather than at apply time.
+func TestAccFastlyServiceLoggingBlobStorage_gzipLevelRange(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("blobstorage-logger-%s", acctest.RandString(10))
+	containerName := fmt.Sprintf("tf-test-container-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigLoggingBlobStorageGzipLevelInvalid(serviceName, domainName, loggerName, containerName),
+				ExpectError: regexp.MustCompile("value must be between 0 and 9"),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingBlobStorage_gzipLevelSentinelRejected verifies that
+// explicitly configuring gzip_level = -1 (the internal "unset" sentinel) is
+// rejected at plan time, rather than being silently accepted and reinterpreted as
+// "unset" - a user should omit the attribute to get that behavior.
+func TestAccFastlyServiceLoggingBlobStorage_gzipLevelSentinelRejected(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("blobstorage-logger-%s", acctest.RandString(10))
+	containerName := fmt.Sprintf("tf-test-container-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigLoggingBlobStorageGzipLevelSentinel(serviceName, domainName, loggerName, containerName),
+				ExpectError: regexp.MustCompile("value must be between 0 and 9"),
+			},
+		},
+	})
+}
+
 // TestAccFastlyServiceLoggingBlobStorage_allAttr exercises every attribute of the
 // standalone resource across a create and an update, so a regression in any single
 // setter (e.g. sending an empty value via a Nullable helper that omits rather than
@@ -332,6 +377,80 @@ func TestAccFastlyServiceLoggingBlobStorage_importBasic(t *testing.T) {
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingBlobStorage_compressionCodec verifies that setting
+// compression_codec without gzip_level does not result in an API error (the two
+// fields are mutually exclusive). With gzip_level unset it stays at the -1
+// sentinel and is never sent to the API. Also verifies compression_codec clears
+// back to its "" default on update: compression_codec is Optional+Computed with a
+// static "" default, and BuildUpdateInput must always send it via new() rather
+// than fastly.NullString, or clearing a previously-set value never reaches the
+// API (it gets omitted instead of sent as "") and the second step's check fails
+// with the old value still applied.
+func TestAccFastlyServiceLoggingBlobStorage_compressionCodec(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("blobstorage-logger-%s", acctest.RandString(10))
+	containerName := fmt.Sprintf("tf-test-container-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingBlobStorageCompressionCodec(serviceName, domainName, loggerName, containerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "compression_codec", "zstd"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "gzip_level", "-1"),
+				),
+			},
+			{
+				Config: ConfigLoggingBlobStorageDefaults(serviceName, domainName, loggerName, containerName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "compression_codec", ""),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "gzip_level", "-1"),
+				),
+			},
+			{
+				// The clear must leave no residual diff against the same config.
+				Config:   ConfigLoggingBlobStorageDefaults(serviceName, domainName, loggerName, containerName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceLoggingBlobStorage_gzipCodec verifies that the "gzip" codec
+// (for which the API auto-populates gzip_level, e.g. to 3) does not produce a
+// perpetual diff. gzip_level is left unset, so it must stay at the -1 sentinel
+// rather than picking up the API-managed value. The final implicit plan check
+// fails on any residual diff.
+func TestAccFastlyServiceLoggingBlobStorage_gzipCodec(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	loggerName := fmt.Sprintf("blobstorage-logger-%s", acctest.RandString(10))
+	containerName := fmt.Sprintf("tf-test-container-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigLoggingBlobStorageGzipCodec(serviceName, domainName, loggerName, containerName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn.test"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "compression_codec", "gzip"),
+					resource.TestCheckResourceAttr("fastly_service_logging_blobstorage.test", "gzip_level", "-1"),
+				),
 			},
 		},
 	})

@@ -2123,6 +2123,74 @@ func ConfigLoggingBlobStorageFileMaxBytesInvalid(serviceName, domainName, logger
 	)
 }
 
+func ConfigLoggingBlobStorageCompressionCodec(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_compression_codec.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageGzipCodec(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_gzip_codec.tf",
+	)
+}
+
+func ConfigLoggingBlobStorageGzipLevelInvalid(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_gzip_level_invalid.tf",
+	)
+}
+
+// ConfigLoggingBlobStorageGzipLevelSentinel returns a config that explicitly sets
+// gzip_level = -1, the internal "unset" sentinel. This should fail plan-time
+// validation via int64validator.Between(0, 9) rather than being silently accepted
+// and reinterpreted as "unset" - a user should omit the attribute for that.
+func ConfigLoggingBlobStorageGzipLevelSentinel(serviceName, domainName, loggerName, containerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"SERVICE_COMMENT":          "",
+			"DOMAIN_NAME":              domainName,
+			"SERVICE_VERSION":          "1",
+			"LOGGING_BLOBSTORAGE_NAME": loggerName,
+			"CONTAINER_NAME":           containerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_blobstorage_gzip_level_sentinel.tf",
+	)
+}
+
 // pgpPublicKeyFixturePath returns the absolute path to a shared PGP public
 // key fixture, used to exercise the public_key attribute across logging
 // endpoint acceptance tests without embedding the key block inline in HCL.

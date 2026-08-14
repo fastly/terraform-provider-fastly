@@ -239,6 +239,9 @@ TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend
 
 # With parallelism
 TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend -parallel 4 -timeout 30m
+
+# With a specific keyword match
+make test-acc KEYWORD=<word>
 ```
 
 `make test-acc KEYWORD=<word>` only runs acceptance tests whose name matches `<word>`; it's

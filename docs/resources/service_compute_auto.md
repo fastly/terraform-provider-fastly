@@ -31,6 +31,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `logging_newrelic` (Block List) New Relic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelic))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
+- `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
 - `package` (Block List) Compute package attached to this service version. At most one package block is supported. (see [below for nested schema](#nestedblock--package))
 - `resource_link` (Block List) Shared resources (such as KV Stores or Config Stores) linked to this service, making them accessible from Compute code. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
@@ -277,6 +278,43 @@ Optional:
 - `access_key` (String, Sensitive) The access key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_ACCESS_KEY` environment variable.
 - `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. Can be set via the `FASTLY_S3_IAM_ROLE` environment variable.
 - `secret_key` (String, Sensitive) The secret key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_SECRET_KEY` environment variable.
+
+
+
+<a id="nestedblock--logging_splunk"></a>
+### Nested Schema for `logging_splunk`
+
+Required:
+
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `url` (String) The URL to post logs to.
+
+Optional:
+
+- `authentication` (Attributes) Splunk authentication credentials. When this block is omitted entirely, defaults to the `FASTLY_SPLUNK_TOKEN` environment variable. (see [below for nested schema](#nestedatt--logging_splunk--authentication))
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `request_max_bytes` (Number) The maximum number of bytes sent in one request. Default `0` for unbounded.
+- `request_max_entries` (Number) The maximum number of logs sent in one request. Default `0` for unbounded.
+- `tls` (Attributes) TLS configuration used when `use_tls` is enabled. When this block is omitted entirely, `ca_cert`, `client_cert`, and `client_key` default to the `FASTLY_SPLUNK_CA_CERT`, `FASTLY_SPLUNK_CLIENT_CERT`, and `FASTLY_SPLUNK_CLIENT_KEY` environment variables. (see [below for nested schema](#nestedatt--logging_splunk--tls))
+- `use_tls` (Boolean) Whether to use TLS for secure logging. Default: `false`.
+
+<a id="nestedatt--logging_splunk--authentication"></a>
+### Nested Schema for `logging_splunk.authentication`
+
+Optional:
+
+- `token` (String, Sensitive) A Splunk token for use in posting logs over HTTP to your collector. Can be set via the `FASTLY_SPLUNK_TOKEN` environment variable.
+
+
+<a id="nestedatt--logging_splunk--tls"></a>
+### Nested Schema for `logging_splunk.tls`
+
+Optional:
+
+- `ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CA_CERT` environment variable.
+- `client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_CERT` environment variable.
+- `client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_KEY` environment variable.
+- `hostname` (String) The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.
 
 
 

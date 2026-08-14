@@ -210,6 +210,14 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 			err.Error(),
 		)
 	}
+
+	if err := ratelimiter.ValidateDictionaryReferences(config.RateLimiter, config.Dictionary); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rate_limiter"),
+			"Invalid rate limiter configuration",
+			err.Error(),
+		)
+	}
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -876,21 +884,24 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.CacheSetting = cachesetting.MatchOrder(cacheSettings, plan.CacheSetting)
 
-		if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Dictionary, plan.Dictionary); err != nil {
+		// Dictionaries and rate limiters are reconciled in three passes, not the usual single
+		// ReconcileWithPrevious + Reconcile pair, because uri_dictionary_name creates a
+		// dependency in both directions: a rate limiter create needs its dictionary to already
+		// exist, but a dictionary delete fails version validation if a not-yet-updated rate
+		// limiter's generated VCL still references it by name. So: create/update dictionaries
+		// first (satisfies the create direction), reconcile rate limiters fully (any rate
+		// limiter losing its dictionary reference is updated/deleted here), then delete
+		// dictionaries no longer desired (now safe - nothing still references them).
+		if err := dictionary.CheckRemovalGuards(ctx, r.providerData.AutoClient(), serviceID, state.Dictionary, plan.Dictionary); err != nil {
 			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
 			return
 		}
 
-		dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+		if err := dictionary.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
 			return
 		}
-		plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
 
-		// Rate limiters must be reconciled after dictionaries: uri_dictionary_name can reference
-		// a dictionary by name, and the Fastly API rejects a create that names one which doesn't
-		// exist yet in this version.
 		if err := ratelimiter.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.RateLimiter); err != nil {
 			resp.Diagnostics.AddError("Error reconciling rate limiters", err.Error())
 			return
@@ -902,6 +913,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.RateLimiter = ratelimiter.MatchOrder(rateLimiters, plan.RateLimiter)
+
+		if err := dictionary.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+			return
+		}
+		plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
 
 		if err := loggingblobstorage.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingBlobStorage); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Blob Storage logging endpoints", err.Error())

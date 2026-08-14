@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -319,6 +320,59 @@ func TestOpsDelete_noMatchingID(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestNeedsRecreate(t *testing.T) {
+	tests := []struct {
+		name     string
+		desired  NestedModel
+		remote   *fastly.ERL
+		expected bool
+	}{
+		{
+			name:     "no remote",
+			desired:  minimalNestedModel(),
+			remote:   nil,
+			expected: false,
+		},
+		{
+			name:    "uri_dictionary_name cleared",
+			desired: minimalNestedModel(),
+			remote: &fastly.ERL{
+				URIDictionaryName: new("my-dictionary"),
+			},
+			expected: true,
+		},
+		{
+			name:    "response_object_name cleared",
+			desired: minimalNestedModel(),
+			remote: &fastly.ERL{
+				ResponseObjectName: new("my-response-object"),
+			},
+			expected: true,
+		},
+		{
+			name:    "uri_dictionary_name unchanged",
+			desired: fullNestedModel(),
+			remote: &fastly.ERL{
+				URIDictionaryName:  new("my-dictionary"),
+				ResponseObjectName: new("my-response-object"),
+			},
+			expected: false,
+		},
+		{
+			name:     "neither field was ever set",
+			desired:  minimalNestedModel(),
+			remote:   &fastly.ERL{},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, needsRecreate(tt.desired, tt.remote))
+		})
+	}
+}
+
 func TestCaseInsensitiveState_PlanModifyString(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -445,6 +499,51 @@ func TestValidateConfig(t *testing.T) {
 		item.Action = types.StringValue("log_only")
 
 		assert.NoError(t, ValidateConfig([]NestedModel{item}))
+	})
+}
+
+func TestValidateDictionaryReferences(t *testing.T) {
+	dict := func(name string) dictionary.NestedModel {
+		return dictionary.NestedModel{Name: types.StringValue(name)}
+	}
+
+	t.Run("no uri_dictionary_name set", func(t *testing.T) {
+		item := minimalNestedModel()
+		assert.NoError(t, ValidateDictionaryReferences([]NestedModel{item}, nil))
+	})
+
+	t.Run("references a configured dictionary", func(t *testing.T) {
+		item := minimalNestedModel()
+		item.URIDictionaryName = types.StringValue("my-dictionary")
+
+		assert.NoError(t, ValidateDictionaryReferences([]NestedModel{item}, []dictionary.NestedModel{dict("my-dictionary")}))
+	})
+
+	t.Run("references a dictionary that isn't configured", func(t *testing.T) {
+		item := minimalNestedModel()
+		item.Name = types.StringValue("rate-limiter")
+		item.URIDictionaryName = types.StringValue("missing-dictionary")
+
+		err := ValidateDictionaryReferences([]NestedModel{item}, []dictionary.NestedModel{dict("other-dictionary")})
+		if assert.Error(t, err) {
+			assert.Contains(t, err.Error(), `"rate-limiter"`)
+			assert.Contains(t, err.Error(), `"missing-dictionary"`)
+		}
+	})
+
+	t.Run("references a dictionary when none are configured", func(t *testing.T) {
+		item := minimalNestedModel()
+		item.URIDictionaryName = types.StringValue("missing-dictionary")
+
+		err := ValidateDictionaryReferences([]NestedModel{item}, nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("skips unknown uri_dictionary_name", func(t *testing.T) {
+		item := minimalNestedModel()
+		item.URIDictionaryName = types.StringUnknown()
+
+		assert.NoError(t, ValidateDictionaryReferences([]NestedModel{item}, nil))
 	})
 }
 

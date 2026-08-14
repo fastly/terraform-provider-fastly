@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 
 	fastly "github.com/fastly/go-fastly/v17/fastly"
@@ -161,6 +162,9 @@ func CommonAttributes() map[string]schema.Attribute {
 		"penalty_box_duration": schema.Int64Attribute{
 			Required:    true,
 			Description: "Length of time in minutes that the rate limiter is in effect after the initial violation is detected.",
+			Validators: []validator.Int64{
+				int64validator.Between(1, 60),
+			},
 		},
 		"rate_limiter_id": schema.StringAttribute{
 			Computed:    true,
@@ -191,6 +195,9 @@ func CommonAttributes() map[string]schema.Attribute {
 		"rps_limit": schema.Int64Attribute{
 			Required:    true,
 			Description: "Upper limit of requests per second allowed by the rate limiter.",
+			Validators: []validator.Int64{
+				int64validator.Between(10, 10000),
+			},
 		},
 		"uri_dictionary_name": schema.StringAttribute{
 			Optional:    true,
@@ -215,14 +222,15 @@ func NestedBlockSchema() schema.ListNestedBlock {
 	}
 }
 
-// ops holds the ID-by-name mapping produced by the most recent List call within a single
+// ops holds the remote ERLs by name produced by the most recent List call within a single
 // reconcile run, since cloning a service version assigns new rate limiter IDs and the Fastly
 // API only accepts an ID (never name+service+version) for update/delete. reconcile.Run always
 // calls List exactly once before any Delete/Update, so Delete/Update can resolve the current ID
-// from that same call instead of re-listing. A fresh ops must be used per Reconcile/ReadForVersion
-// call - this cache must not be shared across calls for different services/versions.
+// (and, for Update, the currently persisted uri_dictionary_name/response_object_name) from that
+// same call instead of re-listing. A fresh ops must be used per Reconcile/ReadForVersion call -
+// this cache must not be shared across calls for different services/versions.
 type ops struct {
-	idsByName map[string]string
+	remoteByName map[string]*fastly.ERL
 }
 
 func (o *ops) List(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]*fastly.ERL, error) {
@@ -234,9 +242,9 @@ func (o *ops) List(ctx context.Context, client *fastly.Client, serviceID string,
 		return nil, err
 	}
 
-	o.idsByName = make(map[string]string, len(erls))
+	o.remoteByName = make(map[string]*fastly.ERL, len(erls))
 	for _, e := range erls {
-		o.idsByName[fastly.ToValue(e.Name)] = fastly.ToValue(e.RateLimiterID)
+		o.remoteByName[fastly.ToValue(e.Name)] = e
 	}
 
 	return erls, nil
@@ -247,11 +255,11 @@ func (o ops) GetName(api *fastly.ERL) string {
 }
 
 func (o *ops) Delete(ctx context.Context, client *fastly.Client, serviceID string, version int, name string) error {
-	id := o.idsByName[name]
-	if id == "" {
+	remote := o.remoteByName[name]
+	if remote == nil {
 		return nil
 	}
-	return client.DeleteERL(ctx, &fastly.DeleteERLInput{ERLID: id})
+	return client.DeleteERL(ctx, &fastly.DeleteERLInput{ERLID: fastly.ToValue(remote.RateLimiterID)})
 }
 
 func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.ERL, error) {
@@ -279,7 +287,21 @@ func (o ops) Equal(desired NestedModel, remote *fastly.ERL) bool {
 
 func (o *ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.ERL, error) {
 	name := service.StringValue(desired.Name)
-	id := o.idsByName[name]
+	remote := o.remoteByName[name]
+
+	// uri_dictionary_name/response_object_name can't be cleared via UpdateERL - see
+	// needsRecreate - so clearing either goes through a delete+create instead.
+	if needsRecreate(desired, remote) {
+		if err := o.Delete(ctx, client, serviceID, version, name); err != nil {
+			return nil, err
+		}
+		return o.Create(ctx, client, serviceID, version, desired)
+	}
+
+	var id string
+	if remote != nil {
+		id = fastly.ToValue(remote.RateLimiterID)
+	}
 
 	return client.UpdateERL(ctx, &fastly.UpdateERLInput{
 		ERLID:              id,
@@ -296,6 +318,24 @@ func (o *ops) Update(ctx context.Context, client *fastly.Client, serviceID strin
 		URIDictionaryName:  optionalStringPointer(desired.URIDictionaryName),
 		WindowSize:         windowSizePointer(desired.WindowSize),
 	})
+}
+
+// needsRecreate reports whether applying desired requires deleting and recreating the rate
+// limiter rather than updating it in place. optionalStringPointer omits uri_dictionary_name/
+// response_object_name entirely when desired clears them to empty, since the API rejects an
+// explicit empty value for either field - but omitting them on update just leaves the
+// previously configured value in place, silently diverging from a plan that shows the field
+// cleared (see https://github.com/fastly/terraform-provider-fastly/pull/1408). Recreating is
+// the only way to actually clear them, mirroring account_name's handling in loggingbigquery.
+func needsRecreate(desired NestedModel, remote *fastly.ERL) bool {
+	if remote == nil {
+		return false
+	}
+
+	clearsURIDictionaryName := service.StringValue(desired.URIDictionaryName) == "" && fastly.ToValue(remote.URIDictionaryName) != ""
+	clearsResponseObjectName := service.StringValue(desired.ResponseObjectName) == "" && fastly.ToValue(remote.ResponseObjectName) != ""
+
+	return clearsURIDictionaryName || clearsResponseObjectName
 }
 
 func (o ops) ToModel(api *fastly.ERL) NestedModel {
@@ -500,6 +540,40 @@ func ValidateConfig(rateLimiters []NestedModel) error {
 			if !item.ResponseObjectName.IsUnknown() && (item.ResponseObjectName.IsNull() || item.ResponseObjectName.ValueString() == "") {
 				return fmt.Errorf("rate limiter %q: response_object_name is required when action is \"response_object\"", name)
 			}
+		}
+	}
+
+	return nil
+}
+
+// ValidateDictionaryReferences confirms every configured uri_dictionary_name matches a
+// dictionary present in the same service config, catching at plan time the case where a
+// dictionary block is renamed or removed but a rate limiter's reference to it is left stale.
+// Left unvalidated, that reaches the Fastly API as a version-validation failure instead - the
+// generated VCL for the unchanged rate limiter still names the now-deleted dictionary's table,
+// and reconcile.Run only reconciles a rate limiter whose own desired fields changed, so removing
+// just the dictionary block never updates it.
+func ValidateDictionaryReferences(rateLimiters []NestedModel, dictionaries []dictionary.NestedModel) error {
+	dictionaryNames := make(map[string]struct{}, len(dictionaries))
+	for _, d := range dictionaries {
+		if d.Name.IsUnknown() || d.Name.IsNull() {
+			continue
+		}
+		dictionaryNames[service.StringValue(d.Name)] = struct{}{}
+	}
+
+	for _, rl := range rateLimiters {
+		if rl.URIDictionaryName.IsUnknown() || rl.URIDictionaryName.IsNull() {
+			continue
+		}
+
+		name := service.StringValue(rl.URIDictionaryName)
+		if name == "" {
+			continue
+		}
+
+		if _, ok := dictionaryNames[name]; !ok {
+			return fmt.Errorf("rate limiter %q: uri_dictionary_name %q does not match any configured dictionary", service.StringValue(rl.Name), name)
 		}
 	}
 

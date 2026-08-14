@@ -723,6 +723,42 @@ func ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiter
 	)
 }
 
+// ConfigCDNAutoWithRateLimiterDictionaryCleared returns a CDN auto service config with the same
+// rate limiter and dictionary as ConfigCDNAutoWithRateLimiterDictionary, but with the rate
+// limiter's uri_dictionary_name unset - the dictionary block itself is left in place, only the
+// reference to it is cleared.
+func ConfigCDNAutoWithRateLimiterDictionaryCleared(serviceName, domainName, rateLimiterName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+			"DICTIONARY_NAME":   dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_with_dictionary_cleared.tf",
+	)
+}
+
+// ConfigCDNAutoWithRateLimiterDictionaryRemoved returns a CDN auto service config with the same
+// rate limiter as ConfigCDNAutoWithRateLimiterDictionary, but with the dictionary block removed
+// entirely - the rate limiter's uri_dictionary_name is left unchanged, still naming the
+// now-unmanaged dictionary.
+func ConfigCDNAutoWithRateLimiterDictionaryRemoved(serviceName, domainName, rateLimiterName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+			"DICTIONARY_NAME":   dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_dictionary_removed.tf",
+	)
+}
+
 // ConfigCDNAutoWithGzip returns a CDN auto service config with a domain and a gzip configuration
 func ConfigCDNAutoWithGzip(serviceName, domainName, gzipName string) string {
 	return BuildConfig(

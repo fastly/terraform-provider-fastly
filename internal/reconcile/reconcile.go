@@ -27,6 +27,47 @@ type Resource[T any, API any] struct {
 }
 
 func (r *Resource[T, API]) Run(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []T) error {
+	if err := r.DeleteRemoved(ctx, client, serviceID, version, desired); err != nil {
+		return err
+	}
+	return r.CreateOrUpdate(ctx, client, serviceID, version, desired)
+}
+
+// DeleteRemoved deletes remote items missing from desired. It is split out from Run so a
+// caller can defer deletion until after some other resource type has been reconciled, when a
+// remote item might still be referenced by name from that other resource type (e.g. a rate
+// limiter's uri_dictionary_name) - see GuardedRun's doc comment for the same concern on the
+// guarded path.
+func (r *Resource[T, API]) DeleteRemoved(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []T) error {
+	remote, err := r.Ops.List(ctx, client, serviceID, version)
+	if err != nil {
+		return err
+	}
+
+	desiredByName := make(map[string]struct{}, len(desired))
+	for _, item := range desired {
+		desiredByName[r.GetName(item)] = struct{}{}
+	}
+
+	for _, item := range remote {
+		name := r.Ops.GetName(item)
+		if _, ok := desiredByName[name]; !ok {
+			err := r.Ops.Delete(ctx, client, serviceID, version, name)
+			if errors.IsNotFound(err) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// CreateOrUpdate creates or updates every item in desired; it never deletes. It is split out
+// from Run for the same reason as DeleteRemoved.
+func (r *Resource[T, API]) CreateOrUpdate(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []T) error {
 	remote, err := r.Ops.List(ctx, client, serviceID, version)
 	if err != nil {
 		return err
@@ -44,23 +85,6 @@ func (r *Resource[T, API]) Run(ctx context.Context, client *fastly.Client, servi
 	remoteByName := make(map[string]*API, len(remote))
 	for _, item := range remote {
 		remoteByName[r.Ops.GetName(item)] = item
-	}
-
-	desiredByName := make(map[string]T, len(desired))
-	for _, item := range desired {
-		desiredByName[r.GetName(item)] = item
-	}
-
-	for name := range remoteByName {
-		if _, ok := desiredByName[name]; !ok {
-			err := r.Ops.Delete(ctx, client, serviceID, version, name)
-			if errors.IsNotFound(err) {
-				continue
-			}
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	for _, desiredItem := range desired {
@@ -105,6 +129,25 @@ func (r *Resource[T, API]) GuardedRun(
 	isEmpty func(ctx context.Context, prev T) (bool, error),
 	notEmptyErr func(name string, prev T) error,
 ) error {
+	if err := r.CheckGuards(ctx, previous, desired, forceDestroy, discardsItems, isEmpty, notEmptyErr); err != nil {
+		return err
+	}
+
+	return r.Run(ctx, client, serviceID, version, desired)
+}
+
+// CheckGuards is the validation half of GuardedRun, split out so a caller can defer the actual
+// deletion (via DeleteRemoved, called separately) until after some other resource type - which
+// might still reference a removed item by name - has been reconciled. It performs no changes;
+// it only refuses the transition if it would silently discard live, unrecoverable API-side data.
+func (r *Resource[T, API]) CheckGuards(
+	ctx context.Context,
+	previous, desired []T,
+	forceDestroy func(T) bool,
+	discardsItems func(prev, desired T, stillPresent bool) bool,
+	isEmpty func(ctx context.Context, prev T) (bool, error),
+	notEmptyErr func(name string, prev T) error,
+) error {
 	previousByName := make(map[string]T, len(previous))
 	for _, p := range previous {
 		previousByName[r.GetName(p)] = p
@@ -131,7 +174,7 @@ func (r *Resource[T, API]) GuardedRun(
 		}
 	}
 
-	return r.Run(ctx, client, serviceID, version, desired)
+	return nil
 }
 
 func (r *Resource[T, API]) ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]T, error) {

@@ -2,6 +2,7 @@ package acceptancetests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -965,6 +966,102 @@ func TestAccFastlyServiceCDNAuto_rateLimiterWithDictionary(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name", dictionaryName),
+				),
+			},
+			{
+				// Clearing uri_dictionary_name can't be done via UpdateERL - the API rejects an
+				// explicit empty value - so this goes through a delete+recreate of the rate
+				// limiter instead (see needsRecreate in internal/resources/ratelimiter).
+				Config: ConfigCDNAutoWithRateLimiterDictionaryCleared(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRateLimiterDictionaryCleared(serviceName, domainName, rateLimiterName, dictionaryName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterDictionaryRemoved(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+	dictionaryName := fmt.Sprintf("dict_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name", dictionaryName),
+				),
+			},
+			{
+				// Removing the dictionary block while the rate limiter's uri_dictionary_name is
+				// left unchanged, still naming it: ValidateDictionaryReferences rejects this at
+				// plan time, since reconcile.Run only reconciles a rate limiter whose own desired
+				// fields changed - leaving this stale would otherwise reach the Fastly API as a
+				// version-validation failure (the generated VCL references an undefined table)
+				// once the dictionary is actually deleted.
+				Config:      ConfigCDNAutoWithRateLimiterDictionaryRemoved(serviceName, domainName, rateLimiterName, dictionaryName),
+				ExpectError: regexp.MustCompile(`does not match any configured dictionary`),
+			},
+			{
+				// Revert to a valid config so CheckDestroy's cleanup doesn't hit the same
+				// plan-time validation error the previous step intentionally triggered.
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterDictionaryRemovedTogether(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+	dictionaryName := fmt.Sprintf("dict_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name", dictionaryName),
+				),
+			},
+			{
+				// Removing the dictionary block and clearing the rate limiter's
+				// uri_dictionary_name together, in the same apply: dictionaries are
+				// created/updated, then rate limiters are fully reconciled (clearing the stale
+				// reference here), then dictionaries no longer desired are deleted - see the
+				// three-pass sequence in servicecdnauto's Update. Confirms the delete succeeds
+				// once nothing still references the dictionary.
+				Config: ConfigCDNAutoWithRateLimiterMinimal(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.#", "0"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name"),
 				),
 			},
 		},

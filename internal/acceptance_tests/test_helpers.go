@@ -645,6 +645,84 @@ func ConfigCDNAutoWithDictionaryForceDestroy(serviceName, domainName, dictionary
 	)
 }
 
+// ConfigCDNAutoWithRateLimiter returns a CDN auto service config with a domain and a rate
+// limiter
+func ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithRateLimiterMinimal returns a CDN auto service config with a rate limiter
+// that leaves feature_revision, logger_type, response, response_object_name, and
+// uri_dictionary_name unset
+func ConfigCDNAutoWithRateLimiterMinimal(serviceName, domainName, rateLimiterName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_minimal.tf",
+	)
+}
+
+// ConfigCDNAutoWithRateLimiterUpdated returns a CDN auto service config with the same rate
+// limiter name but different action/client_key/http_methods/penalty_box_duration/rps_limit/
+// window_size values
+func ConfigCDNAutoWithRateLimiterUpdated(serviceName, domainName, rateLimiterName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleRateLimiters returns a CDN auto service config with two rate limiters
+func ConfigCDNAutoWithMultipleRateLimiters(serviceName, domainName, rateLimiterName1, rateLimiterName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":        serviceName,
+			"DOMAIN_NAME":         domainName,
+			"RATE_LIMITER_NAME_1": rateLimiterName1,
+			"RATE_LIMITER_NAME_2": rateLimiterName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithRateLimiterDictionary returns a CDN auto service config with a rate limiter
+// whose uri_dictionary_name references a real nested dictionary block.
+func ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+			"DICTIONARY_NAME":   dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_with_dictionary.tf",
+	)
+}
+
 // ConfigCDNAutoWithGzip returns a CDN auto service config with a domain and a gzip configuration
 func ConfigCDNAutoWithGzip(serviceName, domainName, gzipName string) string {
 	return BuildConfig(

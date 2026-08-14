@@ -308,7 +308,7 @@ func sharedAttributes() map[string]schema.Attribute {
 					Optional:    true,
 					Computed:    true,
 					Default:     stringdefault.StaticString(DefaultTLSHostname),
-					Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
+					Description: "The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.",
 				},
 			},
 		},

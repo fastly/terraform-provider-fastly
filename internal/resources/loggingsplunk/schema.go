@@ -256,11 +256,15 @@ func sharedAttributes() map[string]schema.Attribute {
 		// though Splunk has a single credential. Optional+Computed rather than
 		// Required like loggingdatadog's: the FASTLY_SPLUNK_TOKEN environment
 		// variable is existing (SDKv2 provider) behavior that must be preserved.
+		// authenticationRequired enforces that the token itself stays required.
 		"authentication": schema.SingleNestedAttribute{
 			Optional:    true,
 			Computed:    true,
 			Default:     authenticationEnvDefault{},
 			Description: "Splunk authentication credentials. When this block is omitted entirely, defaults to the `FASTLY_SPLUNK_TOKEN` environment variable.",
+			Validators: []validator.Object{
+				authenticationRequired{},
+			},
 			Attributes: map[string]schema.Attribute{
 				"token": schema.StringAttribute{
 					Optional:    true,

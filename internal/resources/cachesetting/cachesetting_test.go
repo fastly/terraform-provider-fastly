@@ -108,6 +108,7 @@ func TestActionPointer(t *testing.T) {
 		{name: "unknown", value: types.StringUnknown(), expected: nil},
 		{name: "empty", value: types.StringValue(""), expected: nil},
 		{name: "cache", value: types.StringValue("cache"), expected: new(fastly.CacheSettingActionCache)},
+		{name: "uppercase", value: types.StringValue("PASS"), expected: new(fastly.CacheSettingActionPass)},
 	}
 
 	for _, tt := range tests {

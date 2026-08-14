@@ -2,6 +2,7 @@ package cachesetting
 
 import (
 	"context"
+	"strings"
 
 	"github.com/fastly/terraform-provider-fastly/internal/reconcile"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -40,7 +41,7 @@ func CommonAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Description: "One of `cache`, `pass`, or `restart`, as defined on Fastly's documentation under [\"Caching action descriptions\"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).",
 			Validators: []validator.String{
-				stringvalidator.OneOf("cache", "pass", "restart"),
+				stringvalidator.OneOfCaseInsensitive("cache", "pass", "restart"),
 			},
 		},
 		"cache_condition": schema.StringAttribute{
@@ -114,12 +115,14 @@ func (o ops) Create(ctx context.Context, client *fastly.Client, serviceID string
 }
 
 // actionPointer returns nil for a null/unknown/empty action, so Create omits the field
-// rather than sending an invalid empty string for an enum the Fastly API validates.
+// rather than sending an invalid empty string for an enum the Fastly API validates. The
+// value is lowercased since the validator accepts any case (e.g. PASS) but the API expects
+// the lowercase enum value.
 func actionPointer(v types.String) *fastly.CacheSettingAction {
 	if v.IsNull() || v.IsUnknown() || v.ValueString() == "" {
 		return nil
 	}
-	action := fastly.CacheSettingAction(v.ValueString())
+	action := fastly.CacheSettingAction(strings.ToLower(v.ValueString()))
 	return &action
 }
 
@@ -128,7 +131,7 @@ func (o ops) Equal(desired NestedModel, remote *fastly.CacheSetting) bool {
 }
 
 func (o ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.CacheSetting, error) {
-	action := fastly.CacheSettingAction(service.StringValue(desired.Action))
+	action := fastly.CacheSettingAction(strings.ToLower(service.StringValue(desired.Action)))
 	cacheCondition := service.StringValue(desired.CacheCondition)
 	ttl := int(service.Int64Value(desired.TTL))
 	staleTTL := int(service.Int64Value(desired.StaleTTL))

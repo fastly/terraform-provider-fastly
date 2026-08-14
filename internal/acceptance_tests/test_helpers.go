@@ -349,6 +349,42 @@ func AddACLEntry(resourceName string) resource.TestCheckFunc {
 	}
 }
 
+// AddDictionaryItem adds an item to the dictionary at the given state attribute prefix
+// (e.g. "dictionary.0"). This is used as a test side-effect to populate a dictionary for
+// testing force_destroy behavior. Returns a TestCheckFunc.
+func AddDictionaryItem(resourceName, dictionaryAttrPrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		serviceID := rs.Primary.ID
+		dictionaryID := rs.Primary.Attributes[dictionaryAttrPrefix+".dictionary_id"]
+
+		if serviceID == "" || dictionaryID == "" {
+			return fmt.Errorf("service_id or dictionary_id not set in state")
+		}
+
+		client, err := NewFastlyClient()
+		if err != nil {
+			return fmt.Errorf("error creating Fastly client: %w", err)
+		}
+
+		_, err = client.CreateDictionaryItem(context.Background(), &fastly.CreateDictionaryItemInput{
+			ServiceID:    serviceID,
+			DictionaryID: dictionaryID,
+			ItemKey:      new("test-key"),
+			ItemValue:    new("test-value"),
+		})
+		if err != nil {
+			return fmt.Errorf("error adding item to dictionary %s on service %s: %w", dictionaryID, serviceID, err)
+		}
+
+		return nil
+	}
+}
+
 // Configuration helpers for CDN Auto service
 
 // ConfigCDNAutoBasic returns a basic CDN auto service config with a single domain
@@ -535,6 +571,80 @@ func ConfigCDNAutoWithACLForceDestroy(serviceName, domainName, aclName string) s
 	)
 }
 
+// ConfigCDNAutoWithDictionary returns a CDN auto service config with a domain and a dictionary
+func ConfigCDNAutoWithDictionary(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionaryWriteOnly returns a CDN auto service config with a domain and a
+// write_only dictionary
+func ConfigCDNAutoWithDictionaryWriteOnly(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_write_only.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy returns a CDN auto service config with a
+// domain and a write_only dictionary that has force_destroy enabled
+func ConfigCDNAutoWithDictionaryWriteOnlyForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_write_only_force_destroy.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleDictionaries returns a CDN auto service config with multiple dictionaries
+func ConfigCDNAutoWithMultipleDictionaries(serviceName, domainName, dictionaryName1, dictionaryName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"DICTIONARY_NAME_1": dictionaryName1,
+			"DICTIONARY_NAME_2": dictionaryName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithDictionaryForceDestroy returns a CDN auto service config with a dictionary
+// that has force_destroy enabled
+func ConfigCDNAutoWithDictionaryForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_with_force_destroy.tf",
+	)
+}
+
 // ConfigCDNAutoWithGzip returns a CDN auto service config with a domain and a gzip configuration
 func ConfigCDNAutoWithGzip(serviceName, domainName, gzipName string) string {
 	return BuildConfig(
@@ -703,6 +813,83 @@ func ConfigCDNAutoWithGzipCacheCondition(serviceName, domainName, gzipName, cond
 	)
 }
 
+// ConfigCDNAutoWithCacheSetting returns a CDN auto service config with a domain and a cache
+// setting
+func ConfigCDNAutoWithCacheSetting(serviceName, domainName, cacheSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithCacheSettingMinimal returns a CDN auto service config with a cache setting
+// that leaves action, ttl, and stale_ttl unset
+func ConfigCDNAutoWithCacheSettingMinimal(serviceName, domainName, cacheSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_minimal.tf",
+	)
+}
+
+// ConfigCDNAutoWithCacheSettingUpdated returns a CDN auto service config with the same cache
+// setting name but different action, ttl, and stale_ttl values
+func ConfigCDNAutoWithCacheSettingUpdated(serviceName, domainName, cacheSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleCacheSettings returns a CDN auto service config with two cache settings
+func ConfigCDNAutoWithMultipleCacheSettings(serviceName, domainName, cacheSettingName1, cacheSettingName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"CACHE_SETTING_NAME_1": cacheSettingName1,
+			"CACHE_SETTING_NAME_2": cacheSettingName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/cache_setting_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithCacheSettingCacheCondition returns a CDN auto service config with a cache
+// setting whose cache_condition references a real nested CACHE-type condition block.
+func ConfigCDNAutoWithCacheSettingCacheCondition(serviceName, domainName, cacheSettingName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"CACHE_SETTING_NAME": cacheSettingName,
+			"CONDITION_NAME":     conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_cache.tf",
+		"internal/acceptance_tests/blocks/cache_setting_with_cache_condition.tf",
+	)
+}
+
 // ConfigACLForImport returns a test configuration for importing an ACL
 func ConfigACLForImport(serviceName, domainName, aclName string) string {
 	return BuildConfig(
@@ -764,6 +951,39 @@ func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) s
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithDictionary returns a Compute auto service config with a domain, package, and a dictionary
+func ConfigComputeAutoWithDictionary(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithDictionaryForceDestroy returns a Compute auto service config with a
+// domain, package, and a dictionary that has force_destroy enabled
+func ConfigComputeAutoWithDictionaryForceDestroy(serviceName, domainName, dictionaryName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"DICTIONARY_NAME": dictionaryName,
+			"PACKAGE_PATH":    GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/dictionary_with_force_destroy.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }
@@ -2745,6 +2965,207 @@ func ConfigComputeAutoWithLoggingDatadogFormat(serviceName, domainName, loggerNa
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/logging_datadog_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+func ConfigLoggingNewRelicBasic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_basic.tf",
+	)
+}
+
+func ConfigLoggingNewRelicUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_updated.tf",
+	)
+}
+
+func ConfigLoggingNewRelicAtVersion(serviceName, domainName, loggerName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       fmt.Sprintf("%d", version),
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_basic.tf",
+	)
+}
+
+func ConfigLoggingNewRelicForImport(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"DOMAIN_NAME":           domainName,
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_basic.tf",
+	)
+}
+
+// ConfigLoggingNewRelicComputeFormat returns a config attaching
+// fastly_service_logging_newrelic to an explicit Compute service with format
+// set, a VCL-only attribute. The standalone resource's schema is shared by both
+// service types, so this is expected to fail at apply time via
+// ValidateNoVCLOnlyAttributesForCompute rather than at Terraform's own
+// schema-validation stage.
+func ConfigLoggingNewRelicComputeFormat(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_newrelic_compute_format.tf",
+	)
+}
+
+// ConfigLoggingNewRelicCompute returns a config attaching
+// fastly_service_logging_newrelic to an explicit Compute service with no
+// VCL-only attributes set. ClearVCLOnlyCreateFields strips format from the
+// create request, so the endpoint ends up with whatever format the Fastly API
+// defaults to - see TestAccFastlyServiceLoggingNewRelic_formatDefault.
+func ConfigLoggingNewRelicCompute(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"SERVICE_COMMENT":       "",
+			"SERVICE_VERSION":       "1",
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_newrelic_compute.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingNewRelic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingNewRelicPlacementNone(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested_placement_none.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingNewRelicUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested_updated.tf",
+	)
+}
+
+func ConfigCDNAutoWithMultipleLoggingNewRelic(serviceName, domainName, loggerName1, loggerName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":            serviceName,
+			"DOMAIN_NAME":             domainName,
+			"LOGGING_NEWRELIC_NAME_1": loggerName1,
+			"LOGGING_NEWRELIC_NAME_2": loggerName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested_multi.tf",
+	)
+}
+
+func ConfigCDNAutoWithBackendAndLoggingNewRelic(serviceName, domainName, backendName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"BACKEND_NAME":          backendName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested.tf",
+	)
+}
+
+func ConfigComputeAutoWithLoggingNewRelic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+			"PACKAGE_PATH":          GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingNewRelicFormat returns a Compute auto service
+// config whose nested logging_newrelic block sets format, a VCL-only
+// attribute. service_compute_auto's logging_newrelic schema
+// (ComputeNestedBlockSchema) omits format/format_version/placement/
+// response_condition entirely, so this is expected to fail Terraform's own
+// schema validation ("Unsupported argument") rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingNewRelicFormat(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":          serviceName,
+			"DOMAIN_NAME":           domainName,
+			"LOGGING_NEWRELIC_NAME": loggerName,
+			"PACKAGE_PATH":          GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_newrelic_nested_compute_format.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

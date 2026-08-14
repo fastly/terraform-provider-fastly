@@ -2,6 +2,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
@@ -81,6 +82,56 @@ func (r *Resource[T, API]) Run(ctx context.Context, client *fastly.Client, servi
 	}
 
 	return nil
+}
+
+// GuardedRun applies desired against remote like Run, but first refuses the whole reconcile if
+// it would silently throw away live, unrecoverable API-side data attached to a previously
+// existing item - e.g. ACL entries, or dictionary items. Several resource types wrap a
+// versioned config container (the ACL or dictionary itself) around such data; removing the item
+// from config is the obvious destructive transition, but a resource can have others too (a
+// dictionary's write_only toggle is implemented via delete-then-create, which is just as
+// destructive as removal). discardsItems decides, per previously-existing item, whether the
+// transition to its (possibly absent) desired counterpart is one of those destructive
+// transitions; when it is, the item must either have forceDestroy set, or isEmpty must confirm
+// there's nothing left to lose.
+func (r *Resource[T, API]) GuardedRun(
+	ctx context.Context,
+	client *fastly.Client,
+	serviceID string,
+	version int,
+	previous, desired []T,
+	forceDestroy func(T) bool,
+	discardsItems func(prev, desired T, stillPresent bool) bool,
+	isEmpty func(ctx context.Context, prev T) (bool, error),
+	notEmptyErr func(name string, prev T) error,
+) error {
+	previousByName := make(map[string]T, len(previous))
+	for _, p := range previous {
+		previousByName[r.GetName(p)] = p
+	}
+
+	desiredByName := make(map[string]T, len(desired))
+	for _, d := range desired {
+		desiredByName[r.GetName(d)] = d
+	}
+
+	for name, prevItem := range previousByName {
+		desiredItem, stillPresent := desiredByName[name]
+		if !discardsItems(prevItem, desiredItem, stillPresent) || forceDestroy(prevItem) {
+			continue
+		}
+
+		empty, err := isEmpty(ctx, prevItem)
+		if err != nil {
+			return fmt.Errorf("error checking if %q is empty before removal: %w", name, err)
+		}
+
+		if !empty {
+			return notEmptyErr(name, prevItem)
+		}
+	}
+
+	return r.Run(ctx, client, serviceID, version, desired)
 }
 
 func (r *Resource[T, API]) ReadForVersion(ctx context.Context, client *fastly.Client, serviceID string, version int) ([]T, error) {

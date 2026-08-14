@@ -22,8 +22,10 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 
 - `acl` (Block List) ACLs attached to this service. (see [below for nested schema](#nestedblock--acl))
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
+- `cache_setting` (Block List) Cache settings attached to this service. (see [below for nested schema](#nestedblock--cache_setting))
 - `comment` (String) Optional service comment.
 - `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
+- `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `dynamic_snippet` (Block List) Dynamic VCL snippet metadata attached to this service version. Dynamic snippet content is managed separately by `fastly_service_dynamic_snippet_content`. (see [below for nested schema](#nestedblock--dynamic_snippet))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
@@ -32,6 +34,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
+- `logging_newrelic` (Block List) New Relic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelic))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
@@ -109,6 +112,21 @@ Optional:
 
 
 
+<a id="nestedblock--cache_setting"></a>
+### Nested Schema for `cache_setting`
+
+Required:
+
+- `name` (String) Unique name for this Cache Setting. Changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `action` (String) One of `cache`, `pass`, or `restart`, as defined on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).
+- `cache_condition` (String) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
+- `stale_ttl` (Number) Max "Time To Live" (in seconds) for stale (unreachable) objects. Default `0`.
+- `ttl` (Number) The Time-To-Live (TTL, in seconds) for the object. Default `0`.
+
+
 <a id="nestedblock--condition"></a>
 ### Nested Schema for `condition`
 
@@ -121,6 +139,23 @@ Required:
 Optional:
 
 - `priority` (Number) A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`.
+
+
+<a id="nestedblock--dictionary"></a>
+### Nested Schema for `dictionary`
+
+Required:
+
+- `name` (String) A unique name to identify this dictionary. Must be unique within the service.
+
+Optional:
+
+- `force_destroy` (Boolean) Allow the dictionary to be deleted or have `write_only` changed, even if it still contains items. Dictionary items are not recoverable once deleted, so this defaults to `false`.
+- `write_only` (Boolean) Determines if items in the dictionary are readable or not. Default `false`. Changing this attribute deletes and recreates the dictionary, discarding its current items, so it is subject to the same `force_destroy` requirement as removing the dictionary.
+
+Read-Only:
+
+- `dictionary_id` (String) The ID of the dictionary.
 
 
 <a id="nestedblock--domain"></a>
@@ -269,6 +304,32 @@ Optional:
 Required:
 
 - `token` (String, Sensitive) The API key from your Datadog account.
+
+
+
+<a id="nestedblock--logging_newrelic"></a>
+### Nested Schema for `logging_newrelic`
+
+Required:
+
+- `authentication` (Attributes) New Relic authentication credentials. (see [below for nested schema](#nestedatt--logging_newrelic--authentication))
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid JSON that New Relic Logs can ingest.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of `2` are placed in `vcl_log` and those with `format_version` of `1` are placed in `vcl_deliver`. Valid value is `none`.
+- `processing_region` (String) Region where logs will be processed before streaming to New Relic. Valid values are `none`, `us` and `eu`.
+- `region` (String) The region that log data will be sent to. Valid values are `US` and `EU`. Default: `US`.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+<a id="nestedatt--logging_newrelic--authentication"></a>
+### Nested Schema for `logging_newrelic.authentication`
+
+Required:
+
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
 
 
 

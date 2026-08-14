@@ -22,11 +22,13 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Optional service comment.
+- `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
+- `logging_newrelic` (Block List) New Relic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelic))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
@@ -86,6 +88,23 @@ Optional:
 - `ssl_client_cert` (String, Sensitive) Client certificate used when connecting to the backend.
 - `ssl_client_key` (String, Sensitive) Client key used when connecting to the backend.
 
+
+
+<a id="nestedblock--dictionary"></a>
+### Nested Schema for `dictionary`
+
+Required:
+
+- `name` (String) A unique name to identify this dictionary. Must be unique within the service.
+
+Optional:
+
+- `force_destroy` (Boolean) Allow the dictionary to be deleted or have `write_only` changed, even if it still contains items. Dictionary items are not recoverable once deleted, so this defaults to `false`.
+- `write_only` (Boolean) Determines if items in the dictionary are readable or not. Default `false`. Changing this attribute deletes and recreates the dictionary, discarding its current items, so it is subject to the same `force_destroy` requirement as removing the dictionary.
+
+Read-Only:
+
+- `dictionary_id` (String) The ID of the dictionary.
 
 
 <a id="nestedblock--domain"></a>
@@ -177,6 +196,28 @@ Optional:
 Required:
 
 - `token` (String, Sensitive) The API key from your Datadog account.
+
+
+
+<a id="nestedblock--logging_newrelic"></a>
+### Nested Schema for `logging_newrelic`
+
+Required:
+
+- `authentication` (Attributes) New Relic authentication credentials. (see [below for nested schema](#nestedatt--logging_newrelic--authentication))
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to New Relic. Valid values are `none`, `us` and `eu`.
+- `region` (String) The region that log data will be sent to. Valid values are `US` and `EU`. Default: `US`.
+
+<a id="nestedatt--logging_newrelic--authentication"></a>
+### Nested Schema for `logging_newrelic.authentication`
+
+Required:
+
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
 
 
 

@@ -241,6 +241,9 @@ TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend
 TF_ACC=1 go test ./internal/acceptance_tests -v -run TestAccFastlyServiceBackend -parallel 4 -timeout 30m
 ```
 
+`make test-acc KEYWORD=<word>` only runs acceptance tests whose name matches `<word>`; it's
+passed through to `go test -run` as a regular expression, not a literal substring.
+
 ### Best Practices
 
 1. **Use `t.Parallel()`** for all tests (except those modifying env vars)

@@ -192,7 +192,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-	// Health checks must be reconciled before backend: a backend can reference a health check
+	// Health checks must be reconciled before backends: a backend can reference a health check
 	// by name, and the Fastly API rejects a backend create that names a health check which
 	// doesn't exist yet in this version.
 	if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.HealthCheck); err != nil {
@@ -528,7 +528,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggingnewrelic.ComputeEqual(plan.LoggingNewRelic, state.LoggingNewRelic) ||
 		!loggingdatadog.ComputeEqual(plan.LoggingDatadog, state.LoggingDatadog) ||
 		!loggingbigquery.ComputeEqual(plan.LoggingBigQuery, state.LoggingBigQuery) ||
-		!loggingsplunk.ComputeEqual(plan.LoggingSplunk, state.LoggingSplunk)
+		!loggingsplunk.ComputeEqual(plan.LoggingSplunk, state.LoggingSplunk) ||
+		false
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -574,7 +575,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-		// Health checks must be reconciled before backend: a backend can reference a health
+		// Health checks must be reconciled before backends: a backend can reference a health
 		// check by name, and the Fastly API rejects a backend create that names a health check
 		// which doesn't exist yet in this version.
 		if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.HealthCheck); err != nil {

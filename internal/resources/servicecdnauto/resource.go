@@ -314,7 +314,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Condition = condition.MatchOrder(conditions, plan.Condition)
 
-	// Health checks must be reconciled before backend: a backend can reference a health check
+	// Health checks must be reconciled before backends: a backend can reference a health check
 	// by name, and the Fastly API rejects a backend create that names a health check which
 	// doesn't exist yet in this version.
 	if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.HealthCheck); err != nil {
@@ -822,7 +822,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
 		!dynamicsnippet.Equal(plan.DynamicSnippet, state.DynamicSnippet) ||
-		!vcl.Equal(plan.VCL, state.VCL)
+		!vcl.Equal(plan.VCL, state.VCL) ||
+		false
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -883,7 +884,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Condition = condition.MatchOrder(conditions, plan.Condition)
 
-		// Health checks must be reconciled before backend: a backend can reference a health
+		// Health checks must be reconciled before backends: a backend can reference a health
 		// check by name, and the Fastly API rejects a backend create that names a health check
 		// which doesn't exist yet in this version.
 		if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.HealthCheck); err != nil {

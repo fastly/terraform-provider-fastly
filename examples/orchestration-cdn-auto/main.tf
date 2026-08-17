@@ -71,7 +71,7 @@ resource "fastly_service_cdn_auto" "service_1" {
 
   healthcheck {
     name = "origin_health"
-    host = "unique1.origin.example.foo.com"
+    host = "unique1.origin.foo.example.com"
     path = "/healthz"
   }
 }

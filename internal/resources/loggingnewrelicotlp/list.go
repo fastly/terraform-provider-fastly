@@ -105,7 +105,7 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 				result.DisplayName = service.ToGeneratedResourceName(fastly.ToValue(svc.Name), serviceID, *n.Name)
 
 				if req.IncludeResource {
-					result.Diagnostics.Append(setResourceAttrs(ctx, &result, n, serviceID, version)...)
+					result.Diagnostics.Append(setResourceAttrs(ctx, &result, n, serviceID, version, fastly.ToValue(svc.Type))...)
 				}
 
 				if !push(result) {
@@ -116,7 +116,14 @@ func (l *ListResource) List(ctx context.Context, req list.ListRequest, stream *l
 	}
 }
 
-func setResourceAttrs(ctx context.Context, result *list.ListResult, n *fastly.NewRelicOTLP, serviceID string, version int) diag.Diagnostics {
+// setResourceAttrs sets the listed resource's attributes on result. serviceType
+// mirrors the Compute normalization applied by Create/Read/Import: the API
+// still returns its own values for the VCL-only fields on a Compute-attached
+// endpoint, but the standalone resource's schema rejects those fields being
+// configured on Compute, so they must be reset to their schema defaults here
+// too — otherwise this could emit resource data the resource itself can't
+// accept.
+func setResourceAttrs(ctx context.Context, result *list.ListResult, n *fastly.NewRelicOTLP, serviceID string, version int, serviceType string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	id := serviceID + "-" + fmt.Sprintf("%d", version) + "-" + fastly.ToValue(n.Name)
@@ -126,6 +133,9 @@ func setResourceAttrs(ctx context.Context, result *list.ListResult, n *fastly.Ne
 		ID:          types.StringValue(id),
 		Service:     types.StringValue(serviceID),
 		Version:     types.Int64Value(int64(version)),
+	}
+	if serviceType == service.TypeCompute {
+		ResetVCLOnlyToDefaults(&model.NestedModel)
 	}
 	diags.Append(result.Resource.Set(ctx, &model)...)
 	return diags

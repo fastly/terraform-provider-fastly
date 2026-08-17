@@ -22,6 +22,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingsplunk"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/ratelimiter"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/snippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/vcl"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -72,6 +73,7 @@ type Model struct {
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
 	CacheSetting                  []cachesetting.NestedModel                  `tfsdk:"cache_setting"`
 	Dictionary                    []dictionary.NestedModel                    `tfsdk:"dictionary"`
+	RateLimiter                   []ratelimiter.NestedModel                   `tfsdk:"rate_limiter"`
 	LoggingBlobStorage            []loggingblobstorage.NestedModel            `tfsdk:"logging_blobstorage"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
@@ -139,6 +141,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"gzip":                             gzip.NestedBlockSchema(),
 			"cache_setting":                    cachesetting.NestedBlockSchema(),
 			"dictionary":                       dictionary.NestedBlockSchema(),
+			"rate_limiter":                     ratelimiter.NestedBlockSchema(),
 			"logging_blobstorage":              loggingblobstorage.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
@@ -199,6 +202,22 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 		resp.Diagnostics.AddAttributeError(
 			path.Root("vcl"),
 			"Invalid custom VCL configuration",
+			err.Error(),
+		)
+	}
+
+	if err := ratelimiter.ValidateConfig(config.RateLimiter); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rate_limiter"),
+			"Invalid rate limiter configuration",
+			err.Error(),
+		)
+	}
+
+	if err := ratelimiter.ValidateDictionaryReferences(config.RateLimiter, config.Dictionary); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rate_limiter"),
+			"Invalid rate limiter configuration",
 			err.Error(),
 		)
 	}
@@ -351,6 +370,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
+
+	// Rate limiters must be reconciled after dictionaries: uri_dictionary_name can reference a
+	// dictionary by name, and the Fastly API rejects a create that names one which doesn't exist
+	// yet in this version.
+	if err := ratelimiter.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.RateLimiter); err != nil {
+		resp.Diagnostics.AddError("Error reconciling rate limiters", err.Error())
+		return
+	}
+
+	rateLimiters, err := ratelimiter.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service rate limiters", err.Error())
+		return
+	}
+	plan.RateLimiter = ratelimiter.MatchOrder(rateLimiters, plan.RateLimiter)
 
 	if err := loggingblobstorage.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingBlobStorage); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Blob Storage logging endpoints", err.Error())
@@ -587,6 +621,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
 		return
 	}
+	rateLimiters, err := ratelimiter.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service rate limiters", err.Error())
+		return
+	}
 	loggingBlobStorages, err := loggingblobstorage.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Blob Storage logging endpoints", err.Error())
@@ -629,6 +668,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.CacheSetting = cachesetting.MatchOrder(cacheSettings, state.CacheSetting)
 	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
+	state.RateLimiter = ratelimiter.MatchOrder(rateLimiters, state.RateLimiter)
 	state.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
@@ -746,6 +786,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
 		!cachesetting.Equal(plan.CacheSetting, state.CacheSetting) ||
 		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
+		!ratelimiter.Equal(plan.RateLimiter, state.RateLimiter) ||
 		!loggingblobstorage.Equal(plan.LoggingBlobStorage, state.LoggingBlobStorage) ||
 		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
 		!loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
@@ -865,7 +906,37 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.CacheSetting = cachesetting.MatchOrder(cacheSettings, plan.CacheSetting)
 
-		if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Dictionary, plan.Dictionary); err != nil {
+		// Dictionaries and rate limiters are reconciled in three passes, not the usual single
+		// ReconcileWithPrevious + Reconcile pair, because uri_dictionary_name creates a
+		// dependency in both directions: a rate limiter create needs its dictionary to already
+		// exist, but a dictionary delete fails version validation if a not-yet-updated rate
+		// limiter's generated VCL still references it by name. So: create/update dictionaries
+		// first (satisfies the create direction), reconcile rate limiters fully (any rate
+		// limiter losing its dictionary reference is updated/deleted here), then delete
+		// dictionaries no longer desired (now safe - nothing still references them).
+		if err := dictionary.CheckRemovalGuards(ctx, r.providerData.AutoClient(), serviceID, state.Dictionary, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		if err := dictionary.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		if err := ratelimiter.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.RateLimiter); err != nil {
+			resp.Diagnostics.AddError("Error reconciling rate limiters", err.Error())
+			return
+		}
+
+		rateLimiters, err := ratelimiter.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service rate limiters", err.Error())
+			return
+		}
+		plan.RateLimiter = ratelimiter.MatchOrder(rateLimiters, plan.RateLimiter)
+
+		if err := dictionary.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary); err != nil {
 			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
 			return
 		}
@@ -1036,6 +1107,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 		plan.CacheSetting = cachesetting.MatchOrder(state.CacheSetting, plan.CacheSetting)
 		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
+		plan.RateLimiter = ratelimiter.MatchOrder(state.RateLimiter, plan.RateLimiter)
 		plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(state.LoggingBlobStorage, plan.LoggingBlobStorage)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)

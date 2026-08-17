@@ -2,6 +2,7 @@ package acceptancetests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -771,6 +772,365 @@ func TestAccFastlyServiceCDNAuto_cacheSettingWithCacheCondition(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "cache_setting.0.name", cacheSettingName),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "cache_setting.0.cache_condition", conditionName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_withRateLimiter(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.action", "response"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.client_key.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.client_key.0", "req.http.Fastly-Client-IP"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.http_methods.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.http_methods.0", "GET"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.http_methods.1", "POST"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.penalty_box_duration", "10"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.rps_limit", "100"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.window_size", "10"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response.content", "Rate limit exceeded"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response.content_type", "text/plain"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response.status", "429"),
+					resource.TestCheckResourceAttrSet("fastly_service_cdn_auto.test", "rate_limiter.0.rate_limiter_id"),
+					// Adding a rate limiter should create and activate version 2
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "0"),
+					// Removing the rate limiter should create and activate version 3
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "3"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterResponseCleared(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.action", "response"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response.status", "429"),
+				),
+			},
+			{
+				// Clearing response (switching action away from "response") can't be done via
+				// UpdateERL - the API rejects an explicit empty value - so this goes through a
+				// delete+recreate of the rate limiter instead (see needsRecreate in
+				// internal/resources/ratelimiter).
+				Config: ConfigCDNAutoWithRateLimiterResponseCleared(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.action", "log_only"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRateLimiterResponseCleared(serviceName, domainName, rateLimiterName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterMinimal(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				// feature_revision left unset must default to 1 rather than drifting on
+				// every plan; response/response_object_name/uri_dictionary_name left unset
+				// must default to null. logger_type is set here since the Fastly API requires
+				// it whenever action is log_only.
+				Config: ConfigCDNAutoWithRateLimiterMinimal(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.feature_revision", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.logger_type", "s3"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.response_object_name"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRateLimiterMinimal(serviceName, domainName, rateLimiterName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterUpdated(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiterMinimal(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.penalty_box_duration", "5"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.rps_limit", "50"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.window_size", "60"),
+				),
+			},
+			{
+				// Same name, different client_key/http_methods/penalty_box_duration/rps_limit/
+				// window_size - this is an in-place update, not a delete+recreate, since the
+				// name (the reconciler's identity key) hasn't changed.
+				Config: ConfigCDNAutoWithRateLimiterUpdated(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.client_key.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.http_methods.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.penalty_box_duration", "15"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.rps_limit", "75"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.window_size", "1"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRateLimiterUpdated(serviceName, domainName, rateLimiterName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_multipleRateLimiters(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName1 := fmt.Sprintf("rate-limiter-a-%s", acctest.RandString(10))
+	rateLimiterName2 := fmt.Sprintf("rate-limiter-b-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithMultipleRateLimiters(serviceName, domainName, rateLimiterName1, rateLimiterName2),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName1),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.action", "log_only"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.1.name", rateLimiterName2),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.1.action", "response"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.1.response.status", "429"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithMultipleRateLimiters(serviceName, domainName, rateLimiterName1, rateLimiterName2),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterWithDictionary(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+	dictionaryName := fmt.Sprintf("dict_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name", dictionaryName),
+				),
+			},
+			{
+				// Clearing uri_dictionary_name can't be done via UpdateERL - the API rejects an
+				// explicit empty value - so this goes through a delete+recreate of the rate
+				// limiter instead (see needsRecreate in internal/resources/ratelimiter).
+				Config: ConfigCDNAutoWithRateLimiterDictionaryCleared(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRateLimiterDictionaryCleared(serviceName, domainName, rateLimiterName, dictionaryName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterDictionaryRemoved(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+	dictionaryName := fmt.Sprintf("dict_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name", dictionaryName),
+				),
+			},
+			{
+				// Removing the dictionary block while the rate limiter's uri_dictionary_name is
+				// left unchanged, still naming it: ValidateDictionaryReferences rejects this at
+				// plan time, since reconcile.Run only reconciles a rate limiter whose own desired
+				// fields changed - leaving this stale would otherwise reach the Fastly API as a
+				// version-validation failure (the generated VCL references an undefined table)
+				// once the dictionary is actually deleted.
+				Config:      ConfigCDNAutoWithRateLimiterDictionaryRemoved(serviceName, domainName, rateLimiterName, dictionaryName),
+				ExpectError: regexp.MustCompile(`does not match any configured dictionary`),
+			},
+			{
+				// Revert to a valid config so CheckDestroy's cleanup doesn't hit the same
+				// plan-time validation error the previous step intentionally triggered.
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_rateLimiterDictionaryRemovedTogether(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+	dictionaryName := fmt.Sprintf("dict_%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiterDictionary(serviceName, domainName, rateLimiterName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.0.name", dictionaryName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name", dictionaryName),
+				),
+			},
+			{
+				// Removing the dictionary block and clearing the rate limiter's
+				// uri_dictionary_name together, in the same apply: dictionaries are
+				// created/updated, then rate limiters are fully reconciled (clearing the stale
+				// reference here), then dictionaries no longer desired are deleted - see the
+				// three-pass sequence in servicecdnauto's Update. Confirms the delete succeeds
+				// once nothing still references the dictionary.
+				Config: ConfigCDNAutoWithRateLimiterMinimal(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "dictionary.#", "0"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.uri_dictionary_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_importWithRateLimiter(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("rate-limiter-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "rate_limiter.0.name", rateLimiterName),
+				),
+			},
+			{
+				ResourceName:            "fastly_service_cdn_auto.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "reuse"},
 			},
 		},
 	})

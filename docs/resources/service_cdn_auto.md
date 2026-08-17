@@ -38,6 +38,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
+- `rate_limiter` (Block List) Rate limiters attached to this service. (see [below for nested schema](#nestedblock--rate_limiter))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 - `snippet` (Block List) Regular VCL snippets attached to this service version. (see [below for nested schema](#nestedblock--snippet))
 - `vcl` (Block List) Custom VCL files attached to this service. (see [below for nested schema](#nestedblock--vcl))
@@ -439,6 +440,42 @@ Optional:
 - `client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_CERT` environment variable.
 - `client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_KEY` environment variable.
 - `hostname` (String) The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.
+
+
+
+<a id="nestedblock--rate_limiter"></a>
+### Nested Schema for `rate_limiter`
+
+Required:
+
+- `action` (String) The action to take when a rate limiter violation is detected. One of `log_only`, `response`, or `response_object`.
+- `client_key` (List of String) VCL variables used to generate a counter key to identify a client. Example: `["req.http.Fastly-Client-IP"]`.
+- `http_methods` (List of String) HTTP methods to apply rate limiting to. Each method must be uppercase. Example: `["POST", "PUT", "PATCH", "DELETE"]`.
+- `name` (String) A unique human readable name for the rate limiting rule.
+- `penalty_box_duration` (Number) Length of time in minutes that the rate limiter is in effect after the initial violation is detected.
+- `rps_limit` (Number) Upper limit of requests per second allowed by the rate limiter.
+- `window_size` (Number) Number of seconds during which the RPS limit must be exceeded in order to trigger a violation. One of `1`, `10`, `60`.
+
+Optional:
+
+- `feature_revision` (Number) Revision number of the rate limiting feature implementation. Defaults to the most recent revision.
+- `logger_type` (String) Name of the type of logging endpoint to be used when `action` is `log_only`. One of `azureblob`, `bigquery`, `cloudfiles`, `datadog`, `digitalocean`, `elasticsearch`, `ftp`, `gcs`, `googleanalytics`, `heroku`, `honeycomb`, `http`, `https`, `kafka`, `kinesis`, `logentries`, `loggly`, `logshuttle`, `newrelic`, `openstack`, `papertrail`, `pubsub`, `s3`, `scalyr`, `sftp`, `splunk`, `stackdriver`, `sumologic`, `syslog`.
+- `response` (Attributes) Custom response to be sent when the rate limit is exceeded. Required if `action` is `response`. (see [below for nested schema](#nestedatt--rate_limiter--response))
+- `response_object_name` (String) Name of existing response object. Required if `action` is `response_object`.
+- `uri_dictionary_name` (String) The name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited.
+
+Read-Only:
+
+- `rate_limiter_id` (String) Alphanumeric string identifying the rate limiter.
+
+<a id="nestedatt--rate_limiter--response"></a>
+### Nested Schema for `rate_limiter.response`
+
+Required:
+
+- `content` (String) HTTP response body data.
+- `content_type` (String) HTTP Content-Type (e.g. `application/json`).
+- `status` (Number) HTTP response status code (e.g. `429`).
 
 
 

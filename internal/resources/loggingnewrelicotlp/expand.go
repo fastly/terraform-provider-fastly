@@ -6,7 +6,10 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
-func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateNewRelicOTLPInput {
+// buildCommonCreateInput sets the Create fields shared by VCL and Compute
+// services. BuildCreateInput and BuildComputeCreateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonCreateInput(serviceID string, version int, m commonModel) *fastly.CreateNewRelicOTLPInput {
 	input := &fastly.CreateNewRelicOTLPInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -17,11 +20,16 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 	input.Region = fastly.NullString(service.StringValue(m.Region))
 	input.URL = fastly.NullString(service.StringValue(m.URL))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
+
+	return input
+}
+
+func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateNewRelicOTLPInput {
+	input := buildCommonCreateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.Placement = fastly.NullString(service.StringValue(m.Placement))
 	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
-
 	return input
 }
 
@@ -29,21 +37,13 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 // sets format, format_version, placement, or response_condition, since those
 // only affect generated VCL and Compute services don't have any.
 func BuildComputeCreateInput(serviceID string, version int, m ComputeNestedModel) *fastly.CreateNewRelicOTLPInput {
-	input := &fastly.CreateNewRelicOTLPInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           new(service.StringValue(m.Name)),
-		Token:          new(service.StringValue(m.Token())),
-	}
-
-	input.Region = fastly.NullString(service.StringValue(m.Region))
-	input.URL = fastly.NullString(service.StringValue(m.URL))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-
-	return input
+	return buildCommonCreateInput(serviceID, version, m.commonModel)
 }
 
-func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateNewRelicOTLPInput {
+// buildCommonUpdateInput sets the Update fields shared by VCL and Compute
+// services. BuildUpdateInput and BuildComputeUpdateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonUpdateInput(serviceID string, version int, m commonModel) *fastly.UpdateNewRelicOTLPInput {
 	input := &fastly.UpdateNewRelicOTLPInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -53,13 +53,26 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	}
 
 	input.Region = fastly.NullString(service.StringValue(m.Region))
-	// url and response_condition default to "" and can be cleared, so always send
-	// them as a concrete value on update. fastly.NullString is not used because it
-	// maps "" to nil, which omits the field (url,omitempty) and leaves a
-	// previously-set value in place — producing an inconsistent-result error when
-	// the user clears the attribute.
+	// url defaults to "" and can be cleared, so always send it as a concrete
+	// value on update. fastly.NullString is not used because it maps "" to nil,
+	// which omits the field (url,omitempty) and leaves a previously-set value
+	// in place — producing an inconsistent-result error when the user clears
+	// the attribute.
 	input.URL = new(service.StringValue(m.URL))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
+
+	return input
+}
+
+// BuildComputeUpdateInput is BuildUpdateInput for Compute services: it never
+// sets format, format_version, placement, or response_condition, since those
+// only affect generated VCL and Compute services don't have any.
+func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateNewRelicOTLPInput {
+	return buildCommonUpdateInput(serviceID, version, m.commonModel)
+}
+
+func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateNewRelicOTLPInput {
+	input := buildCommonUpdateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	// placement can be cleared back to unset / nil (distinct from "none" —
@@ -74,28 +87,6 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		input.Placement = fastly.NullValue[string]()
 	}
 	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
-
-	return input
-}
-
-// BuildComputeUpdateInput is BuildUpdateInput for Compute services: it never
-// sets format, format_version, placement, or response_condition, since those
-// only affect generated VCL and Compute services don't have any.
-func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateNewRelicOTLPInput {
-	input := &fastly.UpdateNewRelicOTLPInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           service.StringValue(m.Name),
-		NewName:        new(service.StringValue(m.Name)),
-		Token:          new(service.StringValue(m.Token())),
-	}
-
-	input.Region = fastly.NullString(service.StringValue(m.Region))
-	// url defaults to "" and can be cleared, so always send it as a concrete
-	// value on update — see BuildUpdateInput.
-	input.URL = new(service.StringValue(m.URL))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-
 	return input
 }
 

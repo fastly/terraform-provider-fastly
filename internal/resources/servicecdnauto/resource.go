@@ -11,6 +11,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/director"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
@@ -69,6 +70,7 @@ type Model struct {
 	ManagedVersion                types.Int64                                 `tfsdk:"managed_version"`
 	Domain                        []domain.NestedModel                        `tfsdk:"domain"`
 	Backend                       []backend.NestedModel                       `tfsdk:"backend"`
+	Director                      []director.NestedModel                      `tfsdk:"director"`
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	HealthCheck                   []healthcheck.NestedModel                   `tfsdk:"healthcheck"`
@@ -138,6 +140,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 		Blocks: map[string]schema.Block{
 			"domain":                           domain.NestedBlockSchema(),
 			"backend":                          backend.NestedBlockSchema(),
+			"director":                         director.NestedBlockSchema(),
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
 			"healthcheck":                      healthcheck.NestedBlockSchema(),
@@ -221,6 +224,22 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 		resp.Diagnostics.AddAttributeError(
 			path.Root("rate_limiter"),
 			"Invalid rate limiter configuration",
+			err.Error(),
+		)
+	}
+
+	if err := director.ValidateConfig(config.Director); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("director"),
+			"Invalid director configuration",
+			err.Error(),
+		)
+	}
+
+	if err := director.ValidateBackendReferences(config.Director, config.Backend); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("director"),
+			"Invalid director configuration",
 			err.Error(),
 		)
 	}
@@ -340,6 +359,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+	// Directors must be reconciled after backends: a director's backends can reference a backend
+	// by name, and the Fastly API rejects a director create that names one which doesn't exist
+	// yet in this version.
+	if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Director); err != nil {
+		resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+		return
+	}
+
+	directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service directors", err.Error())
+		return
+	}
+	plan.Director = director.MatchOrder(directors, plan.Director)
 
 	if err := cdnacl.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ACL); err != nil {
 		resp.Diagnostics.AddError("Error reconciling ACLs", err.Error())
@@ -614,6 +648,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
+	directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service directors", err.Error())
+		return
+	}
 	acls, err := cdnacl.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.ACL)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
@@ -686,6 +725,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
+	state.Director = director.MatchOrder(directors, state.Director)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.HealthCheck = healthcheck.MatchOrder(healthChecks, state.HealthCheck)
@@ -805,6 +845,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	nestedChanged := !domain.Equal(plan.Domain, state.Domain) ||
 		!backend.Equal(plan.Backend, state.Backend) ||
+		!director.Equal(plan.Director, state.Director) ||
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!healthcheck.Equal(plan.HealthCheck, state.HealthCheck) ||
@@ -899,7 +940,33 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
-		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+		// Backends and directors are reconciled in three passes, not the usual single
+		// ReconcileWithPrevious + Reconcile pair: a director's backends can reference a backend
+		// by name, so a backend create must run before the director that references it, but a
+		// backend delete must wait until any director no longer referencing it has already been
+		// updated - otherwise the API rejects deleting a backend still named by a director's
+		// association. So: create/update backends first (satisfies the create direction),
+		// reconcile directors fully (any director losing a backend reference is updated/deleted
+		// here), then delete backends no longer desired (now safe - no director still references
+		// them).
+		if err := backend.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
+			return
+		}
+
+		if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Director); err != nil {
+			resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+			return
+		}
+
+		directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service directors", err.Error())
+			return
+		}
+		plan.Director = director.MatchOrder(directors, plan.Director)
+
+		if err := backend.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
 			return
 		}
@@ -1143,6 +1210,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
+		plan.Director = director.MatchOrder(state.Director, plan.Director)
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.HealthCheck = healthcheck.MatchOrder(state.HealthCheck, plan.HealthCheck)

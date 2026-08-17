@@ -438,6 +438,20 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 	return reconciler.Run(ctx, client, serviceID, version, desired)
 }
 
+// CreateOrUpdate creates or updates every backend in desired without deleting any. Split out from
+// Reconcile so a caller can defer deletion until after director has been reconciled - a director
+// referencing a backend by name blocks that backend's deletion until the director no longer
+// references it. See servicecdnauto's Update for the full ordering.
+func CreateOrUpdate(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
+	return reconciler.CreateOrUpdate(ctx, client, serviceID, version, desired)
+}
+
+// DeleteRemoved deletes backends missing from desired. See CreateOrUpdate's doc comment for why
+// this is split out.
+func DeleteRemoved(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
+	return reconciler.DeleteRemoved(ctx, client, serviceID, version, desired)
+}
+
 func Equal(a, b []NestedModel) bool {
 	return reconcile.ModelsEqual(a, b, func(m NestedModel) string { return service.StringValue(m.Name) }, NestedModel.ModelsEqual, true)
 }

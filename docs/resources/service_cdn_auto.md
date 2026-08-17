@@ -26,6 +26,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `comment` (String) Optional service comment.
 - `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
 - `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
+- `director` (Block List) Directors attached to this service. (see [below for nested schema](#nestedblock--director))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `dynamic_snippet` (Block List) Dynamic VCL snippet metadata attached to this service version. Dynamic snippet content is managed separately by `fastly_service_dynamic_snippet_content`. (see [below for nested schema](#nestedblock--dynamic_snippet))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
@@ -158,6 +159,23 @@ Optional:
 Read-Only:
 
 - `dictionary_id` (String) The ID of the dictionary.
+
+
+<a id="nestedblock--director"></a>
+### Nested Schema for `director`
+
+Required:
+
+- `backends` (Set of String) Names of defined backends to map the director to. Example: `["origin1", "origin2"]`.
+- `name` (String) Unique name for this Director.
+
+Optional:
+
+- `comment` (String) An optional comment about the Director.
+- `quorum` (Number) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
+- `retries` (Number) How many backends to search if it fails. Default `5`.
+- `shield` (String) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response.
+- `type` (String) Type of load balance group to use. One of `random`, `hash`, or `client`. Default `random`.
 
 
 <a id="nestedblock--domain"></a>

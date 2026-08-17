@@ -185,8 +185,22 @@ func Reconcile(ctx context.Context, client *fastly.Client, serviceID string, ver
 // is skipped for it - it's treated as non-empty and force_destroy is required unconditionally,
 // matching the old SDKv2 provider's behavior.
 func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID string, version int, previous, desired []NestedModel) error {
-	return reconciler.GuardedRun(
-		ctx, client, serviceID, version, previous, desired,
+	if err := CheckRemovalGuards(ctx, client, serviceID, previous, desired); err != nil {
+		return err
+	}
+	return reconciler.Run(ctx, client, serviceID, version, desired)
+}
+
+// CheckRemovalGuards is the validation half of ReconcileWithPrevious, split out so a caller can
+// defer actual dictionary deletion (via DeleteRemoved) until after some other resource type that
+// might still reference a removed dictionary by name (e.g. a rate limiter's
+// uri_dictionary_name) has been reconciled - deleting a dictionary that generated VCL still
+// references fails version validation, not just this package's own force_destroy/emptiness
+// guard. See servicecdnauto's Update for the full three-step sequence: CreateOrUpdate here,
+// then the referencing resource's reconcile, then DeleteRemoved here.
+func CheckRemovalGuards(ctx context.Context, client *fastly.Client, serviceID string, previous, desired []NestedModel) error {
+	return reconciler.CheckGuards(
+		ctx, previous, desired,
 		func(m NestedModel) bool { return service.BoolValue(m.ForceDestroy) },
 		func(prev, desired NestedModel, stillPresent bool) bool {
 			return !stillPresent || service.BoolValue(prev.WriteOnly) != service.BoolValue(desired.WriteOnly)
@@ -204,6 +218,19 @@ func ReconcileWithPrevious(ctx context.Context, client *fastly.Client, serviceID
 			return fmt.Errorf("cannot delete dictionary %q (ID: %s): it contains items that must be removed first, or set force_destroy to true for this change to be applied", name, service.StringValue(prev.DictionaryID))
 		},
 	)
+}
+
+// CreateOrUpdate creates or updates every dictionary in desired; it never deletes. See
+// CheckRemovalGuards for why a caller might reconcile dictionaries in two passes instead of via
+// ReconcileWithPrevious.
+func CreateOrUpdate(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
+	return reconciler.CreateOrUpdate(ctx, client, serviceID, version, desired)
+}
+
+// DeleteRemoved deletes dictionaries missing from desired. Callers must call CheckRemovalGuards
+// against the same previous/desired first - this performs no guard check of its own.
+func DeleteRemoved(ctx context.Context, client *fastly.Client, serviceID string, version int, desired []NestedModel) error {
+	return reconciler.DeleteRemoved(ctx, client, serviceID, version, desired)
 }
 
 // Equal reports whether two dictionary lists are equivalent from the Terraform resource's

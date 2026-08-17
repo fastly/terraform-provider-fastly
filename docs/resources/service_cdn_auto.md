@@ -22,6 +22,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 
 - `acl` (Block List) ACLs attached to this service. (see [below for nested schema](#nestedblock--acl))
 - `backend` (Block List) Backends attached to this service. (see [below for nested schema](#nestedblock--backend))
+- `cache_setting` (Block List) Cache settings attached to this service. (see [below for nested schema](#nestedblock--cache_setting))
 - `comment` (String) Optional service comment.
 - `condition` (Block List) Conditions attached to this service. (see [below for nested schema](#nestedblock--condition))
 - `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
@@ -34,8 +35,11 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
+- `logging_newrelic` (Block List) New Relic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelic))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
+- `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
+- `rate_limiter` (Block List) Rate limiters attached to this service. (see [below for nested schema](#nestedblock--rate_limiter))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 - `snippet` (Block List) Regular VCL snippets attached to this service version. (see [below for nested schema](#nestedblock--snippet))
 - `vcl` (Block List) Custom VCL files attached to this service. (see [below for nested schema](#nestedblock--vcl))
@@ -108,6 +112,21 @@ Optional:
 - `ssl_client_cert` (String, Sensitive) Client certificate used when connecting to the backend.
 - `ssl_client_key` (String, Sensitive) Client key used when connecting to the backend.
 
+
+
+<a id="nestedblock--cache_setting"></a>
+### Nested Schema for `cache_setting`
+
+Required:
+
+- `name` (String) Unique name for this Cache Setting. Changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `action` (String) One of `cache`, `pass`, or `restart`, as defined on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).
+- `cache_condition` (String) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
+- `stale_ttl` (Number) Max "Time To Live" (in seconds) for stale (unreachable) objects. Default `0`.
+- `ttl` (Number) The Time-To-Live (TTL, in seconds) for the object. Default `0`.
 
 
 <a id="nestedblock--condition"></a>
@@ -312,6 +331,32 @@ Required:
 
 
 
+<a id="nestedblock--logging_newrelic"></a>
+### Nested Schema for `logging_newrelic`
+
+Required:
+
+- `authentication` (Attributes) New Relic authentication credentials. (see [below for nested schema](#nestedatt--logging_newrelic--authentication))
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid JSON that New Relic Logs can ingest.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of `2` are placed in `vcl_log` and those with `format_version` of `1` are placed in `vcl_deliver`. Valid value is `none`.
+- `processing_region` (String) Region where logs will be processed before streaming to New Relic. Valid values are `none`, `us` and `eu`.
+- `region` (String) The region that log data will be sent to. Valid values are `US` and `EU`. Default: `US`.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+<a id="nestedatt--logging_newrelic--authentication"></a>
+### Nested Schema for `logging_newrelic.authentication`
+
+Required:
+
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account.
+
+
+
 <a id="nestedblock--logging_newrelicotlp"></a>
 ### Nested Schema for `logging_newrelicotlp`
 
@@ -377,6 +422,83 @@ Optional:
 - `access_key` (String, Sensitive) The access key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_ACCESS_KEY` environment variable.
 - `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. Can be set via the `FASTLY_S3_IAM_ROLE` environment variable.
 - `secret_key` (String, Sensitive) The secret key for your S3 account. Not required if `iam_role` is provided. Can be set via the `FASTLY_S3_SECRET_KEY` environment variable.
+
+
+
+<a id="nestedblock--logging_splunk"></a>
+### Nested Schema for `logging_splunk`
+
+Required:
+
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `url` (String) The URL to post logs to.
+
+Optional:
+
+- `authentication` (Attributes) Splunk authentication credentials. When this block is omitted entirely, defaults to the `FASTLY_SPLUNK_TOKEN` environment variable. (see [below for nested schema](#nestedatt--logging_splunk--authentication))
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/).
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of `2` are placed in `vcl_log` and those with `format_version` of `1` are placed in `vcl_deliver`. Valid value is `none`.
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `request_max_bytes` (Number) The maximum number of bytes sent in one request. Default `0` for unbounded.
+- `request_max_entries` (Number) The maximum number of logs sent in one request. Default `0` for unbounded.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+- `tls` (Attributes) TLS configuration used when `use_tls` is enabled. When this block is omitted entirely, `ca_cert`, `client_cert`, and `client_key` default to the `FASTLY_SPLUNK_CA_CERT`, `FASTLY_SPLUNK_CLIENT_CERT`, and `FASTLY_SPLUNK_CLIENT_KEY` environment variables. (see [below for nested schema](#nestedatt--logging_splunk--tls))
+- `use_tls` (Boolean) Whether to use TLS for secure logging. Default: `false`.
+
+<a id="nestedatt--logging_splunk--authentication"></a>
+### Nested Schema for `logging_splunk.authentication`
+
+Optional:
+
+- `token` (String, Sensitive) A Splunk token for use in posting logs over HTTP to your collector. Can be set via the `FASTLY_SPLUNK_TOKEN` environment variable.
+
+
+<a id="nestedatt--logging_splunk--tls"></a>
+### Nested Schema for `logging_splunk.tls`
+
+Optional:
+
+- `ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CA_CERT` environment variable.
+- `client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_CERT` environment variable.
+- `client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_KEY` environment variable.
+- `hostname` (String) The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.
+
+
+
+<a id="nestedblock--rate_limiter"></a>
+### Nested Schema for `rate_limiter`
+
+Required:
+
+- `action` (String) The action to take when a rate limiter violation is detected. One of `log_only`, `response`, or `response_object`.
+- `client_key` (List of String) VCL variables used to generate a counter key to identify a client. Example: `["req.http.Fastly-Client-IP"]`.
+- `http_methods` (List of String) HTTP methods to apply rate limiting to. Each method must be uppercase. Example: `["POST", "PUT", "PATCH", "DELETE"]`.
+- `name` (String) A unique human readable name for the rate limiting rule.
+- `penalty_box_duration` (Number) Length of time in minutes that the rate limiter is in effect after the initial violation is detected.
+- `rps_limit` (Number) Upper limit of requests per second allowed by the rate limiter.
+- `window_size` (Number) Number of seconds during which the RPS limit must be exceeded in order to trigger a violation. One of `1`, `10`, `60`.
+
+Optional:
+
+- `feature_revision` (Number) Revision number of the rate limiting feature implementation. Defaults to the most recent revision.
+- `logger_type` (String) Name of the type of logging endpoint to be used when `action` is `log_only`. One of `azureblob`, `bigquery`, `cloudfiles`, `datadog`, `digitalocean`, `elasticsearch`, `ftp`, `gcs`, `googleanalytics`, `heroku`, `honeycomb`, `http`, `https`, `kafka`, `kinesis`, `logentries`, `loggly`, `logshuttle`, `newrelic`, `openstack`, `papertrail`, `pubsub`, `s3`, `scalyr`, `sftp`, `splunk`, `stackdriver`, `sumologic`, `syslog`.
+- `response` (Attributes) Custom response to be sent when the rate limit is exceeded. Required if `action` is `response`. (see [below for nested schema](#nestedatt--rate_limiter--response))
+- `response_object_name` (String) Name of existing response object. Required if `action` is `response_object`.
+- `uri_dictionary_name` (String) The name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited.
+
+Read-Only:
+
+- `rate_limiter_id` (String) Alphanumeric string identifying the rate limiter.
+
+<a id="nestedatt--rate_limiter--response"></a>
+### Nested Schema for `rate_limiter.response`
+
+Required:
+
+- `content` (String) HTTP response body data.
+- `content_type` (String) HTTP Content-Type (e.g. `application/json`).
+- `status` (Number) HTTP response status code (e.g. `429`).
 
 
 

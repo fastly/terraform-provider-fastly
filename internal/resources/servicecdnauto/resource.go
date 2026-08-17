@@ -7,6 +7,7 @@ import (
 	fastlyclient "github.com/fastly/terraform-provider-fastly/internal/client"
 	"github.com/fastly/terraform-provider-fastly/internal/errors"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/cachesetting"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
@@ -18,8 +19,11 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelic"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingsplunk"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/ratelimiter"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/snippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/vcl"
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -69,12 +73,16 @@ type Model struct {
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	HealthCheck                   []healthcheck.NestedModel                   `tfsdk:"healthcheck"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
+	CacheSetting                  []cachesetting.NestedModel                  `tfsdk:"cache_setting"`
 	Dictionary                    []dictionary.NestedModel                    `tfsdk:"dictionary"`
+	RateLimiter                   []ratelimiter.NestedModel                   `tfsdk:"rate_limiter"`
 	LoggingBlobStorage            []loggingblobstorage.NestedModel            `tfsdk:"logging_blobstorage"`
 	LoggingS3                     []loggings3.NestedModel                     `tfsdk:"logging_s3"`
 	LoggingNewRelicOTLP           []loggingnewrelicotlp.NestedModel           `tfsdk:"logging_newrelicotlp"`
+	LoggingNewRelic               []loggingnewrelic.NestedModel               `tfsdk:"logging_newrelic"`
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
 	LoggingBigQuery               []loggingbigquery.NestedModel               `tfsdk:"logging_bigquery"`
+	LoggingSplunk                 []loggingsplunk.NestedModel                 `tfsdk:"logging_splunk"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
 	DynamicSnippet                []dynamicsnippet.NestedModel                `tfsdk:"dynamic_snippet"`
@@ -134,12 +142,16 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"condition":                        condition.NestedBlockSchema(),
 			"healthcheck":                      healthcheck.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
+			"cache_setting":                    cachesetting.NestedBlockSchema(),
 			"dictionary":                       dictionary.NestedBlockSchema(),
+			"rate_limiter":                     ratelimiter.NestedBlockSchema(),
 			"logging_blobstorage":              loggingblobstorage.NestedBlockSchema(),
 			"logging_s3":                       loggings3.NestedBlockSchema(),
 			"logging_newrelicotlp":             loggingnewrelicotlp.NestedBlockSchema(),
+			"logging_newrelic":                 loggingnewrelic.NestedBlockSchema(),
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
 			"logging_bigquery":                 loggingbigquery.NestedBlockSchema(),
+			"logging_splunk":                   loggingsplunk.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 			"snippet":                          snippet.NestedBlockSchema(),
 			"dynamic_snippet":                  dynamicsnippet.NestedBlockSchema(),
@@ -193,6 +205,22 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 		resp.Diagnostics.AddAttributeError(
 			path.Root("vcl"),
 			"Invalid custom VCL configuration",
+			err.Error(),
+		)
+	}
+
+	if err := ratelimiter.ValidateConfig(config.RateLimiter); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rate_limiter"),
+			"Invalid rate limiter configuration",
+			err.Error(),
+		)
+	}
+
+	if err := ratelimiter.ValidateDictionaryReferences(config.RateLimiter, config.Dictionary); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rate_limiter"),
+			"Invalid rate limiter configuration",
 			err.Error(),
 		)
 	}
@@ -271,8 +299,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-	// Conditions must be reconciled before backend/gzip: both can reference a condition by
-	// name (request_condition, cache_condition), and the Fastly API rejects a backend/gzip
+	// Conditions must be reconciled before backend/gzip/cache_setting: all three can reference
+	// a condition by name (request_condition, cache_condition), and the Fastly API rejects a
 	// create that names a condition which doesn't exist yet in this version.
 	if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Condition); err != nil {
 		resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
@@ -337,6 +365,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
 
+	if err := cachesetting.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.CacheSetting); err != nil {
+		resp.Diagnostics.AddError("Error reconciling cache settings", err.Error())
+		return
+	}
+
+	cacheSettings, err := cachesetting.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service cache settings", err.Error())
+		return
+	}
+	plan.CacheSetting = cachesetting.MatchOrder(cacheSettings, plan.CacheSetting)
+
 	if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.Dictionary); err != nil {
 		resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
 		return
@@ -348,6 +388,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Dictionary = dictionary.MatchOrder(dictionaries, plan.Dictionary)
+
+	// Rate limiters must be reconciled after dictionaries: uri_dictionary_name can reference a
+	// dictionary by name, and the Fastly API rejects a create that names one which doesn't exist
+	// yet in this version.
+	if err := ratelimiter.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.RateLimiter); err != nil {
+		resp.Diagnostics.AddError("Error reconciling rate limiters", err.Error())
+		return
+	}
+
+	rateLimiters, err := ratelimiter.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service rate limiters", err.Error())
+		return
+	}
+	plan.RateLimiter = ratelimiter.MatchOrder(rateLimiters, plan.RateLimiter)
 
 	if err := loggingblobstorage.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingBlobStorage); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Blob Storage logging endpoints", err.Error())
@@ -385,6 +440,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, plan.LoggingNewRelicOTLP)
 
+	if err := loggingnewrelic.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingNewRelic); err != nil {
+		resp.Diagnostics.AddError("Error reconciling New Relic logging endpoints", err.Error())
+		return
+	}
+
+	loggingNewRelics, err := loggingnewrelic.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading New Relic logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingNewRelic = loggingnewrelic.MatchOrder(loggingNewRelics, plan.LoggingNewRelic)
+
 	if err := loggingdatadog.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingDatadog); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Datadog logging endpoints", err.Error())
 		return
@@ -408,6 +475,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, plan.LoggingBigQuery)
+
+	if err := loggingsplunk.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingSplunk); err != nil {
+		resp.Diagnostics.AddError("Error reconciling Splunk logging endpoints", err.Error())
+		return
+	}
+
+	loggingSplunks, err := loggingsplunk.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, plan.LoggingSplunk)
 
 	if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ImageOptimizerDefaultSettings); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
@@ -555,9 +634,19 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
 		return
 	}
+	cacheSettings, err := cachesetting.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service cache settings", err.Error())
+		return
+	}
 	dictionaries, err := dictionary.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Dictionary)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service dictionaries", err.Error())
+		return
+	}
+	rateLimiters, err := ratelimiter.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service rate limiters", err.Error())
 		return
 	}
 	loggingBlobStorages, err := loggingblobstorage.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
@@ -575,6 +664,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading New Relic OTLP logging endpoints", err.Error())
 		return
 	}
+	loggingNewRelics, err := loggingnewrelic.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading New Relic logging endpoints", err.Error())
+		return
+	}
 	loggingDatadogs, err := loggingdatadog.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Datadog logging endpoints", err.Error())
@@ -585,18 +679,27 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading BigQuery logging endpoints", err.Error())
 		return
 	}
+	loggingSplunks, err := loggingsplunk.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.HealthCheck = healthcheck.MatchOrder(healthChecks, state.HealthCheck)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
+	state.CacheSetting = cachesetting.MatchOrder(cacheSettings, state.CacheSetting)
 	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
+	state.RateLimiter = ratelimiter.MatchOrder(rateLimiters, state.RateLimiter)
 	state.LoggingBlobStorage = loggingblobstorage.MatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
 	state.LoggingS3 = loggings3.MatchOrder(loggingS3s, state.LoggingS3)
 	state.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, state.LoggingNewRelicOTLP)
+	state.LoggingNewRelic = loggingnewrelic.MatchOrder(loggingNewRelics, state.LoggingNewRelic)
 	state.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, state.LoggingDatadog)
 	state.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, state.LoggingBigQuery)
+	state.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, state.LoggingSplunk)
 
 	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
@@ -706,12 +809,16 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!healthcheck.Equal(plan.HealthCheck, state.HealthCheck) ||
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
+		!cachesetting.Equal(plan.CacheSetting, state.CacheSetting) ||
 		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
+		!ratelimiter.Equal(plan.RateLimiter, state.RateLimiter) ||
 		!loggingblobstorage.Equal(plan.LoggingBlobStorage, state.LoggingBlobStorage) ||
 		!loggings3.Equal(plan.LoggingS3, state.LoggingS3) ||
 		!loggingnewrelicotlp.Equal(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
+		!loggingnewrelic.Equal(plan.LoggingNewRelic, state.LoggingNewRelic) ||
 		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
 		!loggingbigquery.Equal(plan.LoggingBigQuery, state.LoggingBigQuery) ||
+		!loggingsplunk.Equal(plan.LoggingSplunk, state.LoggingSplunk) ||
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
 		!dynamicsnippet.Equal(plan.DynamicSnippet, state.DynamicSnippet) ||
@@ -761,9 +868,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-		// Conditions must be reconciled before backend/gzip: both can reference a condition by
-		// name (request_condition, cache_condition), and the Fastly API rejects a backend/gzip
-		// create that names a condition which doesn't exist yet in this version.
+		// Conditions must be reconciled before backend/gzip/cache_setting: all three can
+		// reference a condition by name (request_condition, cache_condition), and the Fastly
+		// API rejects a create that names a condition which doesn't exist yet in this version.
 		if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Condition); err != nil {
 			resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
 			return
@@ -827,7 +934,49 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Gzip = gzip.MatchOrder(gzips, plan.Gzip)
 
-		if err := dictionary.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Dictionary, plan.Dictionary); err != nil {
+		if err := cachesetting.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.CacheSetting); err != nil {
+			resp.Diagnostics.AddError("Error reconciling cache settings", err.Error())
+			return
+		}
+
+		cacheSettings, err := cachesetting.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service cache settings", err.Error())
+			return
+		}
+		plan.CacheSetting = cachesetting.MatchOrder(cacheSettings, plan.CacheSetting)
+
+		// Dictionaries and rate limiters are reconciled in three passes, not the usual single
+		// ReconcileWithPrevious + Reconcile pair, because uri_dictionary_name creates a
+		// dependency in both directions: a rate limiter create needs its dictionary to already
+		// exist, but a dictionary delete fails version validation if a not-yet-updated rate
+		// limiter's generated VCL still references it by name. So: create/update dictionaries
+		// first (satisfies the create direction), reconcile rate limiters fully (any rate
+		// limiter losing its dictionary reference is updated/deleted here), then delete
+		// dictionaries no longer desired (now safe - nothing still references them).
+		if err := dictionary.CheckRemovalGuards(ctx, r.providerData.AutoClient(), serviceID, state.Dictionary, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		if err := dictionary.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary); err != nil {
+			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
+			return
+		}
+
+		if err := ratelimiter.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.RateLimiter); err != nil {
+			resp.Diagnostics.AddError("Error reconciling rate limiters", err.Error())
+			return
+		}
+
+		rateLimiters, err := ratelimiter.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service rate limiters", err.Error())
+			return
+		}
+		plan.RateLimiter = ratelimiter.MatchOrder(rateLimiters, plan.RateLimiter)
+
+		if err := dictionary.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Dictionary); err != nil {
 			resp.Diagnostics.AddError("Error reconciling dictionaries", err.Error())
 			return
 		}
@@ -875,6 +1024,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(loggingNewRelicOTLPs, plan.LoggingNewRelicOTLP)
 
+		if err := loggingnewrelic.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingNewRelic); err != nil {
+			resp.Diagnostics.AddError("Error reconciling New Relic logging endpoints", err.Error())
+			return
+		}
+
+		loggingNewRelics, err := loggingnewrelic.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading New Relic logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingNewRelic = loggingnewrelic.MatchOrder(loggingNewRelics, plan.LoggingNewRelic)
+
 		if err := loggingdatadog.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingDatadog); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Datadog logging endpoints", err.Error())
 			return
@@ -898,6 +1059,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, plan.LoggingBigQuery)
+
+		if err := loggingsplunk.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingSplunk); err != nil {
+			resp.Diagnostics.AddError("Error reconciling Splunk logging endpoints", err.Error())
+			return
+		}
+
+		loggingSplunks, err := loggingsplunk.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, plan.LoggingSplunk)
 
 		if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.ImageOptimizerDefaultSettings, plan.ImageOptimizerDefaultSettings); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
@@ -973,12 +1146,16 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.HealthCheck = healthcheck.MatchOrder(state.HealthCheck, plan.HealthCheck)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
+		plan.CacheSetting = cachesetting.MatchOrder(state.CacheSetting, plan.CacheSetting)
 		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
+		plan.RateLimiter = ratelimiter.MatchOrder(state.RateLimiter, plan.RateLimiter)
 		plan.LoggingBlobStorage = loggingblobstorage.MatchOrder(state.LoggingBlobStorage, plan.LoggingBlobStorage)
 		plan.LoggingS3 = loggings3.MatchOrder(state.LoggingS3, plan.LoggingS3)
 		plan.LoggingNewRelicOTLP = loggingnewrelicotlp.MatchOrder(state.LoggingNewRelicOTLP, plan.LoggingNewRelicOTLP)
+		plan.LoggingNewRelic = loggingnewrelic.MatchOrder(state.LoggingNewRelic, plan.LoggingNewRelic)
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)
 		plan.LoggingBigQuery = loggingbigquery.MatchOrder(state.LoggingBigQuery, plan.LoggingBigQuery)
+		plan.LoggingSplunk = loggingsplunk.MatchOrder(state.LoggingSplunk, plan.LoggingSplunk)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)
 		plan.DynamicSnippet = dynamicsnippet.MatchOrderPreservePlanFields(state.DynamicSnippet, plan.DynamicSnippet)

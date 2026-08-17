@@ -660,6 +660,22 @@ func ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName strin
 	)
 }
 
+// ConfigCDNAutoWithRateLimiterResponseCleared returns a CDN auto service config with the same
+// rate limiter name as ConfigCDNAutoWithRateLimiter, but with action changed to log_only and
+// response removed.
+func ConfigCDNAutoWithRateLimiterResponseCleared(serviceName, domainName, rateLimiterName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":      serviceName,
+			"DOMAIN_NAME":       domainName,
+			"RATE_LIMITER_NAME": rateLimiterName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/rate_limiter_response_cleared.tf",
+	)
+}
+
 // ConfigCDNAutoWithRateLimiterMinimal returns a CDN auto service config with a rate limiter
 // that leaves feature_revision, logger_type, response, response_object_name, and
 // uri_dictionary_name unset

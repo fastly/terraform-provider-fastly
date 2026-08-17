@@ -289,8 +289,8 @@ func (o *ops) Update(ctx context.Context, client *fastly.Client, serviceID strin
 	name := service.StringValue(desired.Name)
 	remote := o.remoteByName[name]
 
-	// uri_dictionary_name/response_object_name can't be cleared via UpdateERL - see
-	// needsRecreate - so clearing either goes through a delete+create instead.
+	// uri_dictionary_name/response_object_name/response can't be cleared via UpdateERL - see
+	// needsRecreate - so clearing any of them goes through a delete+create instead.
 	if needsRecreate(desired, remote) {
 		if err := o.Delete(ctx, client, serviceID, version, name); err != nil {
 			return nil, err
@@ -321,12 +321,13 @@ func (o *ops) Update(ctx context.Context, client *fastly.Client, serviceID strin
 }
 
 // needsRecreate reports whether applying desired requires deleting and recreating the rate
-// limiter rather than updating it in place. optionalStringPointer omits uri_dictionary_name/
-// response_object_name entirely when desired clears them to empty, since the API rejects an
-// explicit empty value for either field - but omitting them on update just leaves the
-// previously configured value in place, silently diverging from a plan that shows the field
-// cleared (see https://github.com/fastly/terraform-provider-fastly/pull/1408). Recreating is
-// the only way to actually clear them, mirroring account_name's handling in loggingbigquery.
+// limiter rather than updating it in place. optionalStringPointer/responseType omit
+// uri_dictionary_name/response_object_name/response entirely when desired clears them, since
+// the API rejects an explicit empty value for any of the three - but omitting them on update
+// just leaves the previously configured value in place, silently diverging from a plan that
+// shows the field cleared (see https://github.com/fastly/terraform-provider-fastly/pull/1408).
+// Recreating is the only way to actually clear them, mirroring account_name's handling in
+// loggingbigquery.
 func needsRecreate(desired NestedModel, remote *fastly.ERL) bool {
 	if remote == nil {
 		return false
@@ -335,7 +336,12 @@ func needsRecreate(desired NestedModel, remote *fastly.ERL) bool {
 	clearsURIDictionaryName := service.StringValue(desired.URIDictionaryName) == "" && fastly.ToValue(remote.URIDictionaryName) != ""
 	clearsResponseObjectName := service.StringValue(desired.ResponseObjectName) == "" && fastly.ToValue(remote.ResponseObjectName) != ""
 
-	return clearsURIDictionaryName || clearsResponseObjectName
+	// Matches ToModel's criteria for a set response: all three sub-fields present.
+	remoteHasResponse := remote.Response != nil && remote.Response.ERLContent != nil &&
+		remote.Response.ERLContentType != nil && remote.Response.ERLStatus != nil
+	clearsResponse := desired.Response.IsNull() && remoteHasResponse
+
+	return clearsURIDictionaryName || clearsResponseObjectName || clearsResponse
 }
 
 func (o ops) ToModel(api *fastly.ERL) NestedModel {

@@ -364,6 +364,40 @@ func TestNeedsRecreate(t *testing.T) {
 			remote:   &fastly.ERL{},
 			expected: false,
 		},
+		{
+			name:    "response cleared",
+			desired: minimalNestedModel(),
+			remote: &fastly.ERL{
+				Response: &fastly.ERLResponse{
+					ERLContent:     new("rate limited"),
+					ERLContentType: new("text/plain"),
+					ERLStatus:      new(429),
+				},
+			},
+			expected: true,
+		},
+		{
+			name:    "response unchanged",
+			desired: fullNestedModel(),
+			remote: &fastly.ERL{
+				Response: &fastly.ERLResponse{
+					ERLContent:     new("rate limited"),
+					ERLContentType: new("text/plain"),
+					ERLStatus:      new(429),
+				},
+			},
+			expected: false,
+		},
+		{
+			name:    "remote response missing a sub-field doesn't count as set",
+			desired: minimalNestedModel(),
+			remote: &fastly.ERL{
+				Response: &fastly.ERLResponse{
+					ERLContent: new("rate limited"),
+				},
+			},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {

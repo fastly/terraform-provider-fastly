@@ -16,6 +16,7 @@ The example provisions and manages:
 - one gzip configuration on service 1
 - one cache setting on service 1
 - one edge dictionary on service 1
+- one health check on service 1
 - Image Optimizer enabled on service 1 (default settings added in a follow-up apply - see below)
 
 ## What this example is for
@@ -54,10 +55,12 @@ Expected bootstrap behavior:
 1. Terraform creates both `fastly_service_cdn_auto` services.
 2. Fastly creates editable version `1` for each new service.
 3. The provider reconciles the nested `domain`, `backend`, `acl`, `condition`,
-   `gzip`, and `cache_setting` blocks to version `1`. `condition` is
-   reconciled before `backend`, `gzip`, and `cache_setting` since all three
-   can reference a condition by name, and the Fastly API rejects a config
-   that names a condition which doesn't exist yet in that version.
+   `healthcheck`, `gzip`, and `cache_setting` blocks to version `1`.
+   `condition` is reconciled before `backend`, `gzip`, and `cache_setting`
+   since all three can reference a condition by name, and `healthcheck` is
+   reconciled before `backend` since a backend can reference a health check
+   by name - in both cases the Fastly API rejects a config that names a
+   condition or health check which doesn't exist yet in that version.
 4. The provider validates and activates version `1`.
 5. `fastly_service_product_image_optimizer.service_1` enables the Image
    Optimizer product on `service_1`.
@@ -260,6 +263,30 @@ You should see:
 - `service_1_managed_version` increase
 - the new or modified dictionary appear in the service configuration
 - `dictionary_id` outputs reflect the new dictionary IDs
+
+### Add or modify a health check
+
+For example, add a second health check to `service_1`:
+
+```hcl
+  healthcheck {
+    name = "secondary_health"
+    host = "unique1.origin.example.foo.com"
+    path = "/status"
+  }
+```
+
+Then run:
+
+```bash
+terraform apply
+```
+
+You should see:
+
+- `service_1_managed_version` increase
+- `service_1_active_version` move to the new version
+- the new or modified health check appear in the service configuration
 
 ### Remove a dictionary, or change its write_only attribute
 

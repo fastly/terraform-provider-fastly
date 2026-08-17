@@ -10,6 +10,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/backend"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/healthcheck"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
@@ -53,6 +54,7 @@ type Model struct {
 	ActiveVersion       types.Int64                              `tfsdk:"active_version"`
 	ManagedVersion      types.Int64                              `tfsdk:"managed_version"`
 	Domain              []domain.NestedModel                     `tfsdk:"domain"`
+	HealthCheck         []healthcheck.NestedModel                `tfsdk:"healthcheck"`
 	Backend             []backend.NestedModel                    `tfsdk:"backend"`
 	Dictionary          []dictionary.NestedModel                 `tfsdk:"dictionary"`
 	ResourceLink        []resourcelink.NestedModel               `tfsdk:"resource_link"`
@@ -114,6 +116,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 		},
 		Blocks: map[string]schema.Block{
 			"domain":               domain.NestedBlockSchema(),
+			"healthcheck":          healthcheck.NestedBlockSchema(),
 			"backend":              backend.NestedBlockSchema(),
 			"dictionary":           dictionary.NestedBlockSchema(),
 			"resource_link":        resourcelink.NestedBlockSchema(),
@@ -188,6 +191,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Domain = domain.MatchOrder(domains, plan.Domain)
+
+	// Health checks must be reconciled before backends: a backend can reference a health check
+	// by name, and the Fastly API rejects a backend create that names a health check which
+	// doesn't exist yet in this version.
+	if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.HealthCheck); err != nil {
+		resp.Diagnostics.AddError("Error reconciling health checks", err.Error())
+		return
+	}
+
+	healthChecks, err := healthcheck.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service health checks", err.Error())
+		return
+	}
+	plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
 	if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Backend); err != nil {
 		resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -394,6 +412,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service domains", err.Error())
 		return
 	}
+	healthChecks, err := healthcheck.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service health checks", err.Error())
+		return
+	}
 	backends, err := backend.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
@@ -440,6 +463,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
+	state.HealthCheck = healthcheck.MatchOrder(healthChecks, state.HealthCheck)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
 	state.LoggingBlobStorage = loggingblobstorage.ComputeMatchOrder(loggingBlobStorages, state.LoggingBlobStorage)
@@ -492,7 +516,20 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	nestedChanged := !domain.Equal(plan.Domain, state.Domain) || !backend.Equal(plan.Backend, state.Backend) || !dictionary.Equal(plan.Dictionary, state.Dictionary) || !resourcelink.Equal(plan.ResourceLink, state.ResourceLink) || !computepackage.Equal(plan.Package, state.Package) || !loggingblobstorage.ComputeEqual(plan.LoggingBlobStorage, state.LoggingBlobStorage) || !loggings3.ComputeEqual(plan.LoggingS3, state.LoggingS3) || !loggingnewrelicotlp.ComputeEqual(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) || !loggingnewrelic.ComputeEqual(plan.LoggingNewRelic, state.LoggingNewRelic) || !loggingdatadog.ComputeEqual(plan.LoggingDatadog, state.LoggingDatadog) || !loggingbigquery.ComputeEqual(plan.LoggingBigQuery, state.LoggingBigQuery) || !loggingsplunk.ComputeEqual(plan.LoggingSplunk, state.LoggingSplunk)
+	nestedChanged := !domain.Equal(plan.Domain, state.Domain) ||
+		!healthcheck.Equal(plan.HealthCheck, state.HealthCheck) ||
+		!backend.Equal(plan.Backend, state.Backend) ||
+		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
+		!resourcelink.Equal(plan.ResourceLink, state.ResourceLink) ||
+		!computepackage.Equal(plan.Package, state.Package) ||
+		!loggingblobstorage.ComputeEqual(plan.LoggingBlobStorage, state.LoggingBlobStorage) ||
+		!loggings3.ComputeEqual(plan.LoggingS3, state.LoggingS3) ||
+		!loggingnewrelicotlp.ComputeEqual(plan.LoggingNewRelicOTLP, state.LoggingNewRelicOTLP) ||
+		!loggingnewrelic.ComputeEqual(plan.LoggingNewRelic, state.LoggingNewRelic) ||
+		!loggingdatadog.ComputeEqual(plan.LoggingDatadog, state.LoggingDatadog) ||
+		!loggingbigquery.ComputeEqual(plan.LoggingBigQuery, state.LoggingBigQuery) ||
+		!loggingsplunk.ComputeEqual(plan.LoggingSplunk, state.LoggingSplunk) ||
+		false
 	needsVersionChange := nestedChanged
 
 	targetVersion := 0
@@ -537,6 +574,21 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.Domain = domain.MatchOrder(domains, plan.Domain)
+
+		// Health checks must be reconciled before backends: a backend can reference a health
+		// check by name, and the Fastly API rejects a backend create that names a health check
+		// which doesn't exist yet in this version.
+		if err := healthcheck.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.HealthCheck); err != nil {
+			resp.Diagnostics.AddError("Error reconciling health checks", err.Error())
+			return
+		}
+
+		healthChecks, err := healthcheck.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service health checks", err.Error())
+			return
+		}
+		plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
 		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
 			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
@@ -698,6 +750,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ManagedVersion = state.ManagedVersion
 		plan.ActiveVersion = state.ActiveVersion
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
+		plan.HealthCheck = healthcheck.MatchOrder(state.HealthCheck, plan.HealthCheck)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
 		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)
 		plan.ResourceLink = resourcelink.MatchOrder(state.ResourceLink, plan.ResourceLink)

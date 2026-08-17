@@ -25,6 +25,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `dictionary` (Block List) Edge dictionaries attached to this service. (see [below for nested schema](#nestedblock--dictionary))
 - `domain` (Block List) Domains attached to this service. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
+- `healthcheck` (Block List) Health checks attached to this service. (see [below for nested schema](#nestedblock--healthcheck))
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
@@ -117,6 +118,28 @@ Required:
 Optional:
 
 - `comment` (String) Optional comment for the domain.
+
+
+<a id="nestedblock--healthcheck"></a>
+### Nested Schema for `healthcheck`
+
+Required:
+
+- `host` (String) The host to check.
+- `name` (String) A unique name to identify this health check. Changing this attribute will delete and recreate the resource.
+- `path` (String) The path to check.
+
+Optional:
+
+- `check_interval` (Number) How often to run the health check in milliseconds. Default `5000`.
+- `expected_response` (Number) The status code expected from the host. Default `200`.
+- `headers` (Set of String) Custom health check HTTP headers (e.g. if your health check requires an API key to be provided).
+- `http_version` (String) Whether to use version `1.0` or `1.1` HTTP. Default `1.1`.
+- `initial` (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`.
+- `method` (String) Which HTTP method to use. Default `HEAD`.
+- `threshold` (Number) How many health checks must succeed to be considered healthy. Default `3`.
+- `timeout` (Number) Timeout in milliseconds. Default `5000`.
+- `window` (Number) The number of most recent health check queries to keep for this health check. Default `5`.
 
 
 <a id="nestedblock--logging_bigquery"></a>

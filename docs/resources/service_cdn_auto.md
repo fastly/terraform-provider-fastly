@@ -30,6 +30,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `dynamic_snippet` (Block List) Dynamic VCL snippet metadata attached to this service version. Dynamic snippet content is managed separately by `fastly_service_dynamic_snippet_content`. (see [below for nested schema](#nestedblock--dynamic_snippet))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
+- `healthcheck` (Block List) Health checks attached to this service. (see [below for nested schema](#nestedblock--healthcheck))
 - `image_optimizer_default_settings` (Block List) Image Optimizer default settings for this service. At most one block is supported. The Image Optimizer product must already be enabled on the service (e.g. via `fastly_service_product_image_optimizer`) before these settings can be persisted; enabling the product and configuring this block cannot be done in the same initial `apply`, since this block is reconciled as part of this resource's own create step, before a separate product-enablement resource (which depends on this resource's `id`) can run. Enable the product in a prior `apply` first. (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
@@ -200,6 +201,28 @@ Optional:
 - `cache_condition` (String) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`.
 - `content_types` (List of String) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`.
 - `extensions` (List of String) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`.
+
+
+<a id="nestedblock--healthcheck"></a>
+### Nested Schema for `healthcheck`
+
+Required:
+
+- `host` (String) The host to check.
+- `name` (String) A unique name to identify this health check. Changing this attribute will delete and recreate the resource.
+- `path` (String) The path to check.
+
+Optional:
+
+- `check_interval` (Number) How often to run the health check in milliseconds. Default `5000`.
+- `expected_response` (Number) The status code expected from the host. Default `200`.
+- `headers` (Set of String) Custom health check HTTP headers (e.g. if your health check requires an API key to be provided).
+- `http_version` (String) Whether to use version `1.0` or `1.1` HTTP. Default `1.1`.
+- `initial` (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`.
+- `method` (String) Which HTTP method to use. Default `HEAD`.
+- `threshold` (Number) How many health checks must succeed to be considered healthy. Default `3`.
+- `timeout` (Number) Timeout in milliseconds. Default `5000`.
+- `window` (Number) The number of most recent health check queries to keep for this health check. Default `5`.
 
 
 <a id="nestedblock--image_optimizer_default_settings"></a>

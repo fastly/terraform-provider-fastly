@@ -645,6 +645,69 @@ func ConfigCDNAutoWithDictionaryForceDestroy(serviceName, domainName, dictionary
 	)
 }
 
+// ConfigCDNAutoWithHealthCheck returns a CDN auto service config with a domain and a health check
+func ConfigCDNAutoWithHealthCheck(serviceName, domainName, healthCheckName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":     serviceName,
+			"DOMAIN_NAME":      domainName,
+			"HEALTHCHECK_NAME": healthCheckName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/healthcheck_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleHealthChecks returns a CDN auto service config with multiple health
+// checks, the second of which sets every optional attribute to a non-default value.
+func ConfigCDNAutoWithMultipleHealthChecks(serviceName, domainName, healthCheckName1, healthCheckName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"HEALTHCHECK_NAME_1": healthCheckName1,
+			"HEALTHCHECK_NAME_2": healthCheckName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/healthcheck_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithHealthCheckUpdated returns a CDN auto service config with a health check whose
+// optional attributes are all set to non-default values, for use as the second step of an update test.
+func ConfigCDNAutoWithHealthCheckUpdated(serviceName, domainName, healthCheckName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":     serviceName,
+			"DOMAIN_NAME":      domainName,
+			"HEALTHCHECK_NAME": healthCheckName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/healthcheck_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithHealthCheckAndBackend returns a CDN auto service config with a health check
+// and a backend that references it by name, confirming health checks are reconciled before
+// backend so the reference resolves within the same service version.
+func ConfigCDNAutoWithHealthCheckAndBackend(serviceName, domainName, healthCheckName, backendName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":     serviceName,
+			"DOMAIN_NAME":      domainName,
+			"HEALTHCHECK_NAME": healthCheckName,
+			"BACKEND_NAME":     backendName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/healthcheck_single.tf",
+		"internal/acceptance_tests/blocks/backend_with_healthcheck.tf",
+	)
+}
+
 // ConfigCDNAutoWithRateLimiter returns a CDN auto service config with a domain and a rate
 // limiter
 func ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName string) string {
@@ -1081,6 +1144,22 @@ func ConfigComputeAutoWithBackend(serviceName, domainName, backendName string) s
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithHealthCheck returns a Compute auto service config with a domain, package, and a health check
+func ConfigComputeAutoWithHealthCheck(serviceName, domainName, healthCheckName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":     serviceName,
+			"DOMAIN_NAME":      domainName,
+			"HEALTHCHECK_NAME": healthCheckName,
+			"PACKAGE_PATH":     GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/healthcheck_single.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

@@ -3,5 +3,4 @@ resource "fastly_service_logging_gcs" "test" {
   version     = {{.SERVICE_VERSION}}
   name        = "{{.LOGGING_GCS_NAME}}"
   bucket_name = "fastly-test-bucket"
-  project_id  = "fastly-test-project"
 }

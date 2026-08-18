@@ -41,6 +41,7 @@ const (
 	DefaultCompressionCodec  = ""
 	DefaultResponseCondition = ""
 	DefaultProcessingRegion  = "none"
+	DefaultProjectID         = ""
 
 	// maximumFormatLength is the maximum length the Fastly API accepts for a
 	// logging endpoint `format` string. Exceeding it is only rejected by the
@@ -260,10 +261,6 @@ func sharedAttributes() map[string]schema.Attribute {
 			Required:    true,
 			Description: "The name of the GCS bucket in which to store the logs.",
 		},
-		"project_id": schema.StringAttribute{
-			Required:    true,
-			Description: "Your Google Cloud Platform project ID.",
-		},
 		// Optional
 		"authentication": schema.SingleNestedAttribute{
 			Optional:    true,
@@ -298,6 +295,12 @@ func sharedAttributes() map[string]schema.Attribute {
 					Description: "The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_SECRET_KEY` environment variable.",
 				},
 			},
+		},
+		"project_id": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Default:     stringdefault.StaticString(DefaultProjectID),
+			Description: "Your Google Cloud Platform project ID. Not required if `account_name` is specified.",
 		},
 		"compression_codec": schema.StringAttribute{
 			Optional: true,

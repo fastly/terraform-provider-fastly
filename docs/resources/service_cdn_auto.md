@@ -339,7 +339,6 @@ Required:
 
 - `bucket_name` (String) The name of the GCS bucket in which to store the logs.
 - `name` (String) The name for the real-time logging configuration. Must be unique within the service.
-- `project_id` (String) Your Google Cloud Platform project ID.
 
 Optional:
 
@@ -353,6 +352,7 @@ Optional:
 - `period` (Number) How frequently log files are finalized so they can be available for reading, in seconds. Default `3600`.
 - `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of `2` are placed in `vcl_log` and those with `format_version` of `1` are placed in `vcl_deliver`. Valid value is `none`.
 - `processing_region` (String) The geographic region where the logs will be processed before streaming to Google Cloud Storage. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `project_id` (String) Your Google Cloud Platform project ID. Not required if `account_name` is specified.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `timestamp_format` (String) `strftime`-specified timestamp format for log filename.
 

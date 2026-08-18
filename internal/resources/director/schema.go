@@ -13,7 +13,6 @@ import (
 	fastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -28,30 +27,31 @@ const (
 	DefaultQuorum  = 75
 	DefaultRetries = 5
 	DefaultShield  = ""
-	DefaultType    = "random"
+	DefaultType    = 1
 )
 
-// directorTypeByString maps the string enum to the integer DirectorType the Fastly API expects.
-// round_robin is included so Create/Update can round-trip a director that already has that type
-// (see directorTypeByAPI) without panicking, even though the type validator below still rejects
-// round_robin in new config - matching the legacy provider's validateDirectorType on main.
-var directorTypeByString = map[string]fastly.DirectorType{
-	"random":      fastly.DirectorTypeRandom,
-	"hash":        fastly.DirectorTypeHash,
-	"client":      fastly.DirectorTypeClient,
-	"round_robin": fastly.DirectorTypeRoundRobin,
+// directorTypeByInt maps the integer enum to the fastly.DirectorType the Fastly API expects.
+// round_robin (2) is included so Create/Update can round-trip a director that already has that
+// type (see directorIntByAPI) without panicking, even though the type validator below still
+// rejects 2 in new config - matching the legacy provider's validateDirectorType on main and the
+// API's own type enum (director.yaml: enum [1, 3, 4], x-enum-varnames [random, hash, client]).
+var directorTypeByInt = map[int64]fastly.DirectorType{
+	1: fastly.DirectorTypeRandom,
+	2: fastly.DirectorTypeRoundRobin,
+	3: fastly.DirectorTypeHash,
+	4: fastly.DirectorTypeClient,
 }
 
-// directorTypeByAPI maps the integer DirectorType back to its string enum for reading state.
-// Unlike directorTypeByString, it includes round_robin: a director created before this schema
+// directorIntByAPI maps the fastly.DirectorType back to its integer enum for reading state.
+// Unlike directorTypeByInt, it includes round_robin: a director created before this schema
 // existed (or outside Terraform) can already have that type, and ToModel must represent it
-// accurately rather than fall through to the empty string, which would misreport the director's
+// accurately rather than fall through to DefaultType, which would misreport the director's
 // actual type and could drive an unintended type change on the next apply.
-var directorTypeByAPI = map[fastly.DirectorType]string{
-	fastly.DirectorTypeRandom:     "random",
-	fastly.DirectorTypeHash:       "hash",
-	fastly.DirectorTypeClient:     "client",
-	fastly.DirectorTypeRoundRobin: "round_robin",
+var directorIntByAPI = map[fastly.DirectorType]int64{
+	fastly.DirectorTypeRandom:     1,
+	fastly.DirectorTypeRoundRobin: 2,
+	fastly.DirectorTypeHash:       3,
+	fastly.DirectorTypeClient:     4,
 }
 
 type NestedModel struct {
@@ -61,7 +61,7 @@ type NestedModel struct {
 	Quorum   types.Int64  `tfsdk:"quorum"`
 	Retries  types.Int64  `tfsdk:"retries"`
 	Shield   types.String `tfsdk:"shield"`
-	Type     types.String `tfsdk:"type"`
+	Type     types.Int64  `tfsdk:"type"`
 }
 
 func (n NestedModel) ModelsEqual(other NestedModel) bool {
@@ -71,7 +71,7 @@ func (n NestedModel) ModelsEqual(other NestedModel) bool {
 		service.Int64Value(n.Quorum) == service.Int64Value(other.Quorum) &&
 		service.Int64Value(n.Retries) == service.Int64Value(other.Retries) &&
 		service.StringValue(n.Shield) == service.StringValue(other.Shield) &&
-		service.StringValue(n.Type) == service.StringValue(other.Type)
+		service.Int64Value(n.Type) == service.Int64Value(other.Type)
 }
 
 func CommonAttributes() map[string]schema.Attribute {
@@ -118,12 +118,12 @@ func CommonAttributes() map[string]schema.Attribute {
 			Default:     stringdefault.StaticString(DefaultShield),
 			Description: "Selected POP to serve as a \"shield\" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response.",
 		},
-		"type": schema.StringAttribute{
+		"type": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
-			Description: "Type of load balance group to use. One of `random`, `hash`, or `client`. Default `random`.",
-			Validators: []validator.String{
-				stringvalidator.OneOf("random", "hash", "client"),
+			Description: "Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`.",
+			Validators: []validator.Int64{
+				int64validator.OneOf(1, 3, 4),
 			},
 		},
 	}
@@ -143,7 +143,7 @@ func NestedBlockSchema() schema.ListNestedBlock {
 
 // typeStickyDefault applies DefaultType to a director's type only when it is first created (no
 // matching prior state); otherwise it carries the director's existing type forward untouched, so
-// an out-of-band type (e.g. round_robin - see directorTypeByAPI) survives when type is left unset
+// an out-of-band type (e.g. round_robin - see directorIntByAPI) survives when type is left unset
 // in config. This must operate on the whole director list, not as a per-attribute String plan
 // modifier: the plugin framework pairs a ListNestedBlock element's plan-modifier StateValue with
 // the prior state element at the *same list index*, not the element with a matching name (see
@@ -153,7 +153,7 @@ func NestedBlockSchema() schema.ListNestedBlock {
 type typeStickyDefault struct{}
 
 func (m typeStickyDefault) Description(_ context.Context) string {
-	return fmt.Sprintf("defaults each director's type to %q on create; otherwise preserves its existing value, matched by name, when omitted from config", DefaultType)
+	return fmt.Sprintf("defaults each director's type to %d on create; otherwise preserves its existing value, matched by name, when omitted from config", DefaultType)
 }
 
 func (m typeStickyDefault) MarkdownDescription(ctx context.Context) string {
@@ -201,12 +201,12 @@ func (m typeStickyDefault) PlanModifyList(ctx context.Context, req planmodifier.
 			continue
 		}
 
-		configType, ok := configObj.Attributes()["type"].(types.String)
+		configType, ok := configObj.Attributes()["type"].(types.Int64)
 		if !ok || !configType.IsNull() {
 			continue
 		}
 
-		var newType attr.Value = types.StringValue(DefaultType)
+		var newType attr.Value = types.Int64Value(DefaultType)
 		if name, ok := planObj.Attributes()["name"].(types.String); ok && !name.IsNull() && !name.IsUnknown() {
 			if prior, ok := priorTypeByName[name.ValueString()]; ok {
 				newType = prior
@@ -318,7 +318,7 @@ func (o ops) metadataFieldsEqual(desired NestedModel, remote *fastly.Director) b
 		service.Int64Value(desired.Quorum) == service.Int64Value(m.Quorum) &&
 		service.Int64Value(desired.Retries) == service.Int64Value(m.Retries) &&
 		service.StringValue(desired.Shield) == service.StringValue(m.Shield) &&
-		service.StringValue(desired.Type) == service.StringValue(m.Type)
+		service.Int64Value(desired.Type) == service.Int64Value(m.Type)
 }
 
 func (o *ops) Update(ctx context.Context, client *fastly.Client, serviceID string, version int, desired NestedModel) (*fastly.Director, error) {
@@ -400,35 +400,35 @@ func (o ops) ToModel(api *fastly.Director) NestedModel {
 		Quorum:   types.Int64Value(int64(fastly.ToValue(api.Quorum))),
 		Retries:  types.Int64Value(int64(fastly.ToValue(api.Retries))),
 		Shield:   types.StringValue(fastly.ToValue(api.Shield)),
-		Type:     types.StringValue(directorTypeString(api.Type)),
+		Type:     types.Int64Value(directorTypeInt(api.Type)),
 	}
 }
 
-// directorTypeString looks up the string enum for an API DirectorType, falling back to
-// DefaultType for nil or unrecognized values (e.g. a future DirectorType this provider doesn't
-// know about yet) rather than the empty string. An empty string would round-trip into
-// directorTypePointer on the next write and panic; DefaultType is a value the API always accepts.
-func directorTypeString(t *fastly.DirectorType) string {
+// directorTypeInt looks up the integer enum for an API DirectorType, falling back to DefaultType
+// for nil or unrecognized values (e.g. a future DirectorType this provider doesn't know about
+// yet) rather than the zero value. A zero value would round-trip into directorTypePointer on the
+// next write and panic; DefaultType is a value the API always accepts.
+func directorTypeInt(t *fastly.DirectorType) int64 {
 	if t == nil {
 		return DefaultType
 	}
-	s, ok := directorTypeByAPI[*t]
+	i, ok := directorIntByAPI[*t]
 	if !ok {
 		return DefaultType
 	}
-	return s
+	return i
 }
 
 // directorTypePointer looks up the API DirectorType for desired.Type. Every value the schema can
-// produce - the stringvalidator.OneOf values for new config, plus round_robin read back from a
-// director that predates this schema (see directorTypeByAPI) - has an entry in directorTypeByString,
+// produce - the int64validator.OneOf values for new config, plus round_robin (2) read back from a
+// director that predates this schema (see directorIntByAPI) - has an entry in directorTypeByInt,
 // so the map lookup should never miss; panic rather than silently send the API an undefined
 // DirectorType zero-value if that invariant is ever violated.
-func directorTypePointer(v types.String) *fastly.DirectorType {
-	s := service.StringValue(v)
-	t, ok := directorTypeByString[s]
+func directorTypePointer(v types.Int64) *fastly.DirectorType {
+	i := service.Int64Value(v)
+	t, ok := directorTypeByInt[i]
 	if !ok {
-		panic(fmt.Sprintf("director: unrecognized type %q; must be one of random, hash, client, round_robin", s))
+		panic(fmt.Sprintf("director: unrecognized type %d; must be one of 1 (random), 2 (round_robin), 3 (hash), 4 (client)", i))
 	}
 	return &t
 }

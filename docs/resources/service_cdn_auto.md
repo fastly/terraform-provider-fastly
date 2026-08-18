@@ -176,7 +176,7 @@ Optional:
 - `quorum` (Number) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
 - `retries` (Number) How many backends to search if it fails. Default `5`.
 - `shield` (String) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response.
-- `type` (String) Type of load balance group to use. One of `random`, `hash`, or `client`. Default `random`.
+- `type` (Number) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`.
 
 
 <a id="nestedblock--domain"></a>

@@ -1019,7 +1019,7 @@ func TestAccFastlyServiceCDNAuto_withDirector(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.quorum", "75"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.retries", "5"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.shield", ""),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "random"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "1"),
 					// Adding a director should create and activate version 2
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
@@ -1037,7 +1037,7 @@ func TestAccFastlyServiceCDNAuto_withDirector(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.quorum", "30"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.retries", "10"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.shield", "sjc-ca-us"),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "hash"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "3"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "3"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "3"),
 				),
@@ -1060,8 +1060,8 @@ func TestAccFastlyServiceCDNAuto_withDirector(t *testing.T) {
 // director block's type plan modifier carrying forward the wrong director's type when a new
 // director is inserted ahead of existing ones. Terraform pairs a ListNestedBlock element's
 // plan-modifier state value with the prior state element at the same list index; a plan modifier
-// that consults state without matching by name would carry directorA's "hash" onto the newly
-// inserted directorC, and lose directorA's own "hash" in the process. See the typeStickyDefault
+// that consults state without matching by name would carry directorA's type 3 (hash) onto the newly
+// inserted directorC, and lose directorA's own type 3 (hash) in the process. See the typeStickyDefault
 // doc comment in internal/resources/director/schema.go.
 func TestAccFastlyServiceCDNAuto_directorTypeStickyOnReorder(t *testing.T) {
 	t.Parallel()
@@ -1085,26 +1085,26 @@ func TestAccFastlyServiceCDNAuto_directorTypeStickyOnReorder(t *testing.T) {
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "2"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorNameA),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "hash"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "3"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.name", directorNameB),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "random"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "1"),
 				),
 			},
 			{
 				// directorC is inserted ahead of directorA, and directorA's explicit type =
-				// "hash" is dropped from config. If the type plan modifier matched by list
-				// position instead of name, this plan would carry directorA's old "hash" onto
-				// the new directorC, and reset directorA itself to "random".
+				// type 3 (hash) is dropped from config. If the type plan modifier matched by list
+				// position instead of name, this plan would carry directorA's old type 3 (hash) onto
+				// the new directorC, and reset directorA itself to type 1 (random).
 				Config: ConfigCDNAutoWithDirectorInsertedAhead(serviceName, domainName, backendNameA, backendNameB, backendNameC, directorNameA, directorNameB, directorNameC),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "3"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorNameC),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "random"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.name", directorNameA),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "hash"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "3"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.name", directorNameB),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.type", "random"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.type", "1"),
 				),
 			},
 		},

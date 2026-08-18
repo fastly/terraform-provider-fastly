@@ -14,5 +14,5 @@ director {
   quorum   = 30
   retries  = 10
   shield   = "sjc-ca-us"
-  type     = "hash"
+  type     = 3
 }

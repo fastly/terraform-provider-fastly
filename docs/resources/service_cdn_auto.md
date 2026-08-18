@@ -31,6 +31,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `dynamic_snippet` (Block List) Dynamic VCL snippet metadata attached to this service version. Dynamic snippet content is managed separately by `fastly_service_dynamic_snippet_content`. (see [below for nested schema](#nestedblock--dynamic_snippet))
 - `force_destroy` (Boolean) Deactivate the active version before deleting the service. Default `false`.
 - `gzip` (Block List) Gzip configurations attached to this service. (see [below for nested schema](#nestedblock--gzip))
+- `header` (Block List) Header manipulations attached to this service. (see [below for nested schema](#nestedblock--header))
 - `healthcheck` (Block List) Health checks attached to this service. (see [below for nested schema](#nestedblock--healthcheck))
 - `image_optimizer_default_settings` (Block List) Image Optimizer default settings for this service. At most one block is supported. The Image Optimizer product must already be enabled on the service (e.g. via `fastly_service_product_image_optimizer`) before these settings can be persisted; enabling the product and configuring this block cannot be done in the same initial `apply`, since this block is reconciled as part of this resource's own create step, before a separate product-enablement resource (which depends on this resource's `id`) can run. Enable the product in a prior `apply` first. (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
@@ -222,6 +223,28 @@ Optional:
 - `cache_condition` (String) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`.
 - `content_types` (List of String) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`.
 - `extensions` (List of String) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`.
+
+
+<a id="nestedblock--header"></a>
+### Nested Schema for `header`
+
+Required:
+
+- `action` (String) The Header manipulation action to take; must be one of `set`, `append`, `delete`, `regex`, or `regex_repeat`.
+- `destination` (String) The name of the header that is going to be affected by the Action.
+- `name` (String) Unique name for this Header attribute. Changing this attribute will delete and recreate the resource.
+- `type` (String) The Request type on which to apply the selected Action; must be one of `request`, `fetch`, `cache`, or `response`.
+
+Optional:
+
+- `cache_condition` (String) Name of already defined `condition` to apply. This `condition` must be of type `CACHE`.
+- `ignore_if_set` (Boolean) Don't add the header if it is already present. Only applies to the `set` action. Default `false`.
+- `priority` (Number) Lower priorities execute first. Default `100`.
+- `regex` (String) Regular expression to use. Only applies to the `regex` and `regex_repeat` actions.
+- `request_condition` (String) Name of already defined `condition` to apply. This `condition` must be of type `REQUEST`.
+- `response_condition` (String) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`.
+- `source` (String) Variable to be used as a source for the header content. Does not apply to the `delete` action.
+- `substitution` (String) Value to substitute in place of regular expression. Only applies to the `regex` and `regex_repeat` actions.
 
 
 <a id="nestedblock--healthcheck"></a>

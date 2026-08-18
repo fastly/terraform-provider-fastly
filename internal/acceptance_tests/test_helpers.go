@@ -708,6 +708,69 @@ func ConfigCDNAutoWithHealthCheckAndBackend(serviceName, domainName, healthCheck
 	)
 }
 
+// ConfigCDNAutoWithHeader returns a CDN auto service config with a domain and a header
+func ConfigCDNAutoWithHeader(serviceName, domainName, headerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"HEADER_NAME":  headerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/header_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithHeaderUpdated returns a CDN auto service config with the same header name but
+// a different action, type, destination, source, priority, and ignore_if_set, for use as the
+// second step of an update test.
+func ConfigCDNAutoWithHeaderUpdated(serviceName, domainName, headerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"HEADER_NAME":  headerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/header_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithHeaderRequestCondition returns a CDN auto service config with a header whose
+// request_condition references a real nested REQUEST-type condition block.
+func ConfigCDNAutoWithHeaderRequestCondition(serviceName, domainName, headerName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"HEADER_NAME":    headerName,
+			"CONDITION_NAME": conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_single.tf",
+		"internal/acceptance_tests/blocks/header_with_request_condition.tf",
+	)
+}
+
+// ConfigCDNAutoWithHeaderInvalidAction returns a CDN auto service config with a header whose
+// action is not one of the accepted values, exercising the schema-level stringvalidator.OneOf
+// plan-time check.
+func ConfigCDNAutoWithHeaderInvalidAction(serviceName, domainName, headerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME": serviceName,
+			"DOMAIN_NAME":  domainName,
+			"HEADER_NAME":  headerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/header_invalid_action.tf",
+	)
+}
+
 // ConfigCDNAutoWithRateLimiter returns a CDN auto service config with a domain and a rate
 // limiter
 func ConfigCDNAutoWithRateLimiter(serviceName, domainName, rateLimiterName string) string {

@@ -15,6 +15,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/header"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/healthcheck"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/imageoptimizerdefaultsettings"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
@@ -77,6 +78,7 @@ type Model struct {
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	HealthCheck                   []healthcheck.NestedModel                   `tfsdk:"healthcheck"`
+	Header                        []header.NestedModel                        `tfsdk:"header"`
 	Gzip                          []gzip.NestedModel                          `tfsdk:"gzip"`
 	CacheSetting                  []cachesetting.NestedModel                  `tfsdk:"cache_setting"`
 	Dictionary                    []dictionary.NestedModel                    `tfsdk:"dictionary"`
@@ -150,6 +152,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
 			"healthcheck":                      healthcheck.NestedBlockSchema(),
+			"header":                           header.NestedBlockSchema(),
 			"gzip":                             gzip.NestedBlockSchema(),
 			"cache_setting":                    cachesetting.NestedBlockSchema(),
 			"dictionary":                       dictionary.NestedBlockSchema(),
@@ -327,9 +330,10 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-	// Conditions must be reconciled before backend/gzip/cache_setting: all three can reference
-	// a condition by name (request_condition, cache_condition), and the Fastly API rejects a
-	// create that names a condition which doesn't exist yet in this version.
+	// Conditions must be reconciled before backend/gzip/cache_setting/header: all four can
+	// reference a condition by name (request_condition, cache_condition, response_condition), and
+	// the Fastly API rejects a create that names a condition which doesn't exist yet in this
+	// version.
 	if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Condition); err != nil {
 		resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
 		return
@@ -395,6 +399,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.ACL = acls
+
+	if err := header.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Header); err != nil {
+		resp.Diagnostics.AddError("Error reconciling headers", err.Error())
+		return
+	}
+
+	headers, err := header.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service headers", err.Error())
+		return
+	}
+	plan.Header = header.MatchOrder(headers, plan.Header)
 
 	if err := gzip.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.Gzip); err != nil {
 		resp.Diagnostics.AddError("Error reconciling gzip configurations", err.Error())
@@ -713,6 +729,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service health checks", err.Error())
 		return
 	}
+	headers, err := header.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service headers", err.Error())
+		return
+	}
 	gzips, err := gzip.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.Gzip)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service gzip configurations", err.Error())
@@ -789,6 +810,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.HealthCheck = healthcheck.MatchOrder(healthChecks, state.HealthCheck)
+	state.Header = header.MatchOrder(headers, state.Header)
 	state.Gzip = gzip.MatchOrder(gzips, state.Gzip)
 	state.CacheSetting = cachesetting.MatchOrder(cacheSettings, state.CacheSetting)
 	state.Dictionary = dictionary.MatchOrder(dictionaries, state.Dictionary)
@@ -912,6 +934,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!healthcheck.Equal(plan.HealthCheck, state.HealthCheck) ||
+		!header.Equal(plan.Header, state.Header) ||
 		!gzip.Equal(plan.Gzip, state.Gzip) ||
 		!cachesetting.Equal(plan.CacheSetting, state.CacheSetting) ||
 		!dictionary.Equal(plan.Dictionary, state.Dictionary) ||
@@ -976,9 +999,10 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.Domain = domain.MatchOrder(domains, plan.Domain)
 
-		// Conditions must be reconciled before backend/gzip/cache_setting: all three can
-		// reference a condition by name (request_condition, cache_condition), and the Fastly
-		// API rejects a create that names a condition which doesn't exist yet in this version.
+		// Conditions must be reconciled before backend/gzip/cache_setting/header: all four can
+		// reference a condition by name (request_condition, cache_condition, response_condition),
+		// and the Fastly API rejects a create that names a condition which doesn't exist yet in
+		// this version.
 		if err := condition.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Condition); err != nil {
 			resp.Diagnostics.AddError("Error reconciling conditions", err.Error())
 			return
@@ -1077,6 +1101,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			return
 		}
 		plan.ACL = acls
+
+		if err := header.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Header); err != nil {
+			resp.Diagnostics.AddError("Error reconciling headers", err.Error())
+			return
+		}
+
+		headers, err := header.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service headers", err.Error())
+			return
+		}
+		plan.Header = header.MatchOrder(headers, plan.Header)
 
 		if err := gzip.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.Gzip, plan.Gzip); err != nil {
 			resp.Diagnostics.AddError("Error reconciling gzip configurations", err.Error())
@@ -1338,6 +1374,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.HealthCheck = healthcheck.MatchOrder(state.HealthCheck, plan.HealthCheck)
+		plan.Header = header.MatchOrder(state.Header, plan.Header)
 		plan.Gzip = gzip.MatchOrder(state.Gzip, plan.Gzip)
 		plan.CacheSetting = cachesetting.MatchOrder(state.CacheSetting, plan.CacheSetting)
 		plan.Dictionary = dictionary.MatchOrder(state.Dictionary, plan.Dictionary)

@@ -242,7 +242,7 @@ Optional:
 - `priority` (Number) Lower priorities execute first. Default `100`.
 - `regex` (String) Regular expression to use. Only applies to the `regex` and `regex_repeat` actions.
 - `request_condition` (String) Name of already defined `condition` to apply. This `condition` must be of type `REQUEST`.
-- `response_condition` (String) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`.
+- `response_condition` (String) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions).
 - `source` (String) Variable to be used as a source for the header content. Does not apply to the `delete` action.
 - `substitution` (String) Value to substitute in place of regular expression. Only applies to the `regex` and `regex_repeat` actions.
 

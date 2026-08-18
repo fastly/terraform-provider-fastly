@@ -115,7 +115,7 @@ func CommonAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Default:     stringdefault.StaticString(DefaultResponseCondition),
-			Description: "Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`.",
+			Description: "Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions).",
 		},
 		"source": schema.StringAttribute{
 			Optional:    true,

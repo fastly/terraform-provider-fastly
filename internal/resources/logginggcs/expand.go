@@ -20,8 +20,10 @@ func buildCommonCreateInput(serviceID string, version int, m commonModel) *fastl
 		Bucket:         new(service.StringValue(m.BucketName)),
 	}
 
-	// account_name and email/secret_key are alternative auth methods (the API
-	// accepts either); only send whichever is configured.
+	// account_name and email/secret_key are alternative auth methods, but not
+	// mutually exclusive on the API: it accepts both being set at once (each
+	// is sent whenever configured, with no client-side check against the
+	// other), and does not reject the request.
 	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
 	input.User = fastly.NullString(service.StringValue(m.Email()))
 	input.SecretKey = fastly.NullString(service.StringValue(m.SecretKey()))

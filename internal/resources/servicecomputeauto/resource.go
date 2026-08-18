@@ -15,6 +15,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/logginggcs"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/logginghttps"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelic"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -69,6 +70,7 @@ type Model struct {
 	LoggingBigQuery     []loggingbigquery.ComputeNestedModel     `tfsdk:"logging_bigquery"`
 	LoggingGCS          []logginggcs.ComputeNestedModel          `tfsdk:"logging_gcs"`
 	LoggingSplunk       []loggingsplunk.ComputeNestedModel       `tfsdk:"logging_splunk"`
+	LoggingHTTPS        []logginghttps.ComputeNestedModel        `tfsdk:"logging_https"`
 	LoggingSumologic    []loggingsumologic.ComputeNestedModel    `tfsdk:"logging_sumologic"`
 }
 
@@ -133,6 +135,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_bigquery":     loggingbigquery.ComputeNestedBlockSchema(),
 			"logging_gcs":          logginggcs.ComputeNestedBlockSchema(),
 			"logging_splunk":       loggingsplunk.ComputeNestedBlockSchema(),
+			"logging_https":        logginghttps.ComputeNestedBlockSchema(),
 			"logging_sumologic":    loggingsumologic.ComputeNestedBlockSchema(),
 		},
 	}
@@ -345,6 +348,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingSplunk = loggingsplunk.ComputeMatchOrder(loggingSplunks, plan.LoggingSplunk)
 
+	if err := logginghttps.ComputeReconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingHTTPS); err != nil {
+		resp.Diagnostics.AddError("Error reconciling HTTPS logging endpoints", err.Error())
+		return
+	}
+
+	loggingHTTPS, err := logginghttps.ComputeReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingHTTPS = logginghttps.ComputeMatchOrder(loggingHTTPS, plan.LoggingHTTPS)
+
 	if err := loggingsumologic.ComputeReconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingSumologic); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Sumologic logging endpoints", err.Error())
 		return
@@ -497,6 +512,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
 		return
 	}
+	loggingHTTPS, err := logginghttps.ComputeReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+		return
+	}
 	loggingSumologics, err := loggingsumologic.ComputeReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Sumologic logging endpoints", err.Error())
@@ -514,6 +534,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.LoggingBigQuery = loggingbigquery.ComputeMatchOrder(loggingBigQueries, state.LoggingBigQuery)
 	state.LoggingGCS = logginggcs.ComputeMatchOrder(loggingGCSs, state.LoggingGCS)
 	state.LoggingSplunk = loggingsplunk.ComputeMatchOrder(loggingSplunks, state.LoggingSplunk)
+	state.LoggingHTTPS = logginghttps.ComputeMatchOrder(loggingHTTPS, state.LoggingHTTPS)
 	state.LoggingSumologic = loggingsumologic.ComputeMatchOrder(loggingSumologics, state.LoggingSumologic)
 
 	resourceLinks, err := resourcelink.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
@@ -572,6 +593,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggingbigquery.ComputeEqual(plan.LoggingBigQuery, state.LoggingBigQuery) ||
 		!logginggcs.ComputeEqual(plan.LoggingGCS, state.LoggingGCS) ||
 		!loggingsplunk.ComputeEqual(plan.LoggingSplunk, state.LoggingSplunk) ||
+		!logginghttps.ComputeEqual(plan.LoggingHTTPS, state.LoggingHTTPS) ||
 		!loggingsumologic.ComputeEqual(plan.LoggingSumologic, state.LoggingSumologic) ||
 		false
 	needsVersionChange := nestedChanged
@@ -766,6 +788,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingSplunk = loggingsplunk.ComputeMatchOrder(loggingSplunks, plan.LoggingSplunk)
 
+		if err := logginghttps.ComputeReconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingHTTPS); err != nil {
+			resp.Diagnostics.AddError("Error reconciling HTTPS logging endpoints", err.Error())
+			return
+		}
+
+		loggingHTTPS, err := logginghttps.ComputeReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingHTTPS = logginghttps.ComputeMatchOrder(loggingHTTPS, plan.LoggingHTTPS)
+
 		if err := loggingsumologic.ComputeReconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingSumologic); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Sumologic logging endpoints", err.Error())
 			return
@@ -831,6 +865,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingBigQuery = loggingbigquery.ComputeMatchOrder(state.LoggingBigQuery, plan.LoggingBigQuery)
 		plan.LoggingGCS = logginggcs.ComputeMatchOrder(state.LoggingGCS, plan.LoggingGCS)
 		plan.LoggingSplunk = loggingsplunk.ComputeMatchOrder(state.LoggingSplunk, plan.LoggingSplunk)
+		plan.LoggingHTTPS = logginghttps.ComputeMatchOrder(state.LoggingHTTPS, plan.LoggingHTTPS)
 		plan.LoggingSumologic = loggingsumologic.ComputeMatchOrder(state.LoggingSumologic, plan.LoggingSumologic)
 	}
 

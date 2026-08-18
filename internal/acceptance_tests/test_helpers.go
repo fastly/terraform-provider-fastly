@@ -838,6 +838,114 @@ func ConfigCDNAutoWithRateLimiterDictionaryRemoved(serviceName, domainName, rate
 	)
 }
 
+// ConfigCDNAutoWithDirector returns a CDN auto service config with a domain, a backend, and a
+// director mapped to that backend.
+func ConfigCDNAutoWithDirector(serviceName, domainName, backendName, directorName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_NAME":   domainName,
+			"BACKEND_NAME":  backendName,
+			"DIRECTOR_NAME": directorName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/director_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithDirectorUpdated returns a CDN auto service config with the same director and
+// backend names as ConfigCDNAutoWithDirector, but with comment/quorum/retries/shield/type changed.
+func ConfigCDNAutoWithDirectorUpdated(serviceName, domainName, backendName, directorName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_NAME":   domainName,
+			"BACKEND_NAME":  backendName,
+			"DIRECTOR_NAME": directorName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/director_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithDirectorBackendSwapped returns a CDN auto service config with the same
+// director name as ConfigCDNAutoWithDirector, but the original backend removed entirely and a
+// new backend added and referenced instead - exercising the ordering between backend
+// create/delete and director reconciliation (see servicecdnauto's Update).
+func ConfigCDNAutoWithDirectorBackendSwapped(serviceName, domainName, backendName2, directorName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":   serviceName,
+			"DOMAIN_NAME":    domainName,
+			"BACKEND_NAME_2": backendName2,
+			"DIRECTOR_NAME":  directorName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/director_backend_swapped.tf",
+	)
+}
+
+// ConfigCDNAutoWithTwoOrderedDirectors returns a CDN auto service config with two directors,
+// directorA (type "hash") followed by directorB (type omitted, defaults to "random").
+func ConfigCDNAutoWithTwoOrderedDirectors(serviceName, domainName, backendNameA, backendNameB, directorNameA, directorNameB string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"BACKEND_NAME_A":  backendNameA,
+			"BACKEND_NAME_B":  backendNameB,
+			"DIRECTOR_NAME_A": directorNameA,
+			"DIRECTOR_NAME_B": directorNameB,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/director_two_ordered.tf",
+	)
+}
+
+// ConfigCDNAutoWithDirectorInsertedAhead returns a CDN auto service config with the same
+// directorA/directorB names and backends as ConfigCDNAutoWithTwoOrderedDirectors, but with a new
+// directorC (and its backend) inserted ahead of directorA in the config, and the explicit
+// type = "hash" removed from directorA. directorA's type should reset to the default ("random")
+// on omit, not stick to "hash" - see the typeStickyDefault doc comment in
+// internal/resources/director/schema.go.
+func ConfigCDNAutoWithDirectorInsertedAhead(serviceName, domainName, backendNameA, backendNameB, backendNameC, directorNameA, directorNameB, directorNameC string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":    serviceName,
+			"DOMAIN_NAME":     domainName,
+			"BACKEND_NAME_A":  backendNameA,
+			"BACKEND_NAME_B":  backendNameB,
+			"BACKEND_NAME_C":  backendNameC,
+			"DIRECTOR_NAME_A": directorNameA,
+			"DIRECTOR_NAME_B": directorNameB,
+			"DIRECTOR_NAME_C": directorNameC,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/director_reordered_insert.tf",
+	)
+}
+
+// ConfigCDNAutoWithDirectorNegativeRetries returns a CDN auto service config with a director
+// whose retries is negative, exercising the retries int64validator.AtLeast(0) plan-time check.
+func ConfigCDNAutoWithDirectorNegativeRetries(serviceName, domainName, backendName, directorName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":  serviceName,
+			"DOMAIN_NAME":   domainName,
+			"BACKEND_NAME":  backendName,
+			"DIRECTOR_NAME": directorName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/director_negative_retries.tf",
+	)
+}
+
 // ConfigCDNAutoWithGzip returns a CDN auto service config with a domain and a gzip configuration
 func ConfigCDNAutoWithGzip(serviceName, domainName, gzipName string) string {
 	return BuildConfig(
@@ -4089,6 +4197,204 @@ func ConfigComputeAutoWithLoggingSplunkFormat(serviceName, domainName, loggerNam
 	)
 }
 
+func ConfigLoggingHTTPSBasic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"DOMAIN_NAME":        domainName,
+			"SERVICE_VERSION":    "1",
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_https_basic.tf",
+	)
+}
+
+func ConfigLoggingHTTPSUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"DOMAIN_NAME":        domainName,
+			"SERVICE_VERSION":    "1",
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_https_updated.tf",
+	)
+}
+
+func ConfigLoggingHTTPSAtVersion(serviceName, domainName, loggerName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"DOMAIN_NAME":        domainName,
+			"SERVICE_VERSION":    fmt.Sprintf("%d", version),
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_https_basic.tf",
+	)
+}
+
+func ConfigLoggingHTTPSForImport(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"DOMAIN_NAME":        domainName,
+			"SERVICE_VERSION":    "1",
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_https_basic.tf",
+	)
+}
+
+// ConfigLoggingHTTPSGzipCodecConflict returns a config setting both gzip_level
+// and compression_codec, which the schema's gzipLevelCodecConflict validator
+// rejects at plan time.
+func ConfigLoggingHTTPSGzipCodecConflict(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"DOMAIN_NAME":        domainName,
+			"SERVICE_VERSION":    "1",
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_https_gzip_codec.tf",
+	)
+}
+
+// ConfigLoggingHTTPSComputeFormat returns a config attaching
+// fastly_service_logging_https to an explicit Compute service with format set,
+// a VCL-only attribute. The standalone resource's schema is shared by both
+// service types, so this is expected to fail at apply time via
+// ValidateNoVCLOnlyAttributesForCompute rather than at Terraform's own
+// schema-validation stage.
+func ConfigLoggingHTTPSComputeFormat(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"SERVICE_VERSION":    "1",
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_https_compute_format.tf",
+	)
+}
+
+// ConfigLoggingHTTPSCompute returns a config attaching
+// fastly_service_logging_https to an explicit Compute service with no VCL-only
+// attributes set. ClearVCLOnlyCreateFields strips format from the create
+// request, so the endpoint ends up with whatever format the Fastly API defaults
+// to - see TestAccFastlyServiceLoggingHTTPS_formatDefault.
+func ConfigLoggingHTTPSCompute(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"SERVICE_COMMENT":    "",
+			"SERVICE_VERSION":    "1",
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_https_compute.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingHTTPS(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingHTTPSPlacementNone(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested_placement_none.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingHTTPSUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested_updated.tf",
+	)
+}
+
+func ConfigCDNAutoWithMultipleLoggingHTTPS(serviceName, domainName, loggerName1, loggerName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"LOGGING_HTTPS_NAME_1": loggerName1,
+			"LOGGING_HTTPS_NAME_2": loggerName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested_multi.tf",
+	)
+}
+
+func ConfigCDNAutoWithBackendAndLoggingHTTPS(serviceName, domainName, backendName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"BACKEND_NAME":       backendName,
+			"LOGGING_HTTPS_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested.tf",
+	)
+}
+
+func ConfigComputeAutoWithLoggingHTTPS(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"LOGGING_HTTPS_NAME": loggerName,
+			"PACKAGE_PATH":       GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 func ConfigLoggingSumologicBasic(serviceName, domainName, loggerName string) string {
 	return BuildConfig(
 		ServiceCDN,
@@ -4265,6 +4571,27 @@ func ConfigComputeAutoWithLoggingSumologic(serviceName, domainName, loggerName s
 		},
 		"internal/acceptance_tests/blocks/domain_single.tf",
 		"internal/acceptance_tests/blocks/logging_sumologic_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingHTTPSFormat returns a Compute auto service
+// config whose nested logging_https block sets format, a VCL-only attribute.
+// service_compute_auto's logging_https schema (ComputeNestedBlockSchema) omits
+// format/format_version/placement/response_condition entirely, so this is
+// expected to fail Terraform's own schema validation ("Unsupported argument")
+// rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingHTTPSFormat(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":       serviceName,
+			"DOMAIN_NAME":        domainName,
+			"LOGGING_HTTPS_NAME": loggerName,
+			"PACKAGE_PATH":       GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_https_nested_compute_format.tf",
 		"internal/acceptance_tests/blocks/package.tf",
 	)
 }

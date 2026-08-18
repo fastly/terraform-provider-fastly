@@ -11,6 +11,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/cdnacl"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/condition"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dictionary"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/director"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/domain"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/dynamicsnippet"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/gzip"
@@ -20,6 +21,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/logginggcs"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/logginghttps"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelic"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -71,6 +73,7 @@ type Model struct {
 	ManagedVersion                types.Int64                                 `tfsdk:"managed_version"`
 	Domain                        []domain.NestedModel                        `tfsdk:"domain"`
 	Backend                       []backend.NestedModel                       `tfsdk:"backend"`
+	Director                      []director.NestedModel                      `tfsdk:"director"`
 	ACL                           []cdnacl.NestedModel                        `tfsdk:"acl"`
 	Condition                     []condition.NestedModel                     `tfsdk:"condition"`
 	HealthCheck                   []healthcheck.NestedModel                   `tfsdk:"healthcheck"`
@@ -86,6 +89,7 @@ type Model struct {
 	LoggingBigQuery               []loggingbigquery.NestedModel               `tfsdk:"logging_bigquery"`
 	LoggingGCS                    []logginggcs.NestedModel                    `tfsdk:"logging_gcs"`
 	LoggingSplunk                 []loggingsplunk.NestedModel                 `tfsdk:"logging_splunk"`
+	LoggingHTTPS                  []logginghttps.NestedModel                  `tfsdk:"logging_https"`
 	LoggingSumologic              []loggingsumologic.NestedModel              `tfsdk:"logging_sumologic"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
@@ -142,6 +146,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 		Blocks: map[string]schema.Block{
 			"domain":                           domain.NestedBlockSchema(),
 			"backend":                          backend.NestedBlockSchema(),
+			"director":                         director.NestedBlockSchema(),
 			"acl":                              cdnacl.NestedBlockSchema(),
 			"condition":                        condition.NestedBlockSchema(),
 			"healthcheck":                      healthcheck.NestedBlockSchema(),
@@ -157,6 +162,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_bigquery":                 loggingbigquery.NestedBlockSchema(),
 			"logging_gcs":                      logginggcs.NestedBlockSchema(),
 			"logging_splunk":                   loggingsplunk.NestedBlockSchema(),
+			"logging_https":                    logginghttps.NestedBlockSchema(),
 			"logging_sumologic":                loggingsumologic.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 			"snippet":                          snippet.NestedBlockSchema(),
@@ -227,6 +233,22 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 		resp.Diagnostics.AddAttributeError(
 			path.Root("rate_limiter"),
 			"Invalid rate limiter configuration",
+			err.Error(),
+		)
+	}
+
+	if err := director.ValidateConfig(config.Director); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("director"),
+			"Invalid director configuration",
+			err.Error(),
+		)
+	}
+
+	if err := director.ValidateBackendReferences(config.Director, config.Backend); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("director"),
+			"Invalid director configuration",
 			err.Error(),
 		)
 	}
@@ -346,6 +368,21 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 	plan.Backend = backend.MatchOrder(backends, plan.Backend)
+
+	// Directors must be reconciled after backends: a director's backends can reference a backend
+	// by name, and the Fastly API rejects a director create that names one which doesn't exist
+	// yet in this version.
+	if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.Director); err != nil {
+		resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+		return
+	}
+
+	directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service directors", err.Error())
+		return
+	}
+	plan.Director = director.MatchOrder(directors, plan.Director)
 
 	if err := cdnacl.ReconcileWithPrevious(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ACL); err != nil {
 		resp.Diagnostics.AddError("Error reconciling ACLs", err.Error())
@@ -506,6 +543,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, plan.LoggingSplunk)
 
+	if err := logginghttps.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingHTTPS); err != nil {
+		resp.Diagnostics.AddError("Error reconciling HTTPS logging endpoints", err.Error())
+		return
+	}
+
+	loggingHTTPS, err := logginghttps.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingHTTPS = logginghttps.MatchOrder(loggingHTTPS, plan.LoggingHTTPS)
+
 	if err := loggingsumologic.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingSumologic); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Sumologic logging endpoints", err.Error())
 		return
@@ -644,6 +693,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading service backends", err.Error())
 		return
 	}
+	directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading service directors", err.Error())
+		return
+	}
 	acls, err := cdnacl.ReadForVersionWithPlan(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion, state.ACL)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service ACLs", err.Error())
@@ -719,6 +773,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
 		return
 	}
+	loggingHTTPS, err := logginghttps.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+		return
+	}
 	loggingSumologics, err := loggingsumologic.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Sumologic logging endpoints", err.Error())
@@ -726,6 +785,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
+	state.Director = director.MatchOrder(directors, state.Director)
 	state.ACL = cdnacl.MatchOrder(acls, state.ACL)
 	state.Condition = condition.MatchOrder(conditions, state.Condition)
 	state.HealthCheck = healthcheck.MatchOrder(healthChecks, state.HealthCheck)
@@ -741,6 +801,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, state.LoggingBigQuery)
 	state.LoggingGCS = logginggcs.MatchOrder(loggingGCSs, state.LoggingGCS)
 	state.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, state.LoggingSplunk)
+	state.LoggingHTTPS = logginghttps.MatchOrder(loggingHTTPS, state.LoggingHTTPS)
 	state.LoggingSumologic = loggingsumologic.MatchOrder(loggingSumologics, state.LoggingSumologic)
 
 	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
@@ -847,6 +908,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	nestedChanged := !domain.Equal(plan.Domain, state.Domain) ||
 		!backend.Equal(plan.Backend, state.Backend) ||
+		!director.Equal(plan.Director, state.Director) ||
 		!cdnacl.Equal(plan.ACL, state.ACL) ||
 		!condition.Equal(plan.Condition, state.Condition) ||
 		!healthcheck.Equal(plan.HealthCheck, state.HealthCheck) ||
@@ -862,6 +924,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggingbigquery.Equal(plan.LoggingBigQuery, state.LoggingBigQuery) ||
 		!logginggcs.Equal(plan.LoggingGCS, state.LoggingGCS) ||
 		!loggingsplunk.Equal(plan.LoggingSplunk, state.LoggingSplunk) ||
+		!logginghttps.Equal(plan.LoggingHTTPS, state.LoggingHTTPS) ||
 		!loggingsumologic.Equal(plan.LoggingSumologic, state.LoggingSumologic) ||
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
@@ -943,9 +1006,57 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
-		if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
-			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
-			return
+		// A director's backends can reference a backend by name, so whenever directors are (or
+		// were) in play, backends and directors must be reconciled in three passes rather than
+		// the usual single ReconcileWithPrevious + Reconcile pair: a backend create must run
+		// before the director that references it, but a backend delete must wait until any
+		// director no longer referencing it has already been updated - otherwise the API rejects
+		// deleting a backend still named by a director's association. So: create/update backends
+		// first (satisfies the create direction), reconcile directors fully (any director losing
+		// a backend reference is updated/deleted here), then delete backends no longer desired
+		// (now safe - no director still references them). Services with no directors configured
+		// before or after this update skip straight to the single-pass Reconcile, which deletes
+		// before creating and so never transiently holds an extra backend against the service's
+		// backend-count limit.
+		if len(plan.Director) > 0 || len(state.Director) > 0 {
+			if err := backend.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+				resp.Diagnostics.AddError("Error creating or updating backends", err.Error())
+				return
+			}
+
+			if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Director); err != nil {
+				resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+				return
+			}
+
+			directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading service directors", err.Error())
+				return
+			}
+			plan.Director = director.MatchOrder(directors, plan.Director)
+
+			if err := backend.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+				resp.Diagnostics.AddError("Error deleting removed backends", err.Error())
+				return
+			}
+		} else {
+			if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+				resp.Diagnostics.AddError("Error reconciling backends", err.Error())
+				return
+			}
+
+			if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Director); err != nil {
+				resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+				return
+			}
+
+			directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading service directors", err.Error())
+				return
+			}
+			plan.Director = director.MatchOrder(directors, plan.Director)
 		}
 
 		backends, err := backend.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
@@ -1129,6 +1240,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, plan.LoggingSplunk)
 
+		if err := logginghttps.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingHTTPS); err != nil {
+			resp.Diagnostics.AddError("Error reconciling HTTPS logging endpoints", err.Error())
+			return
+		}
+
+		loggingHTTPS, err := logginghttps.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingHTTPS = logginghttps.MatchOrder(loggingHTTPS, plan.LoggingHTTPS)
+
 		if err := loggingsumologic.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingSumologic); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Sumologic logging endpoints", err.Error())
 			return
@@ -1211,6 +1334,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 		plan.Domain = domain.MatchOrder(state.Domain, plan.Domain)
 		plan.Backend = backend.MatchOrder(state.Backend, plan.Backend)
+		plan.Director = director.MatchOrder(state.Director, plan.Director)
 		plan.ACL = cdnacl.MatchOrder(state.ACL, plan.ACL)
 		plan.Condition = condition.MatchOrder(state.Condition, plan.Condition)
 		plan.HealthCheck = healthcheck.MatchOrder(state.HealthCheck, plan.HealthCheck)
@@ -1226,6 +1350,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingBigQuery = loggingbigquery.MatchOrder(state.LoggingBigQuery, plan.LoggingBigQuery)
 		plan.LoggingGCS = logginggcs.MatchOrder(state.LoggingGCS, plan.LoggingGCS)
 		plan.LoggingSplunk = loggingsplunk.MatchOrder(state.LoggingSplunk, plan.LoggingSplunk)
+		plan.LoggingHTTPS = logginghttps.MatchOrder(state.LoggingHTTPS, plan.LoggingHTTPS)
 		plan.LoggingSumologic = loggingsumologic.MatchOrder(state.LoggingSumologic, plan.LoggingSumologic)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)

@@ -1,0 +1,164 @@
+---
+page_title: "fastly_service_logging_https Resource - fastly"
+subcategory: ""
+description: |-
+  Fastly service HTTPS logging endpoint resource. Writes directly to the specified writable service version.
+---
+
+# fastly_service_logging_https (Resource)
+
+Fastly service HTTPS logging endpoint resource. Writes directly to the specified writable service version.
+
+This resource is part of the explicit/default first-class resource family. It
+manages an HTTPS real-time logging endpoint on the configured service version.
+It does not clone, activate, or stage service versions.
+
+To have the provider manage the version lifecycle for you instead, use the
+nested `logging_https` block on `fastly_service_cdn_auto` or
+`fastly_service_compute_auto` — see "Automatic-lifecycle usage" below.
+
+## Example Usage
+
+```terraform
+resource "fastly_service_logging_https" "example" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "https-endpoint"
+  url        = "https://logs.example.com/ingest"
+}
+```
+
+A fully configured endpoint using mutual TLS, a custom header, and gzip
+compression, with a custom request batching limit. `format`, `format_version`,
+`placement`, and `response_condition` only affect generated VCL, so they are
+valid when `service_id` refers to a CDN (VCL) service and rejected for a
+Compute service:
+
+```terraform
+resource "fastly_service_logging_https" "tls" {
+  service_id = fastly_service_cdn.example.id
+  version    = 1
+  name       = "https-tls"
+  url        = "https://logs.example.com/ingest"
+
+  tls = {
+    ca_cert     = file("logs-ca.pem")
+    client_cert = file("logs-client.pem")
+    client_key  = file("logs-client-key.pem")
+    hostname    = "logs.example.com"
+  }
+  header_name  = "Authorization"
+  header_value = var.logs_auth_header
+  gzip_level   = 6
+  method       = "PUT"
+
+  request_max_bytes   = 1000000
+  request_max_entries = 1000
+
+  format             = "%h %l %u %t \"%r\" %>s %b"
+  format_version     = 2
+  placement          = "none"
+  response_condition = fastly_service_condition.errors_only.name
+}
+```
+
+Attaching to a Compute service — the VCL-only attributes must be omitted:
+
+```terraform
+resource "fastly_service_logging_https" "compute" {
+  service_id = fastly_service_compute.example.id
+  version    = 1
+  name       = "https-compute"
+  url        = "https://logs.example.com/ingest"
+}
+```
+
+## Automatic-lifecycle usage
+
+Inside the `_auto` service resources, HTTPS logging is a nested block and the
+provider clones, validates, and activates a new service version whenever the
+block changes. The nested block takes the same arguments as this resource, minus
+`service_id` and `version`, which the parent service owns.
+
+```terraform
+resource "fastly_service_cdn_auto" "example" {
+  name = "my-service"
+
+  domain {
+    name = "www.example.com"
+  }
+
+  logging_https {
+    name = "https-endpoint"
+    url  = "https://logs.example.com/ingest"
+  }
+}
+```
+
+`fastly_service_compute_auto` supports the same block, without the VCL-only
+arguments (`format`, `format_version`, `placement`, `response_condition`):
+
+```terraform
+resource "fastly_service_compute_auto" "example" {
+  name = "my-compute-service"
+
+  domain {
+    name = "www.example.com"
+  }
+
+  package {
+    filename         = "package.tar.gz"
+    source_code_hash = filesha512("package.tar.gz")
+  }
+
+  logging_https {
+    name = "https-compute"
+    url  = "https://logs.example.com/ingest"
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+For import-from-scratch with the Terraform CLI, include the service version in
+the import ID so the provider can read the endpoint from the Fastly API and
+populate full state:
+
+```shell
+terraform import fastly_service_logging_https.example SERVICE_ID/VERSION/ENDPOINT_NAME
+```
+
+Example:
+
+```shell
+terraform import fastly_service_logging_https.example SU1Z0isxPaozGVKXdv0eY/3/https-endpoint
+```
+
+## Version lifecycle
+
+This resource does not clone, activate, or stage service versions. Use explicit
+service-version lifecycle actions to clone, validate, stage, or activate a
+service version.
+
+## Notes
+
+- `tls` groups the certificate material used for mutual TLS to the HTTPS
+  server. None of its fields have an environment variable fallback; all default
+  to an empty string when omitted. `client_key` is sensitive and never appears
+  in plan output.
+- `gzip_level` and `compression_codec` are mutually exclusive — the Fastly API
+  rejects a request that sets both. Leave `compression_codec` unset and set
+  `gzip_level` for a specific level, or set `compression_codec` (`zstd`,
+  `snappy`, or `gzip`) and let the API manage the level.
+- `header_name`/`header_value` add one custom HTTP header to every request the
+  endpoint sends — for example an `Authorization` header some HTTPS log
+  collectors require. Neither is treated as sensitive by this resource, since
+  the Fastly API accepts arbitrary header values here, not only credentials;
+  mark the input variable holding `header_value` sensitive yourself if you use
+  it for an authorization token.
+- Leaving `placement` unset is not the same as setting it to `none`: unset lets
+  Fastly place the logging call automatically (`vcl_log` for `format_version` 2,
+  `vcl_deliver` for `format_version` 1), while `none` suppresses the generated
+  log statement entirely so you can write it yourself.

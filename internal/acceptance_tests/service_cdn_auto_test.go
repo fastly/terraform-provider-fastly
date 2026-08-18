@@ -986,6 +986,221 @@ func TestAccFastlyServiceCDNAuto_multipleRateLimiters(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_withDirector(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	directorName := fmt.Sprintf("director-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithDirector(serviceName, domainName, backendName, directorName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.backends.#", "1"),
+					resource.TestCheckTypeSetElemAttr("fastly_service_cdn_auto.test", "director.0.backends.*", backendName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.comment", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.quorum", "75"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.retries", "5"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.shield", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "random"),
+					// Adding a director should create and activate version 2
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
+				),
+			},
+			{
+				// Same name, different comment/quorum/retries/shield/type - this is an in-place
+				// update, not a delete+recreate, since the name (the reconciler's identity key)
+				// hasn't changed.
+				Config: ConfigCDNAutoWithDirectorUpdated(serviceName, domainName, backendName, directorName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.comment", "updated director"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.quorum", "30"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.retries", "10"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.shield", "sjc-ca-us"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "hash"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "3"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "3"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "0"),
+					// Removing the director should create and activate version 4
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "4"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "4"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccFastlyServiceCDNAuto_directorTypeResetOnOmit is a regression test for dropping an
+// explicit director type from config: it must reset to the default ("random"), matching the
+// legacy SDKv2 provider on main where type had a schema-level `Default: 1`. It also exercises
+// that reset alongside a reorder/insert, since the director block's type plan modifier must
+// still resolve each director's prior value by name rather than list position - see the
+// typeStickyDefault doc comment in internal/resources/director/schema.go. (The one case where a
+// prior value is preserved instead of reset - an existing round_robin director - can't be
+// exercised here, since config can never set type = round_robin; that case is covered by the
+// name-vs-position unit test for typeStickyDefault in internal/resources/director/director_test.go.)
+func TestAccFastlyServiceCDNAuto_directorTypeResetOnOmit(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendNameA := fmt.Sprintf("backend-a-%s", acctest.RandString(10))
+	backendNameB := fmt.Sprintf("backend-b-%s", acctest.RandString(10))
+	backendNameC := fmt.Sprintf("backend-c-%s", acctest.RandString(10))
+	directorNameA := fmt.Sprintf("director-a-%s", acctest.RandString(10))
+	directorNameB := fmt.Sprintf("director-b-%s", acctest.RandString(10))
+	directorNameC := fmt.Sprintf("director-c-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithTwoOrderedDirectors(serviceName, domainName, backendNameA, backendNameB, directorNameA, directorNameB),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorNameA),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "hash"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.name", directorNameB),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "random"),
+				),
+			},
+			{
+				// directorC is inserted ahead of directorA, and directorA's explicit type =
+				// "hash" is dropped from config. directorA must now reset to "random" - the
+				// schema default - rather than sticking with its prior "hash".
+				Config: ConfigCDNAutoWithDirectorInsertedAhead(serviceName, domainName, backendNameA, backendNameB, backendNameC, directorNameA, directorNameB, directorNameC),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "3"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorNameC),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "random"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.name", directorNameA),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "random"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.name", directorNameB),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.type", "random"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_directorNegativeRetries(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	directorName := fmt.Sprintf("director-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigCDNAutoWithDirectorNegativeRetries(serviceName, domainName, backendName, directorName),
+				ExpectError: regexp.MustCompile(`Attribute director\[0\]\.retries value must be at least 0`),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_directorBackendSwap(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName1 := fmt.Sprintf("backend-a-%s", acctest.RandString(10))
+	backendName2 := fmt.Sprintf("backend-b-%s", acctest.RandString(10))
+	directorName := fmt.Sprintf("director-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithDirector(serviceName, domainName, backendName1, directorName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.backends.#", "1"),
+					resource.TestCheckTypeSetElemAttr("fastly_service_cdn_auto.test", "director.0.backends.*", backendName1),
+				),
+			},
+			{
+				// backendName1 is removed from config entirely and backendName2 takes its place
+				// as the director's only backend. This only succeeds if the director's backend
+				// association is updated before backendName1 is deleted - see the ordering
+				// comment in servicecdnauto's Update.
+				Config: ConfigCDNAutoWithDirectorBackendSwapped(serviceName, domainName, backendName2, directorName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "backend.0.name", backendName2),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.backends.#", "1"),
+					resource.TestCheckTypeSetElemAttr("fastly_service_cdn_auto.test", "director.0.backends.*", backendName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_importWithDirector(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-%s", acctest.RandString(10))
+	directorName := fmt.Sprintf("director-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithDirector(serviceName, domainName, backendName, directorName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorName),
+				),
+			},
+			{
+				ResourceName:            "fastly_service_cdn_auto.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "reuse"},
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_rateLimiterWithDictionary(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

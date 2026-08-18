@@ -4089,6 +4089,207 @@ func ConfigComputeAutoWithLoggingSplunkFormat(serviceName, domainName, loggerNam
 	)
 }
 
+func ConfigLoggingSumologicBasic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "",
+			"DOMAIN_NAME":            domainName,
+			"SERVICE_VERSION":        "1",
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_basic.tf",
+	)
+}
+
+func ConfigLoggingSumologicUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "",
+			"DOMAIN_NAME":            domainName,
+			"SERVICE_VERSION":        "1",
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_updated.tf",
+	)
+}
+
+func ConfigLoggingSumologicAtVersion(serviceName, domainName, loggerName string, version int) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "",
+			"DOMAIN_NAME":            domainName,
+			"SERVICE_VERSION":        fmt.Sprintf("%d", version),
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_basic.tf",
+	)
+}
+
+func ConfigLoggingSumologicForImport(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDN,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "",
+			"DOMAIN_NAME":            domainName,
+			"SERVICE_VERSION":        "1",
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/service_cdn_domain.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_basic.tf",
+	)
+}
+
+// ConfigLoggingSumologicComputeFormat returns a config attaching
+// fastly_service_logging_sumologic to an explicit Compute service with format
+// set, a VCL-only attribute. The standalone resource's schema is shared by both
+// service types, so this is expected to fail at apply time via
+// ValidateNoVCLOnlyAttributesForCompute rather than at Terraform's own
+// schema-validation stage.
+func ConfigLoggingSumologicComputeFormat(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "",
+			"SERVICE_VERSION":        "1",
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_sumologic_compute_format.tf",
+	)
+}
+
+// ConfigLoggingSumologicCompute returns a config attaching
+// fastly_service_logging_sumologic to an explicit Compute service with no
+// VCL-only attributes set. ClearVCLOnlyCreateFields strips format from the
+// create request, so the endpoint ends up with whatever format the Fastly API
+// defaults to - see TestAccFastlyServiceLoggingSumologic_formatDefault.
+func ConfigLoggingSumologicCompute(serviceName, loggerName string) string {
+	return BuildConfig(
+		ServiceCompute,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"SERVICE_COMMENT":        "",
+			"SERVICE_VERSION":        "1",
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/logging_sumologic_compute.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingSumologic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingSumologicPlacementNone(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested_placement_none.tf",
+	)
+}
+
+func ConfigCDNAutoWithLoggingSumologicUpdated(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested_updated.tf",
+	)
+}
+
+func ConfigCDNAutoWithMultipleLoggingSumologic(serviceName, domainName, loggerName1, loggerName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":             serviceName,
+			"DOMAIN_NAME":              domainName,
+			"LOGGING_SUMOLOGIC_NAME_1": loggerName1,
+			"LOGGING_SUMOLOGIC_NAME_2": loggerName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested_multi.tf",
+	)
+}
+
+func ConfigCDNAutoWithBackendAndLoggingSumologic(serviceName, domainName, backendName, loggerName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"BACKEND_NAME":           backendName,
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/backend_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested.tf",
+	)
+}
+
+func ConfigComputeAutoWithLoggingSumologic(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+			"PACKAGE_PATH":           GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
+// ConfigComputeAutoWithLoggingSumologicFormat returns a Compute auto service
+// config whose nested logging_sumologic block sets format, a VCL-only
+// attribute. service_compute_auto's logging_sumologic schema
+// (ComputeNestedBlockSchema) omits format/format_version/placement/response_condition
+// entirely, so this is expected to fail Terraform's own schema validation
+// ("Unsupported argument") rather than reach the Fastly API.
+func ConfigComputeAutoWithLoggingSumologicFormat(serviceName, domainName, loggerName string) string {
+	return BuildConfig(
+		ServiceComputeAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"LOGGING_SUMOLOGIC_NAME": loggerName,
+			"PACKAGE_PATH":           GetPackagePath(),
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/logging_sumologic_nested_compute_format.tf",
+		"internal/acceptance_tests/blocks/package.tf",
+	)
+}
+
 // productEnablementBlock renders a single "internal/acceptance_tests/blocks/service_product_<product>.tf"
 // template, merging SERVICE_ID_REF (the Terraform expression for the owning
 // service's id, e.g. "fastly_service_cdn_auto.test.id") with any

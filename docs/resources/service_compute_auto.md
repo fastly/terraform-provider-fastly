@@ -34,6 +34,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
+- `logging_sumologic` (Block List) Sumo Logic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_sumologic))
 - `package` (Block List) Compute package attached to this service version. At most one package block is supported. (see [below for nested schema](#nestedblock--package))
 - `resource_link` (Block List) Shared resources (such as KV Stores or Config Stores) linked to this service, making them accessible from Compute code. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
@@ -371,6 +372,20 @@ Optional:
 - `client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_KEY` environment variable.
 - `hostname` (String) The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.
 
+
+
+<a id="nestedblock--logging_sumologic"></a>
+### Nested Schema for `logging_sumologic`
+
+Required:
+
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `url` (String) The URL to post logs to.
+
+Optional:
+
+- `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
 
 
 <a id="nestedblock--package"></a>

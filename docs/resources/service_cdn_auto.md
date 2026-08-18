@@ -40,6 +40,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
 - `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
+- `logging_sumologic` (Block List) Sumo Logic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_sumologic))
 - `rate_limiter` (Block List) Rate limiters attached to this service. (see [below for nested schema](#nestedblock--rate_limiter))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 - `snippet` (Block List) Regular VCL snippets attached to this service version. (see [below for nested schema](#nestedblock--snippet))
@@ -500,6 +501,24 @@ Optional:
 - `client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. Can be set via the `FASTLY_SPLUNK_CLIENT_KEY` environment variable.
 - `hostname` (String) The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.
 
+
+
+<a id="nestedblock--logging_sumologic"></a>
+### Nested Schema for `logging_sumologic`
+
+Required:
+
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `url` (String) The URL to post logs to.
+
+Optional:
+
+- `format` (String) A Fastly [log format string](https://www.fastly.com/documentation/guides/integrations/streaming-logs/custom-log-formats/). Must produce valid content for the configured `message_type`.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if format_version is set to `2` and in `vcl_deliver` if `format_version` is set to `1`.
+- `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of `2` are placed in `vcl_log` and those with `format_version` of `1` are placed in `vcl_deliver`. Valid value is `none`.
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
 <a id="nestedblock--rate_limiter"></a>

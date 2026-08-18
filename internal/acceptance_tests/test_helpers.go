@@ -1254,6 +1254,101 @@ func ConfigCDNAutoWithCacheSettingCacheCondition(serviceName, domainName, cacheS
 	)
 }
 
+func ConfigCDNAutoWithRequestSetting(serviceName, domainName, requestSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"REQUEST_SETTING_NAME": requestSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/request_setting_single.tf",
+	)
+}
+
+// ConfigCDNAutoWithRequestSettingMinimal returns a CDN auto service config with a request
+// setting that leaves every optional attribute unset.
+func ConfigCDNAutoWithRequestSettingMinimal(serviceName, domainName, requestSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"REQUEST_SETTING_NAME": requestSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/request_setting_minimal.tf",
+	)
+}
+
+// ConfigCDNAutoWithRequestSettingUpdated returns a CDN auto service config with the same
+// request setting name but different attribute values.
+func ConfigCDNAutoWithRequestSettingUpdated(serviceName, domainName, requestSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"REQUEST_SETTING_NAME": requestSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/request_setting_updated.tf",
+	)
+}
+
+// ConfigCDNAutoWithMultipleRequestSettings returns a CDN auto service config with two request
+// settings, each scoped to its own request_condition - Fastly rejects more than one request
+// setting sharing the same request_condition value (including the unset/blank default).
+func ConfigCDNAutoWithMultipleRequestSettings(serviceName, domainName, requestSettingName1, requestSettingName2, conditionName1, conditionName2 string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":           serviceName,
+			"DOMAIN_NAME":            domainName,
+			"REQUEST_SETTING_NAME_1": requestSettingName1,
+			"REQUEST_SETTING_NAME_2": requestSettingName2,
+			"CONDITION_NAME_1":       conditionName1,
+			"CONDITION_NAME_2":       conditionName2,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/request_setting_multi.tf",
+	)
+}
+
+// ConfigCDNAutoWithRequestSettingInvalidAction returns a CDN auto service config with a request
+// setting whose action is not one of the accepted values, exercising the schema-level
+// stringvalidator.OneOfCaseInsensitive plan-time check.
+func ConfigCDNAutoWithRequestSettingInvalidAction(serviceName, domainName, requestSettingName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"REQUEST_SETTING_NAME": requestSettingName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/request_setting_invalid_action.tf",
+	)
+}
+
+// ConfigCDNAutoWithRequestSettingRequestCondition returns a CDN auto service config with a
+// request setting whose request_condition references a real nested REQUEST-type condition block.
+func ConfigCDNAutoWithRequestSettingRequestCondition(serviceName, domainName, requestSettingName, conditionName string) string {
+	return BuildConfig(
+		ServiceCDNAuto,
+		map[string]string{
+			"SERVICE_NAME":         serviceName,
+			"DOMAIN_NAME":          domainName,
+			"REQUEST_SETTING_NAME": requestSettingName,
+			"CONDITION_NAME":       conditionName,
+		},
+		"internal/acceptance_tests/blocks/domain_single.tf",
+		"internal/acceptance_tests/blocks/condition_single.tf",
+		"internal/acceptance_tests/blocks/request_setting_with_request_condition.tf",
+	)
+}
+
 // ConfigACLForImport returns a test configuration for importing an ACL
 func ConfigACLForImport(serviceName, domainName, aclName string) string {
 	return BuildConfig(

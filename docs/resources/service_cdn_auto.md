@@ -45,6 +45,7 @@ Automatic-lifecycle Fastly CDN service resource with nested versioned configurat
 - `logging_splunk` (Block List) Splunk logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_splunk))
 - `logging_sumologic` (Block List) Sumo Logic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_sumologic))
 - `rate_limiter` (Block List) Rate limiters attached to this service. (see [below for nested schema](#nestedblock--rate_limiter))
+- `request_setting` (Block List) Request settings attached to this service. (see [below for nested schema](#nestedblock--request_setting))
 - `reuse` (Boolean) Deactivate the active version but do not delete the service, allowing it to be reused/imported elsewhere. Default `false`.
 - `snippet` (Block List) Regular VCL snippets attached to this service version. (see [below for nested schema](#nestedblock--snippet))
 - `vcl` (Block List) Custom VCL files attached to this service. (see [below for nested schema](#nestedblock--vcl))
@@ -637,6 +638,27 @@ Required:
 - `content_type` (String) HTTP Content-Type (e.g. `application/json`).
 - `status` (Number) HTTP response status code (e.g. `429`).
 
+
+
+<a id="nestedblock--request_setting"></a>
+### Nested Schema for `request_setting`
+
+Required:
+
+- `name` (String) Unique name to refer to this Request Setting. Changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `action` (String) Allows you to terminate request handling and immediately perform an action. When set it can be `lookup` or `pass` (ignore the cache completely).
+- `bypass_busy_wait` (Boolean) Disable collapsed forwarding, so you don't wait for other objects to origin. Default `false`.
+- `default_host` (String) Sets the host header.
+- `force_miss` (Boolean) Force a cache miss for the request. Default `false`.
+- `force_ssl` (Boolean) Forces the request to use SSL (redirects a non-SSL request to SSL). Default `false`.
+- `hash_keys` (String) Comma separated list of varnish request object fields that should be in the hash key.
+- `max_stale_age` (Number) How old an object is allowed to be to serve `stale-if-error` or `stale-while-revalidate`, in seconds. Default `0`.
+- `request_condition` (String) Name of already defined `condition` to determine if this request setting should be applied. Should be unique across multiple instances of `request_setting`, including any left unset (Fastly rejects more than one request setting sharing the same, or unset, `request_condition`).
+- `timer_support` (Boolean) Injects the X-Timer info into the request for viewing origin fetch durations. Default `false`.
+- `xff` (String) X-Forwarded-For, should be `clear`, `leave`, `append`, `append_all`, or `overwrite`.
 
 
 <a id="nestedblock--snippet"></a>

@@ -777,6 +777,233 @@ func TestAccFastlyServiceCDNAuto_cacheSettingWithCacheCondition(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceCDNAuto_withRequestSetting(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName := fmt.Sprintf("request-setting-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "0"),
+					// Initial version should be 1
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "1"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoWithRequestSetting(serviceName, domainName, requestSettingName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.name", requestSettingName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.action", "lookup"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.bypass_busy_wait", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.default_host", "host.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.force_miss", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.force_ssl", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.hash_keys", "req.url,req.http.host"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.max_stale_age", "120"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.timer_support", "true"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.xff", "append"),
+					// Adding a request setting should create and activate version 2
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "2"),
+				),
+			},
+			{
+				Config: ConfigCDNAutoBasic(serviceName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "0"),
+					// Removing the request setting should create and activate version 3
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "active_version", "3"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "managed_version", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_requestSettingMinimal(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName := fmt.Sprintf("request-setting-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				// Every optional attribute left unset must default to null/false/0 rather
+				// than drifting on every plan.
+				Config: ConfigCDNAutoWithRequestSettingMinimal(serviceName, domainName, requestSettingName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.name", requestSettingName),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.action"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.xff"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.bypass_busy_wait", "false"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.default_host", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.force_miss", "false"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.force_ssl", "false"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.hash_keys", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.max_stale_age", "0"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.timer_support", "false"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRequestSettingMinimal(serviceName, domainName, requestSettingName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_requestSettingUpdated(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName := fmt.Sprintf("request-setting-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRequestSetting(serviceName, domainName, requestSettingName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.action", "lookup"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.max_stale_age", "120"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.xff", "append"),
+				),
+			},
+			{
+				// Same name, different attribute values - this is an in-place update, not a
+				// delete+recreate, since the name (the reconciler's identity key) hasn't
+				// changed.
+				Config: ConfigCDNAutoWithRequestSettingUpdated(serviceName, domainName, requestSettingName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.name", requestSettingName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.action", "pass"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.default_host", "other.example.com"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.hash_keys", "req.http.host"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.max_stale_age", "300"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.xff", "clear"),
+				),
+			},
+			{
+				// Removing every optional attribute from config must clear them back to
+				// null/false/0 remotely, not just hide the drift in state.
+				Config: ConfigCDNAutoWithRequestSettingMinimal(serviceName, domainName, requestSettingName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.action"),
+					resource.TestCheckNoResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.xff"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.default_host", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.hash_keys", ""),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.max_stale_age", "0"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithRequestSettingMinimal(serviceName, domainName, requestSettingName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_multipleRequestSettings(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName1 := fmt.Sprintf("request-setting-a-%s", acctest.RandString(10))
+	requestSettingName2 := fmt.Sprintf("request-setting-b-%s", acctest.RandString(10))
+	conditionName1 := fmt.Sprintf("condition-a-%s", acctest.RandString(10))
+	conditionName2 := fmt.Sprintf("condition-b-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithMultipleRequestSettings(serviceName, domainName, requestSettingName1, requestSettingName2, conditionName1, conditionName2),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.name", requestSettingName1),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.max_stale_age", "120"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.1.name", requestSettingName2),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.1.action", "pass"),
+				),
+			},
+			{
+				Config:   ConfigCDNAutoWithMultipleRequestSettings(serviceName, domainName, requestSettingName1, requestSettingName2, conditionName1, conditionName2),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_requestSettingInvalidAction(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName := fmt.Sprintf("request-setting-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config:      ConfigCDNAutoWithRequestSettingInvalidAction(serviceName, domainName, requestSettingName),
+				ExpectError: regexp.MustCompile(`Attribute request_setting\[0\]\.action value must be one of`),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_requestSettingWithRequestCondition(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName := fmt.Sprintf("request-setting-%s", acctest.RandString(10))
+	conditionName := fmt.Sprintf("condition-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRequestSettingRequestCondition(serviceName, domainName, requestSettingName, conditionName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.name", conditionName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "condition.0.type", "REQUEST"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.name", requestSettingName),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.request_condition", conditionName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceCDNAuto_withRateLimiter(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -1368,6 +1595,35 @@ func TestAccFastlyServiceCDNAuto_importWithCacheSetting(t *testing.T) {
 					CheckServiceExists("fastly_service_cdn_auto.test"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "cache_setting.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "cache_setting.0.name", cacheSettingName),
+				),
+			},
+			{
+				ResourceName:            "fastly_service_cdn_auto.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "reuse"},
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCDNAuto_importWithRequestSetting(t *testing.T) {
+	t.Parallel()
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
+	requestSettingName := fmt.Sprintf("request-setting-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheck(t) },
+		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
+		CheckDestroy:             CheckServiceDestroy("fastly_service_cdn_auto"),
+		Steps: []resource.TestStep{
+			{
+				Config: ConfigCDNAutoWithRequestSetting(serviceName, domainName, requestSettingName),
+				Check: resource.ComposeTestCheckFunc(
+					CheckServiceExists("fastly_service_cdn_auto.test"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "request_setting.0.name", requestSettingName),
 				),
 			},
 			{

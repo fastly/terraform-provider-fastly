@@ -230,6 +230,7 @@ Required:
 
 - `bucket_name` (String) The name of the GCS bucket in which to store the logs.
 - `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `project_id` (String) Your Google Cloud Platform project ID.
 
 Optional:
 
@@ -240,7 +241,6 @@ Optional:
 - `path` (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path.
 - `period` (Number) How frequently log files are finalized so they can be available for reading, in seconds. Default `3600`.
 - `processing_region` (String) The geographic region where the logs will be processed before streaming to Google Cloud Storage. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
-- `project_id` (String) Your Google Cloud Platform project ID. Not required if `account_name` is specified.
 - `timestamp_format` (String) `strftime`-specified timestamp format for log filename.
 
 <a id="nestedatt--logging_gcs--authentication"></a>

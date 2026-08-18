@@ -26,7 +26,7 @@ func FlattenToNestedModel(g *fastly.GCS) NestedModel {
 		service.StringPointerOrDefault(g.User, ""),
 		service.StringPointerOrDefault(g.SecretKey, ""),
 	)
-	m.ProjectID = service.StringPointerOrDefault(g.ProjectID, DefaultProjectID)
+	m.ProjectID = types.StringValue(fastly.ToValue(g.ProjectID))
 	m.Path = service.StringPointerOrDefault(g.Path, DefaultPath)
 	m.Period = service.Int64PointerOrDefault(g.Period, DefaultPeriod)
 	m.GzipLevel = service.Int64PointerOrDefault(g.GzipLevel, DefaultGzipLevel)

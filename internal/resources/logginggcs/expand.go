@@ -25,7 +25,7 @@ func buildCommonCreateInput(serviceID string, version int, m commonModel) *fastl
 	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
 	input.User = fastly.NullString(service.StringValue(m.Email()))
 	input.SecretKey = fastly.NullString(service.StringValue(m.SecretKey()))
-	input.ProjectID = fastly.NullString(service.StringValue(m.ProjectID))
+	input.ProjectID = new(service.StringValue(m.ProjectID))
 	input.Path = new(service.StringValue(m.Path))
 	input.Period = fastly.NullInt(int(service.Int64Value(m.Period)))
 	input.CompressionCodec = fastly.NullString(service.StringValue(m.CompressionCodec))

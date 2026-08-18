@@ -1,6 +1,7 @@
 logging_gcs {
   name        = "{{.LOGGING_GCS_NAME_1}}"
   bucket_name = "fastly-test-bucket-1"
+  project_id  = "fastly-test-project"
   authentication = {
     email = "test-gcs@fastly-test-project.iam.gserviceaccount.com"
     secret_key = chomp(<<-EOT
@@ -64,6 +65,7 @@ logging_gcs {
 logging_gcs {
   name        = "{{.LOGGING_GCS_NAME_2}}"
   bucket_name = "fastly-test-bucket-2"
+  project_id  = "fastly-test-project"
   authentication = {
     email = "test-gcs@fastly-test-project.iam.gserviceaccount.com"
     secret_key = chomp(<<-EOT

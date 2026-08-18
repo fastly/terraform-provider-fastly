@@ -70,6 +70,31 @@ func fakeConfigWithCodec(t *testing.T, s resourceschema.Schema, codec types.Stri
 	}
 }
 
+func TestHTTPSURL(t *testing.T) {
+	tests := []struct {
+		name      string
+		value     string
+		wantError bool
+	}{
+		{"valid https URL", "https://example.com/logs", false},
+		{"http scheme rejected", "http://example.com/logs", true},
+		{"missing host", "https://", true},
+		{"not a URL", "not a url", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := &validator.StringResponse{}
+			httpsURL{}.ValidateString(context.Background(), validator.StringRequest{
+				Path:        path.Root("url"),
+				ConfigValue: types.StringValue(tt.value),
+			}, resp)
+
+			assert.Equal(t, tt.wantError, resp.Diagnostics.HasError())
+		})
+	}
+}
+
 func TestValidateNoVCLOnlyAttributesForCompute(t *testing.T) {
 	s := resourceschema.Schema{Attributes: CommonAttributes()}
 

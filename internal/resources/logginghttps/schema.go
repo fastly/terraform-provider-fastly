@@ -216,7 +216,7 @@ func sharedAttributes() map[string]schema.Attribute {
 			Required:    true,
 			Description: "URL that log data will be sent to. Must use the HTTPS protocol.",
 			Validators: []validator.String{
-				stringvalidator.RegexMatches(httpsURLRe, "must use the https:// protocol"),
+				httpsURL{},
 			},
 		},
 		// Optional

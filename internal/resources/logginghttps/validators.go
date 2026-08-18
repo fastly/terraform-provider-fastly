@@ -2,7 +2,8 @@ package logginghttps
 
 import (
 	"context"
-	"regexp"
+	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/fastly/terraform-provider-fastly/internal/service"
@@ -14,9 +15,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// httpsURLRe requires url to use the https:// scheme, matching the Fastly
-// API's documented requirement ("Must use HTTPS").
-var httpsURLRe = regexp.MustCompile(`^https://`)
+// httpsURL requires url to be a valid URL with a non-empty host and the
+// https:// scheme, matching the Fastly API's documented requirement ("Must
+// use HTTPS") and the SDKv2 provider's validation.IsURLWithHTTPS behavior. A
+// bare scheme prefix like "https://" without a host is rejected.
+type httpsURL struct{}
+
+func (httpsURL) Description(_ context.Context) string {
+	return "must be a valid URL using the https:// scheme"
+}
+
+func (v httpsURL) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (httpsURL) ValidateString(_ context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	value := req.ConfigValue.ValueString()
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Host == "" || parsed.Scheme != "https" {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid URL",
+			fmt.Sprintf("must be a valid URL using the https:// scheme, got %q.", value),
+		)
+	}
+}
 
 // gzipLevelCodecConflict enforces that gzip_level and compression_codec are not
 // configured together. The Fastly API rejects a request that sets both, and the

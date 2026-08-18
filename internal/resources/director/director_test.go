@@ -312,6 +312,31 @@ func TestTypeStickyDefault(t *testing.T) {
 		assert.Equal(t, types.StringValue("round_robin"), directorTypeOf(t, resp.PlanValue, 0))
 	})
 
+	t.Run("update - config omitted resets a non-round_robin type to the default", func(t *testing.T) {
+		// Regression test: type has a schema-level Default of 1 (random) in the legacy SDKv2
+		// provider on main, so dropping an explicit `type = "hash"` from config resets the
+		// director to random there. round_robin is the only exception (see the typeStickyDefault
+		// doc comment) - every other prior value must reset on omit, not stick.
+		for _, prior := range []string{"random", "hash", "client"} {
+			t.Run(prior, func(t *testing.T) {
+				configObj := directorObjectValue(t, "a", types.StringNull())
+				planObj := directorObjectValue(t, "a", types.StringNull())
+				stateObj := directorObjectValue(t, "a", types.StringValue(prior))
+
+				req := planmodifier.ListRequest{
+					ConfigValue: directorListValue(t, configObj),
+					StateValue:  directorListValue(t, stateObj),
+					PlanValue:   directorListValue(t, planObj),
+				}
+				resp := &planmodifier.ListResponse{PlanValue: req.PlanValue}
+
+				typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
+
+				assert.Equal(t, types.StringValue(DefaultType), directorTypeOf(t, resp.PlanValue, 0))
+			})
+		}
+	})
+
 	t.Run("config set - left to the configured value", func(t *testing.T) {
 		configObj := directorObjectValue(t, "a", types.StringValue("hash"))
 		planObj := directorObjectValue(t, "a", types.StringValue("hash"))
@@ -350,11 +375,14 @@ func TestTypeStickyDefault(t *testing.T) {
 	})
 
 	t.Run("inserting a director ahead of an existing one matches by name, not position", func(t *testing.T) {
-		// Regression test: state has [a(hash)] at index 0. Config inserts a new director "c"
-		// (no type) ahead of "a" (also no type), so at index 0 the plan-modifier machinery
-		// would naively pair against state's index-0 element ("a", hash) if this modifier
-		// matched positionally instead of by name.
-		stateObj := directorObjectValue(t, "a", types.StringValue("hash"))
+		// Regression test: state has [a(round_robin)] at index 0 - only round_robin sticks on
+		// omit, so it's the only prior value that would expose a positional mismatch here. Config
+		// inserts a new director "c" (no type) ahead of "a" (also no type), so at index 0 the
+		// plan-modifier machinery would naively pair against state's index-0 element
+		// ("a", round_robin) if this modifier matched positionally instead of by name - wrongly
+		// making the new directorC round_robin, and resetting directorA to the default instead of
+		// preserving its round_robin status.
+		stateObj := directorObjectValue(t, "a", types.StringValue("round_robin"))
 
 		configC := directorObjectValue(t, "c", types.StringNull())
 		configA := directorObjectValue(t, "a", types.StringNull())
@@ -370,8 +398,8 @@ func TestTypeStickyDefault(t *testing.T) {
 
 		typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
 
-		assert.Equal(t, types.StringValue(DefaultType), directorTypeOf(t, resp.PlanValue, 0), "new director c should default, not inherit a's type")
-		assert.Equal(t, types.StringValue("hash"), directorTypeOf(t, resp.PlanValue, 1), "existing director a should keep its own type by name")
+		assert.Equal(t, types.StringValue(DefaultType), directorTypeOf(t, resp.PlanValue, 0), "new director c should default, not inherit a's round_robin type")
+		assert.Equal(t, types.StringValue("round_robin"), directorTypeOf(t, resp.PlanValue, 1), "existing director a should keep its own round_robin type by name")
 	})
 }
 

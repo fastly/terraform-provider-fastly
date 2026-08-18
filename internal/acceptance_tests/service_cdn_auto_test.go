@@ -1056,14 +1056,16 @@ func TestAccFastlyServiceCDNAuto_withDirector(t *testing.T) {
 	})
 }
 
-// TestAccFastlyServiceCDNAuto_directorTypeStickyOnReorder is a regression test for the
-// director block's type plan modifier carrying forward the wrong director's type when a new
-// director is inserted ahead of existing ones. Terraform pairs a ListNestedBlock element's
-// plan-modifier state value with the prior state element at the same list index; a plan modifier
-// that consults state without matching by name would carry directorA's "hash" onto the newly
-// inserted directorC, and lose directorA's own "hash" in the process. See the typeStickyDefault
-// doc comment in internal/resources/director/schema.go.
-func TestAccFastlyServiceCDNAuto_directorTypeStickyOnReorder(t *testing.T) {
+// TestAccFastlyServiceCDNAuto_directorTypeResetOnOmit is a regression test for dropping an
+// explicit director type from config: it must reset to the default ("random"), matching the
+// legacy SDKv2 provider on main where type had a schema-level `Default: 1`. It also exercises
+// that reset alongside a reorder/insert, since the director block's type plan modifier must
+// still resolve each director's prior value by name rather than list position - see the
+// typeStickyDefault doc comment in internal/resources/director/schema.go. (The one case where a
+// prior value is preserved instead of reset - an existing round_robin director - can't be
+// exercised here, since config can never set type = round_robin; that case is covered by the
+// name-vs-position unit test for typeStickyDefault in internal/resources/director/director_test.go.)
+func TestAccFastlyServiceCDNAuto_directorTypeResetOnOmit(t *testing.T) {
 	t.Parallel()
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("%s.example.com", acctest.RandString(10))
@@ -1092,9 +1094,8 @@ func TestAccFastlyServiceCDNAuto_directorTypeStickyOnReorder(t *testing.T) {
 			},
 			{
 				// directorC is inserted ahead of directorA, and directorA's explicit type =
-				// "hash" is dropped from config. If the type plan modifier matched by list
-				// position instead of name, this plan would carry directorA's old "hash" onto
-				// the new directorC, and reset directorA itself to "random".
+				// "hash" is dropped from config. directorA must now reset to "random" - the
+				// schema default - rather than sticking with its prior "hash".
 				Config: ConfigCDNAutoWithDirectorInsertedAhead(serviceName, domainName, backendNameA, backendNameB, backendNameC, directorNameA, directorNameB, directorNameC),
 				Check: resource.ComposeTestCheckFunc(
 					CheckServiceExists("fastly_service_cdn_auto.test"),
@@ -1102,7 +1103,7 @@ func TestAccFastlyServiceCDNAuto_directorTypeStickyOnReorder(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.name", directorNameC),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.0.type", "random"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.name", directorNameA),
-					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "hash"),
+					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.1.type", "random"),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.name", directorNameB),
 					resource.TestCheckResourceAttr("fastly_service_cdn_auto.test", "director.2.type", "random"),
 				),

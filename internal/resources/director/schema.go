@@ -149,15 +149,19 @@ func NestedBlockSchema() schema.ListNestedBlock {
 	}
 }
 
-// typeStickyDefault applies DefaultType to a director's type only when it is first created (no
-// matching prior state); otherwise it carries the director's existing type forward untouched, so
-// an out-of-band type (e.g. round_robin - see directorTypeByAPI) survives when type is left unset
-// in config. This must operate on the whole director list, not as a per-attribute String plan
-// modifier: the plugin framework pairs a ListNestedBlock element's plan-modifier StateValue with
-// the prior state element at the *same list index*, not the element with a matching name (see
+// typeStickyDefault resets a director's type to DefaultType whenever type is omitted from config -
+// matching the legacy SDKv2 provider on main, where type had a schema-level `Default: 1`, so
+// dropping an explicit type from config reset the director back to random. The one exception is
+// round_robin: it isn't a value config can ever set (the validator rejects it), so a director that
+// already has it - created before this schema existed, or out-of-band via the API - must keep it
+// when type is left unset, or every plan would propose silently changing it to random. This must
+// operate on the whole director list, not as a per-attribute String plan modifier: the plugin
+// framework pairs a ListNestedBlock element's plan-modifier StateValue with the prior state
+// element at the *same list index*, not the element with a matching name (see
 // BlockPlanModifyList/listElemObject in terraform-plugin-framework). A per-attribute modifier
-// would therefore carry the wrong director's type forward whenever a director block is inserted
-// or reordered. Matching by name here avoids that.
+// would therefore check the wrong director's prior type whenever a director block is inserted or
+// reordered - e.g. attributing directorA's round_robin to a newly inserted directorC. Matching by
+// name here avoids that.
 //
 // It also canonicalizes a configured numeric alias ("1", "3", "4") to its friendly-name
 // equivalent ("random", "hash", "client") in the plan. Without this, a director configured with
@@ -168,7 +172,7 @@ func NestedBlockSchema() schema.ListNestedBlock {
 type typeStickyDefault struct{}
 
 func (m typeStickyDefault) Description(_ context.Context) string {
-	return fmt.Sprintf("defaults each director's type to %q on create; otherwise preserves its existing value, matched by name, when omitted from config; canonicalizes a numeric type alias to its friendly name", DefaultType)
+	return fmt.Sprintf("resets each director's type to %q when omitted from config, unless its existing value (matched by name) is round_robin, which isn't settable via config and is preserved instead; canonicalizes a numeric type alias to its friendly name", DefaultType)
 }
 
 func (m typeStickyDefault) MarkdownDescription(ctx context.Context) string {
@@ -227,7 +231,9 @@ func (m typeStickyDefault) PlanModifyList(ctx context.Context, req planmodifier.
 			newType = types.StringValue(DefaultType)
 			if name, ok := planObj.Attributes()["name"].(types.String); ok && !name.IsNull() && !name.IsUnknown() {
 				if prior, ok := priorTypeByName[name.ValueString()]; ok {
-					newType = prior
+					if priorStr, ok := prior.(types.String); ok && !priorStr.IsNull() && !priorStr.IsUnknown() && priorStr.ValueString() == "round_robin" {
+						newType = prior
+					}
 				}
 			}
 		case configType.IsUnknown():

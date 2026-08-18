@@ -30,6 +30,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
 - `logging_gcs` (Block List) GCS logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_gcs))
+- `logging_https` (Block List) HTTPS logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_https))
 - `logging_newrelic` (Block List) New Relic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelic))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
@@ -251,6 +252,42 @@ Optional:
 - `account_name` (String) The name of the Google Cloud Platform service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` environment variable (shared with Fastly's BigQuery and Pub/Sub logging endpoints), falling back to `FASTLY_GCS_ACCOUNT_NAME`.
 - `email` (String, Sensitive) The `client_email` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_EMAIL` environment variable.
 - `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_SECRET_KEY` environment variable.
+
+
+
+<a id="nestedblock--logging_https"></a>
+### Nested Schema for `logging_https`
+
+Required:
+
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+- `url` (String) URL that log data will be sent to. Must use the HTTPS protocol.
+
+Optional:
+
+- `compression_codec` (String) The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`. If the codec is `gzip`, `gzip_level` defaults to `3`; to use a different level, leave `compression_codec` unset and set `gzip_level` instead. Conflicts with `gzip_level`: setting both in the same request will result in an error.
+- `content_type` (String) Value of the `Content-Type` header sent with the request.
+- `gzip_level` (Number) The level of gzip encoding when sending logs. Valid values are `0` (no compression) through `9`. To compress at a specific gzip level, leave `compression_codec` unset and set this. Conflicts with `compression_codec`: setting both in the same request will result in an error.
+- `header_name` (String) Custom header sent with the request.
+- `header_value` (String) Value of the custom header sent with the request.
+- `json_format` (String) Enforces valid JSON formatting for log entries. Can be either disabled (`0`), array of JSON (`1`), or newline delimited JSON (`2`). Default `0`.
+- `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `blank`.
+- `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`.
+- `period` (Number) How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of `0` sends logs at the same interval as the default, which is `5` seconds.
+- `processing_region` (String) The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `request_max_bytes` (Number) The maximum number of bytes sent in one request. Default `0` for unbounded (100MB).
+- `request_max_entries` (Number) The maximum number of logs sent in one request. Default `0` for unbounded (10k).
+- `tls` (Attributes) TLS configuration used to authenticate the HTTPS server, and optionally this endpoint via mutual TLS. (see [below for nested schema](#nestedatt--logging_https--tls))
+
+<a id="nestedatt--logging_https--tls"></a>
+### Nested Schema for `logging_https.tls`
+
+Optional:
+
+- `ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format.
+- `client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format.
+- `client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
+- `hostname` (String) The hostname used to verify the server's certificate. This should be one of the Subject Alternative Name (SAN) fields for the certificate. Common Names (CN) are not supported.
 
 
 

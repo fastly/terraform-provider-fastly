@@ -21,6 +21,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/logginggcs"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/logginghttps"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelic"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -87,6 +88,7 @@ type Model struct {
 	LoggingBigQuery               []loggingbigquery.NestedModel               `tfsdk:"logging_bigquery"`
 	LoggingGCS                    []logginggcs.NestedModel                    `tfsdk:"logging_gcs"`
 	LoggingSplunk                 []loggingsplunk.NestedModel                 `tfsdk:"logging_splunk"`
+	LoggingHTTPS                  []logginghttps.NestedModel                  `tfsdk:"logging_https"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
 	DynamicSnippet                []dynamicsnippet.NestedModel                `tfsdk:"dynamic_snippet"`
@@ -158,6 +160,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_bigquery":                 loggingbigquery.NestedBlockSchema(),
 			"logging_gcs":                      logginggcs.NestedBlockSchema(),
 			"logging_splunk":                   loggingsplunk.NestedBlockSchema(),
+			"logging_https":                    logginghttps.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 			"snippet":                          snippet.NestedBlockSchema(),
 			"dynamic_snippet":                  dynamicsnippet.NestedBlockSchema(),
@@ -537,6 +540,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, plan.LoggingSplunk)
 
+	if err := logginghttps.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingHTTPS); err != nil {
+		resp.Diagnostics.AddError("Error reconciling HTTPS logging endpoints", err.Error())
+		return
+	}
+
+	loggingHTTPS, err := logginghttps.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingHTTPS = logginghttps.MatchOrder(loggingHTTPS, plan.LoggingHTTPS)
+
 	if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, nil, plan.ImageOptimizerDefaultSettings); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
 		return
@@ -743,6 +758,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
 		return
 	}
+	loggingHTTPS, err := logginghttps.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+		return
+	}
 	state.Domain = domain.MatchOrder(domains, state.Domain)
 	state.Backend = backend.MatchOrder(backends, state.Backend)
 	state.Director = director.MatchOrder(directors, state.Director)
@@ -761,6 +781,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, state.LoggingBigQuery)
 	state.LoggingGCS = logginggcs.MatchOrder(loggingGCSs, state.LoggingGCS)
 	state.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, state.LoggingSplunk)
+	state.LoggingHTTPS = logginghttps.MatchOrder(loggingHTTPS, state.LoggingHTTPS)
 
 	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
@@ -882,6 +903,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggingbigquery.Equal(plan.LoggingBigQuery, state.LoggingBigQuery) ||
 		!logginggcs.Equal(plan.LoggingGCS, state.LoggingGCS) ||
 		!loggingsplunk.Equal(plan.LoggingSplunk, state.LoggingSplunk) ||
+		!logginghttps.Equal(plan.LoggingHTTPS, state.LoggingHTTPS) ||
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
 		!dynamicsnippet.Equal(plan.DynamicSnippet, state.DynamicSnippet) ||
@@ -1196,6 +1218,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, plan.LoggingSplunk)
 
+		if err := logginghttps.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingHTTPS); err != nil {
+			resp.Diagnostics.AddError("Error reconciling HTTPS logging endpoints", err.Error())
+			return
+		}
+
+		loggingHTTPS, err := logginghttps.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading HTTPS logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingHTTPS = logginghttps.MatchOrder(loggingHTTPS, plan.LoggingHTTPS)
+
 		if err := imageoptimizerdefaultsettings.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, state.ImageOptimizerDefaultSettings, plan.ImageOptimizerDefaultSettings); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Image Optimizer default settings", err.Error())
 			return
@@ -1282,6 +1316,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingBigQuery = loggingbigquery.MatchOrder(state.LoggingBigQuery, plan.LoggingBigQuery)
 		plan.LoggingGCS = logginggcs.MatchOrder(state.LoggingGCS, plan.LoggingGCS)
 		plan.LoggingSplunk = loggingsplunk.MatchOrder(state.LoggingSplunk, plan.LoggingSplunk)
+		plan.LoggingHTTPS = logginghttps.MatchOrder(state.LoggingHTTPS, plan.LoggingHTTPS)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)
 		plan.DynamicSnippet = dynamicsnippet.MatchOrderPreservePlanFields(state.DynamicSnippet, plan.DynamicSnippet)

@@ -293,9 +293,12 @@ func sharedAttributes() map[string]schema.Attribute {
 			Description: "HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`.",
 		},
 		"period": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultPeriod),
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(DefaultPeriod),
+			Validators: []validator.Int64{
+				int64validator.AtLeast(0),
+			},
 			Description: "How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of `0` sends logs at the same interval as the default, which is `5` seconds.",
 		},
 		"processing_region": schema.StringAttribute{
@@ -308,15 +311,21 @@ func sharedAttributes() map[string]schema.Attribute {
 			Description: "The geographic region where the logs will be processed before streaming. Valid values are `us`, `eu`, and `none` for global. Default: `none`.",
 		},
 		"request_max_bytes": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultRequestMaxBytes),
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(DefaultRequestMaxBytes),
+			Validators: []validator.Int64{
+				int64validator.AtLeast(0),
+			},
 			Description: "The maximum number of bytes sent in one request. Default `0` for unbounded (100MB).",
 		},
 		"request_max_entries": schema.Int64Attribute{
-			Optional:    true,
-			Computed:    true,
-			Default:     int64default.StaticInt64(DefaultRequestMaxEntries),
+			Optional: true,
+			Computed: true,
+			Default:  int64default.StaticInt64(DefaultRequestMaxEntries),
+			Validators: []validator.Int64{
+				int64validator.AtLeast(0),
+			},
 			Description: "The maximum number of logs sent in one request. Default `0` for unbounded (10k).",
 		},
 		// Grouped under `tls` since client_key is credential material used to

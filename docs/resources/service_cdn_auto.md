@@ -168,7 +168,7 @@ Read-Only:
 Required:
 
 - `backends` (Set of String) Names of defined backends to map the director to. Example: `["origin1", "origin2"]`.
-- `name` (String) Unique name for this Director.
+- `name` (String) Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 

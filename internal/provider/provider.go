@@ -37,6 +37,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/logginggcs"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/logginghttps"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelic"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -126,6 +127,7 @@ func (p *fastlyProvider) Resources(_ context.Context) []func() resource.Resource
 		loggingblobstorage.NewResource,
 		loggingdatadog.NewResource,
 		logginggcs.NewResource,
+		logginghttps.NewResource,
 		loggingnewrelic.NewResource,
 		loggingnewrelicotlp.NewResource,
 		loggings3.NewResource,
@@ -174,6 +176,7 @@ func (p *fastlyProvider) ListResources(_ context.Context) []func() list.ListReso
 		loggingblobstorage.NewListResource,
 		loggingdatadog.NewListResource,
 		logginggcs.NewListResource,
+		logginghttps.NewListResource,
 		loggingnewrelic.NewListResource,
 		loggingnewrelicotlp.NewListResource,
 		vcl.NewListResource,

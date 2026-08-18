@@ -78,7 +78,7 @@ func CommonAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"name": schema.StringAttribute{
 			Required:    true,
-			Description: "Unique name for this Director.",
+			Description: "Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"backends": schema.SetAttribute{
 			ElementType: types.StringType,

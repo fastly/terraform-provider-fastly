@@ -122,9 +122,6 @@ func CommonAttributes() map[string]schema.Attribute {
 			Optional:    true,
 			Computed:    true,
 			Description: "Type of load balance group to use. One of `random`, `hash`, or `client`. Default `random`.",
-			PlanModifiers: []planmodifier.String{
-				typeStickyDefault{},
-			},
 			Validators: []validator.String{
 				stringvalidator.OneOf("random", "hash", "client"),
 			},
@@ -138,34 +135,105 @@ func NestedBlockSchema() schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: CommonAttributes(),
 		},
+		PlanModifiers: []planmodifier.List{
+			typeStickyDefault{},
+		},
 	}
 }
 
-// typeStickyDefault applies DefaultType only when a director is first created (no prior state).
-// A plain Default plan modifier (e.g. stringdefault.StaticString) reapplies its value on every
-// plan where config omits the attribute, regardless of prior state - which would silently plan a
-// type change back to "random" for a pre-existing round_robin director (see directorTypeByAPI)
-// every time type is left unset in config. This modifier instead carries the prior state value
-// forward untouched once the director exists, so an out-of-band type survives.
+// typeStickyDefault applies DefaultType to a director's type only when it is first created (no
+// matching prior state); otherwise it carries the director's existing type forward untouched, so
+// an out-of-band type (e.g. round_robin - see directorTypeByAPI) survives when type is left unset
+// in config. This must operate on the whole director list, not as a per-attribute String plan
+// modifier: the plugin framework pairs a ListNestedBlock element's plan-modifier StateValue with
+// the prior state element at the *same list index*, not the element with a matching name (see
+// BlockPlanModifyList/listElemObject in terraform-plugin-framework). A per-attribute modifier
+// would therefore carry the wrong director's type forward whenever a director block is inserted
+// or reordered. Matching by name here avoids that.
 type typeStickyDefault struct{}
 
 func (m typeStickyDefault) Description(_ context.Context) string {
-	return fmt.Sprintf("defaults to %q on create; otherwise preserves the existing value when omitted from config", DefaultType)
+	return fmt.Sprintf("defaults each director's type to %q on create; otherwise preserves its existing value, matched by name, when omitted from config", DefaultType)
 }
 
 func (m typeStickyDefault) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m typeStickyDefault) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	if !req.ConfigValue.IsNull() {
+func (m typeStickyDefault) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	if req.PlanValue.IsNull() || req.PlanValue.IsUnknown() {
 		return
 	}
-	if req.StateValue.IsNull() {
-		resp.PlanValue = types.StringValue(DefaultType)
+
+	priorTypeByName := make(map[string]attr.Value)
+	if !req.StateValue.IsNull() && !req.StateValue.IsUnknown() {
+		for _, elem := range req.StateValue.Elements() {
+			obj, ok := elem.(types.Object)
+			if !ok {
+				continue
+			}
+			attrs := obj.Attributes()
+			name, ok := attrs["name"].(types.String)
+			if !ok || name.IsNull() || name.IsUnknown() {
+				continue
+			}
+			priorTypeByName[name.ValueString()] = attrs["type"]
+		}
+	}
+
+	configElems := req.ConfigValue.Elements()
+	planElems := req.PlanValue.Elements()
+	if len(configElems) != len(planElems) {
 		return
 	}
-	resp.PlanValue = req.StateValue
+
+	changed := false
+	newElems := make([]attr.Value, len(planElems))
+	for i, elem := range planElems {
+		newElems[i] = elem
+
+		planObj, ok := elem.(types.Object)
+		if !ok {
+			continue
+		}
+		configObj, ok := configElems[i].(types.Object)
+		if !ok {
+			continue
+		}
+
+		configType, ok := configObj.Attributes()["type"].(types.String)
+		if !ok || !configType.IsNull() {
+			continue
+		}
+
+		var newType attr.Value = types.StringValue(DefaultType)
+		if name, ok := planObj.Attributes()["name"].(types.String); ok && !name.IsNull() && !name.IsUnknown() {
+			if prior, ok := priorTypeByName[name.ValueString()]; ok {
+				newType = prior
+			}
+		}
+
+		attrs := planObj.Attributes()
+		attrs["type"] = newType
+		newObj, diags := types.ObjectValue(planObj.AttributeTypes(ctx), attrs)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
+			return
+		}
+		newElems[i] = newObj
+		changed = true
+	}
+
+	if !changed {
+		return
+	}
+
+	newList, diags := types.ListValue(req.PlanValue.ElementType(ctx), newElems)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+	resp.PlanValue = newList
 }
 
 // ops holds the remote directors by name produced by the most recent List call within a single
@@ -332,8 +400,23 @@ func (o ops) ToModel(api *fastly.Director) NestedModel {
 		Quorum:   types.Int64Value(int64(fastly.ToValue(api.Quorum))),
 		Retries:  types.Int64Value(int64(fastly.ToValue(api.Retries))),
 		Shield:   types.StringValue(fastly.ToValue(api.Shield)),
-		Type:     types.StringValue(directorTypeByAPI[fastly.ToValue(api.Type)]),
+		Type:     types.StringValue(directorTypeString(api.Type)),
 	}
+}
+
+// directorTypeString looks up the string enum for an API DirectorType, falling back to
+// DefaultType for nil or unrecognized values (e.g. a future DirectorType this provider doesn't
+// know about yet) rather than the empty string. An empty string would round-trip into
+// directorTypePointer on the next write and panic; DefaultType is a value the API always accepts.
+func directorTypeString(t *fastly.DirectorType) string {
+	if t == nil {
+		return DefaultType
+	}
+	s, ok := directorTypeByAPI[*t]
+	if !ok {
+		return DefaultType
+	}
+	return s
 }
 
 // directorTypePointer looks up the API DirectorType for desired.Type. Every value the schema can

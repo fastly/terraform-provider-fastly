@@ -940,35 +940,57 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.HealthCheck = healthcheck.MatchOrder(healthChecks, plan.HealthCheck)
 
-		// Backends and directors are reconciled in three passes, not the usual single
-		// ReconcileWithPrevious + Reconcile pair: a director's backends can reference a backend
-		// by name, so a backend create must run before the director that references it, but a
-		// backend delete must wait until any director no longer referencing it has already been
-		// updated - otherwise the API rejects deleting a backend still named by a director's
-		// association. So: create/update backends first (satisfies the create direction),
-		// reconcile directors fully (any director losing a backend reference is updated/deleted
-		// here), then delete backends no longer desired (now safe - no director still references
-		// them).
-		if err := backend.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
-			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
-			return
-		}
+		// A director's backends can reference a backend by name, so whenever directors are (or
+		// were) in play, backends and directors must be reconciled in three passes rather than
+		// the usual single ReconcileWithPrevious + Reconcile pair: a backend create must run
+		// before the director that references it, but a backend delete must wait until any
+		// director no longer referencing it has already been updated - otherwise the API rejects
+		// deleting a backend still named by a director's association. So: create/update backends
+		// first (satisfies the create direction), reconcile directors fully (any director losing
+		// a backend reference is updated/deleted here), then delete backends no longer desired
+		// (now safe - no director still references them). Services with no directors configured
+		// before or after this update skip straight to the single-pass Reconcile, which deletes
+		// before creating and so never transiently holds an extra backend against the service's
+		// backend-count limit.
+		if len(plan.Director) > 0 || len(state.Director) > 0 {
+			if err := backend.CreateOrUpdate(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+				resp.Diagnostics.AddError("Error creating or updating backends", err.Error())
+				return
+			}
 
-		if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Director); err != nil {
-			resp.Diagnostics.AddError("Error reconciling directors", err.Error())
-			return
-		}
+			if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Director); err != nil {
+				resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+				return
+			}
 
-		directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading service directors", err.Error())
-			return
-		}
-		plan.Director = director.MatchOrder(directors, plan.Director)
+			directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading service directors", err.Error())
+				return
+			}
+			plan.Director = director.MatchOrder(directors, plan.Director)
 
-		if err := backend.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
-			resp.Diagnostics.AddError("Error reconciling backends", err.Error())
-			return
+			if err := backend.DeleteRemoved(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+				resp.Diagnostics.AddError("Error deleting removed backends", err.Error())
+				return
+			}
+		} else {
+			if err := backend.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Backend); err != nil {
+				resp.Diagnostics.AddError("Error reconciling backends", err.Error())
+				return
+			}
+
+			if err := director.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.Director); err != nil {
+				resp.Diagnostics.AddError("Error reconciling directors", err.Error())
+				return
+			}
+
+			directors, err := director.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading service directors", err.Error())
+				return
+			}
+			plan.Director = director.MatchOrder(directors, plan.Director)
 		}
 
 		backends, err := backend.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)

@@ -21,7 +21,7 @@ func minimalNestedModel() NestedModel {
 		Quorum:   types.Int64Value(75),
 		Retries:  types.Int64Value(5),
 		Shield:   types.StringValue(""),
-		Type:     types.Int64Value(1),
+		Type:     types.StringValue("random"),
 	}
 }
 
@@ -33,7 +33,7 @@ func fullNestedModel() NestedModel {
 		Quorum:   types.Int64Value(30),
 		Retries:  types.Int64Value(10),
 		Shield:   types.StringValue("sjc-ca-us"),
-		Type:     types.Int64Value(3),
+		Type:     types.StringValue("hash"),
 	}
 }
 
@@ -109,13 +109,17 @@ func TestOpsEqual_mismatch(t *testing.T) {
 func TestDirectorTypePointer(t *testing.T) {
 	tests := []struct {
 		name     string
-		value    types.Int64
+		value    types.String
 		expected fastly.DirectorType
 	}{
-		{name: "random", value: types.Int64Value(1), expected: fastly.DirectorTypeRandom},
-		{name: "round_robin", value: types.Int64Value(2), expected: fastly.DirectorTypeRoundRobin},
-		{name: "hash", value: types.Int64Value(3), expected: fastly.DirectorTypeHash},
-		{name: "client", value: types.Int64Value(4), expected: fastly.DirectorTypeClient},
+		{name: "random", value: types.StringValue("random"), expected: fastly.DirectorTypeRandom},
+		{name: "hash", value: types.StringValue("hash"), expected: fastly.DirectorTypeHash},
+		{name: "client", value: types.StringValue("client"), expected: fastly.DirectorTypeClient},
+		{name: "round_robin", value: types.StringValue("round_robin"), expected: fastly.DirectorTypeRoundRobin},
+		{name: "numeric alias 1", value: types.StringValue("1"), expected: fastly.DirectorTypeRandom},
+		{name: "numeric alias 3", value: types.StringValue("3"), expected: fastly.DirectorTypeHash},
+		{name: "numeric alias 4", value: types.StringValue("4"), expected: fastly.DirectorTypeClient},
+		{name: "numeric alias 2", value: types.StringValue("2"), expected: fastly.DirectorTypeRoundRobin},
 	}
 
 	for _, tt := range tests {
@@ -130,7 +134,7 @@ func TestDirectorTypePointer(t *testing.T) {
 
 func TestDirectorTypePointer_unrecognizedPanics(t *testing.T) {
 	assert.Panics(t, func() {
-		directorTypePointer(types.Int64Value(99))
+		directorTypePointer(types.StringValue("bogus"))
 	})
 }
 
@@ -148,7 +152,37 @@ func TestToModel_roundRobin(t *testing.T) {
 
 	result := ops{}.ToModel(api)
 
-	assert.Equal(t, int64(2), result.Type.ValueInt64())
+	assert.Equal(t, "round_robin", result.Type.ValueString())
+}
+
+func TestDirectorTypeCanonical(t *testing.T) {
+	tests := []struct {
+		alias    string
+		expected string
+	}{
+		{alias: "random", expected: "random"},
+		{alias: "1", expected: "random"},
+		{alias: "hash", expected: "hash"},
+		{alias: "3", expected: "hash"},
+		{alias: "client", expected: "client"},
+		{alias: "4", expected: "client"},
+		{alias: "round_robin", expected: "round_robin"},
+		{alias: "2", expected: "round_robin"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.alias, func(t *testing.T) {
+			result, ok := directorTypeCanonical(tt.alias)
+			if assert.True(t, ok) {
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+
+	t.Run("unrecognized", func(t *testing.T) {
+		_, ok := directorTypeCanonical("bogus")
+		assert.False(t, ok)
+	})
 }
 
 func TestSetToStringSlice(t *testing.T) {
@@ -200,7 +234,7 @@ func directorObjectType() types.ObjectType {
 	return types.ObjectType{AttrTypes: attrTypes}
 }
 
-func directorObjectValue(t *testing.T, name string, typ types.Int64) types.Object {
+func directorObjectValue(t *testing.T, name string, typ types.String) types.Object {
 	t.Helper()
 	m := minimalNestedModel()
 	m.Name = types.StringValue(name)
@@ -227,7 +261,7 @@ func directorListValue(t *testing.T, objs ...types.Object) types.List {
 	return list
 }
 
-func directorTypeOf(t *testing.T, list types.List, index int) types.Int64 {
+func directorTypeOf(t *testing.T, list types.List, index int) types.String {
 	t.Helper()
 	elems := list.Elements()
 	if index >= len(elems) {
@@ -237,17 +271,17 @@ func directorTypeOf(t *testing.T, list types.List, index int) types.Int64 {
 	if !ok {
 		t.Fatalf("element %d is not an object", index)
 	}
-	v, ok := obj.Attributes()["type"].(types.Int64)
+	v, ok := obj.Attributes()["type"].(types.String)
 	if !ok {
-		t.Fatalf("element %d has no int64 type attribute", index)
+		t.Fatalf("element %d has no string type attribute", index)
 	}
 	return v
 }
 
 func TestTypeStickyDefault(t *testing.T) {
 	t.Run("create - config omitted defaults", func(t *testing.T) {
-		configObj := directorObjectValue(t, "a", types.Int64Null())
-		planObj := directorObjectValue(t, "a", types.Int64Null())
+		configObj := directorObjectValue(t, "a", types.StringNull())
+		planObj := directorObjectValue(t, "a", types.StringNull())
 
 		req := planmodifier.ListRequest{
 			ConfigValue: directorListValue(t, configObj),
@@ -258,13 +292,13 @@ func TestTypeStickyDefault(t *testing.T) {
 
 		typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
 
-		assert.Equal(t, types.Int64Value(DefaultType), directorTypeOf(t, resp.PlanValue, 0))
+		assert.Equal(t, types.StringValue(DefaultType), directorTypeOf(t, resp.PlanValue, 0))
 	})
 
 	t.Run("update - config omitted preserves round_robin by name", func(t *testing.T) {
-		configObj := directorObjectValue(t, "a", types.Int64Null())
-		planObj := directorObjectValue(t, "a", types.Int64Null())
-		stateObj := directorObjectValue(t, "a", types.Int64Value(2))
+		configObj := directorObjectValue(t, "a", types.StringNull())
+		planObj := directorObjectValue(t, "a", types.StringNull())
+		stateObj := directorObjectValue(t, "a", types.StringValue("round_robin"))
 
 		req := planmodifier.ListRequest{
 			ConfigValue: directorListValue(t, configObj),
@@ -275,13 +309,13 @@ func TestTypeStickyDefault(t *testing.T) {
 
 		typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
 
-		assert.Equal(t, types.Int64Value(2), directorTypeOf(t, resp.PlanValue, 0))
+		assert.Equal(t, types.StringValue("round_robin"), directorTypeOf(t, resp.PlanValue, 0))
 	})
 
 	t.Run("config set - left to the configured value", func(t *testing.T) {
-		configObj := directorObjectValue(t, "a", types.Int64Value(3))
-		planObj := directorObjectValue(t, "a", types.Int64Value(3))
-		stateObj := directorObjectValue(t, "a", types.Int64Value(1))
+		configObj := directorObjectValue(t, "a", types.StringValue("hash"))
+		planObj := directorObjectValue(t, "a", types.StringValue("hash"))
+		stateObj := directorObjectValue(t, "a", types.StringValue("random"))
 
 		req := planmodifier.ListRequest{
 			ConfigValue: directorListValue(t, configObj),
@@ -292,7 +326,27 @@ func TestTypeStickyDefault(t *testing.T) {
 
 		typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
 
-		assert.Equal(t, types.Int64Value(3), directorTypeOf(t, resp.PlanValue, 0))
+		assert.Equal(t, types.StringValue("hash"), directorTypeOf(t, resp.PlanValue, 0))
+	})
+
+	t.Run("config set to a numeric alias - normalized to the friendly name", func(t *testing.T) {
+		// A configured "3" must be normalized to "hash" in the plan itself, not just on the next
+		// refresh: Create/Read will return "hash" from the API, and if the plan still said "3"
+		// the framework's post-apply consistency check would fail ("Provider produced
+		// inconsistent result after apply").
+		configObj := directorObjectValue(t, "a", types.StringValue("3"))
+		planObj := directorObjectValue(t, "a", types.StringValue("3"))
+
+		req := planmodifier.ListRequest{
+			ConfigValue: directorListValue(t, configObj),
+			StateValue:  types.ListNull(directorObjectType()),
+			PlanValue:   directorListValue(t, planObj),
+		}
+		resp := &planmodifier.ListResponse{PlanValue: req.PlanValue}
+
+		typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
+
+		assert.Equal(t, types.StringValue("hash"), directorTypeOf(t, resp.PlanValue, 0))
 	})
 
 	t.Run("inserting a director ahead of an existing one matches by name, not position", func(t *testing.T) {
@@ -300,12 +354,12 @@ func TestTypeStickyDefault(t *testing.T) {
 		// (no type) ahead of "a" (also no type), so at index 0 the plan-modifier machinery
 		// would naively pair against state's index-0 element ("a", hash) if this modifier
 		// matched positionally instead of by name.
-		stateObj := directorObjectValue(t, "a", types.Int64Value(3))
+		stateObj := directorObjectValue(t, "a", types.StringValue("hash"))
 
-		configC := directorObjectValue(t, "c", types.Int64Null())
-		configA := directorObjectValue(t, "a", types.Int64Null())
-		planC := directorObjectValue(t, "c", types.Int64Null())
-		planA := directorObjectValue(t, "a", types.Int64Null())
+		configC := directorObjectValue(t, "c", types.StringNull())
+		configA := directorObjectValue(t, "a", types.StringNull())
+		planC := directorObjectValue(t, "c", types.StringNull())
+		planA := directorObjectValue(t, "a", types.StringNull())
 
 		req := planmodifier.ListRequest{
 			ConfigValue: directorListValue(t, configC, configA),
@@ -316,8 +370,8 @@ func TestTypeStickyDefault(t *testing.T) {
 
 		typeStickyDefault{}.PlanModifyList(context.Background(), req, resp)
 
-		assert.Equal(t, types.Int64Value(DefaultType), directorTypeOf(t, resp.PlanValue, 0), "new director c should default, not inherit a's type")
-		assert.Equal(t, types.Int64Value(3), directorTypeOf(t, resp.PlanValue, 1), "existing director a should keep its own type by name")
+		assert.Equal(t, types.StringValue(DefaultType), directorTypeOf(t, resp.PlanValue, 0), "new director c should default, not inherit a's type")
+		assert.Equal(t, types.StringValue("hash"), directorTypeOf(t, resp.PlanValue, 1), "existing director a should keep its own type by name")
 	})
 }
 

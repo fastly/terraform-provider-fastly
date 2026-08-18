@@ -19,7 +19,7 @@ backend {
 director {
   name     = "{{.DIRECTOR_NAME_A}}"
   backends = ["{{.BACKEND_NAME_A}}"]
-  type     = 3
+  type     = "hash"
 }
 
 director {

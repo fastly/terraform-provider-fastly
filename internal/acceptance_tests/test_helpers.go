@@ -889,7 +889,7 @@ func ConfigCDNAutoWithDirectorBackendSwapped(serviceName, domainName, backendNam
 }
 
 // ConfigCDNAutoWithTwoOrderedDirectors returns a CDN auto service config with two directors,
-// directorA (type 3, hash) followed by directorB (type omitted, defaults to 1, random).
+// directorA (type "hash") followed by directorB (type omitted, defaults to "random").
 func ConfigCDNAutoWithTwoOrderedDirectors(serviceName, domainName, backendNameA, backendNameB, directorNameA, directorNameB string) string {
 	return BuildConfig(
 		ServiceCDNAuto,
@@ -909,7 +909,7 @@ func ConfigCDNAutoWithTwoOrderedDirectors(serviceName, domainName, backendNameA,
 // ConfigCDNAutoWithDirectorInsertedAhead returns a CDN auto service config with the same
 // directorA/directorB names and backends as ConfigCDNAutoWithTwoOrderedDirectors, but with a new
 // directorC (and its backend) inserted ahead of directorA in the config, and the explicit
-// type = 3 (hash) removed from directorA. This exercises the director block's type plan modifier
+// type = "hash" removed from directorA. This exercises the director block's type plan modifier
 // under reordering/insertion - see the typeStickyDefault doc comment in
 // internal/resources/director/schema.go for why this must match directors by name rather than
 // list position.

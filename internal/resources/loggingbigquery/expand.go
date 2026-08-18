@@ -9,7 +9,10 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/service"
 )
 
-func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateBigQueryInput {
+// buildCommonCreateInput sets the Create fields shared by VCL and Compute
+// services. BuildCreateInput and BuildComputeCreateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonCreateInput(serviceID string, version int, m commonModel) *fastly.CreateBigQueryInput {
 	input := &fastly.CreateBigQueryInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -24,11 +27,16 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 	input.SecretKey = fastly.NullString(service.StringValue(m.SecretKey()))
 	input.Template = fastly.NullString(service.StringValue(m.Template))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
+
+	return input
+}
+
+func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.CreateBigQueryInput {
+	input := buildCommonCreateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	input.Placement = fastly.NullString(service.StringValue(m.Placement))
 	input.ResponseCondition = fastly.NullString(service.StringValue(m.ResponseCondition))
-
 	return input
 }
 
@@ -36,25 +44,13 @@ func BuildCreateInput(serviceID string, version int, m NestedModel) *fastly.Crea
 // sets format, format_version, placement, or response_condition, since those
 // only affect generated VCL and Compute services don't have any.
 func BuildComputeCreateInput(serviceID string, version int, m ComputeNestedModel) *fastly.CreateBigQueryInput {
-	input := &fastly.CreateBigQueryInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           new(service.StringValue(m.Name)),
-		ProjectID:      new(service.StringValue(m.ProjectID)),
-		Dataset:        new(service.StringValue(m.Dataset)),
-		Table:          new(service.StringValue(m.Table)),
-	}
-
-	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
-	input.User = fastly.NullString(service.StringValue(m.Email()))
-	input.SecretKey = fastly.NullString(service.StringValue(m.SecretKey()))
-	input.Template = fastly.NullString(service.StringValue(m.Template))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-
-	return input
+	return buildCommonCreateInput(serviceID, version, m.commonModel)
 }
 
-func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateBigQueryInput {
+// buildCommonUpdateInput sets the Update fields shared by VCL and Compute
+// services. BuildUpdateInput and BuildComputeUpdateInput layer their
+// service-type-specific fields on top of this.
+func buildCommonUpdateInput(serviceID string, version int, m commonModel) *fastly.UpdateBigQueryInput {
 	input := &fastly.UpdateBigQueryInput{
 		ServiceID:      serviceID,
 		ServiceVersion: version,
@@ -73,6 +69,19 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 	input.SecretKey = new(service.StringValue(m.SecretKey()))
 	input.Template = new(service.StringValue(m.Template))
 	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
+
+	return input
+}
+
+// BuildComputeUpdateInput is BuildUpdateInput for Compute services: it never
+// sets format, format_version, placement, or response_condition, since those
+// only affect generated VCL and Compute services don't have any.
+func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateBigQueryInput {
+	return buildCommonUpdateInput(serviceID, version, m.commonModel)
+}
+
+func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.UpdateBigQueryInput {
+	input := buildCommonUpdateInput(serviceID, version, m.commonModel)
 	input.Format = fastly.NullString(service.StringValue(m.Format))
 	input.FormatVersion = fastly.NullInt(int(service.Int64Value(m.FormatVersion)))
 	// placement can be cleared back to unset / nil (distinct from "none" — see
@@ -87,32 +96,6 @@ func BuildUpdateInput(serviceID string, version int, m NestedModel) *fastly.Upda
 		input.Placement = fastly.NullValue[string]()
 	}
 	input.ResponseCondition = new(service.StringValue(m.ResponseCondition))
-
-	return input
-}
-
-// BuildComputeUpdateInput is BuildUpdateInput for Compute services: it never
-// sets format, format_version, placement, or response_condition, since those
-// only affect generated VCL and Compute services don't have any.
-func BuildComputeUpdateInput(serviceID string, version int, m ComputeNestedModel) *fastly.UpdateBigQueryInput {
-	input := &fastly.UpdateBigQueryInput{
-		ServiceID:      serviceID,
-		ServiceVersion: version,
-		Name:           service.StringValue(m.Name),
-		NewName:        new(service.StringValue(m.Name)),
-		ProjectID:      new(service.StringValue(m.ProjectID)),
-		Dataset:        new(service.StringValue(m.Dataset)),
-		Table:          new(service.StringValue(m.Table)),
-	}
-
-	// See BuildUpdateInput for why AccountName uses fastly.NullString here while
-	// User/SecretKey use new().
-	input.AccountName = fastly.NullString(service.StringValue(m.AccountName()))
-	input.User = new(service.StringValue(m.Email()))
-	input.SecretKey = new(service.StringValue(m.SecretKey()))
-	input.Template = new(service.StringValue(m.Template))
-	input.ProcessingRegion = fastly.NullString(service.StringValue(m.ProcessingRegion))
-
 	return input
 }
 

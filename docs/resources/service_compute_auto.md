@@ -29,6 +29,7 @@ Automatic-lifecycle Fastly Compute service resource with nested versioned config
 - `logging_bigquery` (Block List) BigQuery logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block List) Blob Storage logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_datadog` (Block List) Datadog logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_datadog))
+- `logging_gcs` (Block List) GCS logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_gcs))
 - `logging_newrelic` (Block List) New Relic logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelic))
 - `logging_newrelicotlp` (Block List) New Relic OTLP logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_s3` (Block List) S3 logging endpoints attached to this service. (see [below for nested schema](#nestedblock--logging_s3))
@@ -219,6 +220,37 @@ Optional:
 Required:
 
 - `token` (String, Sensitive) The API key from your Datadog account.
+
+
+
+<a id="nestedblock--logging_gcs"></a>
+### Nested Schema for `logging_gcs`
+
+Required:
+
+- `bucket_name` (String) The name of the GCS bucket in which to store the logs.
+- `name` (String) The name for the real-time logging configuration. Must be unique within the service.
+
+Optional:
+
+- `authentication` (Attributes) Google Cloud Platform authentication credentials for GCS access. Provide either `account_name`, or `email` and `secret_key`. When this block is omitted entirely, defaults to the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` (or `FASTLY_GCS_ACCOUNT_NAME`), `FASTLY_GCS_EMAIL`, and `FASTLY_GCS_SECRET_KEY` environment variables. (see [below for nested schema](#nestedatt--logging_gcs--authentication))
+- `compression_codec` (String) The codec used for compressing your logs. Valid values are `zstd`, `snappy`, and `gzip`. If the codec is `gzip`, `gzip_level` defaults to `3`; to use a different level, leave `compression_codec` unset and set `gzip_level` instead. Conflicts with `gzip_level`: setting both in the same request will result in an error.
+- `gzip_level` (Number) The level of gzip encoding when sending logs. Valid values are `0` (no compression) through `9`. To compress at a specific gzip level, leave `compression_codec` unset and set this. Conflicts with `compression_codec`: setting both in the same request will result in an error.
+- `message_type` (String) How the message should be formatted. Valid values are `classic`, `loggly`, `logplex`, and `blank`. Default `classic`.
+- `path` (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path.
+- `period` (Number) How frequently log files are finalized so they can be available for reading, in seconds. Default `3600`.
+- `processing_region` (String) The geographic region where the logs will be processed before streaming to Google Cloud Storage. Valid values are `us`, `eu`, and `none` for global. Default: `none`.
+- `project_id` (String) Your Google Cloud Platform project ID. Not required if `account_name` is specified.
+- `timestamp_format` (String) `strftime`-specified timestamp format for log filename.
+
+<a id="nestedatt--logging_gcs--authentication"></a>
+### Nested Schema for `logging_gcs.authentication`
+
+Optional:
+
+- `account_name` (String) The name of the Google Cloud Platform service account associated with the target log collection service. Not required if `email` and `secret_key` are provided. Can be set via the `FASTLY_GOOGLE_SERVICE_ACCOUNT_NAME` environment variable (shared with Fastly's BigQuery and Pub/Sub logging endpoints), falling back to `FASTLY_GCS_ACCOUNT_NAME`.
+- `email` (String, Sensitive) The `client_email` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_EMAIL` environment variable.
+- `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_SECRET_KEY` environment variable.
 
 
 

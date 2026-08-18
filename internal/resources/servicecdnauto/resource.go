@@ -19,6 +19,7 @@ import (
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingbigquery"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingblobstorage"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingdatadog"
+	"github.com/fastly/terraform-provider-fastly/internal/resources/logginggcs"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelic"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggingnewrelicotlp"
 	"github.com/fastly/terraform-provider-fastly/internal/resources/loggings3"
@@ -82,6 +83,7 @@ type Model struct {
 	LoggingNewRelic               []loggingnewrelic.NestedModel               `tfsdk:"logging_newrelic"`
 	LoggingDatadog                []loggingdatadog.NestedModel                `tfsdk:"logging_datadog"`
 	LoggingBigQuery               []loggingbigquery.NestedModel               `tfsdk:"logging_bigquery"`
+	LoggingGCS                    []logginggcs.NestedModel                    `tfsdk:"logging_gcs"`
 	LoggingSplunk                 []loggingsplunk.NestedModel                 `tfsdk:"logging_splunk"`
 	ImageOptimizerDefaultSettings []imageoptimizerdefaultsettings.NestedModel `tfsdk:"image_optimizer_default_settings"`
 	Snippet                       []snippet.NestedModel                       `tfsdk:"snippet"`
@@ -151,6 +153,7 @@ func (r *Resource) Schema(_ context.Context, _ resource.SchemaRequest, resp *res
 			"logging_newrelic":                 loggingnewrelic.NestedBlockSchema(),
 			"logging_datadog":                  loggingdatadog.NestedBlockSchema(),
 			"logging_bigquery":                 loggingbigquery.NestedBlockSchema(),
+			"logging_gcs":                      logginggcs.NestedBlockSchema(),
 			"logging_splunk":                   loggingsplunk.NestedBlockSchema(),
 			"image_optimizer_default_settings": imageoptimizerdefaultsettings.NestedBlockSchema(),
 			"snippet":                          snippet.NestedBlockSchema(),
@@ -476,6 +479,18 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 	plan.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, plan.LoggingBigQuery)
 
+	if err := logginggcs.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingGCS); err != nil {
+		resp.Diagnostics.AddError("Error reconciling GCS logging endpoints", err.Error())
+		return
+	}
+
+	loggingGCSs, err := logginggcs.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, version)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading GCS logging endpoints", err.Error())
+		return
+	}
+	plan.LoggingGCS = logginggcs.MatchOrder(loggingGCSs, plan.LoggingGCS)
+
 	if err := loggingsplunk.Reconcile(ctx, r.providerData.AutoClient(), serviceID, version, plan.LoggingSplunk); err != nil {
 		resp.Diagnostics.AddError("Error reconciling Splunk logging endpoints", err.Error())
 		return
@@ -679,6 +694,11 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		resp.Diagnostics.AddError("Error reading BigQuery logging endpoints", err.Error())
 		return
 	}
+	loggingGCSs, err := logginggcs.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading GCS logging endpoints", err.Error())
+		return
+	}
 	loggingSplunks, err := loggingsplunk.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading Splunk logging endpoints", err.Error())
@@ -699,6 +719,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.LoggingNewRelic = loggingnewrelic.MatchOrder(loggingNewRelics, state.LoggingNewRelic)
 	state.LoggingDatadog = loggingdatadog.MatchOrder(loggingDatadogs, state.LoggingDatadog)
 	state.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, state.LoggingBigQuery)
+	state.LoggingGCS = logginggcs.MatchOrder(loggingGCSs, state.LoggingGCS)
 	state.LoggingSplunk = loggingsplunk.MatchOrder(loggingSplunks, state.LoggingSplunk)
 
 	snippets, err := snippet.ReadForVersion(ctx, r.providerData.AutoClient(), state.ID.ValueString(), readVersion)
@@ -818,6 +839,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		!loggingnewrelic.Equal(plan.LoggingNewRelic, state.LoggingNewRelic) ||
 		!loggingdatadog.Equal(plan.LoggingDatadog, state.LoggingDatadog) ||
 		!loggingbigquery.Equal(plan.LoggingBigQuery, state.LoggingBigQuery) ||
+		!logginggcs.Equal(plan.LoggingGCS, state.LoggingGCS) ||
 		!loggingsplunk.Equal(plan.LoggingSplunk, state.LoggingSplunk) ||
 		!imageoptimizerdefaultsettings.Equal(plan.ImageOptimizerDefaultSettings, state.ImageOptimizerDefaultSettings) ||
 		!snippet.Equal(plan.Snippet, state.Snippet) ||
@@ -1061,6 +1083,18 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 		plan.LoggingBigQuery = loggingbigquery.MatchOrder(loggingBigQueries, plan.LoggingBigQuery)
 
+		if err := logginggcs.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingGCS); err != nil {
+			resp.Diagnostics.AddError("Error reconciling GCS logging endpoints", err.Error())
+			return
+		}
+
+		loggingGCSs, err := logginggcs.ReadForVersion(ctx, r.providerData.AutoClient(), serviceID, targetVersion)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading GCS logging endpoints", err.Error())
+			return
+		}
+		plan.LoggingGCS = logginggcs.MatchOrder(loggingGCSs, plan.LoggingGCS)
+
 		if err := loggingsplunk.Reconcile(ctx, r.providerData.AutoClient(), serviceID, targetVersion, plan.LoggingSplunk); err != nil {
 			resp.Diagnostics.AddError("Error reconciling Splunk logging endpoints", err.Error())
 			return
@@ -1156,6 +1190,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		plan.LoggingNewRelic = loggingnewrelic.MatchOrder(state.LoggingNewRelic, plan.LoggingNewRelic)
 		plan.LoggingDatadog = loggingdatadog.MatchOrder(state.LoggingDatadog, plan.LoggingDatadog)
 		plan.LoggingBigQuery = loggingbigquery.MatchOrder(state.LoggingBigQuery, plan.LoggingBigQuery)
+		plan.LoggingGCS = logginggcs.MatchOrder(state.LoggingGCS, plan.LoggingGCS)
 		plan.LoggingSplunk = loggingsplunk.MatchOrder(state.LoggingSplunk, plan.LoggingSplunk)
 		plan.ImageOptimizerDefaultSettings = state.ImageOptimizerDefaultSettings
 		plan.Snippet = snippet.MatchOrderPreservePlanContent(state.Snippet, plan.Snippet)

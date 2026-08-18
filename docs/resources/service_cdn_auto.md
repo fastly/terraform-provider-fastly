@@ -366,6 +366,8 @@ Optional:
 - `email` (String, Sensitive) The `client_email` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_EMAIL` environment variable.
 - `secret_key` (String, Sensitive) The `private_key` field in your service account authentication JSON. Not required if `account_name` is provided. Can be set via the `FASTLY_GCS_SECRET_KEY` environment variable.
 
+
+
 <a id="nestedblock--logging_https"></a>
 ### Nested Schema for `logging_https`
 

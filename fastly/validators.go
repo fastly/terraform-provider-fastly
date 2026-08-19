@@ -174,6 +174,10 @@ func validateUserRole() schema.SchemaValidateDiagFunc {
 			"billing",
 			"engineer",
 			"superuser",
+			"ngwaf_observer",
+			"ngwaf_user",
+			"ngwaf_admin",
+			"ngwaf_owner",
 		},
 		false,
 	))

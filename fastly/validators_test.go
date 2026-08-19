@@ -348,10 +348,15 @@ func TestValidateUserRole(t *testing.T) {
 		{"billing", 0, 0},
 		{"engineer", 0, 0},
 		{"superuser", 0, 0},
+		{"ngwaf_observer", 0, 0},
+		{"ngwaf_user", 0, 0},
+		{"ngwaf_admin", 0, 0},
+		{"ngwaf_owner", 0, 0},
 		{"USER", 0, 1},
 		{"BILLING", 0, 1},
 		{"ENGINEER", 0, 1},
 		{"SUPERUSER", 0, 1},
+		{"ngwaf_observer_imported", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
 			actualWarns, actualErrors := diagToWarnsAndErrs(validateUserRole()(testcase.value, cty.GetAttrPath("role")))

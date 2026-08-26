@@ -49,21 +49,21 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 			},
 			"interval": {
 				Type:             schema.TypeInt,
-				Description:      "Threshold interval in seconds. Accepted values are `60`, `600`, and `3600`.",
+				Description:      "Threshold interval in seconds. Accepted values are `60`, `600`, and `3600`. The API may also return `0` if no interval is set.",
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntInSlice([]int{60, 600, 3600})),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntInSlice([]int{0, 60, 600, 3600})),
 			},
 			"limit": {
 				Type:             schema.TypeInt,
-				Description:      "Threshold limit. Minimum 1 and maximum 10,000.",
+				Description:      "Threshold limit. Minimum 1 and maximum 10,000. The API may also return `0` if no limit is set.",
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 10000)),
 			},
 			"name": {
 				Type:             schema.TypeString,
-				Description:      "The name of the threshold.",
+				Description:      "The name of the threshold. Minimum 3 and maximum 50 characters. The API may also return an empty string if no name is set.",
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(3, 50)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 50)),
 			},
 			"signal": {
 				Type: schema.TypeString,

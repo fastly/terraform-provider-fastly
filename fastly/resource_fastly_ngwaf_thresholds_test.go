@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -89,6 +90,39 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestFastlyNGWAFThresholds_zeroValueValidators(t *testing.T) {
+	s := resourceFastlyNGWAFThresholds().Schema
+
+	for _, tc := range []struct {
+		field string
+		value any
+	}{
+		{"interval", 0},
+		{"limit", 0},
+		{"name", ""},
+	} {
+		diags := s[tc.field].ValidateDiagFunc(tc.value, nil)
+		if diags.HasError() {
+			t.Errorf("expected %s=%v to be valid (API zero-value default), got: %v", tc.field, tc.value, diags)
+		}
+	}
+
+	// Out-of-range values must still be rejected.
+	for _, tc := range []struct {
+		field string
+		value any
+	}{
+		{"interval", 1234},
+		{"limit", 10001},
+		{"name", strings.Repeat("a", 51)},
+	} {
+		diags := s[tc.field].ValidateDiagFunc(tc.value, nil)
+		if !diags.HasError() {
+			t.Errorf("expected %s=%v to be invalid, got no error", tc.field, tc.value)
+		}
+	}
 }
 
 func testAccNGWAFThresholdsImportID(n string) resource.ImportStateIdFunc {

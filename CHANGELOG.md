@@ -6,6 +6,8 @@
 
 ### BUG FIXES:
 
+- fix(ngwaf/thresholds): allow `interval`, `limit`, and `name` to accept the zero-value defaults returned by the API, fixing `terraform apply` failures against generated/imported configuration ([#TBD](https://github.com/fastly/terraform-provider-fastly/pull/TBD))
+
 ### Dependencies
 - build(deps): `github.com/stretchr/testify` from 1.11.1 to 1.12.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))
 - build(deps): `golang.org/x/net` from 0.57.0 to 0.58.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // ElasticSearchServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -112,10 +112,11 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingElasticsearchDefaultFormat,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingElasticsearchDefaultFormat,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -222,7 +223,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(ctx context.Context, d *sc
 		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
 		opts.TLSCACert = gofastly.ToPointer(v.(string))

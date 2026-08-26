@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // SFTPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -130,10 +130,11 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingSFTPDefaultFormat,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingSFTPDefaultFormat,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -250,7 +251,11 @@ func (h *SFTPServiceAttributeHandler) Update(ctx context.Context, d *schema.Reso
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition prevents users on old provider versions from having
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.ToPointer(v.(string))
@@ -265,7 +270,7 @@ func (h *SFTPServiceAttributeHandler) Update(ctx context.Context, d *schema.Reso
 		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
 		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
@@ -299,6 +304,18 @@ func (h *SFTPServiceAttributeHandler) Delete(ctx context.Context, d *schema.Reso
 	}
 
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For SFTP logging, period is not VCL-only, so we preserve it.
+func (h *SFTPServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for SFTP logging as it's available for both VCL and Compute
+	}
 }
 
 // flattenSFTP models data into format suitable for saving to Terraform state.

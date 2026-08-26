@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/version"
 )
@@ -51,10 +51,17 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"fastly_api_security_operations":                 dataSourceFastlyAPISecurityOperations(),
+			"fastly_api_security_operation_tags":             dataSourceFastlyAPISecurityOperationTags(),
+			"fastly_api_security_discovered_operations":      dataSourceFastlyAPISecurityDiscoveredOperations(),
+			"fastly_audit_log_event_mapping":                 dataSourceFastlyAuditLogEventMapping(),
 			"fastly_compute_acls":                            dataSourceFastlyComputeACLs(),
 			"fastly_configstores":                            dataSourceFastlyConfigStores(),
 			"fastly_datacenters":                             dataSourceFastlyDatacenters(),
 			"fastly_dictionaries":                            dataSourceFastlyDictionaries(),
+			"fastly_dns_zones":                               dataSourceFastlyDNSZones(),
+			"fastly_domains":                                 dataSourceFastlyDomains(),
+			"fastly_domains_v1":                              dataSourceFastlyDomainsV1(),
 			"fastly_ip_ranges":                               dataSourceFastlyIPRanges(),
 			"fastly_kvstores":                                dataSourceFastlyKVStores(),
 			"fastly_ngwaf_alert_datadog_integration":         dataSourceFastlyNGWAFAlertDatadogIntegration(),
@@ -65,14 +72,22 @@ func Provider() *schema.Provider {
 			"fastly_ngwaf_alert_pagerduty_integration":       dataSourceFastlyNGWAFAlertPagerDutyIntegration(),
 			"fastly_ngwaf_alert_slack_integration":           dataSourceFastlyNGWAFAlertSlackIntegration(),
 			"fastly_ngwaf_alert_webhook_integration":         dataSourceFastlyNGWAFAlertWebhookIntegration(),
+			"fastly_ngwaf_account_lists":                     dataSourceFastlyNGWAFAccountLists(),
+			"fastly_ngwaf_account_rules":                     dataSourceFastlyNGWAFAccountRules(),
+			"fastly_ngwaf_account_signals":                   dataSourceFastlyNGWAFAccountSignals(),
 			"fastly_ngwaf_redactions":                        dataSourceFastlyNGWAFRedactions(),
 			"fastly_ngwaf_thresholds":                        dataSourceFastlyNGWAFThresholds(),
+			"fastly_ngwaf_workspace_lists":                   dataSourceFastlyNGWAFWorkspaceLists(),
+			"fastly_ngwaf_workspace_rules":                   dataSourceFastlyNGWAFWorkspaceRules(),
+			"fastly_ngwaf_workspace_signals":                 dataSourceFastlyNGWAFWorkspaceSignals(),
 			"fastly_ngwaf_virtual_patches":                   dataSourceFastlyNGWAFVirtualPatches(),
 			"fastly_ngwaf_workspaces":                        dataSourceFastlyNGWAFWorkspaces(),
 			"fastly_package_hash":                            dataSourceFastlyPackageHash(),
 			"fastly_secretstores":                            dataSourceFastlySecretStores(),
 			"fastly_services":                                dataSourceFastlyServices(),
+			"fastly_staging_ips":                             dataSourceFastlyStagingIPs(),
 			"fastly_tls_activation":                          dataSourceFastlyTLSActivation(),
+			"fastly_tsig_keys":                               dataSourceFastlyTSIGKeys(),
 			"fastly_tls_activation_ids":                      dataSourceFastlyTLSActivationIDs(),
 			"fastly_tls_certificate":                         dataSourceFastlyTLSCertificate(),
 			"fastly_tls_certificate_ids":                     dataSourceFastlyTLSCertificateIDs(),
@@ -88,13 +103,20 @@ func Provider() *schema.Provider {
 			"fastly_vcl_snippets":                            dataSourceFastlyVCLSnippets(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"fastly_api_security_operation":                  resourceFastlyAPISecurityOperation(),
+			"fastly_api_security_operation_tag":              resourceFastlyAPISecurityOperationTag(),
 			"fastly_alert":                                   resourceFastlyAlert(),
+			"fastly_audit_log_event_mapping":                 resourceFastlyAuditLogEventMapping(),
 			"fastly_compute_acl_entries":                     resourceFastlyComputeACLEntries(),
 			"fastly_compute_acl":                             resourceFastlyComputeACL(),
 			"fastly_configstore":                             resourceFastlyConfigStore(),
 			"fastly_configstore_entries":                     resourceFastlyConfigStoreEntries(),
 			"fastly_custom_dashboard":                        resourceFastlyCustomDashboard(),
+			"fastly_dns_zone":                                resourceFastlyDNSZone(),
+			"fastly_domain":                                  resourceFastlyDomain(),
 			"fastly_domain_v1":                               resourceFastlyDomainV1(),
+			"fastly_domain_service_link":                     resourceFastlyDomainServiceLink(),
+			"fastly_domain_v1_service_link":                  resourceFastlyDomainServiceLinkV1(),
 			"fastly_integration":                             resourceFastlyIntegration(),
 			"fastly_kvstore":                                 resourceFastlyKVStore(),
 			"fastly_ngwaf_account_list":                      resourceFastlyNGWAFAccountList(),
@@ -124,6 +146,7 @@ func Provider() *schema.Provider {
 			"fastly_service_dynamic_snippet_content":         resourceServiceDynamicSnippetContent(),
 			"fastly_service_vcl":                             resourceServiceVCL(),
 			"fastly_tls_activation":                          resourceFastlyTLSActivation(),
+			"fastly_tsig_key":                                resourceFastlyTSIGKey(),
 			"fastly_tls_certificate":                         resourceFastlyTLSCertificate(),
 			"fastly_tls_mutual_authentication":               resourceFastlyTLSMutualAuthentication(),
 			"fastly_tls_platform_certificate":                resourceFastlyTLSPlatformCertificate(),
@@ -134,13 +157,14 @@ func Provider() *schema.Provider {
 		},
 	}
 
-	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		config := Config{
 			APIKey:     d.Get("api_key").(string),
 			BaseURL:    d.Get("base_url").(string),
 			ForceHTTP2: d.Get("force_http2").(bool),
 			NoAuth:     d.Get("no_auth").(bool),
 			UserAgent:  provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
+			Context:    ctx,
 		}
 		return config.Client()
 	}

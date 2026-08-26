@@ -1,0 +1,23 @@
+---
+layout: "fastly"
+page_title: "Fastly: tsig_key"
+sidebar_current: "docs-fastly-resource-tsig_key"
+description: |-
+  Provides a Fastly TSIG Key.
+---
+
+# fastly_tsig_key
+
+Provides a Fastly TSIG Key.
+
+## Example Usage
+
+{{ tffile "examples/resources/tsig_key_basic_usage.tf"}}
+
+## Import
+
+Fastly TSIG Keys can be imported using their Key ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/tsig_key_import_cmd.txt"}}
+
+{{ .SchemaMarkdown | trimspace }}

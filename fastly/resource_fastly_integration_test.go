@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 func TestAccFastlyIntegration_mailinglist(t *testing.T) {
@@ -29,6 +29,76 @@ func TestAccFastlyIntegration_mailinglist(t *testing.T) {
 		Description: gofastly.ToPointer("my new description"),
 		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
 		Type:        gofastly.ToPointer("mailinglist"),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_datadog(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+			"site":   "datadoghq.eu",
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeDatadog),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+			"site":   "datadoghq.com",
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeDatadog),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_jiraissue(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"baseurl":    fmt.Sprintf("https://%s.atlassian.net", acctest.RandString(10)),
+			"username":   fmt.Sprintf("user-%s@fastly.com", acctest.RandString(10)),
+			"token":      acctest.RandString(10),
+			"projectkey": acctest.RandString(5),
+			"issuetype":  "Bug",
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJiraIssue),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"baseurl":    fmt.Sprintf("https://%s.atlassian.net", acctest.RandString(10)),
+			"username":   fmt.Sprintf("user-%s@fastly.com", acctest.RandString(10)),
+			"token":      acctest.RandString(10),
+			"projectkey": acctest.RandString(5),
+			"issuetype":  "Task",
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJiraIssue),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_jsm(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJSM),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJSM),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -75,6 +145,26 @@ func TestAccFastlyIntegration_newrelic(t *testing.T) {
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
 
+func TestAccFastlyIntegration_opsgenie(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeOpsGenie),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"apikey": acctest.RandString(10),
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeOpsGenie),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
 func TestAccFastlyIntegration_pagerduty(t *testing.T) {
 	createIntegration := gofastly.Integration{
 		Config: map[string]string{
@@ -115,6 +205,26 @@ func TestAccFastlyIntegration_slack(t *testing.T) {
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
 
+func TestAccFastlyIntegration_splunkoncall(t *testing.T) {
+	createIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"url": fmt.Sprintf("https://alert.victorops.com/integrations/generic/20131114/alert/%s", acctest.RandString(10)),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeSplunkOnCall),
+	}
+	updateIntegration := gofastly.Integration{
+		Config: map[string]string{
+			"url": fmt.Sprintf("https://alert.victorops.com/integrations/generic/20131114/alert/%s", acctest.RandString(10)),
+		},
+		Description: gofastly.ToPointer("my new description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer(gofastly.IntegrationTypeSplunkOnCall),
+	}
+	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
 func TestAccFastlyIntegration_webhook(t *testing.T) {
 	createIntegration := gofastly.Integration{
 		Config: map[string]string{
@@ -133,6 +243,45 @@ func TestAccFastlyIntegration_webhook(t *testing.T) {
 		Type:        gofastly.ToPointer("webhook"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
+}
+
+func TestAccFastlyIntegration_recreateAfterManualDelete(t *testing.T) {
+	var integrationID string
+
+	integration := gofastly.Integration{
+		Config: map[string]string{
+			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
+		},
+		Description: gofastly.ToPointer("my description"),
+		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        gofastly.ToPointer("slack"),
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig(integration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyIntegrationsRemoteState(integration),
+					testAccCaptureFastlyIntegrationID("fastly_integration.foo", &integrationID),
+				),
+			},
+			{
+				PreConfig: func() {
+					testAccDeleteFastlyIntegrationByID(t, integrationID)
+				},
+				Config: testAccIntegrationConfig(integration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyIntegrationsRemoteState(integration),
+				),
+			},
+		},
+	})
 }
 
 func testAccFastlyIntegration(createIntegration, updateIntegration gofastly.Integration, t *testing.T) {
@@ -228,6 +377,43 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccCaptureFastlyIntegrationID(resourceName string, integrationID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found in state: %s", resourceName)
+		}
+
+		if rs.Primary == nil || rs.Primary.ID == "" {
+			return fmt.Errorf("resource %s has no ID in state", resourceName)
+		}
+
+		*integrationID = rs.Primary.ID
+
+		return nil
+	}
+}
+
+func testAccDeleteFastlyIntegrationByID(t *testing.T, integrationID string) {
+	t.Helper()
+
+	if integrationID == "" {
+		t.Fatal("integration ID is not set")
+	}
+
+	conn := testAccProvider.Meta().(*APIClient).conn
+	err := conn.DeleteIntegration(context.TODO(), &gofastly.DeleteIntegrationInput{
+		ID: integrationID,
+	})
+	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			return
+		}
+
+		t.Fatalf("error deleting integration out of band (%s): %s", integrationID, err)
+	}
 }
 
 func testAccIntegrationConfig(integration gofastly.Integration) string {

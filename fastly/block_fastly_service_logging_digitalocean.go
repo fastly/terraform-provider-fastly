@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // DigitalOceanServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -117,10 +117,11 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingDigitalOceanDefaultFormat,
-			Description: "Apache style log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingDigitalOceanDefaultFormat,
+			Description:      "Apache style log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -218,7 +219,11 @@ func (h *DigitalOceanServiceAttributeHandler) Update(ctx context.Context, d *sch
 		opts.Period = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition prevents users on old provider versions from having
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.ToPointer(v.(string))
@@ -236,7 +241,7 @@ func (h *DigitalOceanServiceAttributeHandler) Update(ctx context.Context, d *sch
 		opts.TimestampFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.ToPointer(v.(string))
@@ -273,6 +278,18 @@ func (h *DigitalOceanServiceAttributeHandler) Delete(ctx context.Context, d *sch
 	}
 
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For DigitalOcean logging, period is not VCL-only, so we preserve it.
+func (h *DigitalOceanServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for DigitalOcean logging as it's available for both VCL and Compute
+	}
 }
 
 // flattenDigitalOcean models data into format suitable for saving to Terraform state.

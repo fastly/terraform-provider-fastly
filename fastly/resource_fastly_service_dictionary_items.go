@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 func resourceServiceDictionaryItems() *schema.Resource {
@@ -136,6 +136,11 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if !d.Get("manage_items").(bool) {
+		log.Print("[DEBUG] Skipping dictionary items refresh: manage_items is false")
+		return nil
+	}
+
 	log.Print("[DEBUG] Refreshing Dictionary Items Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -197,6 +202,11 @@ func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceD
 	}
 
 	err = d.Set("dictionary_id", dictionaryID)
+	if err != nil {
+		return nil, fmt.Errorf("error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+	}
+
+	err = d.Set("manage_items", true)
 	if err != nil {
 		return nil, fmt.Errorf("error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}

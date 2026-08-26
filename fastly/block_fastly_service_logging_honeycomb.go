@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // HoneycombServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -61,10 +61,11 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingHoneycombDefaultFormat,
-			Description: "Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingHoneycombDefaultFormat,
+			Description:      "Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -159,7 +160,7 @@ func (h *HoneycombServiceAttributeHandler) Update(ctx context.Context, d *schema
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
 		opts.ProcessingRegion = gofastly.ToPointer(v.(string))

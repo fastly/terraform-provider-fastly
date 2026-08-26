@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
-func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
+func TestAccFastlyServiceProductEnablement_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -34,13 +34,18 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
     }
 
     product_enablement {
-      bot_management        = false
+      api_discovery         = false
       brotli_compression    = true
       domain_inspector      = false
       image_optimizer       = false
       log_explorer_insights = false
       origin_inspector      = false
       websockets            = false
+
+      bot_management {
+        enabled      = false
+        contentguard = "off"
+      }
 
       ddos_protection {
         enabled = false
@@ -78,6 +83,7 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
 		RequestCondition:    gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
@@ -98,6 +104,337 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
 					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceProductEnablement_vcl_ddosProtectionModeChange(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	initialConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    ddos_protection {
+      enabled = true
+      mode    = "block"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	updatedConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    ddos_protection {
+      enabled = true
+      mode    = "log"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ddos_protection.0.mode", "block"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ddos_protection.0.mode", "log"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceProductEnablement_vcl_botManagementUpdate(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	initialConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    bot_management {
+      enabled      = true
+      contentguard = "off"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	updatedConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    bot_management {
+      enabled      = true
+      contentguard = "on"
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.bot_management.0.contentguard", "off"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.bot_management.0.contentguard", "on"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceProductEnablement_vcl_ngwafUpdate(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	initialConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    ngwaf {
+      enabled      = true
+      workspace_id = "7JFbo4RNA0OKdFWC04r6B3"
+      traffic_ramp = 100
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	updatedConfig := fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "%s"
+    name    = "%s"
+    port    = 443
+    shield  = "amsterdam-nl"
+  }
+
+  product_enablement {
+    ngwaf {
+      enabled      = true
+      workspace_id = "Jf4Vo9RXd00MdTYJ44xY12"
+      traffic_ramp = 80
+    }
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, backendAddress, backendName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ngwaf.0.workspace_id", "7JFbo4RNA0OKdFWC04r6B3"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ngwaf.0.traffic_ramp", "100"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ngwaf.0.workspace_id", "Jf4Vo9RXd00MdTYJ44xY12"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "product_enablement.0.ngwaf.0.traffic_ramp", "80"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceProductEnablement_compute_basic(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	config := fmt.Sprintf(`
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
+}
+
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "httpbin.org"
+    name    = "httpbin"
+  }
+
+  product_enablement {
+    api_discovery         = false
+    domain_inspector      = true
+    fanout                = false
+    log_explorer_insights = false
+    websockets            = false
+
+    bot_management {
+      enabled       = false
+      contentguard  = "off"
+    }
+
+    ddos_protection {
+      enabled = false
+      mode    = "block"
+    }
+
+    ngwaf {
+      enabled      = false
+      workspace_id = "7JFbo4RNA0OKdFWC04r6B3"
+    }
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
+  }
+
+  force_destroy = true
+  activate = false
+}
+`, serviceName, domainName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceComputeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "product_enablement.0.domain_inspector", "true"),
 				),
 			},
 		},

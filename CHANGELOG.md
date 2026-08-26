@@ -4,6 +4,324 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### Dependencies
+- build(deps): `github.com/stretchr/testify` from 1.11.1 to 1.12.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))
+- build(deps): `golang.org/x/net` from 0.57.0 to 0.58.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))
+
+## 9.6.0 (August 11, 2026)
+
+### ENHANCEMENTS:
+
+- feat(fastly_audit_log_event_mapping): add resource and data source for managing Audit Log Event Mappings ([#1394](https://github.com/fastly/terraform-provider-fastly/pull/1394))
+
+### BUG FIXES:
+
+- fix(ngwaf/rules):  corrects a bug where rules with a `deception` action had their `deception_type` and `allow_interactive` fields omitted from update operations, causing an error on subsequent applies ([#1396](https://github.com/fastly/terraform-provider-fastly/pull/1396))
+
+### Dependencies
+
+- build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.10.0 to 0.11.0 ([#1392](https://github.com/fastly/terraform-provider-fastly/pull/1392))
+
+## 9.5.1 (August 07, 2026)
+
+### BUG FIXES:
+- fix(service_compute): process `healthcheck` blocks before `backend` blocks so backends referencing a healthcheck created in the same apply do not fail with `No healthcheck named '<name>'` ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
+- fix(service_vcl): process `dictionary` and `response_object` blocks before `rate_limiter` blocks so a rate limiter referencing a dictionary or response object created in the same apply does not fail ([#1384](https://github.com/fastly/terraform-provider-fastly/pull/1384))
+
+### Dependencies
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.1.0 to 17.2.0 ([#1382](https://github.com/fastly/terraform-provider-fastly/pull/1382))
+
+## 9.5.0 (August 04, 2026)
+
+### ENHANCEMENTS:
+
+- feat(fastly_integration): add support for `datadog`, `jiraissue`, `jsm`, `opsgenie`, and `splunkoncall` integration types ([#1374](https://github.com/fastly/terraform-provider-fastly/pull/1374))
+
+### BUG FIXES:
+
+- fix(service): update versionless `name` and `comment` attributes regardless of `activate` and `stage` settings ([#1369](https://github.com/fastly/terraform-provider-fastly/pull/1369))
+
+### Dependencies
+
+- build(deps): `google.golang.org/grpc` from 1.79.3 to 1.82.1 ([#1360](https://github.com/fastly/terraform-provider-fastly/pull/1360))
+- build(deps): `github.com/fastly/go-fastly/v17` from 16.0.1 to 17.1.0 ([#1373](https://github.com/fastly/terraform-provider-fastly/pull/1373))
+
+## 9.4.0 (July 22, 2026)
+
+### ENHANCEMENTS:
+
+- feat(tls_subscription_validation): expose computed `certificate_id`, allowing issuance-dependent resources to be chained in a single apply ([#1345](https://github.com/fastly/terraform-provider-fastly/issues/1345))
+- feat(tls/subscription): include subscription ID and domains in `fastly_tls_subscription` API error messages so failing resources can be identified when managing many subscriptions ([#1344](https://github.com/fastly/terraform-provider-fastly/pull/1344))
+
+### BUG FIXES:
+
+- fix(logging): Validate logging `format` length (max 12288 characters) at plan/validate time instead of failing at apply time ([#1342](https://github.com/fastly/terraform-provider-fastly/pull/1342))
+- fix(tls_subscription): allow `configuration_id` attribute changes to be updated without requiring a resource replacement ([#1353](https://github.com/fastly/terraform-provider-fastly/pull/1353))
+- fix(tls_subscription_validation): key resource validity on certificate presence instead of `issued` state, so subscriptions in `renewing` state no longer destroy/recreate the validation resource on refresh ([#1345](https://github.com/fastly/terraform-provider-fastly/issues/1345))
+- fix(tls_activation): fail fast with an actionable error when `certificate_id` is empty (certificate not yet issued) instead of an opaque API 400; document that managed subscription domains are auto-activated by Fastly and must not be paired with `fastly_tls_activation` ([#1345](https://github.com/fastly/terraform-provider-fastly/issues/1345))
+
+## 9.3.1 (July 09, 2026)
+
+### BUG FIXES:
+
+- fix(ngwaf/signals): increase character limit of the `name` attribute to `128` ([#1338](https://github.com/fastly/terraform-provider-fastly/pull/1338))
+
+- fix(ngwaf/rules): allow `templated_signal` rules to be created without conditions ([#1330](https://github.com/fastly/terraform-provider-fastly/pull/1330))
+
+### Dependencies
+
+- build(deps): `go.mongodb.org/mongo-driver` from 1.17.4 to 1.17.7 ([#1309](https://github.com/fastly/terraform-provider-fastly/pull/1309))
+- build(deps): `github.com/fastly/go-fastly/v16` from 15.0.3 to 16.0.0 ([#1332](https://github.com/fastly/terraform-provider-fastly/pull/1332))
+- build(deps): `github.com/fastly/go-fastly/v16` from 16.0.0 to 16.0.1 ([#1336](https://github.com/fastly/terraform-provider-fastly/pull/1336))
+- build(deps): `golang.org/x/net` from 0.56.0 to 0.57.0 ([#1336](https://github.com/fastly/terraform-provider-fastly/pull/1336))
+- build(deps): `github.com/fastly/go-fastly/v16` from 15.0.3 to 16.0.0 ([#1332](https://github.com/fastly/terraform-provider-fastly/pull/1332))
+
+## 9.3.0 (June 17, 2026)
+
+### ENHANCEMENTS:
+
+- feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
+- feat(ngwaf_thresholds): added support for 'block_immediately' action ([#1292](https://github.com/fastly/terraform-provider-fastly/pull/1292))
+
+### BUG FIXES:
+
+- fix(acl-entries): Skip ACL entry refresh when `manage_entries` is false ([#1291](https://github.com/fastly/terraform-provider-fastly/pull/1291))
+- fix(dictionary-items): Skip dictionary item refresh when `manage_items` is false ([#1296](https://github.com/fastly/terraform-provider-fastly/pull/1296))
+
+## 9.2.1 (June 05, 2026)
+
+### BUG FIXES:
+
+- fix(product_enablement/ngwaf): Restrict `traffic_ramp` field in `ngwaf` block to VCL services only ([#1282](https://github.com/fastly/terraform-provider-fastly/pull/1282))
+
+### DEPENDENCIES:
+
+- build(deps): `golang.org/x/net` from 0.54.0 to 0.55.0 ([#1276](https://github.com/fastly/terraform-provider-fastly/pull/1276))
+- build(deps): `github.com/fastly/go-fastly/v15` from 15.0.1 to 15.0.2 ([#1280](https://github.com/fastly/terraform-provider-fastly/pull/1280))
+
+## 9.2.0 (May 20, 2026)
+
+### ENHANCEMENTS:
+
+- feat(service/backend): added support for the `MaxLifetime` and `MaxUse` attributes ([#1233](https://github.com/fastly/terraform-provider-fastly/pull/1233))
+- feat(dns): added support for DNS Zones and TSIG Keys ([#1266](https://github.com/fastly/terraform-provider-fastly/pull/1266))
+
+### BUG FIXES:
+
+- fix(block_fastly_service_product_enablement): Allow `bot_management` to be enabled on Compute services ([#1270](https://github.com/fastly/terraform-provider-fastly/pull/1270))
+- fix(resource_fastly_integration): recreate integrations deleted outside of Terraform ([#1273](https://github.com/fastly/terraform-provider-fastly/pull/1273))
+
+### DEPENDENCIES:
+
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.40.0 to 2.40.1 ([#1259](https://github.com/fastly/terraform-provider-fastly/pull/1259))
+- build(deps): `github.com/fastly/go-fastly/v15` from 14.0.2 to 15.0.1([#1260](https://github.com/fastly/terraform-provider-fastly/pull/1260))
+- build(deps): `golang.org/x/net` from 0.53.0 to 0.54.0 ([#1267](https://github.com/fastly/terraform-provider-fastly/pull/1267))
+
+## 9.1.1 (April 22, 2026)
+
+### BUG FIXES:
+
+- fix(ngwaf/rules): updated validation to allow the maximum value of rate limit rule thresholds to `1000000` ([#1236](https://github.com/fastly/terraform-provider-fastly/pull/1236))
+
+### DEPENDENCIES:
+
+- build(deps): `actions/github-script` from 8 to 9 ([#1232](https://github.com/fastly/terraform-provider-fastly/pull/1232))
+- build(deps): `github.com/fastly/go-fastly/v14` from 14.0.0 to 14.2.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
+- build(deps): `golang.org/x/net` from 0.52.0 to 0.53.0 ([#1231](https://github.com/fastly/terraform-provider-fastly/pull/1231))
+- build(deps): `github.com/deckarep/golang-set/v2` from 2.8.0 to 2.9.0 ([#1234](https://github.com/fastly/terraform-provider-fastly/pull/1234))
+
+### DOCUMENTATION:
+
+- docs(state_upgrader_bot_management): add subcategory and header to state upgrade guide ([#1230](https://github.com/fastly/terraform-provider-fastly/pull/1230))
+
+## 9.1.0 (April 07, 2026)
+
+### ENHANCEMENTS:
+
+- feat(product_enablement): add state upgrader for bot_management schema change from v9.0.0 - automatically migrates existing boolean values to new list structure with contentguard attribute ([#1226](https://github.com/fastly/terraform-provider-fastly/pull/1226))
+
+### BUG FIXES:
+
+- fix(product_enablement/bot_management): fix Optional/MinItems schema conflict ([#1228](https://github.com/fastly/terraform-provider-fastly/pull/1228))
+
+## 9.0.0 (April 04, 2026)
+
+### BREAKING:
+
+- breaking(product_enablement/bot_management): added support for ContentGuard, which is now requires the `contentguard` and `enabled` parameters ([#1221](https://github.com/fastly/terraform-provider-fastly/pull/1221))
+
+### DEPENDENCIES:
+
+- build(deps): `google.golang.org/grpc` from 1.79.2 to 1.79.3 ([#1216](https://github.com/fastly/terraform-provider-fastly/pull/1216))
+- build(deps): `github.com/fastly/go-fastly/v14` from 13.1.2 to 14.0.0 ([#1220](https://github.com/fastly/terraform-provider-fastly/pull/1220))
+
+### DOCUMENTATION:
+
+- docs(ngwaf/lists): updated docs to provide important prefix information for usage with a NGWAF rule ([#1217](https://github.com/fastly/terraform-provider-fastly/pull/1217))
+
+## 8.8.0 (March 17, 2026)
+
+### ENHANCEMENTS:
+
+- feat(api-security): add support for API Security operations ([#1211](https://github.com/fastly/terraform-provider-fastly/pull/1211))
+
+### DEPENDENCIES:
+
+- build(deps): `github.com/fastly/go-fastly/v13` from 13.0.1 to 13.1.0 ([#1208](https://github.com/fastly/terraform-provider-fastly/pull/1208))
+- build(deps): `github.com/fastly/go-fastly/v13` from 13.1.0 to 13.1.1 ([#1210](https://github.com/fastly/terraform-provider-fastly/pull/1210))
+- build(deps): `github.com/fastly/go-fastly/v13` from 13.1.1 to 13.1.2 ([#1214](https://github.com/fastly/terraform-provider-fastly/pull/1214))
+- build(deps): `actions/create-github-app-token` from 2 to 3 ([#1213](https://github.com/fastly/terraform-provider-fastly/pull/1213))
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.39.0 to 2.40.0 ([#1212](https://github.com/fastly/terraform-provider-fastly/pull/1212))
+- build(deps): `golang.org/x/net` from 0.51.0 to 0.52.0 ([#1212](https://github.com/fastly/terraform-provider-fastly/pull/1212))
+- build(deps): `actions/create-github-app-token` from 2 to 3 ([#1213](https://github.com/fastly/terraform-provider-fastly/pull/1213))
+
+## 8.7.2 (March 10, 2026)
+
+### DEPENDENCIES:
+
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.2 to 2.39.0 ([#1204](https://github.com/fastly/terraform-provider-fastly/pull/1204))
+- build(deps): `golang.org/x/net` from 0.50.0 to 0.51.0 ([#1204](https://github.com/fastly/terraform-provider-fastly/pull/1204))
+- build(deps): `hashicorp/setup-terraform` from 3 to 4 ([#1205](https://github.com/fastly/terraform-provider-fastly/pull/1205))
+- build(deps): `github.com/fastly/go-fastly/v13` from 13.0.0 to 13.0.1 ([#1206](https://github.com/fastly/terraform-provider-fastly/pull/1206))
+
+## 8.7.1 (February 26, 2026)
+
+### BUG FIXES:
+
+- fix(ngwaf/rules): corrected the condition type assertion for nested single conditions in a group condition ([#1198](https://github.com/fastly/terraform-provider-fastly/pull/1198))
+
+### DOCUMENTATION:
+
+- docs(templates/guides): add a guide for adding a versionless domain to a service using a wildcard tls subscription ([#1194](https://github.com/fastly/terraform-provider-fastly/pull/1194))
+- docs(templates/guides): add a guide for using versionless domains with a Certainly subscription to a new devlivery service ([#1195](https://github.com/fastly/terraform-provider-fastly/pull/1195))
+- docs(templates/guides): add a guide for migrating delivery service classic domain to a versionless domain ([#1202](https://github.com/fastly/terraform-provider-fastly/pull/1202))
+- docs(templates/guides): add a guide for linking versionless domains to a service when the domains are not managed in Terraform ([#1199](https://github.com/fastly/terraform-provider-fastly/pull/1199))
+- docs(templates/guides): add a guide for migrating from the deprecated 'fastly_domain_v1' and 'fastly_domain_v1_service_link' resources and data sources ([#1200](https://github.com/fastly/terraform-provider-fastly/pull/1200))
+- docs(ngwaf/rules): updated list of supported values for the 'operator' field for NGWAF WAF rule conditions ([#1201](https://github.com/fastly/terraform-provider-fastly/pull/1201))
+
+## 8.7.0 (February 20, 2026)
+
+### ENHANCEMENTS:
+
+- feat(product_enablement): Adding support for the `domain_inspector` feature to Compute services ([#1175](https://github.com/fastly/terraform-provider-fastly/pull/1175))
+- feat(domain_management): Added import support for the `fastly_domain_service_link` resource and improved test coverage ([#1178](https://github.com/fastly/terraform-provider-fastly/pull/1178))
+- feat(domains): Removed `_v1` suffixes from domain-related resources and data sources, leaving deprecated aliases in place. ([#1181](https://github.com/fastly/terraform-provider-fastly/pull/1181))
+- feat(products/staging): Add a Data Source for Staging IP addresses ([#1186](https://github.com/fastly/terraform-provider-fastly/pull/1186))
+- feat(ngwaf/rules): Added support for `multival` type conditions nested in `group_operator` blocks. ([#1189](https://github.com/fastly/terraform-provider-fastly/pull/1189))
+
+### DEPENDENCIES:
+
+- build(deps): `github.com/fastly/go-fastly/v12` from 12.1.0 to 12.1.1 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
+- build(deps): `golang.org/x/net` from 0.48.0 to 0.49.0 ([#1177](https://github.com/fastly/terraform-provider-fastly/pull/1177))
+- build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.9.0 to 0.10.0 ([#1179](https://github.com/fastly/terraform-provider-fastly/pull/1179))
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.1 to 2.38.2 ([#1180](https://github.com/fastly/terraform-provider-fastly/pull/1180))
+- build(deps): `github.com/hashicorp/terraform-plugin-log` from 0.9.0 to 0.10.0 ([#1179](https://github.com/fastly/terraform-provider-fastly/pull/1179))
+- build(go.mod): upgrade golang to 1.25.0 and make appropriate changes ([#1183](https://github.com/fastly/terraform-provider-fastly/pull/1183))
+- build(deps): `github.com/fastly/go-fastly/v12` from 12.1.1 to 12.1.2 ([#1185](https://github.com/fastly/terraform-provider-fastly/pull/1185))
+- build(deps): `golang.org/x/net` from 0.49.0 to 0.50.0 ([#1188](https://github.com/fastly/terraform-provider-fastly/pull/1188))
+- build(deps): `github.com/fastly/go-fastly/v12` from 12.1.2 to 13.0.0 ([#1190](https://github.com/fastly/terraform-provider-fastly/pull/1190))
+
+## 8.6.0 (December 17, 2025)
+
+### ENHANCEMENTS:
+
+- feat(provider): redact `Fastly-Key` from `TF_LOG=DEBUG` output ([#1167](https://github.com/fastly/terraform-provider-fastly/pull/1167))
+- feat(provider): log response body for HTTP error responses (≥400) in `TF_LOG=DEBUG` output ([#1170](https://github.com/fastly/terraform-provider-fastly/pull/1170))
+
+### BUG FIXES:
+
+- fix(service/backend): corrected a drift issue caused by the `keepalive_time` attribute ([#1156](https://github.com/fastly/terraform-provider-fastly/pull/1156))
+- fix(request_setting): preserve optional bool fields (`force_miss`, `force_ssl`, `bypass_busy_wait`, `timer_support`) during updates and add acceptance test coverage ([#1165](https://github.com/fastly/terraform-provider-fastly/pull/1165))
+
+### DEPENDENCIES:
+
+- build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
+- build(deps): `golang.org/x/net` from 0.47.0 to 0.48.0 ([#1166](https://github.com/fastly/terraform-provider-fastly/pull/1166))
+- build(deps): `actions/checkout` from 5 to 6 ([#1159](https://github.com/fastly/terraform-provider-fastly/pull/1159))
+
+### DOCUMENTATION:
+
+- docs(ngwaf/rules): provided examples of client_identifiers types for rate limit rules ([#1169](https://github.com/fastly/terraform-provider-fastly/pull/1169))
+- docs(logging/bigquery): updates the details of the `account_name` field to match API requirements ([#1171](https://github.com/fastly/terraform-provider-fastly/pull/1171))
+
+## 8.5.0 (November 20, 2025)
+
+### ENHANCEMENTS:
+
+- feat(compute_acl_entries): add CIDR validation ([#1136](https://github.com/fastly/terraform-provider-fastly/pull/1136))
+
+### BUG FIXES:
+
+- fix(header): preserve optional bool field `ignore_if_set` during updates and add acceptance test coverage ([#1142](https://github.com/fastly/terraform-provider-fastly/pull/1142))
+- fix(block_fastly_service_logging_logentries_test): fix tests for logentries to account for API behavior ([#1143](https://github.com/fastly/terraform-provider-fastly/pull/1143))
+- fix(image_optimizer_default_settings): preserve optional bool fields (`allow_video`, `webp`, `upscale`) during updates and add acceptance test coverage ([#1145](https://github.com/fastly/terraform-provider-fastly/pull/1145))
+- fix(logging_kafka): preserve optional bool fields (`use_tls`, `parse_log_keyvals`) during updates and add acceptance test coverage ([#1147](https://github.com/fastly/terraform-provider-fastly/pull/1147))
+- fix(product_enablement): ensure `ddos_protection` mode updates are applied ([#1149](https://github.com/fastly/terraform-provider-fastly/pull/1149))
+
+### DEPENDENCIES:
+
+- build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
+- build(deps): `golang.org/x/net` from 0.46.0 to 0.47.0 ([#1150](https://github.com/fastly/terraform-provider-fastly/pull/1150))
+- build(deps): `golangci/golangci-lint-action` from 8 to 9 ([#1144](https://github.com/fastly/terraform-provider-fastly/pull/1144))
+- build(deps): `golang.org/x/crypto` from 0.44.0 to 0.45.0 ([#1154](https://github.com/fastly/terraform-provider-fastly/pull/1154))
+
+### DOCUMENTATION:
+
+- docs(ngwaf/rules): added signal exclusion rule type documentation ([#1140](https://github.com/fastly/terraform-provider-fastly/pull/1140))
+
+## 8.4.0 (November 4, 2025)
+
+### ENHANCEMENTS:
+
+- feat(ngwaf/lists): added support for NGWAF Lists to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
+- feat(ngwaf/rules): added support for NGWAF Rules to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
+- feat(ngwaf/signals): added support for NGWAF Signals to data sources ([#1124](https://github.com/fastly/terraform-provider-fastly/pull/1124))
+
+### BUG FIXES:
+
+- fix(logging_https): ensure `response_condition` is applied during updates and add acceptance test coverage ([#1130](https://github.com/fastly/terraform-provider-fastly/pull/1130))
+- fix(backend): preserve optional bool fields (`use_ssl`, `ssl_check_cert`, `prefer_ipv6`, `auto_loadbalance`) during updates and add acceptance test coverage ([#1133](https://github.com/fastly/terraform-provider-fastly/pull/1133))
+- fix(domains_v1/service_link): corrected a behavior where new service links created were not referring to 'domain_id' values correctly ([#1132](https://github.com/fastly/terraform-provider-fastly/pull/1132))
+- fix(logging/compute): corrected drift behavior for some compute logging endpoints where the value of 'period' was not being retained correctly ([#1134](https://github.com/fastly/terraform-provider-fastly/pull/1134))
+- fix(tls/subscriptions): corrects 'common_name' validation for update operations ([#1135](https://github.com/fastly/terraform-provider-fastly/pull/1135))
+
+### DOCUMENTATION:
+
+- docs(ngwaf/rules): imroved usage examples of various NGWAF Rule patterns ([#1128](https://github.com/fastly/terraform-provider-fastly/pull/1128))
+
+## 8.3.2 (October 16, 2025)
+
+### DOCUMENTATION:
+
+- fix: correct release with non main tag
+
+## 8.3.1 (October 15, 2025)
+
+### BUG FIXES:
+
+- fix(logging/https): corrected a bug where users that had a HTTPS logging block would encounter 'gzip_level' API errors after upgrading to the v8.1.0 provider or later ([#1118](https://github.com/fastly/terraform-provider-fastly/pull/1118))
+
+### DEPENDENCIES:
+
+- build(deps): `stefanzweifel/git-auto-commit-action` from 6 to 7 ([#1120](https://github.com/fastly/terraform-provider-fastly/pull/1120))
+- build(deps): `golang.org/x/net` from 0.44.0 to 0.46.0 ([#1119](https://github.com/fastly/terraform-provider-fastly/pull/1119))
+
+## 8.3.0 (September 30, 2025)
+
+### ENHANCEMENTS:
+
+- feat(logging/https): add support for Period HTTPS logging endpoint ([#1097](https://github.com/fastly/terraform-provider-fastly/pull/1097))
+- feat(product_enablement): Add enable/disable support for API Discovery ([#1111](https://github.com/fastly/terraform-provider-fastly/pull/1111))
+- feat(domainsv1/data source): add support for the v1 domains data source ([#1112](https://github.com/fastly/terraform-provider-fastly/pull/1112))
+- feat(service): 'domain' blocks are now optional ([#1113](https://github.com/fastly/terraform-provider-fastly/pull/1113))
+- feat(domain_service_link): add support for domain service links ([#1110](https://github.com/fastly/terraform-provider-fastly/pull/1110))
+
+## 8.2.0 (September 24, 2025)
+
+### ENHANCEMENTS:
+
 - feat(ngwaf/rules): add support for multival type conditions ([#1100](https://github.com/fastly/terraform-provider-fastly/pull/1100))
 
 ### BUG FIXES:
@@ -15,12 +333,10 @@
 ### DEPENDENCIES:
 
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
-
-### DOCUMENTATION:
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.37.0 to 2.38.1 ([#1108](https://github.com/fastly/terraform-provider-fastly/pull/1108))
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
 
 ## 8.1.0 (September 17, 2025)
-
-### BREAKING:
 
 ### ENHANCEMENTS:
 

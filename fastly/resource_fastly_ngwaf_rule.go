@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/scope"
 )
 
 func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
@@ -26,6 +26,8 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	// Force recreation for templated_signal rules to avoid "templateSignal rules expect no actions"
 	// API error
 	r.CustomizeDiff = customdiff.All(
+		// Preserve base validations (validateRuleHasConditions, validateGroupConditionNotEmpty)
+		r.CustomizeDiff,
 		// Validate description for templated_signal rules
 		func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 			if diff.Get("type").(string) == "templated_signal" {
@@ -71,7 +73,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 							"type": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "Type of the Client Identifier.",
+								Description: "Type of the Client Identifier. Accepted values are `ip`, `post_parameter`, `request_cookie`, `request_header`, and `signal_payload`.",
 							},
 						},
 					},
@@ -95,8 +97,8 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 				"threshold": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					Description:  "Rate limit threshold. Minimum 1 and maximum 10,000.",
-					ValidateFunc: validation.IntBetween(1, 10000),
+					Description:  "Rate limit threshold. Minimum 1 and maximum 100,000.",
+					ValidateFunc: validation.IntBetween(1, 100000),
 				},
 			},
 		},

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // OpenstackServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -117,10 +117,11 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingOpenStackDefaultFormat,
-			Description: "Apache style log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingOpenStackDefaultFormat,
+			Description:      "Apache style log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -215,7 +216,7 @@ func (h *OpenstackServiceAttributeHandler) Update(ctx context.Context, d *schema
 		opts.Path = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
 		opts.Period = gofastly.ToPointer(v.(int))
@@ -224,7 +225,11 @@ func (h *OpenstackServiceAttributeHandler) Update(ctx context.Context, d *schema
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition prevents users on old provider versions from having
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.ToPointer(v.(string))
@@ -276,6 +281,18 @@ func (h *OpenstackServiceAttributeHandler) Delete(ctx context.Context, d *schema
 	}
 
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For OpenStack logging, period is not VCL-only, so we preserve it.
+func (h *OpenstackServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for OpenStack logging as it's available for both VCL and Compute
+	}
 }
 
 // flattenOpenstack models data into format suitable for saving to Terraform state.

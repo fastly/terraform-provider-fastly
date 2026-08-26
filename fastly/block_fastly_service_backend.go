@@ -6,8 +6,9 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // BackendServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -71,6 +72,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		"keepalive_time": {
 			Type:        schema.TypeInt,
 			Optional:    true,
+			Computed:    true,
 			Description: "How long in seconds to keep a persistent connection to the backend between requests.",
 		},
 		"max_conn": {
@@ -79,11 +81,25 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     200,
 			Description: "Maximum number of connections for this Backend. Default `200`",
 		},
+		"max_lifetime": {
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
+			Description:      "Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited - which is the default behavior.",
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		},
 		"max_tls_version": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
 			Description: "Maximum allowed TLS version on SSL connections to this backend.",
+		},
+		"max_use": {
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
+			Description:      "Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited - which is the default behavior.",
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 		},
 		"min_tls_version": {
 			Type:        schema.TypeString,
@@ -316,6 +332,13 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		opts.KeepAliveTime = gofastly.ToPointer(resource["keepalive_time"].(int))
 	}
 
+	if resource["max_lifetime"].(int) > 0 {
+		opts.MaxLifetime = gofastly.ToPointer(resource["max_lifetime"].(int))
+	}
+	if resource["max_use"].(int) > 0 {
+		opts.MaxUse = gofastly.ToPointer(resource["max_use"].(int))
+	}
+
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
@@ -372,9 +395,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["port"]; ok {
 		opts.Port = gofastly.ToPointer(v.(int))
 	}
-	if v, ok := modified["prefer_ipv6"]; ok {
-		opts.PreferIPv6 = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
 	if v, ok := modified["override_host"]; ok {
 		opts.OverrideHost = gofastly.ToPointer(v.(string))
 	}
@@ -383,6 +403,12 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["keepalive_time"]; ok {
 		opts.KeepAliveTime = gofastly.ToPointer(v.(int))
+	}
+	if v, ok := modified["max_lifetime"]; ok {
+		opts.MaxLifetime = gofastly.ToPointer(v.(int))
+	}
+	if v, ok := modified["max_use"]; ok {
+		opts.MaxUse = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["max_conn"]; ok {
 		opts.MaxConn = gofastly.ToPointer(v.(int))
@@ -395,11 +421,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["between_bytes_timeout"]; ok {
 		opts.BetweenBytesTimeout = gofastly.ToPointer(v.(int))
-	}
-	if v, ok := modified["auto_loadbalance"]; ok {
-		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-		}
 	}
 	if v, ok := modified["weight"]; ok {
 		opts.Weight = gofastly.ToPointer(v.(int))
@@ -419,12 +440,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["shield"]; ok {
 		opts.Shield = gofastly.ToPointer(v.(string))
-	}
-	if v, ok := modified["use_ssl"]; ok {
-		opts.UseSSL = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
-	if v, ok := modified["ssl_check_cert"]; ok {
-		opts.SSLCheckCert = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["ssl_ca_cert"]; ok {
 		opts.SSLCACert = gofastly.ToPointer(v.(string))
@@ -449,6 +464,13 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
 		opts.SSLCiphers = gofastly.ToPointer(v.(string))
+	}
+	// Always set optional boolean values to preserve state
+	opts.UseSSL = gofastly.ToPointer(gofastly.Compatibool(resource["use_ssl"].(bool)))
+	opts.SSLCheckCert = gofastly.ToPointer(gofastly.Compatibool(resource["ssl_check_cert"].(bool)))
+	opts.PreferIPv6 = gofastly.ToPointer(gofastly.Compatibool(resource["prefer_ipv6"].(bool)))
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
 	}
 
 	return opts
@@ -484,6 +506,12 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 		}
 		if resource.MaxConn != nil {
 			data["max_conn"] = *resource.MaxConn
+		}
+		if resource.MaxLifetime != nil {
+			data["max_lifetime"] = *resource.MaxLifetime
+		}
+		if resource.MaxUse != nil {
+			data["max_use"] = *resource.MaxUse
 		}
 		if resource.MaxTLSVersion != nil {
 			data["max_tls_version"] = *resource.MaxTLSVersion

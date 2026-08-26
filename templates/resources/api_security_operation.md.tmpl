@@ -1,0 +1,29 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_api_security_operation"
+sidebar_current: "docs-fastly-resource-api-security-operation"
+description: |-
+  Manages an API Security operation for a Fastly service.
+---
+
+# fastly_api_security_operation
+
+Manages an API Security operation for a Fastly service. Operations represent API endpoints (method + domain + path) and can optionally be associated with operation tags.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/api_security_operation_basic_usage.tf" }}
+
+With tags:
+
+{{ tffile "examples/resources/api_security_operation_with_tags.tf" }}
+
+## Import
+
+API Security operations can be imported using a composite ID of the form `<service_id>/<operation_id>`, e.g.
+
+{{ codefile "sh" "examples/resources/components/api_security_operation_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

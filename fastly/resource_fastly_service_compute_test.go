@@ -10,12 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	updatedName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	comment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,7 +28,7 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceComputeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceComputeConfig(name, domainName1),
+				Config: testAccServiceComputeConfig(name, "Managed by Terraform", domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
@@ -38,6 +40,16 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.name", "healthCheckTest"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.host", "example.com"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.path", "/health"),
+				),
+			},
+			{
+				// Versionless service metadata is updated even when activation is disabled.
+				Config: testAccServiceComputeConfig(updatedName, comment, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", updatedName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "comment", comment),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "cloned_version", "1"),
 				),
 			},
 			{
@@ -88,8 +100,9 @@ resource "fastly_service_compute" "foo" {
 
   {{ range .Backends }}
   backend {
-    address = "{{ . }}"
-    name    = "tf-test backend {{ . }}"
+    address     = "{{ . }}"
+    name        = "tf-test backend {{ . }}"
+    healthcheck = "{{ $.HealthcheckName }}"
   }
   {{ end }}
 
@@ -211,7 +224,7 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccServiceComputeConfig(name, domain string) string {
+func testAccServiceComputeConfig(name, comment, domain string) string {
 	return fmt.Sprintf(`
 data "fastly_package_hash" "example" {
   filename = "./test_fixtures/package/valid.tar.gz"
@@ -219,14 +232,16 @@ data "fastly_package_hash" "example" {
 
 resource "fastly_service_compute" "foo" {
   name = "%s"
+  comment = "%s"
 
   domain {
     name    = "%s"
     comment = "tf-testing-domain"
   }
   backend {
-    address = "aws.amazon.com"
-    name    = "amazon docs"
+    address     = "test.mytest.com"
+    name        = "my testing site"
+    healthcheck = "healthCheckTest"
   }
   healthcheck {
     name = "healthCheckTest"
@@ -239,5 +254,5 @@ resource "fastly_service_compute" "foo" {
   }
   force_destroy = true
   activate = false
-}`, name, domain)
+}`, name, comment, domain)
 }

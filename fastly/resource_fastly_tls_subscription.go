@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 func resourceFastlyTLSSubscription() *schema.Resource {
@@ -184,7 +184,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 		CommonName:           commonName,
 	})
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error creating TLS subscription for domains [%s]: %s", strings.Join(domainStrings, ", "), err)
 	}
 
 	d.SetId(subscription.ID)
@@ -213,7 +213,7 @@ func resourceFastlyTLSSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 			},
 		}
 	} else if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error fetching TLS subscription (%s): %s", d.Id(), err)
 	}
 
 	var domains []string
@@ -353,31 +353,40 @@ func resourceFastlyTLSSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// NOTE: Terraform might trigger an update even when it doesn't make sense.
 	//
-	// This is because along with the "domains" and "common_name" attributes,
-	// there are other attributes a customer might modify, such as
-	// "force_update" (which has no effect on the upstream data model).
+	// This is because along with the "domains", "common_name", and
+	// "configuration_id" attributes, there are other attributes a customer
+	// might modify, such as "force_update" (which has no effect on the
+	// upstream data model).
 	//
 	// So we don't want to call the API if the customer neither passes a change to
-	// domains or to the common_name attributes as that would be a waste of
+	// domains, common_name, or configuration_id as that would be a waste of
 	// network resources.
 	//
 	// This is why we wrap the API request in the following conditional check.
-	// We then send BOTH "domains" and "common_name" in the API request.
-	// This is because they both will have a pre-existing value.
-	if d.HasChanges("domains", "common_name") {
+	// We then send "domains", "common_name" AND "configuration_id" in the API
+	// request. This is because they will all have a pre-existing value.
+	if d.HasChanges("domains", "common_name", "configuration_id") {
 		// NOTE: The API doesn't care if the domains are in a different order.
 		// I mention this because if it did, then we'd only want to set the Domains
 		// field on the input struct if there was a change because we otherwise
 		// can't guarantee the order.
 		var domains []*gofastly.TLSDomain
+		var domainStrings []string
 		for _, domain := range d.Get("domains").(*schema.Set).List() {
 			domains = append(domains, &gofastly.TLSDomain{ID: domain.(string)})
+			domainStrings = append(domainStrings, domain.(string))
+		}
+
+		// Validate that common_name is in domains
+		commonNameStr := d.Get("common_name").(string)
+		if commonNameStr != "" && !contains(domainStrings, commonNameStr) {
+			return diag.Errorf("domain specified as common_name (%s) must also be in domains (%v)", commonNameStr, domainStrings)
 		}
 
 		updates := &gofastly.UpdateTLSSubscriptionInput{
 			ID:         d.Id(),
 			Force:      d.Get("force_update").(bool),
-			CommonName: &gofastly.TLSDomain{ID: d.Get("common_name").(string)},
+			CommonName: &gofastly.TLSDomain{ID: commonNameStr},
 			Domains:    domains,
 
 			// IMPORTANT: We should always pass the configuration_id to the API.
@@ -387,7 +396,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 		conn := meta.(*APIClient).conn
 		_, err := conn.UpdateTLSSubscription(ctx, updates)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.Errorf("error updating TLS subscription (%s) for domains [%s]: %s", d.Id(), strings.Join(domainStrings, ", "), err)
 		}
 	}
 
@@ -402,7 +411,21 @@ func resourceFastlyTLSSubscriptionDelete(ctx context.Context, d *schema.Resource
 		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.Errorf("error deleting TLS subscription (%s) for domains [%s]: %s", d.Id(), strings.Join(tlsSubscriptionDomains(d), ", "), err)
+	}
+	return nil
+}
+
+// tlsSubscriptionDomains returns the subscription's domains from state, for
+// inclusion in error messages so users running many subscriptions can tell
+// which resource an API error belongs to.
+func tlsSubscriptionDomains(d *schema.ResourceData) []string {
+	var domains []string
+	for _, domain := range d.Get("domains").(*schema.Set).List() {
+		domains = append(domains, domain.(string))
+	}
+	return domains
 }
 
 func resourceFastlyTLSSubscriptionIsStateImmutable(_ context.Context, d *schema.ResourceDiff, _ any) bool {

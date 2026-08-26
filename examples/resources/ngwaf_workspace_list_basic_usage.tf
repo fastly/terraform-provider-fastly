@@ -24,3 +24,27 @@ resource "fastly_ngwaf_workspace_list" "example" {
     "10.0.0.1"
   ]
 }
+
+# Example usage with a rule. 
+resource "fastly_ngwaf_workspace_rule" "example" {
+  workspace_id = fastly_ngwaf_workspace.example.id
+  type = "request"
+  description = "Example usage of a workspace list rule"
+  enabled = true
+  request_logging = "sampled"
+  
+  condition {
+    field = "ip"
+    operator = "not_in_list"
+    # *********************************************
+    # Workspace lists must be prefixed with 'site.'
+    # *********************************************
+    value = "site.${fastly_ngwaf_workspace_list.example.name}"
+  }
+
+  action {
+    type = "block"
+  }
+
+  depends_on = [ fastly_ngwaf_workspace_list.example ]
+}

@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
-func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingHTTPS_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -31,6 +31,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		MessageType:       gofastly.ToPointer("blank"),
 		Method:            gofastly.ToPointer("PUT"),
 		Name:              gofastly.ToPointer("httpslogger"),
+		Period:            gofastly.ToPointer(10),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -52,9 +53,32 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		MessageType:       gofastly.ToPointer("blank"),
 		Method:            gofastly.ToPointer("POST"),
 		Name:              gofastly.ToPointer("httpslogger"),
+		Period:            gofastly.ToPointer(30),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/1"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
+	}
+
+	log1WithCondition := gofastly.HTTPS{
+		CompressionCodec:  gofastly.ToPointer("snappy"),
+		ContentType:       gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("POST"),
+		Name:              gofastly.ToPointer("httpslogger"),
+		Period:            gofastly.ToPointer(30),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		TLSHostname:       gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer("https://example.com/logs/1"),
@@ -72,6 +96,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		MessageType:       gofastly.ToPointer("blank"),
 		Method:            gofastly.ToPointer("POST"),
 		Name:              gofastly.ToPointer("httpslogger2"),
+		Period:            gofastly.ToPointer(60),
 		RequestMaxBytes:   gofastly.ToPointer(1000),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -92,6 +117,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		MessageType:       gofastly.ToPointer("blank"),
 		Method:            gofastly.ToPointer("PUT"),
 		Name:              gofastly.ToPointer("httpslogger3"),
+		Period:            gofastly.ToPointer(120),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -108,6 +134,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
+			// Step 1: Basic config
 			{
 				Config: testAccServiceVCLHTTPSConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -118,6 +145,17 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				),
 			},
 
+			// Step 2: Update with response_condition
+			{
+				Config: testAccServiceVCLHTTPSWithCondition(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1WithCondition}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "1"),
+				),
+			},
+
+			// Step 3: Update with two loggers
 			{
 				Config: testAccServiceVCLHTTPSConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -128,6 +166,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				),
 			},
 
+			// Step 4: Compression not specified
 			{
 				Config: testAccServiceVCLHTTPSConfigCompressionNotSpecified(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -141,7 +180,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingHTTPS_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -156,6 +195,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 		MessageType:       gofastly.ToPointer("blank"),
 		Method:            gofastly.ToPointer("PUT"),
 		Name:              gofastly.ToPointer("httpslogger"),
+		Period:            gofastly.ToPointer(300),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ServiceVersion:    gofastly.ToPointer(1),
@@ -281,6 +321,7 @@ resource "fastly_service_vcl" "foo" {
 		name               = "httpslogger3"
 		method             = "PUT"
 		format             = %q
+		period             = 120
 		url                = "https://example.com/logs/3"
 	}
 
@@ -306,6 +347,7 @@ resource "fastly_service_vcl" "foo" {
 	logging_https {
 		name               = "httpslogger"
 		method             = "PUT"
+		period			   = 10
 		url                = "https://example.com/logs/1"
 		compression_codec = "zstd"
     processing_region = "us"
@@ -339,7 +381,8 @@ resource "fastly_service_compute" "foo" {
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
 		compression_codec = "zstd"
-    processing_region = "us"
+		period  		  = 300
+        processing_region = "us"
 	}
 
   package {
@@ -370,6 +413,7 @@ resource "fastly_service_vcl" "foo" {
 		name               = "httpslogger"
 		format             = %q
 		method             = "POST"
+		period			   = 30
 		url                = "https://example.com/logs/1"
 		compression_codec = "snappy"
 	}
@@ -379,11 +423,51 @@ resource "fastly_service_vcl" "foo" {
 		format             = %q
 		method             = "POST"
 		url                = "https://example.com/logs/2"
+		period			   = 60
 		request_max_bytes  = 1000
 		gzip_level				 = 5
 	}
 	force_destroy = true
 }`, name, domain, format, format)
+}
+
+func testAccServiceVCLHTTPSWithCondition(name, domain string) string {
+	format := LoggingFormatUpdate
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-https-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_https {
+    name               = "httpslogger"
+    format             = %q
+    method             = "POST"
+    period             = 30
+    url                = "https://example.com/logs/1"
+    compression_codec  = "snappy"
+    response_condition = "response_condition_test"
+    processing_region  = "none"
+  }
+
+  condition {
+    name      = "response_condition_test"
+    type      = "RESPONSE"
+    statement = "resp.status == 418"
+    priority  = 10
+  }
+
+  force_destroy = true
+}
+`, name, domain, format)
 }
 
 func TestResourceFastlyFlattenHTTPS(t *testing.T) {
@@ -405,6 +489,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					GzipLevel:         gofastly.ToPointer(0),
 					Format:            gofastly.ToPointer(LoggingHTTPSDefaultFormat),
 					FormatVersion:     gofastly.ToPointer(2),
+					Period:            gofastly.ToPointer(5),
 					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
@@ -420,6 +505,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					"format":              LoggingHTTPSDefaultFormat,
 					"format_version":      2,
 					"gzip_level":          0,
+					"period":              5,
 					"processing_region":   "eu",
 				},
 			},

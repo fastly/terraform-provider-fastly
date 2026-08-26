@@ -52,18 +52,30 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingDigitalOcean(vclAttributes),
 		NewServiceLoggingCloudfiles(vclAttributes),
 		NewServiceLoggingKinesis(vclAttributes),
-		NewServiceRateLimiter(vclAttributes),
+		NewServiceDictionary(vclAttributes),
 		NewServiceResponseObject(vclAttributes),
+		NewServiceRateLimiter(vclAttributes),
 		NewServiceRequestSetting(vclAttributes),
 		NewServiceVCL(vclAttributes),
 		NewServiceSnippet(vclAttributes),
 		NewServiceDynamicSnippet(vclAttributes),
 		NewServiceCacheSetting(vclAttributes),
 		NewServiceACL(),
-		NewServiceDictionary(vclAttributes),
 	},
 }
 
 func resourceServiceVCL() *schema.Resource {
-	return resourceService(vclService)
+	resource := resourceService(vclService)
+
+	// Add schema version and state upgraders for bot_management breaking change (v9.0.0)
+	resource.SchemaVersion = 1
+	resource.StateUpgraders = []schema.StateUpgrader{
+		{
+			Version: 0,
+			Type:    serviceVCLStateUpgraderV0().CoreConfigSchema().ImpliedType(),
+			Upgrade: upgradeServiceVCLStateV0toV1,
+		},
+	}
+
+	return resource
 }

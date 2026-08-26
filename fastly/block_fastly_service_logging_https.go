@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // HTTPSLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -92,6 +92,13 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
+		"period": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      5,
+			Description:  "How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.",
+			ValidateFunc: validation.IntAtLeast(1),
+		},
 		"processing_region": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -143,10 +150,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingHTTPSDefaultFormat,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingHTTPSDefaultFormat,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -247,7 +255,14 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition specificlly is added for HTTPS since we only recently
+		// added support for compression on this endpoint in v8.1.0. As such,
+		// users that upgraded were having a default value of `-1` being set up 'gzip_level'
+		// during an Update operation, but had no suppression of sending this `-1` value to
+		// to the API, resulting an errors as `-1` is not a valid value for `gzip_level`.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["header_name"]; ok {
 		opts.HeaderName = gofastly.ToPointer(v.(string))
@@ -261,8 +276,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	if v, ok := modified["json_format"]; ok {
 		opts.JSONFormat = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["period"]; ok {
+		opts.Period = gofastly.ToPointer(v.(int))
+	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
 		opts.TLSCACert = gofastly.ToPointer(v.(string))
@@ -285,6 +303,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	if v, ok := modified["processing_region"]; ok {
 		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["response_condition"]; ok {
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
 	_, err := conn.UpdateHTTPS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
@@ -292,6 +313,18 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 		return err
 	}
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For HTTPS logging, period is not VCL-only, so we preserve it.
+func (h *HTTPSLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is NOT deleted for HTTPS logging as it's available for both VCL and Compute
+	}
 }
 
 // Delete deletes the resource.
@@ -356,6 +389,9 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]
 		}
 		if resource.RequestMaxEntries != nil {
 			data["request_max_entries"] = *resource.RequestMaxEntries
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
 		}
 		if resource.RequestMaxBytes != nil {
 			data["request_max_bytes"] = *resource.RequestMaxBytes
@@ -434,6 +470,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 		MessageType:       gofastly.ToPointer(resource["message_type"].(string)),
 		Method:            gofastly.ToPointer(resource["method"].(string)),
 		Name:              gofastly.ToPointer(resource["name"].(string)),
+		Period:            gofastly.ToPointer(resource["period"].(int)),
 		RequestMaxBytes:   gofastly.ToPointer(resource["request_max_bytes"].(int)),
 		RequestMaxEntries: gofastly.ToPointer(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,

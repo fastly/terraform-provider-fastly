@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // DomainServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -34,7 +34,7 @@ func (h *DomainServiceAttributeHandler) Key() string {
 func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
-		Required:    true,
+		Optional:    true,
 		Description: "A set of Domain names to serve as entry points for your Service",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{

@@ -10,12 +10,12 @@ resource "fastly_ngwaf_workspace" "example" {
 }
 
 resource "fastly_ngwaf_workspace_rule" "example" {
-  workspace_id     = fastly_ngwaf_workspace.example.id
-  type             = "request"
-  description      = "example"
-  enabled          = true
-  request_logging  = "sampled"
-  group_operator   = "all"
+  workspace_id    = fastly_ngwaf_workspace.example.id
+  type            = "request"
+  description     = "Block requests from specific IP to login path"
+  enabled         = true
+  request_logging = "sampled"
+  group_operator  = "all"
 
   action {
     type = "block"
@@ -24,56 +24,12 @@ resource "fastly_ngwaf_workspace_rule" "example" {
   condition {
     field    = "ip"
     operator = "equals"
-    value    = "127.0.0.1"
+    value    = "192.0.2.1"
   }
 
   condition {
     field    = "path"
     operator = "equals"
     value    = "/login"
-  }
-
-  condition {
-    field    = "agent_name"
-    operator = "equals"
-    value    = "host-001"
-  }
-
-  group_condition {
-    group_operator = "all"
-
-    condition {
-      field    = "country"
-      operator = "equals"
-      value    = "AD"
-    }
-
-    condition {
-      field    = "method"
-      operator = "equals"
-      value    = "POST"
-    }
-  }
-
-  group_condition {
-    group_operator = "any"
-
-    condition {
-      field    = "protocol_version"
-      operator = "equals"
-      value    = "HTTP/1.0"
-    }
-
-    condition {
-      field    = "method"
-      operator = "equals"
-      value    = "HEAD"
-    }
-
-    condition {
-      field    = "domain"
-      operator = "equals"
-      value    = "example.com"
-    }
   }
 }

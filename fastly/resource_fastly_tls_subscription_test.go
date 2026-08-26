@@ -3,15 +3,19 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v17/fastly"
 )
 
 func init() {
@@ -60,6 +64,18 @@ func TestAccResourceFastlyTLSSubscription_Config(t *testing.T) {
 				),
 			},
 			{
+				// Regression test: changing ONLY configuration_id (no change
+				// to domains/common_name) must actually reach the API. If it
+				// doesn't, this step's automatic post-apply plan check fails
+				// because the diff reappears on the next refresh.
+				Config: testAccResourceFastlyTLSSubscriptionConfigWithConfigurationID(name, domain1, domain2, commonName2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_id"),
+					// subscription is "updated" so the subscription ID should remain the same
+					resource.TestCheckResourceAttrPtr(resourceName, "id", &subscriptionID),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -67,7 +83,7 @@ func TestAccResourceFastlyTLSSubscription_Config(t *testing.T) {
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfigInvalidCommonName(),
-				ExpectError: regexp.MustCompile(`Please add \S+ to an active service to begin TLS enablement`),
+				ExpectError: regexp.MustCompile(`domain specified as common_name .* must also be in domains`),
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2Bad, commonName2),
@@ -105,6 +121,43 @@ resource "fastly_tls_subscription" "subject" {
 `, name, domain1, domain2, commonName)
 }
 
+// testAccResourceFastlyTLSSubscriptionConfigWithConfigurationID pins
+// configuration_id to a specific, non-default TLS configuration, so that a
+// subsequent step can change configuration_id alone and verify the change is
+// actually applied (see TestAccResourceFastlyTLSSubscription_Config).
+func testAccResourceFastlyTLSSubscriptionConfigWithConfigurationID(name, domain1, domain2, commonName string) string {
+	return fmt.Sprintf(`
+data "fastly_tls_configuration" "secondary" {
+  name = "HTTP/3 & TLS v1.3 (s.sni)"
+}
+
+resource "fastly_service_vcl" "test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+  }
+
+  force_destroy = true
+}
+resource "fastly_tls_subscription" "subject" {
+  domains = [for domain in fastly_service_vcl.test.domain : domain.name]
+  common_name = "%s"
+  certificate_authority = "lets-encrypt"
+  configuration_id = data.fastly_tls_configuration.secondary.id
+}
+`, name, domain1, domain2, commonName)
+}
+
 func testAccResourceFastlyTLSSubscriptionExists(resourceName string, id *string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		r, ok := state.RootModule().Resources[resourceName]
@@ -132,6 +185,93 @@ resource "fastly_tls_subscription" "subject" {
   certificate_authority = "lets-encrypt"
 }
 `, domain, commonName)
+}
+
+func TestResourceFastlyTLSSubscriptionErrorsIncludeSubscriptionContext(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"errors":[{"title":"Bad Request","detail":"something went wrong"}]}`))
+	}))
+	defer server.Close()
+
+	conn, err := fastly.NewClientForEndpoint("test-key", server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &APIClient{conn: conn}
+
+	for name, testcase := range map[string]struct {
+		invoke func(*schema.ResourceData) diag.Diagnostics
+		wants  []string
+	}{
+		"create": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				return resourceFastlyTLSSubscriptionCreate(context.Background(), d, client)
+			},
+			wants: []string{
+				"error creating TLS subscription for domains",
+				"henry.example.com",
+				"www.henry.example.com",
+				"something went wrong",
+			},
+		},
+		"read": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				return resourceFastlyTLSSubscriptionRead(context.Background(), d, client)
+			},
+			wants: []string{
+				"error fetching TLS subscription (h23m07b03)",
+				"something went wrong",
+			},
+		},
+		"update": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				// Simulate a config change so the update path calls the API.
+				if err := d.Set("common_name", "henry.example.com"); err != nil {
+					t.Fatal(err)
+				}
+				return resourceFastlyTLSSubscriptionUpdate(context.Background(), d, client)
+			},
+			wants: []string{
+				"error updating TLS subscription (h23m07b03)",
+				"henry.example.com",
+				"www.henry.example.com",
+				"something went wrong",
+			},
+		},
+		"delete": {
+			invoke: func(d *schema.ResourceData) diag.Diagnostics {
+				return resourceFastlyTLSSubscriptionDelete(context.Background(), d, client)
+			},
+			wants: []string{
+				"error deleting TLS subscription (h23m07b03)",
+				"henry.example.com",
+				"www.henry.example.com",
+				"something went wrong",
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, resourceFastlyTLSSubscription().Schema, map[string]any{
+				"domains":               []any{"henry.example.com", "www.henry.example.com"},
+				"certificate_authority": "lets-encrypt",
+			})
+			d.SetId("h23m07b03")
+
+			diags := testcase.invoke(d)
+			if !diags.HasError() {
+				t.Fatalf("expected %s to return an error diagnostic", name)
+			}
+
+			summary := diags[0].Summary
+			for _, want := range testcase.wants {
+				if !strings.Contains(summary, want) {
+					t.Errorf("expected %s error %q to contain %q", name, summary, want)
+				}
+			}
+		})
+	}
 }
 
 func testSweepTLSSubscription(region string) error {

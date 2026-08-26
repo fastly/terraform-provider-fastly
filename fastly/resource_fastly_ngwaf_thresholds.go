@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
-	wsr "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/thresholds"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	wsr "github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/workspaces/thresholds"
 )
 
 func resourceFastlyNGWAFThresholds() *schema.Resource {
@@ -28,7 +28,7 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 				Type:             schema.TypeString,
 				Description:      "Action to take when threshold is exceeded.",
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"block", "log"}, false)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"block", "block_immediately", "log"}, false)),
 			},
 			"dont_notify": {
 				Type:        schema.TypeBool,

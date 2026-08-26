@@ -25,7 +25,7 @@ related discussions (e.g. Slack threads, tickets, documents).
 
 ### User Impact
 
-* [ ] What is the user impact of this change?
+<!-- What is the user impact of this change? -->
 
 ### Are there any considerations that need to be addressed for release?
 

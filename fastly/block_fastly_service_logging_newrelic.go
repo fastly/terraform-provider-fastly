@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // NewRelicServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -62,10 +62,11 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingNewRelicDefaultFormat,
-			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingNewRelicDefaultFormat,
+			Description:      "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -157,7 +158,7 @@ func (h *NewRelicServiceAttributeHandler) Update(ctx context.Context, d *schema.
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
 		opts.Region = gofastly.ToPointer(v.(string))

@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -11,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/rules"
 )
 
 func TestFlattenNGWAFRuleResponse(t *testing.T) {
@@ -49,9 +51,15 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Type: "group",
 				Fields: rules.GroupCondition{
 					GroupOperator: "all",
-					Conditions: []rules.Condition{
-						{Type: "single", Field: "country", Operator: "equals", Value: "AD"},
-						{Type: "single", Field: "method", Operator: "equals", Value: "POST"},
+					Conditions: []rules.GroupConditionItem{
+						{
+							Type:   "single",
+							Fields: rules.Condition{Type: "single", Field: "country", Operator: "equals", Value: "AD"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.Condition{Type: "single", Field: "method", Operator: "equals", Value: "POST"},
+						},
 					},
 				},
 			},
@@ -59,10 +67,43 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 				Type: "group",
 				Fields: rules.GroupCondition{
 					GroupOperator: "any",
-					Conditions: []rules.Condition{
-						{Type: "single", Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
-						{Type: "single", Field: "method", Operator: "equals", Value: "HEAD"},
-						{Type: "single", Field: "domain", Operator: "equals", Value: "example.com"},
+					Conditions: []rules.GroupConditionItem{
+						{
+							Type:   "single",
+							Fields: rules.Condition{Type: "single", Field: "protocol_version", Operator: "equals", Value: "HTTP/1.0"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.Condition{Type: "single", Field: "method", Operator: "equals", Value: "HEAD"},
+						},
+						{
+							Type:   "single",
+							Fields: rules.Condition{Type: "single", Field: "domain", Operator: "equals", Value: "example.com"},
+						},
+					},
+				},
+			},
+			{
+				Type: "group",
+				Fields: rules.GroupCondition{
+					GroupOperator: "all",
+					Conditions: []rules.GroupConditionItem{
+						{
+							Type:   "single",
+							Fields: rules.Condition{Type: "single", Field: "ip", Operator: "in_list", Value: "site.mylist"},
+						},
+						{
+							Type: "multival",
+							Fields: rules.MultivalCondition{
+								Field:         "request_header",
+								Operator:      "exists",
+								GroupOperator: "all",
+								Conditions: []rules.ConditionMul{
+									{Type: "single", Field: "name", Operator: "equals", Value: "X-myHeader"},
+									{Type: "single", Field: "value_string", Operator: "equals", Value: "sampleString"},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -101,7 +142,63 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 
 	// Group conditions
 	groups := d.Get("group_condition").([]any)
-	require.Len(t, groups, 2)
+	require.Len(t, groups, 3)
+
+	// Check first group's nested single conditions
+	group1 := groups[0].(map[string]any)
+	require.Equal(t, "all", group1["group_operator"])
+	group1Conds := group1["condition"].([]any)
+	require.Len(t, group1Conds, 2, "First group should have 2 nested single conditions")
+	require.Equal(t, "country", group1Conds[0].(map[string]any)["field"])
+	require.Equal(t, "equals", group1Conds[0].(map[string]any)["operator"])
+	require.Equal(t, "AD", group1Conds[0].(map[string]any)["value"])
+	require.Equal(t, "method", group1Conds[1].(map[string]any)["field"])
+	require.Equal(t, "equals", group1Conds[1].(map[string]any)["operator"])
+	require.Equal(t, "POST", group1Conds[1].(map[string]any)["value"])
+
+	// Check second group's nested single conditions
+	group2 := groups[1].(map[string]any)
+	require.Equal(t, "any", group2["group_operator"])
+	group2Conds := group2["condition"].([]any)
+	require.Len(t, group2Conds, 3, "Second group should have 3 nested single conditions")
+	require.Equal(t, "protocol_version", group2Conds[0].(map[string]any)["field"])
+	require.Equal(t, "equals", group2Conds[0].(map[string]any)["operator"])
+	require.Equal(t, "HTTP/1.0", group2Conds[0].(map[string]any)["value"])
+	require.Equal(t, "method", group2Conds[1].(map[string]any)["field"])
+	require.Equal(t, "equals", group2Conds[1].(map[string]any)["operator"])
+	require.Equal(t, "HEAD", group2Conds[1].(map[string]any)["value"])
+	require.Equal(t, "domain", group2Conds[2].(map[string]any)["field"])
+	require.Equal(t, "equals", group2Conds[2].(map[string]any)["operator"])
+	require.Equal(t, "example.com", group2Conds[2].(map[string]any)["value"])
+
+	// Check the group with nested multival condition (third group)
+	groupWithMultival := groups[2].(map[string]any)
+	require.Equal(t, "all", groupWithMultival["group_operator"])
+
+	// Check single conditions within the group
+	groupConds := groupWithMultival["condition"].([]any)
+	require.Len(t, groupConds, 1)
+	require.Equal(t, "ip", groupConds[0].(map[string]any)["field"])
+	require.Equal(t, "in_list", groupConds[0].(map[string]any)["operator"])
+	require.Equal(t, "site.mylist", groupConds[0].(map[string]any)["value"])
+
+	// Check nested multival condition within the group
+	groupMultivals := groupWithMultival["multival_condition"].([]any)
+	require.Len(t, groupMultivals, 1)
+
+	nestedMultival := groupMultivals[0].(map[string]any)
+	require.Equal(t, "request_header", nestedMultival["field"])
+	require.Equal(t, "exists", nestedMultival["operator"])
+	require.Equal(t, "all", nestedMultival["group_operator"])
+
+	nestedMultivalConds := nestedMultival["condition"].([]any)
+	require.Len(t, nestedMultivalConds, 2)
+	require.Equal(t, "name", nestedMultivalConds[0].(map[string]any)["field"])
+	require.Equal(t, "equals", nestedMultivalConds[0].(map[string]any)["operator"])
+	require.Equal(t, "X-myHeader", nestedMultivalConds[0].(map[string]any)["value"])
+	require.Equal(t, "value_string", nestedMultivalConds[1].(map[string]any)["field"])
+	require.Equal(t, "equals", nestedMultivalConds[1].(map[string]any)["operator"])
+	require.Equal(t, "sampleString", nestedMultivalConds[1].(map[string]any)["value"])
 
 	// Multival conditions
 	multivals := d.Get("multival_condition").([]any)
@@ -120,6 +217,45 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 	require.Equal(t, "name", multivalConds[1].(map[string]any)["field"])
 	require.Equal(t, "equals", multivalConds[1].(map[string]any)["operator"])
 	require.Equal(t, "X-API-Key", multivalConds[1].(map[string]any)["value"])
+}
+
+// TestExpandNGWAFRuleUpdateActions_Deception guards against a regression where
+// deception_type (and allow_interactive) were dropped from update requests,
+// causing the API to reject a second apply with "invalid deception type: ".
+func TestExpandNGWAFRuleUpdateActions_Deception(t *testing.T) {
+	raw := []any{
+		map[string]any{
+			"type":              "deception",
+			"deception_type":    "invalid_login_response",
+			"allow_interactive": false,
+			"signal":            "",
+			"redirect_url":      "",
+			"response_code":     0,
+		},
+	}
+
+	actions := expandNGWAFRuleUpdateActions(raw, "workspace")
+	require.Len(t, actions, 1)
+	require.NotNil(t, actions[0].DeceptionType)
+	require.Equal(t, "invalid_login_response", *actions[0].DeceptionType)
+}
+
+func TestExpandNGWAFRuleUpdateActions_AllowInteractive(t *testing.T) {
+	raw := []any{
+		map[string]any{
+			"type":              "browser_challenge",
+			"allow_interactive": true,
+			"deception_type":    "",
+			"signal":            "",
+			"redirect_url":      "",
+			"response_code":     0,
+		},
+	}
+
+	actions := expandNGWAFRuleUpdateActions(raw, "workspace")
+	require.Len(t, actions, 1)
+	require.NotNil(t, actions[0].AllowInteractive)
+	require.True(t, *actions[0].AllowInteractive)
 }
 
 func TestAccFastlyNGWAFWorkspaceRule_basic(t *testing.T) {
@@ -251,6 +387,77 @@ func TestAccFastlyNGWAFWorkspaceRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.field", "name"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.operator", "contains"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.value", "X-API-Key-Updated"),
+				),
+			},
+			{
+				ResourceName:      "fastly_ngwaf_workspace_rule.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rule := s.RootModule().Resources["fastly_ngwaf_workspace_rule.example"]
+					workspace := s.RootModule().Resources["fastly_ngwaf_workspace.example"]
+					return fmt.Sprintf("%s/%s", workspace.Primary.ID, rule.Primary.ID), nil
+				},
+			},
+		},
+	})
+}
+
+func TestAccFastlyNGWAFWorkspaceRule_nestedMultival(t *testing.T) {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	ruleDescription := fmt.Sprintf("Terraform Rule Nested Multival %s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil, // Rule is deleted implicitly when workspace is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNGWAFWorkspaceRuleConfigNestedMultival(workspaceName, ruleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "description", ruleDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "type", "request"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "request_logging", "sampled"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_operator", "any"),
+
+					// Action
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "action.0.type", "add_signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "action.0.signal", "site.test2"),
+
+					// Group condition with nested single and multival conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.group_operator", "all"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.field", "ip"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.operator", "in_list"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.condition.0.value", "site.mylist"),
+
+					// Nested multival condition within group
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.group_operator", "all"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.0.value", "X-myHeader"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.field", "value_string"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.0.multival_condition.0.condition.1.value", "sampleString"),
+
+					// Second group condition with different nested multival
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.group_operator", "all"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.field", "ip"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.operator", "in_list"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.0.value", "site.mylist"),
+
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.group_operator", "any"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.0.value", "X-myHeaderelse"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.1.field", "value_string"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.1.operator", "in_list"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.multival_condition.0.condition.1.value", "corp.test"),
 				),
 			},
 			{
@@ -465,6 +672,91 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       field    = "name"
       operator = "contains"
       value    = "X-API-Key-Updated"
+    }
+  }
+}
+`, workspaceName, ruleName)
+}
+
+func testAccNGWAFWorkspaceRuleConfigNestedMultival(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {}
+}
+
+resource "fastly_ngwaf_workspace_rule" "example" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  type             = "request"
+  description      = "%s"
+  enabled          = true
+  request_logging  = "sampled"
+  group_operator   = "any"
+
+  action {
+    type   = "add_signal"
+    signal = "site.test2"
+  }
+
+  group_condition {
+    group_operator = "all"
+
+    condition {
+      field    = "ip"
+      operator = "in_list"
+      value    = "site.mylist"
+    }
+
+    multival_condition {
+      field          = "request_header"
+      operator       = "exists"
+      group_operator = "all"
+
+      condition {
+        field    = "name"
+        operator = "equals"
+        value    = "X-myHeader"
+      }
+
+      condition {
+        field    = "value_string"
+        operator = "equals"
+        value    = "sampleString"
+      }
+    }
+  }
+
+  group_condition {
+    group_operator = "all"
+
+    condition {
+      field    = "ip"
+      operator = "in_list"
+      value    = "site.mylist"
+    }
+
+    multival_condition {
+      field          = "request_header"
+      operator       = "exists"
+      group_operator = "any"
+
+      condition {
+        field    = "name"
+        operator = "equals"
+        value    = "X-myHeaderelse"
+      }
+
+      condition {
+        field    = "value_string"
+        operator = "in_list"
+        value    = "corp.test"
+      }
     }
   }
 }
@@ -864,4 +1156,109 @@ resource "fastly_ngwaf_workspace_rule" "templated_signal" {
   }
 }
 `, workspaceName, ruleName)
+}
+
+func TestAccFastlyNGWAFWorkspaceRule_emptyGroupCondition(t *testing.T) {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	ruleDescription := fmt.Sprintf("Terraform Rule %s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNGWAFWorkspaceRuleConfigEmptyGroupCondition(workspaceName, ruleDescription),
+				ExpectError: regexp.MustCompile(`group_condition\[0\]: must define at least one 'condition' or 'multival_condition' block`),
+			},
+		},
+	})
+}
+
+func testAccNGWAFWorkspaceRuleConfigEmptyGroupCondition(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+  resource "fastly_ngwaf_workspace" "example" {
+    name                            = "%s"
+    description                     = "Test NGWAF Workspace"
+    mode                            = "block"
+    ip_anonymization                = "hashed"
+    client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+    default_blocking_response_code = 429
+
+    attack_signal_thresholds {}
+  }
+
+  resource "fastly_ngwaf_workspace_rule" "example" {
+    workspace_id     = fastly_ngwaf_workspace.example.id
+    type             = "request"
+    description      = "%s"
+    enabled          = true
+    request_logging  = "sampled"
+    group_operator   = "all"
+
+    action {
+      type = "block"
+    }
+
+    group_condition {
+      group_operator = "all"
+      # Empty - no condition or multival_condition!
+    }
+  }
+  `, workspaceName, ruleName)
+}
+
+func TestAccFastlyNGWAFWorkspaceRule_noConditions(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFastlyNGWAFRuleConfigNoConditions(),
+				ExpectError: regexp.MustCompile("rule must define at least one 'condition', 'group_condition', or 'multival_condition'"),
+			},
+		},
+	})
+}
+
+func testAccFastlyNGWAFRuleConfigNoConditions() string {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	return fmt.Sprintf(`
+  resource "fastly_ngwaf_workspace" "test" {
+    name                            = "%s"
+    description                     = "Test NGWAF Workspace"
+    mode                            = "block"
+    ip_anonymization                = "hashed"
+    client_ip_headers               = ["X-Forwarded-For"]
+    default_blocking_response_code = 429
+
+    attack_signal_thresholds {}
+  }
+
+  resource "fastly_ngwaf_workspace_rule" "test" {
+    workspace_id = fastly_ngwaf_workspace.test.id
+    action {
+      type = "block"
+    }
+    description = "Empty rule with no conditions"
+    enabled = true
+    type = "request"
+  }
+  `, workspaceName)
+}
+
+func TestValidateRuleHasConditions_TemplatedSignalSkipsCheck(t *testing.T) {
+	r := resourceFastlyNGWAFRuleBase()
+	r.Schema["type"] = resourceFastlyNGWAFWorkspaceRule().Schema["type"]
+
+	cfg := terraform.NewResourceConfigRaw(map[string]any{
+		"description": "",
+		"enabled":     true,
+		"type":        "templated_signal",
+		"action":      []any{map[string]any{"type": "block"}},
+	})
+
+	_, err := r.Diff(context.Background(), nil, cfg, nil)
+	require.NoError(t, err, "templated_signal rule without conditions should pass validation")
 }

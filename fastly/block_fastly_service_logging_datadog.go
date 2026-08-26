@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // DatadogServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -50,7 +50,7 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "US",
-			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined",
+			Description: "The region that log data will be sent to. Defaults to `US` if undefined",
 		},
 		"token": {
 			Type:        schema.TypeString,
@@ -62,10 +62,11 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingDatadogDefaultFormat,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingDatadogDefaultFormat,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -158,7 +159,7 @@ func (h *DatadogServiceAttributeHandler) Update(ctx context.Context, d *schema.R
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
 		opts.ProcessingRegion = gofastly.ToPointer(v.(string))

@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
-func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingPaperTrail_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -81,7 +81,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingPaperTrail_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

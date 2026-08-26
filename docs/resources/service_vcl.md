@@ -40,6 +40,10 @@ set to `true`. While this combination will not cause any harm to the
 service, there is no logical reason to both stage and activate every
 set of applied changes.
 
+The `activate` and `stage` attributes only control version lifecycle operations.
+Versionless service attributes, including `name` and `comment`, are updated
+immediately during `terraform apply` regardless of these settings.
+
 ## Example Usage
 
 Basic usage:
@@ -217,21 +221,21 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- `domain` (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
-- `name` (String) The unique name for the Service to create
+- `name` (String) The unique name for the Service to create. This versionless attribute is updated regardless of the `activate` and `stage` settings
 
 ### Optional
 
 - `acl` (Block Set) (see [below for nested schema](#nestedblock--acl))
-- `activate` (Boolean) Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Controls whether newly created service versions are activated. When versioned configuration changes, the apply step creates a draft version but does not activate it if this is set to `false`. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `cache_setting` (Block Set) (see [below for nested schema](#nestedblock--cache_setting))
-- `comment` (String) Description field for the service. Default `Managed by Terraform`
+- `comment` (String) Description field for the service. This versionless attribute is updated regardless of the `activate` and `stage` settings. Default `Managed by Terraform`
 - `condition` (Block Set) (see [below for nested schema](#nestedblock--condition))
 - `default_host` (String) The default hostname
 - `default_ttl` (Number) The default Time-to-live (TTL) for requests
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - `director` (Block Set) (see [below for nested schema](#nestedblock--director))
+- `domain` (Block Set) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `dynamicsnippet` (Block Set) (see [below for nested schema](#nestedblock--dynamicsnippet))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - `gzip` (Block Set) (see [below for nested schema](#nestedblock--gzip))
@@ -273,7 +277,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `response_object` (Block Set) (see [below for nested schema](#nestedblock--response_object))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
 - `snippet` (Block Set) (see [below for nested schema](#nestedblock--snippet))
-- `stage` (Boolean) Conditionally enables new service versions to be staged. If set to `true`, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
+- `stage` (Boolean) Conditionally enables new service versions to be staged. If set to `true`, versioned changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `false`
 - `stale_if_error` (Boolean) Enables serving a stale object if there is an error
 - `stale_if_error_ttl` (Number) The default time-to-live (TTL) for serving the stale object for the version
 - `vcl` (Block Set) (see [below for nested schema](#nestedblock--vcl))
@@ -287,18 +291,6 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `id` (String) The ID of this resource.
 - `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
 - `staged_version` (Number) The currently staged version of your Fastly Service
-
-<a id="nestedblock--domain"></a>
-### Nested Schema for `domain`
-
-Required:
-
-- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
-
-Optional:
-
-- `comment` (String) An optional comment about the Domain.
-
 
 <a id="nestedblock--acl"></a>
 ### Nested Schema for `acl`
@@ -334,7 +326,9 @@ Optional:
 - `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
 - `keepalive_time` (Number) How long in seconds to keep a persistent connection to the backend between requests.
 - `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
+- `max_lifetime` (Number) Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited - which is the default behavior.
 - `max_tls_version` (String) Maximum allowed TLS version on SSL connections to this backend.
+- `max_use` (Number) Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited - which is the default behavior.
 - `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.
 - `override_host` (String) The hostname to override the Host header
 - `port` (Number) The port number on which the Backend responds. Default `80`
@@ -414,6 +408,18 @@ Optional:
 - `retries` (Number) How many backends to search if it fails. Default `5`
 - `shield` (String) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response
 - `type` (Number) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`
+
+
+<a id="nestedblock--domain"></a>
+### Nested Schema for `domain`
+
+Required:
+
+- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `comment` (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--dynamicsnippet"></a>
@@ -527,7 +533,7 @@ Required:
 
 Optional:
 
-- `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
+- `account_name` (String) The google account name used to obtain temporary credentials (default none). Not required if 'email' and 'secret_key' are provided. You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
 - `format` (String) The logging format desired.
 - `placement` (String) Where in the generated VCL the logging call should be placed.
@@ -605,7 +611,7 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
-- `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
+- `region` (String) The region that log data will be sent to. Defaults to `US` if undefined
 - `response_condition` (String) The name of the condition to apply.
 
 
@@ -814,6 +820,7 @@ Optional:
 - `json_format` (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
+- `period` (Number) How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.
 - `placement` (String) Where in the generated VCL the logging call should be placed
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `request_max_bytes` (Number) The maximum number of bytes sent in one request
@@ -1164,7 +1171,8 @@ Optional:
 
 Optional:
 
-- `bot_management` (Boolean) Enable Bot Management support
+- `api_discovery` (Boolean) Enable API Discovery support
+- `bot_management` (Block List, Max: 1) Enable Bot Management support (see [below for nested schema](#nestedblock--product_enablement--bot_management))
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `ddos_protection` (Block List, Max: 1) DDoS Protection product (see [below for nested schema](#nestedblock--product_enablement--ddos_protection))
 - `domain_inspector` (Boolean) Enable Domain Inspector support
@@ -1174,6 +1182,15 @@ Optional:
 - `ngwaf` (Block List, Max: 1) Next-Gen WAF product (see [below for nested schema](#nestedblock--product_enablement--ngwaf))
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support
+
+<a id="nestedblock--product_enablement--bot_management"></a>
+### Nested Schema for `product_enablement.bot_management`
+
+Required:
+
+- `contentguard` (String) ContentGuard status. Can be either `off`, or `on`.
+- `enabled` (Boolean) Enable Bot Management support
+
 
 <a id="nestedblock--product_enablement--ddos_protection"></a>
 ### Nested Schema for `product_enablement.ddos_protection`

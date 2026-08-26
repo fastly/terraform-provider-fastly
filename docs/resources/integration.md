@@ -3,18 +3,61 @@ layout: "fastly"
 page_title: "Fastly: integration"
 sidebar_current: "docs-fastly-resource-integration"
 description: |-
-  Provides a Fastly integration. Fastly will use these integrations to send you notifications and alerts related to the Fastly product. Mailing list, Microsoft Teams, New Relic, PagerDuty, Slack, and webhook are supported as integrations.
+  Provides a Fastly integration. Fastly will use these integrations to send you notifications and alerts related to the Fastly product. Datadog, Jira, Jira Service Management, Mailing list, Microsoft Teams, New Relic, OpsGenie, PagerDuty, Slack, Splunk On-Call, and webhook are supported as integrations.
 ---
 
 # fastly_integration
 
-Provides a Fastly integration. Fastly will use these integrations to send you notifications and alerts related to the Fastly product. Mailing list, Microsoft Teams, New Relic, PagerDuty, Slack, and webhook are supported as integrations.
+Provides a Fastly integration. Fastly will use these integrations to send you notifications and alerts related to the Fastly product. Datadog, Jira, Jira Service Management, Mailing list, Microsoft Teams, New Relic, OpsGenie, PagerDuty, Slack, Splunk On-Call, and webhook are supported as integrations.
 
 ~> **IMPORTANT:** The mailing list integrations require confirmation. To send a confirmation email and verify integration status, after applying changes using Terraform, please visit https://manage.fastly.com/observability/alerts/integrations
 
 ## Example Usage
 
 ```terraform
+resource "fastly_integration" "datadog_example" {
+  name = "my Datadog integration"
+  description = "example Datadog integration"
+  type = "datadog"
+
+  config = {
+    # Datadog API key
+    apikey = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    # Datadog site (optional, defaults to the US site)
+    site = "datadoghq.eu"
+  }
+}
+
+resource "fastly_integration" "jiraissue_example" {
+  name = "my Jira integration"
+  description = "example Jira integration"
+  type = "jiraissue"
+
+  config = {
+    # base URL of the Jira instance
+    baseurl = "https://my-org.atlassian.net"
+    # Jira username (email address) used to authenticate
+    username = "user@my-org.com"
+    # Jira API token
+    token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    # key of the Jira project where issues will be created
+    projectkey = "ABC"
+    # type of Jira issue to create
+    issuetype = "Bug"
+  }
+}
+
+resource "fastly_integration" "jsm_example" {
+  name = "my Jira Service Management integration"
+  description = "example Jira Service Management integration"
+  type = "jsm"
+
+  config = {
+    # Jira Service Management API key
+    apikey = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+
 resource "fastly_integration" "mailinglist_example" {
   name = "my mailing list integration"
   description = "example mailing list integration"
@@ -49,6 +92,17 @@ resource "fastly_integration" "newrelic_example" {
   }
 }
 
+resource "fastly_integration" "opsgenie_example" {
+  name = "my OpsGenie integration"
+  description = "example OpsGenie integration"
+  type = "opsgenie"
+
+  config = {
+    # OpsGenie API key
+    apikey = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+
 resource "fastly_integration" "pagerduty_example" {
   name = "my PagerDuty integration"
   description = "example PagerDuty integration"
@@ -71,6 +125,17 @@ resource "fastly_integration" "slack_example" {
   }
 }
 
+resource "fastly_integration" "splunkoncall_example" {
+  name = "my Splunk On-Call integration"
+  description = "example Splunk On-Call integration"
+  type = "splunkoncall"
+
+  config = {
+    # Splunk On-Call webhook URL
+    url = "https://alert.victorops.com/integrations/generic/20131114/alert/XXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+
 resource "fastly_integration" "webhook_example" {
   name = "my webhook integration"
   description = "example webhook integration"
@@ -90,7 +155,7 @@ resource "fastly_integration" "webhook_example" {
 
 - `config` (Map of String, Sensitive) Configuration specific to the integration `type` (see documentation examples).
 - `name` (String) User submitted name of the integration.
-- `type` (String) Type of the integration. One of: `mailinglist`, `microsoftteams`, `newrelic`, `pagerduty`, `slack`, `webhook`.
+- `type` (String) Type of the integration. One of: `datadog`, `jiraissue`, `jsm`, `mailinglist`, `microsoftteams`, `newrelic`, `opsgenie`, `pagerduty`, `slack`, `splunkoncall`, `webhook`.
 
 ### Optional
 

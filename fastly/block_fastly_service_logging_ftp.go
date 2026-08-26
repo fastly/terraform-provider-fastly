@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // FTPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -118,10 +118,11 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
-			Default:     LoggingFTPDefaultFormat,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			Default:          LoggingFTPDefaultFormat,
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -231,10 +232,14 @@ func (h *FTPServiceAttributeHandler) Update(ctx context.Context, d *schema.Resou
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition prevents users on old provider versions from having
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
@@ -276,6 +281,18 @@ func (h *FTPServiceAttributeHandler) Delete(ctx context.Context, d *schema.Resou
 	}
 
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For FTP logging, period is not VCL-only, so we preserve it.
+func (h *FTPServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for FTP logging as it's available for both VCL and Compute
+	}
 }
 
 // flattenFTP models data into format suitable for saving to Terraform state.

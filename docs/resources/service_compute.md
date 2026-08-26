@@ -38,6 +38,10 @@ set to `true`. While this combination will not cause any harm to the
 service, there is no logical reason to both stage and activate every
 set of applied changes.
 
+The `activate` and `stage` attributes only control version lifecycle operations.
+Versionless service attributes, including `name` and `comment`, are updated
+immediately during `terraform apply` regardless of these settings.
+
 ## Example Usage
 
 Basic usage:
@@ -98,15 +102,15 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- `domain` (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
-- `name` (String) The unique name for the Service to create
+- `name` (String) The unique name for the Service to create. This versionless attribute is updated regardless of the `activate` and `stage` settings
 
 ### Optional
 
-- `activate` (Boolean) Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Controls whether newly created service versions are activated. When versioned configuration changes, the apply step creates a draft version but does not activate it if this is set to `false`. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
-- `comment` (String) Description field for the service. Default `Managed by Terraform`
+- `comment` (String) Description field for the service. This versionless attribute is updated regardless of the `activate` and `stage` settings. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
+- `domain` (Block Set) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - `healthcheck` (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - `image_optimizer_default_settings` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
@@ -142,7 +146,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
 - `resource_link` (Block Set) A resource link represents a link between a shared resource (such as an KV Store or Config Store) and a service version. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
-- `stage` (Boolean) Conditionally enables new service versions to be staged. If set to `true`, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
+- `stage` (Boolean) Conditionally enables new service versions to be staged. If set to `true`, versioned changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Versionless service attributes, such as `name` and `comment`, are updated regardless of this setting. Default `false`
 - `version_comment` (String) Description field for the version
 
 ### Read-Only
@@ -153,18 +157,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `id` (String) The ID of this resource.
 - `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
 - `staged_version` (Number) The currently staged version of your Fastly Service
-
-<a id="nestedblock--domain"></a>
-### Nested Schema for `domain`
-
-Required:
-
-- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
-
-Optional:
-
-- `comment` (String) An optional comment about the Domain.
-
 
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`
@@ -183,7 +175,9 @@ Optional:
 - `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
 - `keepalive_time` (Number) How long in seconds to keep a persistent connection to the backend between requests.
 - `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
+- `max_lifetime` (Number) Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited - which is the default behavior.
 - `max_tls_version` (String) Maximum allowed TLS version on SSL connections to this backend.
+- `max_use` (Number) Maximum number of requests allowed over a single, pooled HTTP keepalive connection to this backend; 0 is treated as unlimited - which is the default behavior.
 - `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.
 - `override_host` (String) The hostname to override the Host header
 - `port` (Number) The port number on which the Backend responds. Default `80`
@@ -216,6 +210,18 @@ Optional:
 Read-Only:
 
 - `dictionary_id` (String) The ID of the dictionary
+
+
+<a id="nestedblock--domain"></a>
+### Nested Schema for `domain`
+
+Required:
+
+- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `comment` (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--healthcheck"></a>
@@ -275,7 +281,7 @@ Required:
 
 Optional:
 
-- `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
+- `account_name` (String) The google account name used to obtain temporary credentials (default none). Not required if 'email' and 'secret_key' are provided. You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `secret_key` (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
@@ -339,7 +345,7 @@ Required:
 Optional:
 
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
-- `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
+- `region` (String) The region that log data will be sent to. Defaults to `US` if undefined
 
 
 <a id="nestedblock--logging_digitalocean"></a>
@@ -513,6 +519,7 @@ Optional:
 - `json_format` (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
+- `period` (Number) How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `request_max_bytes` (Number) The maximum number of bytes sent in one request
 - `request_max_entries` (Number) The maximum number of logs sent in one request
@@ -815,12 +822,24 @@ Optional:
 
 Optional:
 
+- `api_discovery` (Boolean) Enable API Discovery support
+- `bot_management` (Block List, Max: 1) Enable Bot Management support (see [below for nested schema](#nestedblock--product_enablement--bot_management))
 - `ddos_protection` (Block List, Max: 1) DDoS Protection product (see [below for nested schema](#nestedblock--product_enablement--ddos_protection))
+- `domain_inspector` (Boolean) Enable Domain Inspector support
 - `fanout` (Boolean) Enable Fanout support
 - `log_explorer_insights` (Boolean) Enable Log Explorer & Insights
 - `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
 - `ngwaf` (Block List, Max: 1) Next-Gen WAF product (see [below for nested schema](#nestedblock--product_enablement--ngwaf))
 - `websockets` (Boolean) Enable WebSockets support
+
+<a id="nestedblock--product_enablement--bot_management"></a>
+### Nested Schema for `product_enablement.bot_management`
+
+Required:
+
+- `contentguard` (String) ContentGuard status. Can be either `off`, or `on`.
+- `enabled` (Boolean) Enable Bot Management support
+
 
 <a id="nestedblock--product_enablement--ddos_protection"></a>
 ### Nested Schema for `product_enablement.ddos_protection`
@@ -838,10 +857,6 @@ Required:
 
 - `enabled` (Boolean) Enable Next-Gen WAF support
 - `workspace_id` (String) The workspace to link
-
-Optional:
-
-- `traffic_ramp` (Number) The percentage of traffic to inspect
 
 
 

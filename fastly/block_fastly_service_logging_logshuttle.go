@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // LogshuttleServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -62,10 +62,11 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingLogshuttleDefaultFormat,
-			Description: "Apache style log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingLogshuttleDefaultFormat,
+			Description:      "Apache style log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -151,7 +152,7 @@ func (h *LogshuttleServiceAttributeHandler) Update(ctx context.Context, d *schem
 		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))

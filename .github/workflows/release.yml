@@ -8,34 +8,48 @@
 # private key in the `GPG_PRIVATE_KEY` secret and passphrase in the `PASSPHRASE`
 # secret. We use the fastly fork to ensure safety GPG handling.
 name: release
-permissions:
-  contents: write
+
 on:
   push:
     tags:
       - 'v*'
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Unshallow
         run: git fetch --prune --unshallow
+
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.24.x
+          go-version: 1.26.x
+          cache: false
+
       - name: Import GPG key
         id: import_gpg
-        uses: fastly/ghaction-import-gpg@v2.1.0
+        uses: fastly/ghaction-import-gpg@53deb67fe3b05af114ad9488a4da7b782455d588 # v2.1.0
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
+
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
-          version: v2.6.1
+          version: "~> 2"
           args: release --clean
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

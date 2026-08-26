@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // BigQueryLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -38,7 +38,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
-			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+			Description: "The google account name used to obtain temporary credentials (default none). Not required if 'email' and 'secret_key' are provided. You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
 		},
 		"dataset": {
 			Type:        schema.TypeString,
@@ -92,10 +92,11 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The logging format desired.",
-			Default:     LoggingBigQueryDefaultFormat,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The logging format desired.",
+			Default:          LoggingBigQueryDefaultFormat,
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -224,7 +225,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(ctx context.Context, d *
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["account_name"]; ok {
 		opts.AccountName = gofastly.ToPointer(v.(string))

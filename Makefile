@@ -21,15 +21,17 @@ TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false -XR001=false
 # XAT001: missing resource.TestCase ErrorCheck.
 TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false
 
-GOHOSTOS ?= $(shell $(GO_BIN) env GOHOSTOS || echo unknown)
-GOHOSTARCH ?= $(shell $(GO_BIN) env GOHOSTARCH || echo unknown)
-
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the
 # tests is network bandwidth and Fastly API rate limits. Therefore using the
 # system default value of GOMAXPROCS, which is usually determined by the number
 # of processors available, doesn't make the most sense.
 TEST_PARALLELISM?=4
+
+# Tooling versions
+GOLANGCI_LINT_VERSION = v2.4.0
+BIN_DIR := $(CURDIR)/bin
+GOLANGCI_LINT := $(BIN_DIR)/golangci-lint
 
 default: build
 
@@ -66,20 +68,10 @@ clean_test:
 		TEST_PARALLELISM=8 make testacc; \
 	fi
 
-fmt:
-	golangci-lint fmt
+fmt: install-linter check-linter-version
+	@echo "==> Running golangci-lint --fix"
+	@$(GOLANGCI_LINT) run --fix
 
-goreleaser-bin:
-	$(GO_BIN) get -modfile=tools.mod -tool github.com/goreleaser/goreleaser/v2@v2.11.2
-
-# You can pass flags to goreleaser via GORELEASER_ARGS
-# --skip=validate will skip the checks
-# --clean will save you deleting the dist dir
-# --single-target will be quicker and only build for your os & architecture
-# e.g.
-# make goreleaser GORELEASER_ARGS="--skip=validate --clean"
-goreleaser: goreleaser-bin
-	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" $(GO_BIN) tool -modfile=tools.mod goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -91,17 +83,17 @@ test-compile:
 
 generate-docs:
 	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)
-	$(GO_BIN) tool -modfile=tools.mod tfplugindocs generate
+	$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs generate
 	rm examples/index-fastly-provider.tf
 
 validate-docs:
-	$(GO_BIN) tool -modfile=tools.mod tfplugindocs validate
+	$(GO_BIN) tool -modfile=tools/go.mod tfplugindocs validate
 
 tfproviderlintx:
-	$(GO_BIN) tool -modfile=tools.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools/go.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
 tfproviderlint:
-	$(GO_BIN) tool -modfile=tools.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools/go.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
 
 sweep:
 	@if [ "$(SILENCE)" != "true" ]; then \
@@ -115,7 +107,27 @@ clean:
 validate-interface:
 	@./tests/interface/script.sh
 
-lint:
-	golangci-lint run --verbose
+lint: install-linter check-linter-version
+	@echo "==> Running golangci-lint"
+	@$(GOLANGCI_LINT) run --verbose
 
-.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin lint sweep test test-compile testacc validate-docs validate-interface vet
+install-linter: ## Installs golangci-lint via go install
+	@echo "==> Installing golangci-lint $(GOLANGCI_LINT_VERSION)"
+	@mkdir -p $(BIN_DIR)
+	@GOBIN=$(BIN_DIR) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+
+check-linter-version: ## Verifies installed golangci-lint version matches expected
+	@echo "==> Checking golangci-lint version"
+	@EXPECTED="$(GOLANGCI_LINT_VERSION)"; \
+	EXPECTED=$${EXPECTED#v}; \
+	INSTALLED=$$($(GOLANGCI_LINT) version --short); \
+	if [ "$$INSTALLED" != "$$EXPECTED" ]; then \
+		echo "Expected golangci-lint v$$EXPECTED but found $$INSTALLED"; \
+		exit 1; \
+	fi
+
+clean-bin: ## Removes locally installed binaries
+	@echo "==> Cleaning ./bin directory"
+	@rm -rf $(BIN_DIR)
+
+.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs lint install-linter check-linter-version clean-bin sweep test test-compile testacc validate-docs validate-interface vet

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 func TestResourceFastlyFlattenHeaders(t *testing.T) {
@@ -234,6 +234,43 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceVCL_headers_PreserveIgnoreIfSetDuringPriorityUpdate(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := acctest.RandomWithPrefix("tf-header")
+	domainName := fmt.Sprintf("test.%s.com", acctest.RandString(10))
+	headerName := "header-priority-update"
+	ignoreIfSet := true
+
+	initialPriority := 100
+	updatedPriority := 150
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLHeaderWithIgnoreIfSetAndPriority(serviceName, domainName, headerName, ignoreIfSet, initialPriority),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.ignore_if_set", fmt.Sprintf("%t", ignoreIfSet)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.priority", fmt.Sprintf("%d", initialPriority)),
+				),
+			},
+			{
+				Config: testAccServiceVCLHeaderWithIgnoreIfSetAndPriority(serviceName, domainName, headerName, ignoreIfSet, updatedPriority),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.ignore_if_set", fmt.Sprintf("%t", ignoreIfSet)),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "header.0.priority", fmt.Sprintf("%d", updatedPriority)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetail, headers []*gofastly.Header) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -373,4 +410,32 @@ resource "fastly_service_vcl" "foo" {
 
   force_destroy = true
 }`, name, domain)
+}
+
+func testAccServiceVCLHeaderWithIgnoreIfSetAndPriority(serviceName, domainName, headerName string, ignoreIfSet bool, priority int) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    address = "example.com"
+    name    = "example-backend"
+  }
+
+  header {
+    destination    = "http.x-example-header"
+    type           = "cache"
+    action         = "delete"
+    name           = "%s"
+    ignore_if_set  = %t
+    priority       = %d
+  }
+
+  force_destroy = true
+}
+`, serviceName, domainName, headerName, ignoreIfSet, priority)
 }

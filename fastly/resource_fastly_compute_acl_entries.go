@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
-	"github.com/fastly/go-fastly/v12/fastly/computeacls"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/fastly/go-fastly/v17/fastly/computeacls"
 )
 
 func resourceFastlyComputeACLEntries() *schema.Resource {
@@ -35,6 +36,18 @@ func resourceFastlyComputeACLEntries() *schema.Resource {
 				Elem:        schema.TypeString,
 				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					return !d.HasChange("compute_acl_id") && !d.Get("manage_entries").(bool)
+				},
+				ValidateFunc: func(val interface{}, _ string) (warns []string, errs []error) {
+					entriesMap, ok := val.(map[string]interface{})
+					if !ok {
+						return nil, []error{fmt.Errorf("expected map[string]string for entries")}
+					}
+					for prefix := range entriesMap {
+						if _, _, err := net.ParseCIDR(prefix); err != nil {
+							errs = append(errs, fmt.Errorf("invalid prefix %q: expected valid CIDR notation", prefix))
+						}
+					}
+					return
 				},
 			},
 			"manage_entries": {

@@ -15,8 +15,8 @@ var computeService = &BaseServiceDefinition{
 	Type: computeAttributes.serviceType,
 	Attributes: []ServiceAttributeDefinition{
 		NewServiceDomain(computeAttributes),
-		NewServiceBackend(computeAttributes),
 		NewServiceHealthCheck(computeAttributes),
+		NewServiceBackend(computeAttributes),
 		NewServiceProductEnablement(computeAttributes),
 		NewServiceImageOptimizerDefaultSettings(vclAttributes),
 		NewServiceLoggingS3(computeAttributes),

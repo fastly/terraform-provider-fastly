@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
-	"github.com/fastly/go-fastly/v12/fastly/objectstorage/accesskeys"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	"github.com/fastly/go-fastly/v17/fastly/objectstorage/accesskeys"
 )
 
 func resourceObjectStorageAccessKey() *schema.Resource {
@@ -131,7 +131,7 @@ func resourceObjectStorageAccessKeyRead(ctx context.Context, resourceData *schem
 		}
 	}
 	if readAK.AccessKeyID != "" {
-		err = resourceData.Set("access_key_id", readAK.SecretKey)
+		err = resourceData.Set("access_key_id", readAK.AccessKeyID)
 		if err != nil {
 			return diag.FromErr(err)
 		}

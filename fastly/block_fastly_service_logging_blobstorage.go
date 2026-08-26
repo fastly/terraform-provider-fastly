@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
 // BlobStorageLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -118,10 +118,11 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     LoggingBlobStorageDefaultFormat,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          LoggingBlobStorageDefaultFormat,
+			Description:      "Apache-style string or VCL variables to use for log formatting.",
+			ValidateDiagFunc: validateLoggingFormat(),
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
@@ -260,7 +261,11 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(ctx context.Context, 
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition prevents users on old provider versions from having
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.ToPointer(v.(string))
@@ -275,7 +280,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(ctx context.Context, 
 		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.ToPointer(v.(string))
+		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.ToPointer(v.(string))
@@ -313,6 +318,18 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(ctx context.Context, 
 		return err
 	}
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For Blob Storage logging, period is not VCL-only, so we preserve it.
+func (h *BlobStorageLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for Blob Storage logging as it's available for both VCL and Compute
+	}
 }
 
 // flattenBlobStorages models data into format suitable for saving to Terraform state.

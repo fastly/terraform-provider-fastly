@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
 
-func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
+func TestAccFastlyServiceLoggingSplunk_vcl_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -109,7 +109,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
+func TestAccFastlyServiceLoggingSplunk_compute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

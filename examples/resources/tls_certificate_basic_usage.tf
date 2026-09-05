@@ -27,7 +27,8 @@ resource "fastly_tls_private_key" "key" {
 }
 
 resource "fastly_tls_certificate" "example" {
-  name = "tf-demo"
-  certificate_body = tls_self_signed_cert.cert.cert_pem
-  depends_on = [fastly_tls_private_key.key] // The private key has to be present before the certificate can be uploaded
+  allow_untrusted_root = true
+  name                 = "tf-demo"
+  certificate_body     = tls_self_signed_cert.cert.cert_pem
+  depends_on           = [fastly_tls_private_key.key] // The private key has to be present before the certificate can be uploaded
 }

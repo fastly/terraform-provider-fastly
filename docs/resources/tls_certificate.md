@@ -47,9 +47,10 @@ resource "fastly_tls_private_key" "key" {
 }
 
 resource "fastly_tls_certificate" "example" {
-  name = "tf-demo"
-  certificate_body = tls_self_signed_cert.cert.cert_pem
-  depends_on = [fastly_tls_private_key.key] // The private key has to be present before the certificate can be uploaded
+  allow_untrusted_root = true
+  name                 = "tf-demo"
+  certificate_body     = tls_self_signed_cert.cert.cert_pem
+  depends_on           = [fastly_tls_private_key.key] // The private key has to be present before the certificate can be uploaded
 }
 ```
 
@@ -82,6 +83,7 @@ $ terraform import fastly_tls_certificate.demo xxxxxxxxxxx
 
 ### Optional
 
+- `allow_untrusted_root` (Boolean) Allow a certificate whose chain is not signed by a trusted root. Useful for development purposes with self-signed CAs. Defaults to false. Write-only on create and update.
 - `name` (String) Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.
 
 ### Read-Only

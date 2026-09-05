@@ -2,17 +2,112 @@ package fastly
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 
 	"github.com/fastly/go-fastly/v17/fastly"
 )
+
+func TestResourceFastlyTLSCertificateAllowUntrustedRoot(t *testing.T) {
+	testCases := []struct {
+		name   string
+		method string
+		allow  bool
+	}{
+		{name: "create with untrusted root", method: http.MethodPost, allow: true},
+		{name: "create with trusted root", method: http.MethodPost, allow: false},
+		{name: "update with untrusted root", method: http.MethodPatch, allow: true},
+		{name: "update with trusted root", method: http.MethodPatch, allow: false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			type observedAttribute struct {
+				present bool
+				value   bool
+			}
+
+			observed := make(chan observedAttribute, 1)
+			certificateResponse := `{
+				"data": {
+					"type": "tls_certificate",
+					"id": "test-certificate",
+					"attributes": {
+						"created_at": "2026-09-05T00:00:00Z",
+						"issued_to": "example.com",
+						"issuer": "Test CA",
+						"name": "test-certificate",
+						"replace": false,
+						"serial_number": "1",
+						"signature_algorithm": "SHA256-RSA",
+						"updated_at": "2026-09-05T00:00:00Z"
+					},
+					"relationships": {
+						"tls_domains": {"data": []}
+					}
+				}
+			}`
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/vnd.api+json")
+				if r.Method == testCase.method {
+					var payload struct {
+						Data struct {
+							Attributes map[string]any `json:"attributes"`
+						} `json:"data"`
+					}
+					if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+						return
+					}
+
+					value, present := payload.Data.Attributes["allow_untrusted_root"]
+					boolValue, _ := value.(bool)
+					observed <- observedAttribute{present: present, value: boolValue}
+				}
+				_, _ = w.Write([]byte(certificateResponse))
+			}))
+			defer server.Close()
+
+			conn, err := fastly.NewClientForEndpoint("test-key", server.URL)
+			require.NoError(t, err)
+			client := &APIClient{conn: conn}
+			d := schema.TestResourceDataRaw(t, resourceFastlyTLSCertificate().Schema, map[string]any{
+				"allow_untrusted_root": testCase.allow,
+				"certificate_body":     "test-certificate-body",
+				"name":                 "test-certificate",
+			})
+
+			var diagnostics diag.Diagnostics
+			if testCase.method == http.MethodPost {
+				diagnostics = resourceFastlyTLSCertificateCreate(context.Background(), d, client)
+			} else {
+				d.SetId("test-certificate")
+				diagnostics = resourceFastlyTLSCertificateUpdate(context.Background(), d, client)
+			}
+			require.False(t, diagnostics.HasError(), diagnostics)
+
+			attribute := <-observed
+			if testCase.allow {
+				require.True(t, attribute.present)
+				require.True(t, attribute.value)
+			} else {
+				require.False(t, attribute.present)
+			}
+		})
+	}
+}
 
 func init() {
 	resource.AddTestSweepers("fastly_tls_certificate", &resource.Sweeper{
@@ -41,6 +136,7 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 			{
 				Config: testAccTLSCertificateWithName(name, key, name, cert),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "allow_untrusted_root", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
@@ -55,13 +151,16 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 			},
 			{
 				Config: testAccTLSCertificateWithName(name, key, updatedName, cert2),
-				Check:  resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "allow_untrusted_root", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"certificate_body"},
+				ImportStateVerifyIgnore: []string{"allow_untrusted_root", "certificate_body"},
 			},
 		},
 	})
@@ -85,6 +184,7 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 			{
 				Config: testAccTLSCertificateWithoutName(name, key, cert),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "allow_untrusted_root", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", domain),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
@@ -130,6 +230,7 @@ EOF
 }
 
 resource "fastly_tls_certificate" "test" {
+  allow_untrusted_root = true
   name = "%[3]s"
   certificate_body = <<EOF
 %[4]s
@@ -149,6 +250,7 @@ EOF
 }
 
 resource "fastly_tls_certificate" "test" {
+  allow_untrusted_root = true
   certificate_body = <<EOF
 %[3]s
 EOF

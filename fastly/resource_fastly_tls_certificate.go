@@ -23,6 +23,12 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"allow_untrusted_root": {
+				Type:        schema.TypeBool,
+				Description: "Allow a certificate whose chain is not signed by a trusted root. Useful for development purposes with self-signed CAs. Defaults to false. Write-only on create and update.",
+				Optional:    true,
+				Default:     false,
+			},
 			"certificate_body": {
 				Type:             schema.TypeString,
 				Description:      "PEM-formatted certificate, optionally including any intermediary certificates.",
@@ -84,7 +90,8 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateCustomTLSCertificateInput{
-		CertBlob: d.Get("certificate_body").(string),
+		AllowUntrustedRoot: d.Get("allow_untrusted_root").(bool),
+		CertBlob:           d.Get("certificate_body").(string),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -162,8 +169,9 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.UpdateCustomTLSCertificateInput{
-		ID:       d.Id(),
-		CertBlob: d.Get("certificate_body").(string),
+		AllowUntrustedRoot: d.Get("allow_untrusted_root").(bool),
+		ID:                 d.Id(),
+		CertBlob:           d.Get("certificate_body").(string),
 	}
 
 	if v, ok := d.GetOk("name"); ok {

@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(tls/certificate): add `allow_untrusted_root` support to `fastly_tls_certificate` ([#1424](https://github.com/fastly/terraform-provider-fastly/pull/1424))
+
 ### BUG FIXES:
 
 ### Dependencies

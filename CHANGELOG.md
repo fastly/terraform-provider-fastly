@@ -4,7 +4,7 @@
 
 ### ENHANCEMENTS:
 
-- feat(ai_runtime_control): add resources and data sources for managing AI Runtime Control ([#1424](https://github.com/fastly/terraform-provider-fastly/pull/1424))
+- feat(ai_runtime_control): add resources and data sources for managing AI Runtime Control ([#1428](https://github.com/fastly/terraform-provider-fastly/pull/1428))
 
 ### BUG FIXES:
 

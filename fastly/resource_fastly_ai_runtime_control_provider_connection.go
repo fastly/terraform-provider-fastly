@@ -69,7 +69,9 @@ func resourceFastlyAIRuntimeControlProviderConnectionCreate(ctx context.Context,
 		Models:  expandAIRuntimeControlModels(d.Get("models").(*schema.Set)),
 	}
 
-	log.Printf("[DEBUG] CREATE: AI Runtime Control provider connection input: %#v", i)
+	// api_key is deliberately omitted from this log line; do not log the full
+	// input struct, as it contains the provider's secret key.
+	log.Printf("[DEBUG] CREATE: AI Runtime Control provider connection input: name=%q base_url=%q models=%v", gofastly.ToValue(i.Name), gofastly.ToValue(i.BaseURL), i.Models)
 
 	pc, err := providerconnection.Create(ctx, conn, &i)
 	if err != nil {
@@ -137,7 +139,9 @@ func resourceFastlyAIRuntimeControlProviderConnectionUpdate(ctx context.Context,
 		i.Models = expandAIRuntimeControlModels(d.Get("models").(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] UPDATE: AI Runtime Control provider connection input: %#v", i)
+	// api_key is deliberately omitted from this log line; do not log the full
+	// input struct, as it contains the provider's secret key.
+	log.Printf("[DEBUG] UPDATE: AI Runtime Control provider connection input: id=%q base_url=%q models=%v", gofastly.ToValue(i.ID), gofastly.ToValue(i.BaseURL), i.Models)
 
 	if _, err := providerconnection.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
 		return diag.FromErr(err)

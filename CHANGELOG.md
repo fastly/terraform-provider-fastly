@@ -13,7 +13,7 @@
 - build(deps): `github.com/stretchr/testify` from 1.12.0 to 1.12.1 ([#1421](https://github.com/fastly/terraform-provider-fastly/pull/1421))
 - build(deps): `google.golang.org/grpc` from 1.82.1 to 1.83.1 ([#1422](https://github.com/fastly/terraform-provider-fastly/pull/1422))
 - build(deps): `google.golang.org/grpc` from 1.83.1 to 1.83.2 ([#1425](https://github.com/fastly/terraform-provider-fastly/pull/1425))
-- build(deps): `github.com/fastly/go-fastly/v17` from 17.3.0 to 17.3.1 ([#](https://github.com/fastly/terraform-provider-fastly/pull/))
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.3.0 to 17.3.1 ([#1427](https://github.com/fastly/terraform-provider-fastly/pull/1427))
 
 ## 9.6.0 (August 11, 2026)
 

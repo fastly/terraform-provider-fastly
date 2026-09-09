@@ -1,0 +1,24 @@
+---
+page_title: "Fastly: fastly_ai_runtime_control_usage_metrics"
+sidebar_current: "docs-fastly-datasource-fastly_ai_runtime_control_usage_metrics"
+description: |-
+  Get AI usage metrics from Fastly AI Runtime Control.
+---
+
+# fastly_ai_runtime_control_usage_metrics
+
+Use this data source to get usage metrics for AI model consumption from [Fastly
+AI Runtime Control][1], including requests, sessions, and input and output
+tokens.
+
+~> **Note:** These are time-series telemetry records, which are re-read on every
+plan and change as new AI traffic is served. Consuming them from Terraform will
+produce results that differ between runs.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/ai_runtime_control_usage_metrics.tf"}}
+
+[1]: https://www.fastly.com/documentation/reference/api/ai-runtime-control/
+
+{{ .SchemaMarkdown | trimspace }}

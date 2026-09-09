@@ -1,0 +1,30 @@
+---
+page_title: "Fastly: fastly_ai_runtime_control_sessions"
+sidebar_current: "docs-fastly-datasource-fastly_ai_runtime_control_sessions"
+description: |-
+  Get session logs from Fastly AI Runtime Control.
+---
+
+# fastly_ai_runtime_control_sessions
+
+Use this data source to get session logs from [Fastly AI Runtime Control][1],
+including per-session token counts and the request and response data exchanged
+with the AI provider.
+
+~> **Warning:** The `logs` attribute contains the raw prompts and completions
+exchanged with the AI provider, and everything a data source reads is persisted
+to Terraform state in plaintext. Only use this data source when your state
+backend is an appropriate place to keep that data, and prefer narrow `from`,
+`to`, and `key` filters to limit what is retrieved.
+
+~> **Note:** These are time-series telemetry records, which are re-read on every
+plan and change as new AI traffic is served. Consuming them from Terraform will
+produce results that differ between runs.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/ai_runtime_control_sessions.tf"}}
+
+[1]: https://www.fastly.com/documentation/reference/api/ai-runtime-control/
+
+{{ .SchemaMarkdown | trimspace }}

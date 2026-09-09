@@ -1,0 +1,1 @@
+$ terraform import fastly_ai_runtime_control_provider_connection.demo xxxxxxxxxxxxxxxxxxxx

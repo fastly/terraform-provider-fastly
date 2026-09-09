@@ -72,24 +72,12 @@ func dataSourceFastlyAIRuntimeControlProviderConnectionsRead(ctx context.Context
 
 	log.Printf("[DEBUG] Reading AI Runtime Control provider connections")
 
-	var all []providerconnection.ProviderConnection
-	var cursor *string
-
-	for {
-		remoteState, err := providerconnection.List(ctx, conn, &providerconnection.ListInput{
-			Cursor: cursor,
-		})
-		if err != nil {
-			return diag.Errorf("error fetching AI Runtime Control provider connections: %s", err)
-		}
-
-		all = append(all, remoteState.Data...)
-
-		if remoteState.Meta.NextCursor == "" {
-			break
-		}
-		cursor = &remoteState.Meta.NextCursor
+	remoteState, err := providerconnection.List(ctx, conn, &providerconnection.ListInput{})
+	if err != nil {
+		return diag.Errorf("error fetching AI Runtime Control provider connections: %s", err)
 	}
+
+	all := remoteState.Data
 
 	hashBase, _ := json.Marshal(all)
 	d.SetId(strconv.Itoa(hashcode.String(string(hashBase))))

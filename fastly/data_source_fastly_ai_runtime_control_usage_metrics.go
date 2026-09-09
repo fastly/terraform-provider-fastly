@@ -134,21 +134,12 @@ func dataSourceFastlyAIRuntimeControlUsageMetricsRead(ctx context.Context, d *sc
 		i.To = &to
 	}
 
-	var all []usagemetrics.UsageMetric
-
-	for {
-		remoteState, err := usagemetrics.List(ctx, conn, &i)
-		if err != nil {
-			return diag.Errorf("error fetching AI Runtime Control usage metrics: %s", err)
-		}
-
-		all = append(all, remoteState.Data...)
-
-		if remoteState.Meta.NextCursor == "" {
-			break
-		}
-		i.Cursor = &remoteState.Meta.NextCursor
+	remoteState, err := usagemetrics.List(ctx, conn, &i)
+	if err != nil {
+		return diag.Errorf("error fetching AI Runtime Control usage metrics: %s", err)
 	}
+
+	all := remoteState.Data
 
 	hashBase, _ := json.Marshal(all)
 	d.SetId(strconv.Itoa(hashcode.String(string(hashBase))))

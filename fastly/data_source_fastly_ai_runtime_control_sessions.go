@@ -152,12 +152,7 @@ func dataSourceFastlyAIRuntimeControlSessionsRead(ctx context.Context, d *schema
 
 	log.Printf("[DEBUG] Reading AI Runtime Control sessions")
 
-	// Request the largest page the API allows to minimise round trips.
-	limit := 1000
-
-	i := session.ListInput{
-		Limit: &limit,
-	}
+	i := session.ListInput{}
 	if v, ok := d.GetOk("key"); ok {
 		i.Key = gofastly.ToPointer(v.(string))
 	}
@@ -182,20 +177,9 @@ func dataSourceFastlyAIRuntimeControlSessionsRead(ctx context.Context, d *schema
 		i.To = &to
 	}
 
-	var all []session.Session
-
-	for {
-		remoteState, err := session.List(ctx, conn, &i)
-		if err != nil {
-			return diag.Errorf("error fetching AI Runtime Control sessions: %s", err)
-		}
-
-		all = append(all, remoteState.Data...)
-
-		if remoteState.Meta.NextCursor == "" {
-			break
-		}
-		i.Cursor = &remoteState.Meta.NextCursor
+	all, err := session.List(ctx, conn, &i)
+	if err != nil {
+		return diag.Errorf("error fetching AI Runtime Control sessions: %s", err)
 	}
 
 	hashBase, _ := json.Marshal(all)

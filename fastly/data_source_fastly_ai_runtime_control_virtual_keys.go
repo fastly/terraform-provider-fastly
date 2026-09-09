@@ -135,7 +135,6 @@ func dataSourceFastlyAIRuntimeControlVirtualKeysRead(ctx context.Context, d *sch
 
 	log.Printf("[DEBUG] Reading AI Runtime Control virtual keys")
 
-	var all []key.VirtualKeyListItem
 	// Request the largest page the API allows to minimise round trips.
 	limit := 100
 
@@ -153,18 +152,9 @@ func dataSourceFastlyAIRuntimeControlVirtualKeysRead(ctx context.Context, d *sch
 		i.Search = gofastly.ToPointer(v.(string))
 	}
 
-	for {
-		remoteState, err := key.List(ctx, conn, &i)
-		if err != nil {
-			return diag.Errorf("error fetching AI Runtime Control virtual keys: %s", err)
-		}
-
-		all = append(all, remoteState.Data...)
-
-		if remoteState.Meta.NextCursor == "" {
-			break
-		}
-		i.Cursor = &remoteState.Meta.NextCursor
+	all, err := key.List(ctx, conn, &i)
+	if err != nil {
+		return diag.Errorf("error fetching AI Runtime Control virtual keys: %s", err)
 	}
 
 	hashBase, _ := json.Marshal(all)

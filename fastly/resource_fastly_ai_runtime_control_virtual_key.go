@@ -33,11 +33,6 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 				Computed:    true,
 				Description: "The display name of the user who created the virtual key.",
 			},
-			"customer_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The ID of the customer that owns the virtual key.",
-			},
 			"expires_at": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -170,17 +165,8 @@ func resourceFastlyAIRuntimeControlVirtualKeyRead(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 
-	// The get endpoint omits user_id for some keys, so preserve the configured
-	// value rather than clearing it.
-	if vk.UserID != "" {
-		if err := d.Set("user_id", vk.UserID); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if vk.CustomerID != "" {
-		if err := d.Set("customer_id", vk.CustomerID); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("user_id", vk.UserID); err != nil {
+		return diag.FromErr(err)
 	}
 	if err := d.Set("expires_at", vk.ExpiresAt); err != nil {
 		return diag.FromErr(err)

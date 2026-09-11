@@ -59,7 +59,6 @@ $ terraform import fastly_ai_runtime_control_virtual_key.demo xxxxxxxxxxxxxxxxxx
 
 - `created_at` (String) Timestamp (UTC) of when the virtual key was created.
 - `created_by` (String) The display name of the user who created the virtual key.
-- `customer_id` (String) The ID of the customer that owns the virtual key.
 - `id` (String) The ID of this resource.
 - `last_used_at` (String) Timestamp (UTC) of when the virtual key was last used.
 - `type` (String) The type of the virtual key.

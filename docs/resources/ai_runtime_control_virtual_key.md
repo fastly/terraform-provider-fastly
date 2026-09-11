@@ -8,7 +8,7 @@ description: |-
 
 # fastly_ai_runtime_control_virtual_key
 
-Provides a Fastly AI Runtime Control (ARC) virtual key, used to authenticate
+Provides a Fastly AI Runtime Control virtual key, used to authenticate
 requests to an AI service and to attribute usage and session logs back to a
 named key.
 

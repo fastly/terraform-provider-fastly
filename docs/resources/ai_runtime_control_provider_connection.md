@@ -8,7 +8,7 @@ description: |-
 
 # fastly_ai_runtime_control_provider_connection
 
-Provides a Fastly AI Runtime Control (ARC) provider connection, which stores the
+Provides a Fastly AI Runtime Control provider connection, which stores the
 authentication details and the set of allowed models for an AI model provider.
 
 ~> **Note:** The API never returns the provider's `api_key`, so its value cannot

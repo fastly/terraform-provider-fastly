@@ -9,7 +9,6 @@ import (
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/key"
 	arcprovider "github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/provider"
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/providerconnection"
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/session"
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/usagemetrics"
 )
 
@@ -230,61 +229,3 @@ func TestFlattenAIRuntimeControlUsageMetrics(t *testing.T) {
 	}
 }
 
-func TestFlattenAIRuntimeControlSessions(t *testing.T) {
-	remoteState := []session.Session{
-		{
-			ID:             "sess_3Yv86B123RGMSfgh",
-			VirtualKeyID:   "123abc",
-			VirtualKeyName: "chatbot prod env",
-			Model:          "claude-sonnet-4-20250514",
-			Provider:       "Anthropic",
-			Requests:       2300,
-			InputTokens:    68,
-			OutputTokens:   1200,
-			CreatedAt:      "2026-05-05T14:30:00Z",
-			UpdatedAt:      "2026-05-05T15:45:00Z",
-			Logs: []session.Log{
-				{
-					Request:  "request body",
-					Response: "response body",
-					Attrs: map[string]any{
-						"already_a_string": "verbatim",
-						"a_number":         float64(42),
-						"structured":       map[string]any{"nested": true},
-					},
-				},
-			},
-		},
-	}
-
-	want := []map[string]any{
-		{
-			"id":               "sess_3Yv86B123RGMSfgh",
-			"virtual_key_id":   "123abc",
-			"virtual_key_name": "chatbot prod env",
-			"model":            "claude-sonnet-4-20250514",
-			"provider":         "Anthropic",
-			"requests":         2300,
-			"input_tokens":     68,
-			"output_tokens":    1200,
-			"created_at":       "2026-05-05T14:30:00Z",
-			"updated_at":       "2026-05-05T15:45:00Z",
-			"logs": []map[string]any{
-				{
-					"request":  "request body",
-					"response": "response body",
-					// Non-string values are JSON encoded so they fit TypeMap.
-					"attrs": map[string]string{
-						"already_a_string": "verbatim",
-						"a_number":         "42",
-						"structured":       `{"nested":true}`,
-					},
-				},
-			},
-		},
-	}
-
-	if diff := cmp.Diff(want, flattenAIRuntimeControlSessions(remoteState)); diff != "" {
-		t.Fatalf("unexpected result (-want +got):\n%s", diff)
-	}
-}

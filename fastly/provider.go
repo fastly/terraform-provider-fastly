@@ -53,7 +53,6 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"fastly_ai_runtime_control_provider_connections": dataSourceFastlyAIRuntimeControlProviderConnections(),
 			"fastly_ai_runtime_control_providers":            dataSourceFastlyAIRuntimeControlProviders(),
-			"fastly_ai_runtime_control_sessions":             dataSourceFastlyAIRuntimeControlSessions(),
 			"fastly_ai_runtime_control_usage_metrics":        dataSourceFastlyAIRuntimeControlUsageMetrics(),
 			"fastly_ai_runtime_control_virtual_keys":         dataSourceFastlyAIRuntimeControlVirtualKeys(),
 			"fastly_api_security_operations":                 dataSourceFastlyAPISecurityOperations(),

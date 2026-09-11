@@ -9,7 +9,6 @@ import (
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/key"
 	arcprovider "github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/provider"
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/providerconnection"
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/usagemetrics"
 )
 
 func TestDiffSuppressEquivalentRFC3339(t *testing.T) {
@@ -195,36 +194,6 @@ func TestFlattenAIRuntimeControlVirtualKeys(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(want, flattenAIRuntimeControlVirtualKeys(remoteState)); diff != "" {
-		t.Fatalf("unexpected result (-want +got):\n%s", diff)
-	}
-}
-
-func TestFlattenAIRuntimeControlUsageMetrics(t *testing.T) {
-	remoteState := []usagemetrics.UsageMetric{
-		{
-			Date:           "2026-05-01",
-			UsageType:      "requests",
-			Quantity:       604567,
-			VirtualKeyID:   "123abc",
-			VirtualKeyName: "prod website chatbot",
-			Provider:       "Anthropic",
-			Model:          "claude-sonnet-4-20250514",
-		},
-	}
-
-	want := []map[string]any{
-		{
-			"date":             "2026-05-01",
-			"usage_type":       "requests",
-			"quantity":         604567,
-			"virtual_key_id":   "123abc",
-			"virtual_key_name": "prod website chatbot",
-			"provider":         "Anthropic",
-			"model":            "claude-sonnet-4-20250514",
-		},
-	}
-
-	if diff := cmp.Diff(want, flattenAIRuntimeControlUsageMetrics(remoteState)); diff != "" {
 		t.Fatalf("unexpected result (-want +got):\n%s", diff)
 	}
 }

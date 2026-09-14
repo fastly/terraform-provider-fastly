@@ -15,6 +15,9 @@
 - build(deps): `google.golang.org/grpc` from 1.83.1 to 1.83.2 ([#1425](https://github.com/fastly/terraform-provider-fastly/pull/1425))
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.3.0 to 17.3.1 ([#1427](https://github.com/fastly/terraform-provider-fastly/pull/1427))
 
+### DOCUMENTATION:
+- docs(fastly_object_storage): updated examples to use modern region ([#1430](https://github.com/fastly/terraform-provider-fastly/pull/1430))
+
 ## 9.6.0 (August 11, 2026)
 
 ### ENHANCEMENTS:

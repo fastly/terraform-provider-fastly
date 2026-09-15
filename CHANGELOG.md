@@ -4,7 +4,7 @@
 
 ### ENHANCEMENTS:
 
-- feat(product_enablement/ddos_protection): Add support for 'client_challenge' mode. ([#XXX](https://github.com/fastly/terraform-provider-fastly/pull/XXX))
+- feat(product_enablement/ddos_protection): Add support for 'client_challenge' mode. ([#1431](https://github.com/fastly/terraform-provider-fastly/pull/1431))
 
 ### BUG FIXES:
 

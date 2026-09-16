@@ -13,11 +13,12 @@ requests to an AI service and to attribute usage and session logs back to a
 named key.
 
 ~> **Note:** The access token generated for a virtual key is returned by the API
-only at the moment the key is created or rotated, and is never returned by any
-read operation. This resource therefore does **not** expose the access token, so
-that AI credentials are not written to Terraform state. Use the
-[Fastly CLI](https://developer.fastly.com/reference/cli/) (`fastly
-ai-runtime-control key rotate`) to mint a token you can capture.
+only at the moment the key is created, and is never returned by any read
+operation. It is therefore captured in `access_token` when the resource is
+created, but cannot be reconciled with, or recovered from, the remote state
+afterward (including on import). Use the [Fastly
+CLI](https://developer.fastly.com/reference/cli/) (`fastly ai-runtime-control
+key rotate`) to mint a new token if the existing one is lost or compromised.
 
 ## Example Usage
 
@@ -57,6 +58,7 @@ $ terraform import fastly_ai_runtime_control_virtual_key.demo xxxxxxxxxxxxxxxxxx
 
 ### Read-Only
 
+- `access_token` (String, Sensitive) The generated access token used to authenticate as this virtual key. Only returned by the API when the key is created.
 - `created_at` (String) Timestamp (UTC) of when the virtual key was created.
 - `created_by` (String) The display name of the user who created the virtual key.
 - `id` (String) The ID of this resource.

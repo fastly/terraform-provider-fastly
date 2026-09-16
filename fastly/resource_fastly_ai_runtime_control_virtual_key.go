@@ -23,6 +23,15 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			// Only the create (and rotate, which this provider does not
+			// expose) response includes the token, so it can only be
+			// captured here; subsequent refreshes must leave it untouched.
+			"access_token": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   !DisplaySensitiveFields,
+				Description: "The generated access token used to authenticate as this virtual key. Only returned by the API when the key is created.",
+			},
 			"created_at": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -103,15 +112,19 @@ func resourceFastlyAIRuntimeControlVirtualKeyCreate(ctx context.Context, d *sche
 
 	log.Printf("[DEBUG] CREATE: AI Runtime Control virtual key input: %#v", i)
 
-	// The access token is returned only here and by the rotate endpoint, which
-	// the provider does not expose. It is deliberately discarded rather than
-	// persisted to state.
 	vk, err := key.Create(ctx, conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(vk.ID)
+
+	if vk.AccessToken == "" {
+		return diag.Errorf("error: AI Runtime Control virtual key access token is empty")
+	}
+	if err := d.Set("access_token", vk.AccessToken); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return resourceFastlyAIRuntimeControlVirtualKeyRead(ctx, d, meta)
 }

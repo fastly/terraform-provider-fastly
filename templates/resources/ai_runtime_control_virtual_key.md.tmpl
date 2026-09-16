@@ -12,14 +12,6 @@ Provides a Fastly AI Runtime Control virtual key, used to authenticate
 requests to an AI service and to attribute usage and session logs back to a
 named key.
 
-~> **Note:** The access token generated for a virtual key is returned by the API
-only at the moment the key is created, and is never returned by any read
-operation. It is therefore captured in `access_token` when the resource is
-created, but cannot be reconciled with, or recovered from, the remote state
-afterward (including on import). Use the [Fastly
-CLI](https://developer.fastly.com/reference/cli/) (`fastly ai-runtime-control
-key rotate`) to mint a new token if the existing one is lost or compromised.
-
 ## Example Usage
 
 Basic usage:
@@ -31,5 +23,7 @@ Basic usage:
 Fastly AI Runtime Control virtual keys can be imported using their key ID, e.g.
 
 {{ codefile "sh" "examples/resources/components/ai_runtime_control_virtual_key_import_cmd.txt" }}
+
+~> **Note:** Since `access_token` is only returned by the API at creation time, it will be empty after importing an existing virtual key.
 
 {{ .SchemaMarkdown | trimspace }}

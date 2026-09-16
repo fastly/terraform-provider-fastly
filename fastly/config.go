@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"golang.org/x/net/http2"
 
 	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
@@ -56,8 +55,9 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	// 2 (minor). while http.Transport supports HTTP/2 by default, it does TLS-ALPN negotiation
 	// in order to support HTTP/1.x fallback. This means each new client connection initiated
 	// by each resource will start TLS handshake regardless of the existing connection pool status.
-	// explicitly assigning http2.Transport so there will be just one TLS-ALPN negotiation happening
-	// (across all Fastly provider resources) against the same api.fastly.com:443 destination.
+	// explicitly assigning http.Transport with an HTTP/2-only Protocols set so there will be just
+	// one TLS-ALPN negotiation happening (across all Fastly provider resources) against the same
+	// api.fastly.com:443 destination.
 	httpDefaultTransport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -71,9 +71,13 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 	// NOTE: "force_http2" provider option is an experimental feature.
-	// http2.Transport struct fields are largely different than http.Transport
-	// so leave it to default values for now.
-	http2DefaultTransport := &http2.Transport{}
+	// http.Transport has many more configurable fields than http2.Transport did,
+	// so leave it to default values for now (aside from the HTTP/2-only Protocols set).
+	var http2OnlyProtocols http.Protocols
+	http2OnlyProtocols.SetHTTP2(true)
+	http2DefaultTransport := &http.Transport{
+		Protocols: &http2OnlyProtocols,
+	}
 
 	redactedHeaders := []string{"Fastly-Key"}
 

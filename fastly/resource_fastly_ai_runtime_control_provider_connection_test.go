@@ -31,6 +31,7 @@ func TestAccFastlyAIRuntimeControlProviderConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ai_runtime_control_provider_connection.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_ai_runtime_control_provider_connection.foo", "models.#", "1"),
 					resource.TestCheckResourceAttrSet("fastly_ai_runtime_control_provider_connection.foo", "created_at"),
+					resource.TestCheckResourceAttrSet("fastly_ai_runtime_control_provider_connection.foo", "secret_id"),
 				),
 			},
 			{

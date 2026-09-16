@@ -49,4 +49,5 @@ Read-Only:
 - `id` (String)
 - `models` (List of String)
 - `name` (String)
+- `secret_id` (String)
 - `updated_at` (String)

@@ -50,6 +50,14 @@ func resourceFastlyAIRuntimeControlProviderConnection() *schema.Resource {
 				ForceNew:    true,
 				Description: "A human-readable name for the provider. Changing this forces a new provider connection to be created.",
 			},
+			// Since api_key itself is never returned by the API, comparing
+			// secret_id across refreshes is how a user detects that the API
+			// key has been changed out-of-band.
+			"secret_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "A hash representing the `api_key` used to create the provider connection.",
+			},
 			"updated_at": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -109,6 +117,9 @@ func resourceFastlyAIRuntimeControlProviderConnectionRead(ctx context.Context, d
 		return diag.FromErr(err)
 	}
 	if err := d.Set("models", pc.Models); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("secret_id", pc.SecretID); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("created_at", pc.CreatedAt); err != nil {

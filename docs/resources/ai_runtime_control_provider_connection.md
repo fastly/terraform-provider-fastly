@@ -55,4 +55,5 @@ Note that `api_key` cannot be imported, since the API does not return it.
 
 - `created_at` (String) Timestamp (UTC) of when the provider connection was created.
 - `id` (String) The ID of this resource.
+- `secret_id` (String) A hash representing the `api_key` used to create the provider connection.
 - `updated_at` (String) Timestamp (UTC) of when the provider connection was last updated.

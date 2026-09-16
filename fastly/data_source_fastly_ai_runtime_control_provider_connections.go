@@ -50,6 +50,11 @@ func dataSourceFastlyAIRuntimeControlProviderConnections() *schema.Resource {
 							Computed:    true,
 							Description: "The human-readable name of the provider.",
 						},
+						"secret_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "A hash representing the API key used to create the provider connection.",
+						},
 						"updated_at": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -101,6 +106,7 @@ func flattenAIRuntimeControlProviderConnections(remoteState []providerconnection
 			"name":       pc.Name,
 			"models":     pc.Models,
 			"base_url":   pc.BaseURL,
+			"secret_id":  pc.SecretID,
 			"created_at": pc.CreatedAt,
 			"updated_at": pc.UpdatedAt,
 		}

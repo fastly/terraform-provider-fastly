@@ -197,4 +197,3 @@ func TestFlattenAIRuntimeControlVirtualKeys(t *testing.T) {
 		t.Fatalf("unexpected result (-want +got):\n%s", diff)
 	}
 }
-

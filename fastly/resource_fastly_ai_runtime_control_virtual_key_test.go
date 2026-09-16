@@ -35,6 +35,7 @@ func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ai_runtime_control_virtual_key.foo", "name", keyName),
 					resource.TestCheckResourceAttr("fastly_ai_runtime_control_virtual_key.foo", "provider_name", "Anthropic"),
 					resource.TestCheckResourceAttrSet("fastly_ai_runtime_control_virtual_key.foo", "created_at"),
+					resource.TestCheckResourceAttrSet("fastly_ai_runtime_control_virtual_key.foo", "access_token"),
 				),
 			},
 			{
@@ -48,6 +49,9 @@ func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {
 				ResourceName:      "fastly_ai_runtime_control_virtual_key.foo",
 				ImportState:       true,
 				ImportStateVerify: true,
+				// The API only returns the access token on create; it cannot
+				// be recovered via import.
+				ImportStateVerifyIgnore: []string{"access_token"},
 			},
 		},
 	})

@@ -4,10 +4,16 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### Dependencies
+
+## 9.7.0 (September 17, 2026)
+
+### ENHANCEMENTS:
+
 - feat(ai_runtime_control): add resources and data sources for managing AI Runtime Control ([#1428](https://github.com/fastly/terraform-provider-fastly/pull/1428))
 - feat(product_enablement/ddos_protection): Add support for 'client_challenge' mode. ([#1431](https://github.com/fastly/terraform-provider-fastly/pull/1431))
-
-### BUG FIXES:
 
 ### Dependencies
 - build(deps): `github.com/stretchr/testify` from 1.11.1 to 1.12.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))

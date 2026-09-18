@@ -7,6 +7,15 @@
 ### BUG FIXES:
 
 ### Dependencies
+
+## 9.7.0 (September 17, 2026)
+
+### ENHANCEMENTS:
+
+- feat(ai_runtime_control): add resources and data sources for managing AI Runtime Control ([#1428](https://github.com/fastly/terraform-provider-fastly/pull/1428))
+- feat(product_enablement/ddos_protection): Add support for 'client_challenge' mode. ([#1431](https://github.com/fastly/terraform-provider-fastly/pull/1431))
+
+### Dependencies
 - build(deps): `github.com/stretchr/testify` from 1.11.1 to 1.12.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))
 - build(deps): `golang.org/x/net` from 0.57.0 to 0.58.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.2.0 to 17.3.0 ([#1421](https://github.com/fastly/terraform-provider-fastly/pull/1421))
@@ -14,6 +23,7 @@
 - build(deps): `google.golang.org/grpc` from 1.82.1 to 1.83.1 ([#1422](https://github.com/fastly/terraform-provider-fastly/pull/1422))
 - build(deps): `google.golang.org/grpc` from 1.83.1 to 1.83.2 ([#1425](https://github.com/fastly/terraform-provider-fastly/pull/1425))
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.3.0 to 17.3.1 ([#1427](https://github.com/fastly/terraform-provider-fastly/pull/1427))
+- build(deps): `golang.org/x/net` from 0.59.0 to 0.58.0 ([#1435](https://github.com/fastly/terraform-provider-fastly/pull/1435))
 
 ### DOCUMENTATION:
 - docs(fastly_object_storage): updated examples to use modern region ([#1430](https://github.com/fastly/terraform-provider-fastly/pull/1430))

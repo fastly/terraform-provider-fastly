@@ -1,0 +1,29 @@
+---
+layout: "fastly"
+page_title: "Fastly: ai_runtime_control_virtual_key"
+sidebar_current: "docs-fastly-resource-ai-runtime-control-virtual-key"
+description: |-
+  Provides a Fastly AI Runtime Control virtual key
+---
+
+# fastly_ai_runtime_control_virtual_key
+
+Provides a Fastly AI Runtime Control virtual key, used to authenticate
+requests to an AI service and to attribute usage and session logs back to a
+named key.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ai_runtime_control_virtual_key_basic_usage.tf" }}
+
+## Import
+
+Fastly AI Runtime Control virtual keys can be imported using their key ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/ai_runtime_control_virtual_key_import_cmd.txt" }}
+
+~> **Note:** Since `access_token` is only returned by the API at creation time, it will be empty after importing an existing virtual key.
+
+{{ .SchemaMarkdown | trimspace }}

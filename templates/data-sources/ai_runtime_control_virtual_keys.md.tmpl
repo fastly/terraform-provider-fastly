@@ -1,0 +1,22 @@
+---
+page_title: "Fastly: fastly_ai_runtime_control_virtual_keys"
+sidebar_current: "docs-fastly-datasource-fastly_ai_runtime_control_virtual_keys"
+description: |-
+  Get information about Fastly AI Runtime Control virtual keys.
+---
+
+# fastly_ai_runtime_control_virtual_keys
+
+Use this data source to get the list of virtual keys configured for your customer
+account in [Fastly AI Runtime Control][1], optionally filtered by model,
+provider, or a substring match on the key name.
+
+~> **Note:** Access tokens are never returned by this endpoint.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/ai_runtime_control_virtual_keys.tf"}}
+
+[1]: https://www.fastly.com/documentation/reference/api/ai-runtime-control/
+
+{{ .SchemaMarkdown | trimspace }}

@@ -108,8 +108,8 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
 
-	if entries.Len() == 0 && !d.Get("manage_entries").(bool) {
-		log.Print("[DEBUG] Skipping ACL entries refresh after create: manage_entries is false and no entries were configured")
+	if !d.Get("manage_entries").(bool) {
+		log.Print("[DEBUG] Skipping ACL entries refresh after create: manage_entries is false")
 		return nil
 	}
 
@@ -118,7 +118,10 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceServiceACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if !d.Get("manage_entries").(bool) {
-		log.Print("[DEBUG] Skipping ACL entries refresh: manage_entries is false")
+		log.Print("[DEBUG] Skipping ACL entries refresh: manage_entries is false (clearing entries from state)")
+		if err := d.Set("entry", []map[string]any{}); err != nil {
+			return diag.FromErr(err)
+		}
 		return nil
 	}
 
@@ -154,6 +157,13 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
+
+	if d.HasChange("manage_entries") {
+		oldManageEntries, newManageEntries := d.GetChange("manage_entries")
+		if !oldManageEntries.(bool) && newManageEntries.(bool) {
+			return reconcileServiceACLEntriesAfterEnablingManagement(ctx, d, meta)
+		}
+	}
 
 	batchACLEntries := []*gofastly.BatchACLEntry{}
 
@@ -216,7 +226,104 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
-	return resourceServiceACLEntriesRead(ctx, d, meta)
+	if !d.Get("manage_entries").(bool) {
+		log.Print("[DEBUG] Skipping ACL entries refresh after update: manage_entries is false")
+		return nil
+	}
+
+	return refreshServiceACLEntries(ctx, d, meta)
+}
+
+func reconcileServiceACLEntriesAfterEnablingManagement(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
+
+	serviceID := d.Get("service_id").(string)
+	aclID := d.Get("acl_id").(string)
+	desiredEntries := d.Get("entry").(*schema.Set)
+
+	remoteState, err := getAllACLEntriesViaPaginator(gofastly.NewContextForResourceID(ctx, serviceID), conn, &gofastly.GetACLEntriesInput{
+		ServiceID: serviceID,
+		ACLID:     aclID,
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	remoteEntries := flattenACLEntries(remoteState)
+	matchedRemoteEntries := make([]bool, len(remoteEntries))
+	remoteEntryIndexes := make(map[aclEntryKey][]int, len(remoteEntries))
+	batchACLEntries := []*gofastly.BatchACLEntry{}
+
+	for i, remoteEntry := range remoteEntries {
+		key := newACLEntryKey(remoteEntry)
+		remoteEntryIndexes[key] = append(remoteEntryIndexes[key], i)
+	}
+
+	// Entries are intentionally absent from state while manage_entries is false.
+	// When management is enabled again, match configured entries to the current
+	// remote ACL by value so existing entries can be retained without relying on
+	// state-only entry IDs.
+	for _, rawDesiredEntry := range desiredEntries.List() {
+		desiredEntry := rawDesiredEntry.(map[string]any)
+		key := newACLEntryKey(desiredEntry)
+		matchingIndexes := remoteEntryIndexes[key]
+
+		if len(matchingIndexes) > 0 {
+			matchedRemoteEntries[matchingIndexes[0]] = true
+			remoteEntryIndexes[key] = matchingIndexes[1:]
+			continue
+		}
+
+		batchACLEntries = append(batchACLEntries, buildBatchACLEntry(desiredEntry, gofastly.CreateBatchOperation))
+	}
+
+	// Once management is enabled, remote entries that are not represented in
+	// configuration must be removed to restore the normal manage_entries=true
+	// reconciliation semantics.
+	deletions := []*gofastly.BatchACLEntry{}
+	for i, remoteEntry := range remoteEntries {
+		if matchedRemoteEntries[i] {
+			continue
+		}
+
+		entryID, ok := remoteEntry["id"].(string)
+		if !ok || entryID == "" {
+			return diag.Errorf("error reconciling ACL entries after enabling management: remote ACL entry is missing an ID")
+		}
+
+		deletions = append(deletions, &gofastly.BatchACLEntry{
+			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
+			EntryID:   gofastly.ToPointer(entryID),
+		})
+	}
+
+	// Delete unmanaged remote entries before creating any missing configured
+	// entries. This mirrors the ordering used by the regular update path.
+	batchACLEntries = append(deletions, batchACLEntries...)
+
+	if err := executeBatchACLOperations(gofastly.NewContextForResourceID(ctx, serviceID), conn, serviceID, aclID, batchACLEntries); err != nil {
+		return diag.Errorf("error reconciling ACL entries after enabling management: service %s, ACL %s, %s", serviceID, aclID, err)
+	}
+
+	return refreshServiceACLEntries(ctx, d, meta)
+}
+
+type aclEntryKey struct {
+	ip      string
+	subnet  string
+	negated bool
+	comment string
+}
+
+func newACLEntryKey(entry map[string]any) aclEntryKey {
+	key := aclEntryKey{}
+
+	key.ip, _ = entry["ip"].(string)
+	key.subnet, _ = entry["subnet"].(string)
+	key.negated, _ = entry["negated"].(bool)
+	key.comment, _ = entry["comment"].(string)
+
+	return key
 }
 
 func resourceServiceACLEntriesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

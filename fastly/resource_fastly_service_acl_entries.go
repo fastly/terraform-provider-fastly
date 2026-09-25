@@ -442,10 +442,17 @@ func executeBatchACLOperations(ctx context.Context, conn *gofastly.Client, servi
 func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
 		Operation: gofastly.ToPointer(op),
-		EntryID:   gofastly.ToPointer(v["id"].(string)),
 		IP:        gofastly.ToPointer(v["ip"].(string)),
 		Negated:   gofastly.ToPointer(gofastly.Compatibool(v["negated"].(bool))),
 		Comment:   gofastly.ToPointer(v["comment"].(string)),
+	}
+
+	// Entry IDs are computed by Fastly and are not guaranteed to be present in
+	// configuration-derived values. Create operations do not require an ID.
+	if op != gofastly.CreateBatchOperation {
+		if entryID, ok := v["id"].(string); ok && entryID != "" {
+			entry.EntryID = gofastly.ToPointer(entryID)
+		}
 	}
 
 	subnet := convertSubnetToInt(v["subnet"].(string))

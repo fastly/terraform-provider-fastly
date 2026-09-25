@@ -21,14 +21,14 @@ func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 		{
 			remote: []*gofastly.ResponseObject{
 				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("responseObjecttesting"),
-					Status:           gofastly.ToPointer(200),
-					Response:         gofastly.ToPointer("OK"),
-					Content:          gofastly.ToPointer("test content"),
-					ContentType:      gofastly.ToPointer("text/html"),
-					RequestCondition: gofastly.ToPointer("test-request-condition"),
-					CacheCondition:   gofastly.ToPointer("test-cache-condition"),
+					ServiceVersion:   new(1),
+					Name:             new("responseObjecttesting"),
+					Status:           new(200),
+					Response:         new("OK"),
+					Content:          new("test content"),
+					ContentType:      new("text/html"),
+					RequestCondition: new("test-request-condition"),
+					CacheCondition:   new("test-cache-condition"),
 				},
 			},
 			local: []map[string]any{
@@ -59,25 +59,25 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.ResponseObject{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("responseObjecttesting"),
-		Status:           gofastly.ToPointer(200),
-		Response:         gofastly.ToPointer("OK"),
-		Content:          gofastly.ToPointer("test content"),
-		ContentType:      gofastly.ToPointer("text/html"),
-		RequestCondition: gofastly.ToPointer("test-request-condition"),
-		CacheCondition:   gofastly.ToPointer("test-cache-condition"),
+		ServiceVersion:   new(1),
+		Name:             new("responseObjecttesting"),
+		Status:           new(200),
+		Response:         new("OK"),
+		Content:          new("test content"),
+		ContentType:      new("text/html"),
+		RequestCondition: new("test-request-condition"),
+		CacheCondition:   new("test-cache-condition"),
 	}
 
 	log2 := gofastly.ResponseObject{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("responseObjecttesting2"),
-		Status:           gofastly.ToPointer(404),
-		Response:         gofastly.ToPointer("Not Found"),
-		Content:          gofastly.ToPointer("some, other, content"),
-		ContentType:      gofastly.ToPointer("text/csv"),
-		RequestCondition: gofastly.ToPointer("another-test-request-condition"),
-		CacheCondition:   gofastly.ToPointer("another-test-cache-condition"),
+		ServiceVersion:   new(1),
+		Name:             new("responseObjecttesting2"),
+		Status:           new(404),
+		Response:         new("Not Found"),
+		Content:          new("some, other, content"),
+		ContentType:      new("text/csv"),
+		RequestCondition: new("another-test-request-condition"),
+		CacheCondition:   new("another-test-cache-condition"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

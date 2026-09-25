@@ -195,16 +195,16 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(
 	}
 
 	// Always preserve optional boolean fields
-	apiInput.AllowVideo = gofastly.ToPointer(resource["allow_video"].(bool))
-	apiInput.Webp = gofastly.ToPointer(resource["webp"].(bool))
-	apiInput.Upscale = gofastly.ToPointer(resource["upscale"].(bool))
+	apiInput.AllowVideo = new(resource["allow_video"].(bool))
+	apiInput.Webp = new(resource["webp"].(bool))
+	apiInput.Upscale = new(resource["upscale"].(bool))
 
 	// Conditionally include int fields
 	if v, ok := modified["jpeg_quality"]; ok {
-		apiInput.JpegQuality = gofastly.ToPointer(v.(int))
+		apiInput.JpegQuality = new(v.(int))
 	}
 	if v, ok := modified["webp_quality"]; ok {
-		apiInput.WebpQuality = gofastly.ToPointer(v.(int))
+		apiInput.WebpQuality = new(v.(int))
 	}
 
 	// Conditionally include resize_filter enum
@@ -293,9 +293,9 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(ctx contex
 			}
 			apiInput.ResizeFilter = &resizeFilter
 		case "webp":
-			apiInput.Webp = gofastly.ToPointer(value.(bool))
+			apiInput.Webp = new(value.(bool))
 		case "webp_quality":
-			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
+			apiInput.WebpQuality = new(value.(int))
 		case "jpeg_type":
 			var jpegType gofastly.ImageOptimizerJpegType
 			switch value.(string) {
@@ -310,11 +310,11 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(ctx contex
 			}
 			apiInput.JpegType = &jpegType
 		case "jpeg_quality":
-			apiInput.JpegQuality = gofastly.ToPointer(value.(int))
+			apiInput.JpegQuality = new(value.(int))
 		case "upscale":
-			apiInput.Upscale = gofastly.ToPointer(value.(bool))
+			apiInput.Upscale = new(value.(bool))
 		case "allow_video":
-			apiInput.AllowVideo = gofastly.ToPointer(value.(bool))
+			apiInput.AllowVideo = new(value.(bool))
 		case "name":
 			continue
 		default:

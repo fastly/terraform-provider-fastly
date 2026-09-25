@@ -20,28 +20,28 @@ func TestAccFastlyServiceLoggingLogentries_vcl_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("somelogentriesname"),
-		Port:           gofastly.ToPointer(20000),
-		UseTLS:         gofastly.ToPointer(true),
-		Token:          gofastly.ToPointer("token"),
+		ServiceVersion: new(1),
+		Name:           new("somelogentriesname"),
+		Port:           new(20000),
+		UseTLS:         new(true),
+		Token:          new("token"),
 		// This log endpoint seems to be depreciated, so we aren't setting the default here.
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
-		FormatVersion:     gofastly.ToPointer(2),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     new(2),
+		ResponseCondition: new("response_condition_test"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log2 := gofastly.Logentries{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("somelogentriesanothername"),
-		Port:              gofastly.ToPointer(10000),
-		UseTLS:            gofastly.ToPointer(false),
-		Token:             gofastly.ToPointer("newtoken"),
-		Format:            gofastly.ToPointer(`%h %u %t %r %>s`),
-		FormatVersion:     gofastly.ToPointer(2),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		ServiceVersion:    new(1),
+		Name:              new("somelogentriesanothername"),
+		Port:              new(10000),
+		UseTLS:            new(false),
+		Token:             new("newtoken"),
+		Format:            new(`%h %u %t %r %>s`),
+		FormatVersion:     new(2),
+		ResponseCondition: new("response_condition_test"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,15 +83,15 @@ func TestAccFastlyServiceLoggingLogentries_compute_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("somelogentriesname"),
-		Port:              gofastly.ToPointer(20000),
-		UseTLS:            gofastly.ToPointer(true),
-		Token:             gofastly.ToPointer("token"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
-		FormatVersion:     gofastly.ToPointer(2),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		ServiceVersion:    new(1),
+		Name:              new("somelogentriesname"),
+		Port:              new(20000),
+		UseTLS:            new(true),
+		Token:             new("token"),
+		Format:            new(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     new(2),
+		ResponseCondition: new("response_condition_test"),
+		ProcessingRegion:  new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -193,15 +193,15 @@ func TestAccFastlyServiceLoggingLogentries_vcl_formatVersion(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("somelogentriesname"),
-		Port:              gofastly.ToPointer(20000),
-		UseTLS:            gofastly.ToPointer(true),
-		Token:             gofastly.ToPointer("token"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
-		FormatVersion:     gofastly.ToPointer(2),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		ServiceVersion:    new(1),
+		Name:              new("somelogentriesname"),
+		Port:              new(20000),
+		UseTLS:            new(true),
+		Token:             new("token"),
+		Format:            new(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     new(2),
+		ResponseCondition: new("response_condition_test"),
+		ProcessingRegion:  new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -360,15 +360,15 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 		{
 			remote: []*gofastly.Logentries{
 				{
-					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
-					FormatVersion:     gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("somelogentriesname"),
-					Placement:         gofastly.ToPointer("placement"),
-					Port:              gofastly.ToPointer(8080),
-					ResponseCondition: gofastly.ToPointer("response_condition_test"),
-					ServiceVersion:    gofastly.ToPointer(1), // expect this not to be persisted to tf state as it's tracked by the parent 'service' resource
-					Token:             gofastly.ToPointer("mytoken"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					Format:            new("%h %l %u %t %r %>s"),
+					FormatVersion:     new(1),
+					Name:              new("somelogentriesname"),
+					Placement:         new("placement"),
+					Port:              new(8080),
+					ResponseCondition: new("response_condition_test"),
+					ServiceVersion:    new(1), // expect this not to be persisted to tf state as it's tracked by the parent 'service' resource
+					Token:             new("mytoken"),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

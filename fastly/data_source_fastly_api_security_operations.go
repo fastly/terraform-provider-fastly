@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/apisecurity/operations"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -133,16 +132,16 @@ func dataSourceFastlyAPISecurityOperationsRead(ctx context.Context, d *schema.Re
 	serviceID := d.Get("service_id").(string)
 
 	in := &operations.ListOperationsInput{
-		ServiceID: gofastly.ToPointer(serviceID),
+		ServiceID: new(serviceID),
 		// Keep pagination internal; go-fastly will paginate across all pages.
-		Page:  gofastly.ToPointer(0),
-		Limit: gofastly.ToPointer(apiSecurityDefaultPageLimit),
+		Page:  new(0),
+		Limit: new(apiSecurityDefaultPageLimit),
 	}
 
 	if v, ok := d.GetOk("tag_id"); ok {
 		s := v.(string)
 		if s != "" {
-			in.TagID = gofastly.ToPointer(s)
+			in.TagID = new(s)
 		}
 	}
 	if v, ok := d.GetOk("method"); ok {
@@ -154,7 +153,7 @@ func dataSourceFastlyAPISecurityOperationsRead(ctx context.Context, d *schema.Re
 	if v, ok := d.GetOk("path"); ok {
 		s := v.(string)
 		if s != "" {
-			in.Path = gofastly.ToPointer(s)
+			in.Path = new(s)
 		}
 	}
 

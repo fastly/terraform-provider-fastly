@@ -20,36 +20,36 @@ func TestAccFastlyServiceLoggingSumologic_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Sumologic{
-		Format:            gofastly.ToPointer(LoggingSumologicDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		MessageType:       gofastly.ToPointer("classic"),
-		Name:              gofastly.ToPointer("sumologic-endpoint"),
-		ResponseCondition: gofastly.ToPointer("test_response_condition"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingSumologicDefaultFormat),
+		FormatVersion:     new(2),
+		MessageType:       new("classic"),
+		Name:              new("sumologic-endpoint"),
+		ResponseCondition: new("test_response_condition"),
+		ServiceVersion:    new(1),
+		URL:               new("https://collectors.sumologic.com/receiver/1"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Sumologic{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		MessageType:       gofastly.ToPointer("blank"),
-		Name:              gofastly.ToPointer("sumologic-endpoint"),
-		ResponseCondition: gofastly.ToPointer("test_response_condition"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/2"),
-		ProcessingRegion:  gofastly.ToPointer("eu"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		MessageType:       new("blank"),
+		Name:              new("sumologic-endpoint"),
+		ResponseCondition: new("test_response_condition"),
+		ServiceVersion:    new(1),
+		URL:               new("https://collectors.sumologic.com/receiver/2"),
+		ProcessingRegion:  new("eu"),
 	}
 
 	log2 := gofastly.Sumologic{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		MessageType:       gofastly.ToPointer("classic"),
-		Name:              gofastly.ToPointer("another-sumologic-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/3"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		MessageType:       new("classic"),
+		Name:              new("another-sumologic-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		URL:               new("https://collectors.sumologic.com/receiver/3"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,10 +88,10 @@ func TestAccFastlyServiceLoggingSumologic_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Sumologic{
-		Name:             gofastly.ToPointer("sumologic-endpoint"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		URL:              gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Name:             new("sumologic-endpoint"),
+		ServiceVersion:   new(1),
+		URL:              new("https://collectors.sumologic.com/receiver/1"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -287,13 +287,13 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 		{
 			remote: []*gofastly.Sumologic{
 				{
-					Name:              gofastly.ToPointer("sumo collector"),
-					URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
-					Format:            gofastly.ToPointer(LoggingSumologicDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					MessageType:       gofastly.ToPointer("classic"),
-					ResponseCondition: gofastly.ToPointer("condition 1"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					Name:              new("sumo collector"),
+					URL:               new("https://collectors.sumologic.com/receiver/1"),
+					Format:            new(LoggingSumologicDefaultFormat),
+					FormatVersion:     new(2),
+					MessageType:       new("classic"),
+					ResponseCondition: new("condition 1"),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

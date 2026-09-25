@@ -3,7 +3,6 @@ package fastly
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/rules"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/scope"
 )
@@ -35,12 +34,12 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData, s *scope.Scope) *rules.C
 	}
 
 	return &rules.CreateInput{
-		Type:               gofastly.ToPointer(d.Get("type").(string)),
-		Description:        gofastly.ToPointer(d.Get("description").(string)),
+		Type:               new(d.Get("type").(string)),
+		Description:        new(d.Get("description").(string)),
 		Scope:              s,
-		Enabled:            gofastly.ToPointer(d.Get("enabled").(bool)),
-		GroupOperator:      gofastly.ToPointer(d.Get("group_operator").(string)),
-		RequestLogging:     gofastly.ToPointer(d.Get("request_logging").(string)),
+		Enabled:            new(d.Get("enabled").(bool)),
+		GroupOperator:      new(d.Get("group_operator").(string)),
+		RequestLogging:     new(d.Get("request_logging").(string)),
 		Actions:            expandNGWAFRuleCreateActions(actionRaw, string(s.Type)),
 		Conditions:         expandNGWAFRuleCreateConditions(conditionRaw),
 		GroupConditions:    expandNGWAFRuleGroupCreateConditions(groupRaw),
@@ -76,13 +75,13 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, s *scope.Scope) *rules.U
 	}
 
 	updateInput := &rules.UpdateInput{
-		RuleID:             gofastly.ToPointer(d.Id()),
+		RuleID:             new(d.Id()),
 		Scope:              s,
-		Type:               gofastly.ToPointer(d.Get("type").(string)),
-		Description:        gofastly.ToPointer(d.Get("description").(string)),
-		Enabled:            gofastly.ToPointer(d.Get("enabled").(bool)),
-		GroupOperator:      gofastly.ToPointer(d.Get("group_operator").(string)),
-		RequestLogging:     gofastly.ToPointer(d.Get("request_logging").(string)),
+		Type:               new(d.Get("type").(string)),
+		Description:        new(d.Get("description").(string)),
+		Enabled:            new(d.Get("enabled").(bool)),
+		GroupOperator:      new(d.Get("group_operator").(string)),
+		RequestLogging:     new(d.Get("request_logging").(string)),
 		Conditions:         expandNGWAFRuleUpdateConditions(conditionRaw),
 		GroupConditions:    expandNGWAFRuleGroupUpdateConditions(groupRaw),
 		MultivalConditions: expandNGWAFRuleMultiValUpdateConditions(multivalRaw),
@@ -106,20 +105,20 @@ func expandNGWAFRuleCreateActions(raw []any, scopeType string) []*rules.CreateAc
 	for _, item := range raw {
 		m := item.(map[string]any)
 		action := &rules.CreateAction{
-			Type: gofastly.ToPointer(m["type"].(string)),
+			Type: new(m["type"].(string)),
 		}
 		if v, ok := m["signal"]; ok {
-			action.Signal = gofastly.ToPointer(v.(string))
+			action.Signal = new(v.(string))
 		}
 		if scopeType == "workspace" {
 			if v, ok := m["allow_interactive"]; ok && v.(bool) {
-				action.AllowInteractive = gofastly.ToPointer(v.(bool))
+				action.AllowInteractive = new(v.(bool))
 			}
 			if v, ok := m["deception_type"]; ok && v != "" {
-				action.DeceptionType = gofastly.ToPointer(v.(string))
+				action.DeceptionType = new(v.(string))
 			}
 			if v, ok := m["redirect_url"]; ok && v != "" {
-				action.RedirectURL = gofastly.ToPointer(v.(string))
+				action.RedirectURL = new(v.(string))
 			}
 			if v, ok := m["response_code"]; ok && v != 0 {
 				val := v.(int)
@@ -141,20 +140,20 @@ func expandNGWAFRuleUpdateActions(raw []any, scopeType string) []*rules.UpdateAc
 	for _, item := range raw {
 		m := item.(map[string]any)
 		action := &rules.UpdateAction{
-			Type: gofastly.ToPointer(m["type"].(string)),
+			Type: new(m["type"].(string)),
 		}
 		if v, ok := m["signal"]; ok {
-			action.Signal = gofastly.ToPointer(v.(string))
+			action.Signal = new(v.(string))
 		}
 		if scopeType == "workspace" {
 			if v, ok := m["allow_interactive"]; ok && v.(bool) {
-				action.AllowInteractive = gofastly.ToPointer(v.(bool))
+				action.AllowInteractive = new(v.(bool))
 			}
 			if v, ok := m["deception_type"]; ok && v != "" {
-				action.DeceptionType = gofastly.ToPointer(v.(string))
+				action.DeceptionType = new(v.(string))
 			}
 			if v, ok := m["redirect_url"]; ok {
-				action.RedirectURL = gofastly.ToPointer(v.(string))
+				action.RedirectURL = new(v.(string))
 			}
 			if v, ok := m["response_code"]; ok {
 				val := v.(int)
@@ -174,9 +173,9 @@ func expandNGWAFRuleCreateConditions(raw []any) []*rules.CreateCondition {
 
 	conds := expandNGWAFRuleConditionsGeneric(raw, func(field, operator, value string) any {
 		return &rules.CreateCondition{
-			Field:    gofastly.ToPointer(field),
-			Operator: gofastly.ToPointer(operator),
-			Value:    gofastly.ToPointer(value),
+			Field:    new(field),
+			Operator: new(operator),
+			Value:    new(value),
 		}
 	})
 	result := make([]*rules.CreateCondition, len(conds))
@@ -194,9 +193,9 @@ func expandNGWAFRuleUpdateConditions(raw []any) []*rules.UpdateCondition {
 
 	conds := expandNGWAFRuleConditionsGeneric(raw, func(field, operator, value string) any {
 		return &rules.UpdateCondition{
-			Field:    gofastly.ToPointer(field),
-			Operator: gofastly.ToPointer(operator),
-			Value:    gofastly.ToPointer(value),
+			Field:    new(field),
+			Operator: new(operator),
+			Value:    new(value),
 		}
 	})
 	result := make([]*rules.UpdateCondition, len(conds))
@@ -245,9 +244,9 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 					continue
 				}
 				conditions = append(conditions, &rules.CreateCondition{
-					Field:    gofastly.ToPointer(field),
-					Operator: gofastly.ToPointer(operator),
-					Value:    gofastly.ToPointer(value),
+					Field:    new(field),
+					Operator: new(operator),
+					Value:    new(value),
 				})
 			}
 		}
@@ -295,24 +294,24 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 							continue
 						}
 						mvConditions = append(mvConditions, &rules.CreateConditionMult{
-							Field:    gofastly.ToPointer(mvField),
-							Operator: gofastly.ToPointer(mvOperator),
-							Value:    gofastly.ToPointer(mvValue),
+							Field:    new(mvField),
+							Operator: new(mvOperator),
+							Value:    new(mvValue),
 						})
 					}
 				}
 
 				multivalConditions = append(multivalConditions, &rules.CreateMultivalCondition{
-					Field:         gofastly.ToPointer(field),
-					Operator:      gofastly.ToPointer(operator),
-					GroupOperator: gofastly.ToPointer(mvGroupOp),
+					Field:         new(field),
+					Operator:      new(operator),
+					GroupOperator: new(mvGroupOp),
 					Conditions:    mvConditions,
 				})
 			}
 		}
 
 		groupConditions = append(groupConditions, &rules.CreateGroupCondition{
-			GroupOperator:      gofastly.ToPointer(groupOp),
+			GroupOperator:      new(groupOp),
 			Conditions:         conditions,
 			MultivalConditions: multivalConditions,
 		})
@@ -359,9 +358,9 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 					continue
 				}
 				conditions = append(conditions, &rules.UpdateCondition{
-					Field:    gofastly.ToPointer(field),
-					Operator: gofastly.ToPointer(operator),
-					Value:    gofastly.ToPointer(value),
+					Field:    new(field),
+					Operator: new(operator),
+					Value:    new(value),
 				})
 			}
 		}
@@ -409,24 +408,24 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 							continue
 						}
 						mvConditions = append(mvConditions, &rules.UpdateConditionMult{
-							Field:    gofastly.ToPointer(mvField),
-							Operator: gofastly.ToPointer(mvOperator),
-							Value:    gofastly.ToPointer(mvValue),
+							Field:    new(mvField),
+							Operator: new(mvOperator),
+							Value:    new(mvValue),
 						})
 					}
 				}
 
 				multivalConditions = append(multivalConditions, &rules.UpdateMultivalCondition{
-					Field:         gofastly.ToPointer(field),
-					Operator:      gofastly.ToPointer(operator),
-					GroupOperator: gofastly.ToPointer(mvGroupOp),
+					Field:         new(field),
+					Operator:      new(operator),
+					GroupOperator: new(mvGroupOp),
 					Conditions:    mvConditions,
 				})
 			}
 		}
 
 		groupConditions = append(groupConditions, &rules.UpdateGroupCondition{
-			GroupOperator:      gofastly.ToPointer(groupOp),
+			GroupOperator:      new(groupOp),
 			Conditions:         conditions,
 			MultivalConditions: multivalConditions,
 		})
@@ -464,15 +463,15 @@ func expandNGWAFRuleMultiValCreateConditions(raw []any) []*rules.CreateMultivalC
 				continue
 			}
 			conditions = append(conditions, &rules.CreateConditionMult{
-				Field:    gofastly.ToPointer(cm["field"].(string)),
-				Operator: gofastly.ToPointer(cm["operator"].(string)),
-				Value:    gofastly.ToPointer(cm["value"].(string)),
+				Field:    new(cm["field"].(string)),
+				Operator: new(cm["operator"].(string)),
+				Value:    new(cm["value"].(string)),
 			})
 		}
 		MultivalConditions = append(MultivalConditions, &rules.CreateMultivalCondition{
-			Field:         gofastly.ToPointer(field),
-			Operator:      gofastly.ToPointer(operator),
-			GroupOperator: gofastly.ToPointer(groupOperator),
+			Field:         new(field),
+			Operator:      new(operator),
+			GroupOperator: new(groupOperator),
 			Conditions:    conditions,
 		})
 	}
@@ -509,15 +508,15 @@ func expandNGWAFRuleMultiValUpdateConditions(raw []any) []*rules.UpdateMultivalC
 				continue
 			}
 			conditions = append(conditions, &rules.UpdateConditionMult{
-				Field:    gofastly.ToPointer(cm["field"].(string)),
-				Operator: gofastly.ToPointer(cm["operator"].(string)),
-				Value:    gofastly.ToPointer(cm["value"].(string)),
+				Field:    new(cm["field"].(string)),
+				Operator: new(cm["operator"].(string)),
+				Value:    new(cm["value"].(string)),
 			})
 		}
 		MultivalConditions = append(MultivalConditions, &rules.UpdateMultivalCondition{
-			Field:         gofastly.ToPointer(field),
-			Operator:      gofastly.ToPointer(operator),
-			GroupOperator: gofastly.ToPointer(groupOperator),
+			Field:         new(field),
+			Operator:      new(operator),
+			GroupOperator: new(groupOperator),
 			Conditions:    conditions,
 		})
 	}
@@ -553,10 +552,10 @@ func expandNGWAFRuleCreateRateLimit(raw []any) *rules.CreateRateLimit {
 		m := item.(map[string]any)
 		createRateLimit = &rules.CreateRateLimit{
 			ClientIdentifiers: createRateLimitClientIdentifiers,
-			Duration:          gofastly.ToPointer(m["duration"].(int)),
-			Interval:          gofastly.ToPointer(m["interval"].(int)),
-			Signal:            gofastly.ToPointer(m["signal"].(string)),
-			Threshold:         gofastly.ToPointer(m["threshold"].(int)),
+			Duration:          new(m["duration"].(int)),
+			Interval:          new(m["interval"].(int)),
+			Signal:            new(m["signal"].(string)),
+			Threshold:         new(m["threshold"].(int)),
 		}
 	}
 
@@ -591,10 +590,10 @@ func expandNGWAFRuleUpdateRateLimit(raw []any) *rules.UpdateRateLimit {
 		m := item.(map[string]any)
 		updateRateLimit = &rules.UpdateRateLimit{
 			ClientIdentifiers: updateRateLimitClientIdentifiers,
-			Duration:          gofastly.ToPointer(m["duration"].(int)),
-			Interval:          gofastly.ToPointer(m["interval"].(int)),
-			Signal:            gofastly.ToPointer(m["signal"].(string)),
-			Threshold:         gofastly.ToPointer(m["threshold"].(int)),
+			Duration:          new(m["duration"].(int)),
+			Interval:          new(m["interval"].(int)),
+			Signal:            new(m["signal"].(string)),
+			Threshold:         new(m["threshold"].(int)),
 		}
 	}
 

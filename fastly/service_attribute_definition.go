@@ -73,7 +73,7 @@ type VCLLoggingAttributes struct {
 // getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes.
 func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]any) VCLLoggingAttributes {
 	vla := VCLLoggingAttributes{
-		period:    gofastly.ToPointer(3600),
+		period:    new(3600),
 		placement: "none",
 	}
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -81,10 +81,10 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 			vla.format = val.(string)
 		}
 		if val, ok := data["format_version"]; ok {
-			vla.formatVersion = gofastly.ToPointer(val.(int))
+			vla.formatVersion = new(val.(int))
 		}
 		if val, ok := data["period"]; ok {
-			vla.period = gofastly.ToPointer(val.(int))
+			vla.period = new(val.(int))
 		}
 		if val, ok := data["placement"]; ok {
 			vla.placement = val.(string)

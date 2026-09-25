@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/key"
 	arcprovider "github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/provider"
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/providerconnection"
@@ -150,8 +149,8 @@ func TestFlattenAIRuntimeControlVirtualKeys(t *testing.T) {
 			CreatedAt:  "2026-05-07T16:42:01Z",
 			CreatedBy:  "Ellen Ripley",
 			UpdatedAt:  "2026-05-07T16:42:01Z",
-			ExpiresAt:  gofastly.ToPointer("2026-05-08T04:42:01Z"),
-			LastUsedAt: gofastly.ToPointer("2026-05-07T16:52:14Z"),
+			ExpiresAt:  new("2026-05-08T04:42:01Z"),
+			LastUsedAt: new("2026-05-07T16:52:14Z"),
 		},
 		{
 			// Null timestamps must flatten to empty strings rather than panic.

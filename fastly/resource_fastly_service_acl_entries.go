@@ -188,8 +188,8 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 			resource := resource.(map[string]any)
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-				Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-				EntryID:   gofastly.ToPointer(resource["id"].(string)),
+				Operation: new(gofastly.DeleteBatchOperation),
+				EntryID:   new(resource["id"].(string)),
 			})
 		}
 
@@ -232,8 +232,8 @@ func resourceServiceACLEntriesDelete(ctx context.Context, d *schema.ResourceData
 		val := vRaw.(map[string]any)
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-			EntryID:   gofastly.ToPointer(val["id"].(string)),
+			Operation: new(gofastly.DeleteBatchOperation),
+			EntryID:   new(val["id"].(string)),
 		})
 	}
 
@@ -334,17 +334,17 @@ func executeBatchACLOperations(ctx context.Context, conn *gofastly.Client, servi
 
 func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
-		Operation: gofastly.ToPointer(op),
-		EntryID:   gofastly.ToPointer(v["id"].(string)),
-		IP:        gofastly.ToPointer(v["ip"].(string)),
-		Negated:   gofastly.ToPointer(gofastly.Compatibool(v["negated"].(bool))),
-		Comment:   gofastly.ToPointer(v["comment"].(string)),
+		Operation: new(op),
+		EntryID:   new(v["id"].(string)),
+		IP:        new(v["ip"].(string)),
+		Negated:   new(gofastly.Compatibool(v["negated"].(bool))),
+		Comment:   new(v["comment"].(string)),
 	}
 
 	subnet := convertSubnetToInt(v["subnet"].(string))
 	// only set zero subnet if the attribute is explicitly set
 	if v["subnet"].(string) == "0" || subnet != 0 {
-		entry.Subnet = gofastly.ToPointer(subnet)
+		entry.Subnet = new(subnet)
 	}
 
 	return entry

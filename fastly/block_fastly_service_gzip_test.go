@@ -21,8 +21,8 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 		{
 			remote: []*gofastly.Gzip{
 				{
-					Name:       gofastly.ToPointer("somegzip"),
-					Extensions: gofastly.ToPointer("css"),
+					Name:       new("somegzip"),
+					Extensions: new("css"),
 				},
 			},
 			local: []map[string]any{
@@ -35,14 +35,14 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 		{
 			remote: []*gofastly.Gzip{
 				{
-					Name:         gofastly.ToPointer("somegzip"),
-					Extensions:   gofastly.ToPointer("css json js"),
-					ContentTypes: gofastly.ToPointer("text/html"),
+					Name:         new("somegzip"),
+					Extensions:   new("css json js"),
+					ContentTypes: new("text/html"),
 				},
 				{
-					Name:         gofastly.ToPointer("someothergzip"),
-					Extensions:   gofastly.ToPointer("css js"),
-					ContentTypes: gofastly.ToPointer("text/html text/xml"),
+					Name:         new("someothergzip"),
+					Extensions:   new("css js"),
+					ContentTypes: new("text/html text/xml"),
 				},
 			},
 			local: []map[string]any{
@@ -74,35 +74,35 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Gzip{
-		CacheCondition: gofastly.ToPointer("testing_condition"),
-		ContentTypes:   gofastly.ToPointer(""),
-		Extensions:     gofastly.ToPointer("css js"),
-		Name:           gofastly.ToPointer("gzip file types"),
-		ServiceVersion: gofastly.ToPointer(1),
+		CacheCondition: new("testing_condition"),
+		ContentTypes:   new(""),
+		Extensions:     new("css js"),
+		Name:           new("gzip file types"),
+		ServiceVersion: new(1),
 	}
 
 	log2 := gofastly.Gzip{
-		CacheCondition: gofastly.ToPointer(""),
-		ContentTypes:   gofastly.ToPointer("text/css text/html"),
-		Extensions:     gofastly.ToPointer(""),
-		Name:           gofastly.ToPointer("gzip extensions"),
-		ServiceVersion: gofastly.ToPointer(1),
+		CacheCondition: new(""),
+		ContentTypes:   new("text/css text/html"),
+		Extensions:     new(""),
+		Name:           new("gzip extensions"),
+		ServiceVersion: new(1),
 	}
 
 	log3 := gofastly.Gzip{
-		CacheCondition: gofastly.ToPointer(""),
-		ContentTypes:   gofastly.ToPointer("text/javascript application/x-javascript application/javascript text/css text/html"),
-		Extensions:     gofastly.ToPointer("css js html"),
-		Name:           gofastly.ToPointer("all"),
-		ServiceVersion: gofastly.ToPointer(1),
+		CacheCondition: new(""),
+		ContentTypes:   new("text/javascript application/x-javascript application/javascript text/css text/html"),
+		Extensions:     new("css js html"),
+		Name:           new("all"),
+		ServiceVersion: new(1),
 	}
 
 	log4 := gofastly.Gzip{
-		CacheCondition: gofastly.ToPointer(""),
-		ContentTypes:   gofastly.ToPointer("application/x-javascript text/javascript"),
-		Extensions:     gofastly.ToPointer("css"),
-		Name:           gofastly.ToPointer("all"),
-		ServiceVersion: gofastly.ToPointer(1),
+		CacheCondition: new(""),
+		ContentTypes:   new("application/x-javascript text/javascript"),
+		Extensions:     new("css"),
+		Name:           new("all"),
+		ServiceVersion: new(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -174,10 +174,10 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 					// If empty value is sent, default value is assigned automatically by the API
 					// and so we ignore these fields in response
 					if gofastly.ToValue(g.Extensions) == "" {
-						lg.Extensions = gofastly.ToPointer("")
+						lg.Extensions = new("")
 					}
 					if gofastly.ToValue(g.ContentTypes) == "" {
-						lg.ContentTypes = gofastly.ToPointer("")
+						lg.ContentTypes = new("")
 					}
 					if !reflect.DeepEqual(g, lg) {
 						return fmt.Errorf("bad match Gzip match, expected (%#v), got (%#v)", g, lg)

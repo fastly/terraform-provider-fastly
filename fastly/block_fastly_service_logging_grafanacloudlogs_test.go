@@ -20,42 +20,42 @@ func TestAccFastlyServiceLoggingGrafanaCloudLogs_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.GrafanaCloudLogs{
-		Format:            gofastly.ToPointer(LoggingGrafanaCloudLogsDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("grafanacloudlogs-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		User:              gofastly.ToPointer("123456"),
-		Token:             gofastly.ToPointer("token"),
-		URL:               gofastly.ToPointer("https://test123.grafana.net"),
-		Index:             gofastly.ToPointer("{\"label\": \"value\"}"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingGrafanaCloudLogsDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("grafanacloudlogs-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		User:              new("123456"),
+		Token:             new("token"),
+		URL:               new("https://test123.grafana.net"),
+		Index:             new("{\"label\": \"value\"}"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.GrafanaCloudLogs{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("grafanacloudlogs-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		User:              gofastly.ToPointer("987654"),
-		Token:             gofastly.ToPointer("t0k3n"),
-		URL:               gofastly.ToPointer("https://test456.grafana.net"),
-		Index:             gofastly.ToPointer("{\"label2\": \"value2\"}"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("grafanacloudlogs-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		User:              new("987654"),
+		Token:             new("t0k3n"),
+		URL:               new("https://test456.grafana.net"),
+		Index:             new("{\"label2\": \"value2\"}"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.GrafanaCloudLogs{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-grafanacloudlogs-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		User:              gofastly.ToPointer("123456"),
-		URL:               gofastly.ToPointer("https://test789.grafana.net"),
-		Index:             gofastly.ToPointer("{\"label3\": \"value3\"}"),
-		Token:             gofastly.ToPointer("another-token"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-grafanacloudlogs-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		User:              new("123456"),
+		URL:               new("https://test789.grafana.net"),
+		Index:             new("{\"label3\": \"value3\"}"),
+		Token:             new("another-token"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,13 +94,13 @@ func TestAccFastlyServiceLoggingGrafanaCloudLogs_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.GrafanaCloudLogs{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("grafanacloudlogs-endpoint"),
-		User:             gofastly.ToPointer("123456"),
-		Token:            gofastly.ToPointer("token"),
-		URL:              gofastly.ToPointer("https://test123.grafana.net"),
-		Index:            gofastly.ToPointer("{\"label\": \"value\"}"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		ServiceVersion:   new(1),
+		Name:             new("grafanacloudlogs-endpoint"),
+		User:             new("123456"),
+		Token:            new("token"),
+		URL:              new("https://test123.grafana.net"),
+		Index:            new("{\"label\": \"value\"}"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -292,15 +292,15 @@ func TestResourceFastlyFlattenGrafanaCloudLogs(t *testing.T) {
 		{
 			remote: []*gofastly.GrafanaCloudLogs{
 				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("grafanacloudlogs-endpoint"),
-					User:             gofastly.ToPointer("123456"),
-					Token:            gofastly.ToPointer("token"),
-					URL:              gofastly.ToPointer("https://test123.grafana.net"),
-					Index:            gofastly.ToPointer("{\"label\": \"value\"}"),
-					Format:           gofastly.ToPointer(LoggingGrafanaCloudLogsDefaultFormat),
-					FormatVersion:    gofastly.ToPointer(2),
-					ProcessingRegion: gofastly.ToPointer("eu"),
+					ServiceVersion:   new(1),
+					Name:             new("grafanacloudlogs-endpoint"),
+					User:             new("123456"),
+					Token:            new("token"),
+					URL:              new("https://test123.grafana.net"),
+					Index:            new("{\"label\": \"value\"}"),
+					Format:           new(LoggingGrafanaCloudLogsDefaultFormat),
+					FormatVersion:    new(2),
+					ProcessingRegion: new("eu"),
 				},
 			},
 			local: []map[string]any{

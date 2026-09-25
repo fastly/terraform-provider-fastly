@@ -68,11 +68,11 @@ func resourceFastlyAPISecurityOperationTagCreate(ctx context.Context, d *schema.
 	serviceID := d.Get("service_id").(string)
 
 	in := &operations.CreateTagInput{
-		ServiceID: gofastly.ToPointer(serviceID),
-		Name:      gofastly.ToPointer(d.Get("name").(string)),
+		ServiceID: new(serviceID),
+		Name:      new(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("description"); ok {
-		in.Description = gofastly.ToPointer(v.(string))
+		in.Description = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating API Security operation tag: %#v", in)
@@ -97,8 +97,8 @@ func resourceFastlyAPISecurityOperationTagRead(ctx context.Context, d *schema.Re
 	}
 
 	tag, err := operations.DescribeTag(ctx, conn, &operations.DescribeTagInput{
-		ServiceID: gofastly.ToPointer(serviceID),
-		TagID:     gofastly.ToPointer(tagID),
+		ServiceID: new(serviceID),
+		TagID:     new(tagID),
 	})
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
@@ -130,16 +130,16 @@ func resourceFastlyAPISecurityOperationTagUpdate(ctx context.Context, d *schema.
 
 	// API may require "name" on PATCH even when only changing description.
 	in := &operations.UpdateTagInput{
-		ServiceID: gofastly.ToPointer(serviceID),
-		TagID:     gofastly.ToPointer(tagID),
-		Name:      gofastly.ToPointer(d.Get("name").(string)),
+		ServiceID: new(serviceID),
+		TagID:     new(tagID),
+		Name:      new(d.Get("name").(string)),
 	}
 
 	if d.HasChange("description") {
 		if v, ok := d.GetOk("description"); ok {
-			in.Description = gofastly.ToPointer(v.(string))
+			in.Description = new(v.(string))
 		} else {
-			in.Description = gofastly.ToPointer("")
+			in.Description = new("")
 		}
 	}
 
@@ -162,8 +162,8 @@ func resourceFastlyAPISecurityOperationTagDelete(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] Deleting API Security operation tag (%s/%s)", serviceID, tagID)
 	err = operations.DeleteTag(gofastly.NewContextForResourceID(ctx, serviceID), conn, &operations.DeleteTagInput{
-		ServiceID: gofastly.ToPointer(serviceID),
-		TagID:     gofastly.ToPointer(tagID),
+		ServiceID: new(serviceID),
+		TagID:     new(tagID),
 	})
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {

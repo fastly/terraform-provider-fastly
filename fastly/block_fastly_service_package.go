@@ -78,7 +78,7 @@ func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.
 			input.PackageContent = decoded
 		}
 		if v := pkg["filename"].(string); v != "" {
-			input.PackagePath = gofastly.ToPointer(v)
+			input.PackagePath = new(v)
 		}
 
 		_, err := conn.UpdatePackage(gofastly.NewContextForResourceID(ctx, d.Id()), input)

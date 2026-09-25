@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/domainmanagement/v1/domains"
 )
 
@@ -75,7 +74,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 		fqdn := a["fqdn"]
 		conn := testAccProvider.Meta().(*APIClient).conn
 		input := &domains.ListInput{
-			FQDN: gofastly.ToPointer(fqdn),
+			FQDN: new(fqdn),
 		}
 		cl, err := domains.List(context.TODO(), conn, input)
 		if err != nil {

@@ -24,20 +24,20 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 		{
 			remote: []*gofastly.ACLEntry{
 				{
-					ServiceID: gofastly.ToPointer("service-id"),
-					ACLID:     gofastly.ToPointer("1234567890"),
-					IP:        gofastly.ToPointer("127.0.0.1"),
-					Subnet:    gofastly.ToPointer(24),
-					Negated:   gofastly.ToPointer(false),
-					Comment:   gofastly.ToPointer("ACL Entry 1"),
+					ServiceID: new("service-id"),
+					ACLID:     new("1234567890"),
+					IP:        new("127.0.0.1"),
+					Subnet:    new(24),
+					Negated:   new(false),
+					Comment:   new("ACL Entry 1"),
 				},
 				{
-					ServiceID: gofastly.ToPointer("service-id"),
-					ACLID:     gofastly.ToPointer("0987654321"),
-					IP:        gofastly.ToPointer("192.168.0.1"),
-					Subnet:    gofastly.ToPointer(16),
-					Negated:   gofastly.ToPointer(true),
-					Comment:   gofastly.ToPointer("ACL Entry 2"),
+					ServiceID: new("service-id"),
+					ACLID:     new("0987654321"),
+					IP:        new("192.168.0.1"),
+					Subnet:    new(16),
+					Negated:   new(true),
+					Comment:   new("ACL Entry 2"),
 				},
 			},
 			local: []map[string]any{

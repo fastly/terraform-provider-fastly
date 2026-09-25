@@ -121,8 +121,8 @@ func testAccCheckAPISecurityOperationDestroy(s *terraform.State) error {
 		}
 
 		_, err = operations.Describe(context.Background(), conn, &operations.DescribeInput{
-			ServiceID:   gofastly.ToPointer(serviceID),
-			OperationID: gofastly.ToPointer(opID),
+			ServiceID:   new(serviceID),
+			OperationID: new(opID),
 		})
 		if err == nil {
 			return fmt.Errorf("API Security operation still exists after destroy: %s/%s", serviceID, opID)

@@ -150,46 +150,46 @@ func (h *RequestSettingServiceAttributeHandler) Update(ctx context.Context, d *s
 	}
 
 	// Always preserve optional boolean fields
-	opts.ForceMiss = gofastly.ToPointer(gofastly.Compatibool(resource["force_miss"].(bool)))
-	opts.ForceSSL = gofastly.ToPointer(gofastly.Compatibool(resource["force_ssl"].(bool)))
-	opts.BypassBusyWait = gofastly.ToPointer(gofastly.Compatibool(resource["bypass_busy_wait"].(bool)))
-	opts.TimerSupport = gofastly.ToPointer(gofastly.Compatibool(resource["timer_support"].(bool)))
+	opts.ForceMiss = new(gofastly.Compatibool(resource["force_miss"].(bool)))
+	opts.ForceSSL = new(gofastly.Compatibool(resource["force_ssl"].(bool)))
+	opts.BypassBusyWait = new(gofastly.Compatibool(resource["bypass_busy_wait"].(bool)))
+	opts.TimerSupport = new(gofastly.Compatibool(resource["timer_support"].(bool)))
 
 	if v, ok := modified["action"]; ok {
 		switch strings.ToLower(v.(string)) {
 		case "lookup":
-			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionLookup)
+			opts.Action = new(gofastly.RequestSettingActionLookup)
 		case "pass":
-			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionPass)
+			opts.Action = new(gofastly.RequestSettingActionPass)
 		default:
-			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionUnset)
+			opts.Action = new(gofastly.RequestSettingActionUnset)
 		}
 	}
 	if v, ok := modified["max_stale_age"]; ok {
-		opts.MaxStaleAge = gofastly.ToPointer(v.(int))
+		opts.MaxStaleAge = new(v.(int))
 	}
 	if v, ok := modified["hash_keys"]; ok {
-		opts.HashKeys = gofastly.ToPointer(v.(string))
+		opts.HashKeys = new(v.(string))
 	}
 	if v, ok := modified["xff"]; ok {
 		switch strings.ToLower(v.(string)) {
 		case "clear":
-			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFClear)
+			opts.XForwardedFor = new(gofastly.RequestSettingXFFClear)
 		case "leave":
-			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFLeave)
+			opts.XForwardedFor = new(gofastly.RequestSettingXFFLeave)
 		case "append":
-			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFAppend)
+			opts.XForwardedFor = new(gofastly.RequestSettingXFFAppend)
 		case "append_all":
-			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFAppendAll)
+			opts.XForwardedFor = new(gofastly.RequestSettingXFFAppendAll)
 		case "overwrite":
-			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFOverwrite)
+			opts.XForwardedFor = new(gofastly.RequestSettingXFFOverwrite)
 		}
 	}
 	if v, ok := modified["default_host"]; ok {
-		opts.DefaultHost = gofastly.ToPointer(v.(string))
+		opts.DefaultHost = new(v.(string))
 	}
 	if v, ok := modified["request_condition"]; ok {
-		opts.RequestCondition = gofastly.ToPointer(v.(string))
+		opts.RequestCondition = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Request Settings Opts: %#v", opts)
@@ -276,40 +276,40 @@ func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string
 func buildRequestSetting(requestSettingMap any) *gofastly.CreateRequestSettingInput {
 	resource := requestSettingMap.(map[string]any)
 	opts := gofastly.CreateRequestSettingInput{
-		BypassBusyWait: gofastly.ToPointer(gofastly.Compatibool(resource["bypass_busy_wait"].(bool))),
-		DefaultHost:    gofastly.ToPointer(resource["default_host"].(string)),
-		ForceMiss:      gofastly.ToPointer(gofastly.Compatibool(resource["force_miss"].(bool))),
-		ForceSSL:       gofastly.ToPointer(gofastly.Compatibool(resource["force_ssl"].(bool))),
-		HashKeys:       gofastly.ToPointer(resource["hash_keys"].(string)),
-		MaxStaleAge:    gofastly.ToPointer(resource["max_stale_age"].(int)),
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		TimerSupport:   gofastly.ToPointer(gofastly.Compatibool(resource["timer_support"].(bool))),
+		BypassBusyWait: new(gofastly.Compatibool(resource["bypass_busy_wait"].(bool))),
+		DefaultHost:    new(resource["default_host"].(string)),
+		ForceMiss:      new(gofastly.Compatibool(resource["force_miss"].(bool))),
+		ForceSSL:       new(gofastly.Compatibool(resource["force_ssl"].(bool))),
+		HashKeys:       new(resource["hash_keys"].(string)),
+		MaxStaleAge:    new(resource["max_stale_age"].(int)),
+		Name:           new(resource["name"].(string)),
+		TimerSupport:   new(gofastly.Compatibool(resource["timer_support"].(bool))),
 	}
 
 	if v := resource["request_condition"].(string); v != "" {
-		opts.RequestCondition = gofastly.ToPointer(v)
+		opts.RequestCondition = new(v)
 	}
 
 	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "lookup":
-		opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionLookup)
+		opts.Action = new(gofastly.RequestSettingActionLookup)
 	case "pass":
-		opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionPass)
+		opts.Action = new(gofastly.RequestSettingActionPass)
 	}
 
 	xff := strings.ToLower(resource["xff"].(string))
 	switch xff {
 	case "clear":
-		opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFClear)
+		opts.XForwardedFor = new(gofastly.RequestSettingXFFClear)
 	case "leave":
-		opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFLeave)
+		opts.XForwardedFor = new(gofastly.RequestSettingXFFLeave)
 	case "append":
-		opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFAppend)
+		opts.XForwardedFor = new(gofastly.RequestSettingXFFAppend)
 	case "append_all":
-		opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFAppendAll)
+		opts.XForwardedFor = new(gofastly.RequestSettingXFFAppendAll)
 	case "overwrite":
-		opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFOverwrite)
+		opts.XForwardedFor = new(gofastly.RequestSettingXFFOverwrite)
 	}
 
 	return &opts

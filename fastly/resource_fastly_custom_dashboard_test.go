@@ -54,7 +54,7 @@ func generateDashboardParams(t *testing.T) (name, description string, items []go
 			Visualization: gofastly.DashboardVisualization{
 				Config: gofastly.VisualizationConfig{
 					PlotType:          gofastly.PlotTypeLine,
-					CalculationMethod: gofastly.ToPointer(gofastly.CalculationMethodAvg),
+					CalculationMethod: new(gofastly.CalculationMethodAvg),
 				},
 				Type: gofastly.VisualizationTypeChart,
 			},
@@ -69,7 +69,7 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 
 	createDashboard := gofastly.CreateObservabilityCustomDashboardInput{
 		Name:        dashboardName,
-		Description: gofastly.ToPointer(dashboardDescription),
+		Description: new(dashboardDescription),
 		Items:       dashboardItems,
 	}
 

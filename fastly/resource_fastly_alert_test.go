@@ -138,8 +138,8 @@ func TestAccFastlyAlert_BasicStats(t *testing.T) {
 
 func TestAccFastlyAlert_BasicStatsAggregate(t *testing.T) {
 	service := gofastly.ServiceDetail{
-		Name:      gofastly.ToPointer(""),
-		ServiceID: gofastly.ToPointer(""),
+		Name:      new(""),
+		ServiceID: new(""),
 	}
 
 	createAlert := gofastly.AlertDefinition{
@@ -197,8 +197,8 @@ func TestAccFastlyAlert_BasicStatsAggregate(t *testing.T) {
 
 func TestAccFastlyAlert_BasicStatsAggregatePercent(t *testing.T) {
 	service := gofastly.ServiceDetail{
-		Name:      gofastly.ToPointer(""),
-		ServiceID: gofastly.ToPointer(""),
+		Name:      new(""),
+		ServiceID: new(""),
 	}
 
 	createAlert := gofastly.AlertDefinition{
@@ -321,7 +321,7 @@ func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, servic
 
 		for {
 			adr, err := conn.ListAlertDefinitions(context.TODO(), &gofastly.ListAlertDefinitionsInput{
-				Cursor: gofastly.ToPointer(cursor),
+				Cursor: new(cursor),
 			})
 			if err != nil {
 				return fmt.Errorf("error listing all alert definitions: %s", err)

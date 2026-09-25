@@ -68,26 +68,26 @@ func TestAccFastlyServiceProductEnablement_vcl_basic(t *testing.T) {
 	// the specific backend definitions in the Terraform configuration.
 
 	b1 := gofastly.Backend{
-		Address: gofastly.ToPointer(backendAddress),
-		Name:    gofastly.ToPointer(backendName),
-		Port:    gofastly.ToPointer(443),
-		Shield:  gofastly.ToPointer("amsterdam-nl"), // required for image_optimizer
+		Address: new(backendAddress),
+		Name:    new(backendName),
+		Port:    new(443),
+		Shield:  new("amsterdam-nl"), // required for image_optimizer
 
 		// NOTE: The following are defaults applied by the API.
-		AutoLoadbalance:     gofastly.ToPointer(false),
-		BetweenBytesTimeout: gofastly.ToPointer(10000),
-		Comment:             gofastly.ToPointer(""),
-		ConnectTimeout:      gofastly.ToPointer(1000),
-		ErrorThreshold:      gofastly.ToPointer(0),
-		FirstByteTimeout:    gofastly.ToPointer(15000),
-		HealthCheck:         gofastly.ToPointer(""),
-		Hostname:            gofastly.ToPointer(backendAddress),
-		MaxConn:             gofastly.ToPointer(200),
-		PreferIPv6:          gofastly.ToPointer(false),
-		RequestCondition:    gofastly.ToPointer(""),
-		SSLCheckCert:        gofastly.ToPointer(true),
-		Weight:              gofastly.ToPointer(100),
-		UseSSL:              gofastly.ToPointer(false),
+		AutoLoadbalance:     new(false),
+		BetweenBytesTimeout: new(10000),
+		Comment:             new(""),
+		ConnectTimeout:      new(1000),
+		ErrorThreshold:      new(0),
+		FirstByteTimeout:    new(15000),
+		HealthCheck:         new(""),
+		Hostname:            new(backendAddress),
+		MaxConn:             new(200),
+		PreferIPv6:          new(false),
+		RequestCondition:    new(""),
+		SSLCheckCert:        new(true),
+		Weight:              new(100),
+		UseSSL:              new(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -23,16 +23,16 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 		{
 			remote: []*gofastly.DictionaryItem{
 				{
-					ServiceID:    gofastly.ToPointer("service-id"),
-					DictionaryID: gofastly.ToPointer("1234567890"),
-					ItemKey:      gofastly.ToPointer("key-1"),
-					ItemValue:    gofastly.ToPointer("value-1"),
+					ServiceID:    new("service-id"),
+					DictionaryID: new("1234567890"),
+					ItemKey:      new("key-1"),
+					ItemValue:    new("value-1"),
 				},
 				{
-					ServiceID:    gofastly.ToPointer("service-id"),
-					DictionaryID: gofastly.ToPointer("1234567890"),
-					ItemKey:      gofastly.ToPointer("key-2"),
-					ItemValue:    gofastly.ToPointer("value-2"),
+					ServiceID:    new("service-id"),
+					DictionaryID: new("1234567890"),
+					ItemKey:      new("key-2"),
+					ItemValue:    new("value-2"),
 				},
 			},
 			local: map[string]string{
@@ -448,8 +448,8 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 		ServiceID:    gofastly.ToValue(service.ServiceID),
 		DictionaryID: gofastly.ToValue(dict.DictionaryID),
 
-		ItemKey:   gofastly.ToPointer(expectedKey),
-		ItemValue: gofastly.ToPointer(expectedValue),
+		ItemKey:   new(expectedKey),
+		ItemValue: new(expectedValue),
 	})
 	if err != nil {
 		t.Fatalf("[ERR] Error Creating Dictionary item for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.Name), err)

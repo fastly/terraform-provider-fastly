@@ -163,38 +163,38 @@ func (h *HeaderServiceAttributeHandler) Update(ctx context.Context, d *schema.Re
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["action"]; ok {
-		opts.Action = gofastly.ToPointer(gofastly.HeaderAction(v.(string)))
+		opts.Action = new(gofastly.HeaderAction(v.(string)))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.ToPointer(gofastly.HeaderType(v.(string)))
+		opts.Type = new(gofastly.HeaderType(v.(string)))
 	}
 	if v, ok := modified["destination"]; ok {
-		opts.Destination = gofastly.ToPointer(v.(string))
+		opts.Destination = new(v.(string))
 	}
 	if v, ok := modified["source"]; ok {
-		opts.Source = gofastly.ToPointer(v.(string))
+		opts.Source = new(v.(string))
 	}
 	if v, ok := modified["regex"]; ok {
-		opts.Regex = gofastly.ToPointer(v.(string))
+		opts.Regex = new(v.(string))
 	}
 	if v, ok := modified["substitution"]; ok {
-		opts.Substitution = gofastly.ToPointer(v.(string))
+		opts.Substitution = new(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(v.(int))
+		opts.Priority = new(v.(int))
 	}
 	if v, ok := modified["request_condition"]; ok {
-		opts.RequestCondition = gofastly.ToPointer(v.(string))
+		opts.RequestCondition = new(v.(string))
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.ToPointer(v.(string))
+		opts.CacheCondition = new(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 
 	// Always set optional boolean fields to preserve state
-	opts.IgnoreIfSet = gofastly.ToPointer(gofastly.Compatibool(resource["ignore_if_set"].(bool)))
+	opts.IgnoreIfSet = new(gofastly.Compatibool(resource["ignore_if_set"].(bool)))
 
 	log.Printf("[DEBUG] Update Header Opts: %#v", opts)
 	_, err := conn.UpdateHeader(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
@@ -281,42 +281,42 @@ func flattenHeaders(remoteState []*gofastly.Header) []map[string]any {
 func buildHeader(headerMap any) *gofastly.CreateHeaderInput {
 	resource := headerMap.(map[string]any)
 	opts := gofastly.CreateHeaderInput{
-		Name:              gofastly.ToPointer(resource["name"].(string)),
-		IgnoreIfSet:       gofastly.ToPointer(gofastly.Compatibool(resource["ignore_if_set"].(bool))),
-		Destination:       gofastly.ToPointer(resource["destination"].(string)),
-		Priority:          gofastly.ToPointer(resource["priority"].(int)),
-		Source:            gofastly.ToPointer(resource["source"].(string)),
-		Regex:             gofastly.ToPointer(resource["regex"].(string)),
-		Substitution:      gofastly.ToPointer(resource["substitution"].(string)),
-		RequestCondition:  gofastly.ToPointer(resource["request_condition"].(string)),
-		CacheCondition:    gofastly.ToPointer(resource["cache_condition"].(string)),
-		ResponseCondition: gofastly.ToPointer(resource["response_condition"].(string)),
+		Name:              new(resource["name"].(string)),
+		IgnoreIfSet:       new(gofastly.Compatibool(resource["ignore_if_set"].(bool))),
+		Destination:       new(resource["destination"].(string)),
+		Priority:          new(resource["priority"].(int)),
+		Source:            new(resource["source"].(string)),
+		Regex:             new(resource["regex"].(string)),
+		Substitution:      new(resource["substitution"].(string)),
+		RequestCondition:  new(resource["request_condition"].(string)),
+		CacheCondition:    new(resource["cache_condition"].(string)),
+		ResponseCondition: new(resource["response_condition"].(string)),
 	}
 
 	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "set":
-		opts.Action = gofastly.ToPointer(gofastly.HeaderActionSet)
+		opts.Action = new(gofastly.HeaderActionSet)
 	case "append":
-		opts.Action = gofastly.ToPointer(gofastly.HeaderActionAppend)
+		opts.Action = new(gofastly.HeaderActionAppend)
 	case "delete":
-		opts.Action = gofastly.ToPointer(gofastly.HeaderActionDelete)
+		opts.Action = new(gofastly.HeaderActionDelete)
 	case "regex":
-		opts.Action = gofastly.ToPointer(gofastly.HeaderActionRegex)
+		opts.Action = new(gofastly.HeaderActionRegex)
 	case "regex_repeat":
-		opts.Action = gofastly.ToPointer(gofastly.HeaderActionRegexRepeat)
+		opts.Action = new(gofastly.HeaderActionRegexRepeat)
 	}
 
 	ty := strings.ToLower(resource["type"].(string))
 	switch ty {
 	case "request":
-		opts.Type = gofastly.ToPointer(gofastly.HeaderTypeRequest)
+		opts.Type = new(gofastly.HeaderTypeRequest)
 	case "fetch":
-		opts.Type = gofastly.ToPointer(gofastly.HeaderTypeFetch)
+		opts.Type = new(gofastly.HeaderTypeFetch)
 	case "cache":
-		opts.Type = gofastly.ToPointer(gofastly.HeaderTypeCache)
+		opts.Type = new(gofastly.HeaderTypeCache)
 	case "response":
-		opts.Type = gofastly.ToPointer(gofastly.HeaderTypeResponse)
+		opts.Type = new(gofastly.HeaderTypeResponse)
 	}
 
 	return &opts

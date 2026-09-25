@@ -151,28 +151,28 @@ func (h *ScalyrServiceAttributeHandler) Update(ctx context.Context, d *schema.Re
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.ToPointer(v.(string))
+		opts.Token = new(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.ToPointer(v.(string))
+		opts.Region = new(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["project_id"]; ok {
-		opts.ProjectID = gofastly.ToPointer(v.(string))
+		opts.ProjectID = new(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Scalyr Opts: %#v", opts)
@@ -255,28 +255,28 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateScalyrInput{
-		Format:           gofastly.ToPointer(vla.format),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		Region:           gofastly.ToPointer(resource["region"].(string)),
+		Name:             new(resource["name"].(string)),
+		Region:           new(resource["region"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		Token:            gofastly.ToPointer(resource["token"].(string)),
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		Token:            new(resource["token"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	if v := resource["project_id"].(string); v != "" {
-		opts.ProjectID = gofastly.ToPointer(v)
+		opts.ProjectID = new(v)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	return opts

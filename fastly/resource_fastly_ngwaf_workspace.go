@@ -111,10 +111,10 @@ func resourceFastlyNGWAFWorkspaceCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	i := ws.CreateInput{
-		Name:            gofastly.ToPointer(d.Get("name").(string)),
-		Description:     gofastly.ToPointer(d.Get("description").(string)),
-		Mode:            gofastly.ToPointer(d.Get("mode").(string)),
-		IPAnonymization: gofastly.ToPointer(d.Get("ip_anonymization").(string)),
+		Name:            new(d.Get("name").(string)),
+		Description:     new(d.Get("description").(string)),
+		Mode:            new(d.Get("mode").(string)),
+		IPAnonymization: new(d.Get("ip_anonymization").(string)),
 	}
 
 	if v, ok := d.GetOk("client_ip_headers"); ok {
@@ -139,10 +139,10 @@ func resourceFastlyNGWAFWorkspaceCreate(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("attack_signal_thresholds"); ok && len(v.([]any)) > 0 {
 		th := v.([]any)[0].(map[string]any)
 		i.AttackSignalThresholds = &ws.AttackSignalThresholdsCreateInput{
-			OneMinute:  gofastly.ToPointer(th["one_minute"].(int)),
-			TenMinutes: gofastly.ToPointer(th["ten_minutes"].(int)),
-			OneHour:    gofastly.ToPointer(th["one_hour"].(int)),
-			Immediate:  gofastly.ToPointer(th["immediate"].(bool)),
+			OneMinute:  new(th["one_minute"].(int)),
+			TenMinutes: new(th["ten_minutes"].(int)),
+			OneHour:    new(th["one_hour"].(int)),
+			Immediate:  new(th["immediate"].(bool)),
 		}
 	}
 
@@ -162,7 +162,7 @@ func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*APIClient).conn
 
 	i := ws.GetInput{
-		WorkspaceID: gofastly.ToPointer(d.Id()),
+		WorkspaceID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF workspace input: %#v", i)
@@ -240,11 +240,11 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	i := ws.UpdateInput{
-		WorkspaceID:     gofastly.ToPointer(d.Id()),
-		Name:            gofastly.ToPointer(d.Get("name").(string)),
-		Description:     gofastly.ToPointer(d.Get("description").(string)),
-		Mode:            gofastly.ToPointer(d.Get("mode").(string)),
-		IPAnonymization: gofastly.ToPointer(d.Get("ip_anonymization").(string)),
+		WorkspaceID:     new(d.Id()),
+		Name:            new(d.Get("name").(string)),
+		Description:     new(d.Get("description").(string)),
+		Mode:            new(d.Get("mode").(string)),
+		IPAnonymization: new(d.Get("ip_anonymization").(string)),
 	}
 
 	if v, ok := d.GetOk("client_ip_headers"); ok {
@@ -269,10 +269,10 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("attack_signal_thresholds"); ok && len(v.([]any)) > 0 {
 		th := v.([]any)[0].(map[string]any)
 		i.AttackSignalThresholds = &ws.AttackSignalThresholdsUpdateInput{
-			OneMinute:  gofastly.ToPointer(th["one_minute"].(int)),
-			TenMinutes: gofastly.ToPointer(th["ten_minutes"].(int)),
-			OneHour:    gofastly.ToPointer(th["one_hour"].(int)),
-			Immediate:  gofastly.ToPointer(th["immediate"].(bool)),
+			OneMinute:  new(th["one_minute"].(int)),
+			TenMinutes: new(th["ten_minutes"].(int)),
+			OneHour:    new(th["one_hour"].(int)),
+			Immediate:  new(th["immediate"].(bool)),
 		}
 	}
 
@@ -290,7 +290,7 @@ func resourceFastlyNGWAFWorkspaceDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	i := ws.DeleteInput{
-		WorkspaceID: gofastly.ToPointer(d.Id()),
+		WorkspaceID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF workspace input: %#v", i)

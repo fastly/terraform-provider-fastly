@@ -20,36 +20,36 @@ func TestAccFastlyServiceLoggingNewRelic_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		Format:            gofastly.ToPointer(LoggingNewRelicDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("newrelic-endpoint"),
-		Region:            gofastly.ToPointer("US"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("token"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingNewRelicDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("newrelic-endpoint"),
+		Region:            new("US"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("token"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.NewRelic{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("newrelic-endpoint"),
-		Region:            gofastly.ToPointer("EU"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("t0k3n"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("newrelic-endpoint"),
+		Region:            new("EU"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("t0k3n"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.NewRelic{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-newrelic-endpoint"),
-		Region:            gofastly.ToPointer("US"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("another-token"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-newrelic-endpoint"),
+		Region:            new("US"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("another-token"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,12 +89,12 @@ func TestAccFastlyServiceLoggingNewRelic_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		FormatVersion:    gofastly.ToPointer(2),
-		Name:             gofastly.ToPointer("newrelic-endpoint"),
-		Region:           gofastly.ToPointer("US"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		Token:            gofastly.ToPointer("token"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		FormatVersion:    new(2),
+		Name:             new("newrelic-endpoint"),
+		Region:           new("US"),
+		ServiceVersion:   new(1),
+		Token:            new("token"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -273,13 +273,13 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 		{
 			remote: []*gofastly.NewRelic{
 				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("newrelic-endpoint"),
-					Token:            gofastly.ToPointer("token"),
-					Region:           gofastly.ToPointer("US"),
-					FormatVersion:    gofastly.ToPointer(2),
-					Format:           gofastly.ToPointer(LoggingNewRelicDefaultFormat),
-					ProcessingRegion: gofastly.ToPointer("eu"),
+					ServiceVersion:   new(1),
+					Name:             new("newrelic-endpoint"),
+					Token:            new("token"),
+					Region:           new("US"),
+					FormatVersion:    new(2),
+					Format:           new(LoggingNewRelicDefaultFormat),
+					ProcessingRegion: new("eu"),
 				},
 			},
 			local: []map[string]any{

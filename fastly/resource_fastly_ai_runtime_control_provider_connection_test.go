@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/providerconnection"
 )
 
@@ -62,7 +61,7 @@ func testAccCheckAIRuntimeControlProviderConnectionRemoteState(resourceName, exp
 		conn := testAccProvider.Meta().(*APIClient).conn
 
 		got, err := providerconnection.Get(context.TODO(), conn, &providerconnection.GetInput{
-			ID: gofastly.ToPointer(rs.Primary.ID),
+			ID: new(rs.Primary.ID),
 		})
 		if err != nil {
 			return fmt.Errorf("error fetching AI Runtime Control provider connection (%s): %s", rs.Primary.ID, err)
@@ -100,7 +99,7 @@ func testAccCheckAIRuntimeControlProviderConnectionDestroy(s *terraform.State) e
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := providerconnection.Get(context.TODO(), conn, &providerconnection.GetInput{
-			ID: gofastly.ToPointer(rs.Primary.ID),
+			ID: new(rs.Primary.ID),
 		})
 		if err == nil {
 			return fmt.Errorf("tried deleting AI Runtime Control provider connection (%s), but was still found", rs.Primary.ID)

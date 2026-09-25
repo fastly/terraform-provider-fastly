@@ -202,53 +202,53 @@ func (h *CloudfilesServiceAttributeHandler) Update(ctx context.Context, d *schem
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.ToPointer(v.(string))
+		opts.User = new(v.(string))
 	}
 	if v, ok := modified["access_key"]; ok {
-		opts.AccessKey = gofastly.ToPointer(v.(string))
+		opts.AccessKey = new(v.(string))
 	}
 	if v, ok := modified["bucket_name"]; ok {
-		opts.BucketName = gofastly.ToPointer(v.(string))
+		opts.BucketName = new(v.(string))
 	}
 	if v, ok := modified["path"]; ok {
-		opts.Path = gofastly.ToPointer(v.(string))
+		opts.Path = new(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.ToPointer(v.(string))
+		opts.Region = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.ToPointer(v.(int))
+		opts.Period = new(v.(int))
 	}
 	if v, ok := modified["gzip_level"]; ok {
 		// This condition prevents users on old provider versions from having
 		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
 		if gl := v.(int); gl != -1 {
-			opts.GzipLevel = gofastly.ToPointer(gl)
+			opts.GzipLevel = new(gl)
 		}
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.ToPointer(v.(string))
+		opts.MessageType = new(v.(string))
 	}
 	if v, ok := modified["timestamp_format"]; ok {
-		opts.TimestampFormat = gofastly.ToPointer(v.(string))
+		opts.TimestampFormat = new(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
-		opts.PublicKey = gofastly.ToPointer(v.(string))
+		opts.PublicKey = new(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Cloud Files Opts: %#v", opts)
@@ -315,7 +315,7 @@ func flattenCloudfiles(remoteState []*gofastly.Cloudfiles, localState []any) []m
 		for _, s := range localState {
 			v := s.(map[string]any)
 			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
+				resource.GzipLevel = new(v["gzip_level"].(int))
 				break
 			}
 		}
@@ -392,22 +392,22 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, servi
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateCloudfilesInput{
-		AccessKey:        gofastly.ToPointer(resource["access_key"].(string)),
-		BucketName:       gofastly.ToPointer(resource["bucket_name"].(string)),
-		CompressionCodec: gofastly.ToPointer(resource["compression_codec"].(string)),
-		Format:           gofastly.ToPointer(vla.format),
+		AccessKey:        new(resource["access_key"].(string)),
+		BucketName:       new(resource["bucket_name"].(string)),
+		CompressionCodec: new(resource["compression_codec"].(string)),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		Path:             gofastly.ToPointer(resource["path"].(string)),
-		Period:           gofastly.ToPointer(resource["period"].(int)),
-		PublicKey:        gofastly.ToPointer(resource["public_key"].(string)),
-		Region:           gofastly.ToPointer(resource["region"].(string)),
+		MessageType:      new(resource["message_type"].(string)),
+		Name:             new(resource["name"].(string)),
+		Path:             new(resource["path"].(string)),
+		Period:           new(resource["period"].(int)),
+		PublicKey:        new(resource["public_key"].(string)),
+		Region:           new(resource["region"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.ToPointer(resource["timestamp_format"].(string)),
-		User:             gofastly.ToPointer(resource["user"].(string)),
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		TimestampFormat:  new(resource["timestamp_format"].(string)),
+		User:             new(resource["user"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
@@ -415,17 +415,17 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, servi
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
 	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
-		opts.GzipLevel = gofastly.ToPointer(gl)
+		opts.GzipLevel = new(gl)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	return opts

@@ -141,28 +141,28 @@ func (h *DatadogServiceAttributeHandler) Update(ctx context.Context, d *schema.R
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
-		Token:          gofastly.ToPointer(resource["token"].(string)),
+		Token:          new(resource["token"].(string)),
 	}
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.ToPointer(v.(string))
+		opts.Region = new(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Datadog Opts: %#v", opts)
@@ -244,24 +244,24 @@ func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap any, serviceID s
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateDatadogInput{
-		Format:           gofastly.ToPointer(vla.format),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		Region:           gofastly.ToPointer(resource["region"].(string)),
+		Name:             new(resource["name"].(string)),
+		Region:           new(resource["region"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		Token:            gofastly.ToPointer(resource["token"].(string)),
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		Token:            new(resource["token"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	return opts

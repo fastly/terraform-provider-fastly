@@ -50,11 +50,11 @@ func resourceFastlyNGWAFAlertOpsgenieIntegrationCreate(ctx context.Context, d *s
 
 	i := opsgenieAlerts.CreateInput{
 		Config: &opsgenieAlerts.CreateConfig{
-			Key: gofastly.ToPointer(d.Get("key").(string)),
+			Key: new(d.Get("key").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF Opsgenie alert input: %#v", i)
@@ -76,8 +76,8 @@ func resourceFastlyNGWAFAlertOpsgenieIntegrationRead(ctx context.Context, d *sch
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := opsgenieAlerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Opsgenie alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -105,11 +105,11 @@ func resourceFastlyNGWAFAlertOpsgenieIntegrationUpdate(ctx context.Context, d *s
 	conn := meta.(*APIClient).conn
 
 	i := opsgenieAlerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &opsgenieAlerts.UpdateConfig{
-			Key: gofastly.ToPointer(d.Get("key").(string)),
+			Key: new(d.Get("key").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Opsgenie alert input: %#v", i)
@@ -128,8 +128,8 @@ func resourceFastlyNGWAFAlertOpsgenieIntegrationDelete(ctx context.Context, d *s
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := opsgenieAlerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF Opsgenie alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

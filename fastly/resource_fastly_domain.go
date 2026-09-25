@@ -52,13 +52,13 @@ func resourceFastlyDomainCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var input domains.CreateInput
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("fqdn"); ok {
-		input.FQDN = gofastly.ToPointer(v.(string))
+		input.FQDN = new(v.(string))
 	}
 	if v, ok := d.GetOk("service_id"); ok {
-		input.ServiceID = gofastly.ToPointer(v.(string))
+		input.ServiceID = new(v.(string))
 	}
 
 	data, err := domains.Create(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, &input)
@@ -79,7 +79,7 @@ func resourceFastlyDomainRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*APIClient).conn
 
 	input := &domains.GetInput{
-		DomainID: gofastly.ToPointer(d.Id()),
+		DomainID: new(d.Id()),
 	}
 
 	data, err := domains.Get(ctx, conn, input)
@@ -107,13 +107,13 @@ func resourceFastlyDomainUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*APIClient).conn
 
 	input := &domains.UpdateInput{
-		DomainID: gofastly.ToPointer(d.Id()),
+		DomainID: new(d.Id()),
 	}
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("service_id"); ok {
-		input.ServiceID = gofastly.ToPointer(v.(string))
+		input.ServiceID = new(v.(string))
 	}
 
 	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
@@ -127,7 +127,7 @@ func resourceFastlyDomainUpdate(ctx context.Context, d *schema.ResourceData, met
 func resourceFastlyDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	input := &domains.DeleteInput{
-		DomainID: gofastly.ToPointer(d.Id()),
+		DomainID: new(d.Id()),
 	}
 	err := domains.Delete(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
 	if err != nil {

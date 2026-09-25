@@ -20,40 +20,40 @@ func TestAccFastlyServiceLoggingScalyr_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		Format:            gofastly.ToPointer(LoggingScalyrDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("scalyrlogger"),
-		Placement:         gofastly.ToPointer("none"),
-		Region:            gofastly.ToPointer("US"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("tkn"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingScalyrDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("scalyrlogger"),
+		Placement:         new("none"),
+		Region:            new("US"),
+		ResponseCondition: new("response_condition_test"),
+		ServiceVersion:    new(1),
+		Token:             new("tkn"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Scalyr{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("scalyrlogger"),
-		Placement:         gofastly.ToPointer("none"),
-		Region:            gofastly.ToPointer("EU"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("newtkn"),
-		ProjectID:         gofastly.ToPointer("example-project"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("scalyrlogger"),
+		Placement:         new("none"),
+		Region:            new("EU"),
+		ResponseCondition: new("response_condition_test"),
+		ServiceVersion:    new(1),
+		Token:             new("newtkn"),
+		ProjectID:         new("example-project"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Scalyr{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-scalyrlogger"),
-		Placement:         gofastly.ToPointer("none"),
-		Region:            gofastly.ToPointer("US"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("tknb"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-scalyrlogger"),
+		Placement:         new("none"),
+		Region:            new("US"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("tknb"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,11 +92,11 @@ func TestAccFastlyServiceLoggingScalyr_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		Name:             gofastly.ToPointer("scalyrlogger"),
-		Region:           gofastly.ToPointer("US"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		Token:            gofastly.ToPointer("tkn"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Name:             new("scalyrlogger"),
+		Region:           new("US"),
+		ServiceVersion:   new(1),
+		Token:            new("tkn"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -300,16 +300,16 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 		{
 			remote: []*gofastly.Scalyr{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("scalyr-endpoint"),
-					Region:            gofastly.ToPointer("US"),
-					Token:             gofastly.ToPointer("tkn"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					Format:            gofastly.ToPointer(LoggingScalyrDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					Placement:         gofastly.ToPointer("none"),
-					ProjectID:         gofastly.ToPointer("example-project"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					ServiceVersion:    new(1),
+					Name:              new("scalyr-endpoint"),
+					Region:            new("US"),
+					Token:             new("tkn"),
+					ResponseCondition: new("response_condition"),
+					Format:            new(LoggingScalyrDefaultFormat),
+					FormatVersion:     new(2),
+					Placement:         new("none"),
+					ProjectID:         new("example-project"),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

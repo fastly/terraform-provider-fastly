@@ -50,11 +50,11 @@ func resourceFastlyNGWAFAlertWebhookIntegrationCreate(ctx context.Context, d *sc
 
 	i := webhookAlerts.CreateInput{
 		Config: &webhookAlerts.CreateConfig{
-			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
+			Webhook: new(d.Get("webhook").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF Webhook alert input: %#v", i)
@@ -76,8 +76,8 @@ func resourceFastlyNGWAFAlertWebhookIntegrationRead(ctx context.Context, d *sche
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := webhookAlerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Webhook alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -105,11 +105,11 @@ func resourceFastlyNGWAFAlertWebhookIntegrationUpdate(ctx context.Context, d *sc
 	conn := meta.(*APIClient).conn
 
 	i := webhookAlerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &webhookAlerts.UpdateConfig{
-			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
+			Webhook: new(d.Get("webhook").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Webhook alert input: %#v", i)
@@ -128,8 +128,8 @@ func resourceFastlyNGWAFAlertWebhookIntegrationDelete(ctx context.Context, d *sc
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := webhookAlerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF Webhook alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

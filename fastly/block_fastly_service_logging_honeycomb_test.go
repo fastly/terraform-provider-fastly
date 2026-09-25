@@ -20,38 +20,38 @@ func TestAccFastlyServiceLoggingHoneycomb_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		Dataset:           gofastly.ToPointer("dataset"),
-		Format:            gofastly.ToPointer(LoggingHoneycombDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("honeycomb-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("s3cr3t"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Dataset:           new("dataset"),
+		Format:            new(LoggingHoneycombDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("honeycomb-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("s3cr3t"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Honeycomb{
-		Dataset:           gofastly.ToPointer("new-dataset"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("honeycomb-endpoint"),
-		Placement:         gofastly.ToPointer("none"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("secret"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Dataset:           new("new-dataset"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("honeycomb-endpoint"),
+		Placement:         new("none"),
+		ResponseCondition: new("response_condition_test"),
+		ServiceVersion:    new(1),
+		Token:             new("secret"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Honeycomb{
-		Dataset:           gofastly.ToPointer("another-dataset"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-honeycomb-endpoint"),
-		Placement:         gofastly.ToPointer("none"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("another-token"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Dataset:           new("another-dataset"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-honeycomb-endpoint"),
+		Placement:         new("none"),
+		ResponseCondition: new("response_condition_test"),
+		ServiceVersion:    new(1),
+		Token:             new("another-token"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,11 +90,11 @@ func TestAccFastlyServiceLoggingHoneycomb_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		Dataset:          gofastly.ToPointer("dataset"),
-		Name:             gofastly.ToPointer("honeycomb-endpoint"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		Token:            gofastly.ToPointer("s3cr3t"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Dataset:          new("dataset"),
+		Name:             new("honeycomb-endpoint"),
+		ServiceVersion:   new(1),
+		Token:            new("s3cr3t"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -281,15 +281,15 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 		{
 			remote: []*gofastly.Honeycomb{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("honeycomb-endpoint"),
-					Token:             gofastly.ToPointer("token"),
-					Dataset:           gofastly.ToPointer("dataset"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					Format:            gofastly.ToPointer(LoggingHoneycombDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					ServiceVersion:    new(1),
+					Name:              new("honeycomb-endpoint"),
+					Token:             new("token"),
+					Dataset:           new("dataset"),
+					Placement:         new("none"),
+					ResponseCondition: new("always"),
+					Format:            new(LoggingHoneycombDefaultFormat),
+					FormatVersion:     new(2),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

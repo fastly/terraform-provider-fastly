@@ -19,36 +19,36 @@ func TestAccFastlyServiceLoggingPaperTrail_vcl_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
-		Format:            gofastly.ToPointer(LoggingPapertrailDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("papertrailtesting"),
-		Port:              gofastly.ToPointer(3600),
-		ResponseCondition: gofastly.ToPointer("test_response_condition"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Address:           new("test1.papertrailapp.com"),
+		Format:            new(LoggingPapertrailDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("papertrailtesting"),
+		Port:              new(3600),
+		ResponseCondition: new("test_response_condition"),
+		ServiceVersion:    new(1),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Papertrail{
-		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("papertrailtesting"),
-		Port:              gofastly.ToPointer(3600),
-		ResponseCondition: gofastly.ToPointer("test_response_condition"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		ProcessingRegion:  gofastly.ToPointer("eu"),
+		Address:           new("test1.papertrailapp.com"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("papertrailtesting"),
+		Port:              new(3600),
+		ResponseCondition: new("test_response_condition"),
+		ServiceVersion:    new(1),
+		ProcessingRegion:  new("eu"),
 	}
 
 	log2 := gofastly.Papertrail{
-		Address:           gofastly.ToPointer("test2.papertrailapp.com"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("papertrailtesting2"),
-		Port:              gofastly.ToPointer(8080),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Address:           new("test2.papertrailapp.com"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("papertrailtesting2"),
+		Port:              new(8080),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -87,11 +87,11 @@ func TestAccFastlyServiceLoggingPaperTrail_compute_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		Address:          gofastly.ToPointer("test1.papertrailapp.com"),
-		Name:             gofastly.ToPointer("papertrailtesting"),
-		Port:             gofastly.ToPointer(3600),
-		ServiceVersion:   gofastly.ToPointer(1),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Address:          new("test1.papertrailapp.com"),
+		Name:             new("papertrailtesting"),
+		Port:             new(3600),
+		ServiceVersion:   new(1),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -286,14 +286,14 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 		{
 			remote: []*gofastly.Papertrail{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("papertrailtesting"),
-					Address:           gofastly.ToPointer("test1.papertrailapp.com"),
-					Port:              gofastly.ToPointer(3600),
-					Format:            gofastly.ToPointer(LoggingPapertrailDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					ResponseCondition: gofastly.ToPointer("test_response_condition"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					ServiceVersion:    new(1),
+					Name:              new("papertrailtesting"),
+					Address:           new("test1.papertrailapp.com"),
+					Port:              new(3600),
+					Format:            new(LoggingPapertrailDefaultFormat),
+					FormatVersion:     new(2),
+					ResponseCondition: new("test_response_condition"),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

@@ -96,10 +96,10 @@ func resourceFastlyAIRuntimeControlVirtualKeyCreate(ctx context.Context, d *sche
 	conn := meta.(*APIClient).conn
 
 	i := key.CreateInput{
-		Name:     gofastly.ToPointer(d.Get("name").(string)),
-		Model:    gofastly.ToPointer(d.Get("model").(string)),
-		Provider: gofastly.ToPointer(d.Get("provider_name").(string)),
-		UserID:   gofastly.ToPointer(d.Get("user_id").(string)),
+		Name:     new(d.Get("name").(string)),
+		Model:    new(d.Get("model").(string)),
+		Provider: new(d.Get("provider_name").(string)),
+		UserID:   new(d.Get("user_id").(string)),
 	}
 
 	if v, ok := d.GetOk("expires_at"); ok {
@@ -133,7 +133,7 @@ func resourceFastlyAIRuntimeControlVirtualKeyRead(ctx context.Context, d *schema
 	conn := meta.(*APIClient).conn
 
 	i := key.GetInput{
-		KeyID: gofastly.ToPointer(d.Id()),
+		KeyID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] REFRESH: AI Runtime Control virtual key input: %#v", i)
@@ -196,17 +196,17 @@ func resourceFastlyAIRuntimeControlVirtualKeyUpdate(ctx context.Context, d *sche
 
 	// The API applies a partial update, so only send what actually changed.
 	i := key.UpdateInput{
-		KeyID: gofastly.ToPointer(d.Id()),
+		KeyID: new(d.Id()),
 	}
 
 	if d.HasChange("name") {
-		i.Name = gofastly.ToPointer(d.Get("name").(string))
+		i.Name = new(d.Get("name").(string))
 	}
 	if d.HasChange("model") {
-		i.Model = gofastly.ToPointer(d.Get("model").(string))
+		i.Model = new(d.Get("model").(string))
 	}
 	if d.HasChange("provider_name") {
-		i.Provider = gofastly.ToPointer(d.Get("provider_name").(string))
+		i.Provider = new(d.Get("provider_name").(string))
 	}
 	if d.HasChange("expires_at") {
 		if v, ok := d.GetOk("expires_at"); ok {
@@ -231,7 +231,7 @@ func resourceFastlyAIRuntimeControlVirtualKeyDelete(ctx context.Context, d *sche
 	conn := meta.(*APIClient).conn
 
 	i := key.DeleteInput{
-		KeyID: gofastly.ToPointer(d.Id()),
+		KeyID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] DELETE: AI Runtime Control virtual key input: %#v", i)

@@ -21,12 +21,12 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 		{
 			remote: []*gofastly.RequestSetting{
 				{
-					Action:           gofastly.ToPointer(gofastly.RequestSettingActionPass),
-					DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
-					MaxStaleAge:      gofastly.ToPointer(90),
-					Name:             gofastly.ToPointer("alt_backend"),
-					RequestCondition: gofastly.ToPointer("serve_alt_backend"),
-					XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+					Action:           new(gofastly.RequestSettingActionPass),
+					DefaultHost:      new("http-me.fastly.dev"),
+					MaxStaleAge:      new(90),
+					Name:             new("alt_backend"),
+					RequestCondition: new("serve_alt_backend"),
+					XForwardedFor:    new(gofastly.RequestSettingXFFAppend),
 				},
 			},
 			local: []map[string]any{
@@ -60,11 +60,11 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	rq1 := gofastly.RequestSetting{
-		DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
-		MaxStaleAge:      gofastly.ToPointer(90),
-		Name:             gofastly.ToPointer("alt_backend"),
-		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
-		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+		DefaultHost:      new("http-me.fastly.dev"),
+		MaxStaleAge:      new(90),
+		Name:             new("alt_backend"),
+		RequestCondition: new("serve_alt_backend"),
+		XForwardedFor:    new(gofastly.RequestSettingXFFAppend),
 
 		// We only set a few attributes in our TF config (see above).
 		// For all the other attributes (with the exception of `action`),
@@ -72,20 +72,20 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		// the default value for their types are still sent to the API
 		// and so the API responds with those default values. Hence we have to set
 		// those defaults below...
-		BypassBusyWait: gofastly.ToPointer(false),
-		ForceMiss:      gofastly.ToPointer(false),
-		ForceSSL:       gofastly.ToPointer(false),
-		HashKeys:       gofastly.ToPointer(""),
-		TimerSupport:   gofastly.ToPointer(false),
+		BypassBusyWait: new(false),
+		ForceMiss:      new(false),
+		ForceSSL:       new(false),
+		HashKeys:       new(""),
+		TimerSupport:   new(false),
 	}
 
 	rq2 := gofastly.RequestSetting{
-		Action:           gofastly.ToPointer(gofastly.RequestSettingActionLookup),
-		DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
-		MaxStaleAge:      gofastly.ToPointer(900),
-		Name:             gofastly.ToPointer("alt_backend"),
-		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
-		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+		Action:           new(gofastly.RequestSettingActionLookup),
+		DefaultHost:      new("http-me.fastly.dev"),
+		MaxStaleAge:      new(900),
+		Name:             new("alt_backend"),
+		RequestCondition: new("serve_alt_backend"),
+		XForwardedFor:    new(gofastly.RequestSettingXFFAppend),
 
 		// We only set a few attributes in our TF config (see above).
 		// For all the other attributes (with the exception of `action` and `xff`,
@@ -93,19 +93,19 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		// the default value for their types are still sent to the API
 		// and so the API responds with those default values. Hence we have to set
 		// those defaults below...
-		BypassBusyWait: gofastly.ToPointer(false),
-		ForceMiss:      gofastly.ToPointer(false),
-		ForceSSL:       gofastly.ToPointer(false),
-		HashKeys:       gofastly.ToPointer(""),
-		TimerSupport:   gofastly.ToPointer(false),
+		BypassBusyWait: new(false),
+		ForceMiss:      new(false),
+		ForceSSL:       new(false),
+		HashKeys:       new(""),
+		TimerSupport:   new(false),
 	}
 	rq3 := gofastly.RequestSetting{
-		Action:           gofastly.ToPointer(gofastly.RequestSettingActionUnset),
-		DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
-		MaxStaleAge:      gofastly.ToPointer(900),
-		Name:             gofastly.ToPointer("alt_backend"),
-		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
-		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+		Action:           new(gofastly.RequestSettingActionUnset),
+		DefaultHost:      new("http-me.fastly.dev"),
+		MaxStaleAge:      new(900),
+		Name:             new("alt_backend"),
+		RequestCondition: new("serve_alt_backend"),
+		XForwardedFor:    new(gofastly.RequestSettingXFFAppend),
 
 		// We only set a few attributes in our TF config (see above).
 		// For all the other attributes (with the exception of `action` and `xff`,
@@ -113,11 +113,11 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		// the default value for their types are still sent to the API
 		// and so the API responds with those default values. Hence we have to set
 		// those defaults below...
-		BypassBusyWait: gofastly.ToPointer(false),
-		ForceMiss:      gofastly.ToPointer(false),
-		ForceSSL:       gofastly.ToPointer(false),
-		HashKeys:       gofastly.ToPointer(""),
-		TimerSupport:   gofastly.ToPointer(false),
+		BypassBusyWait: new(false),
+		ForceMiss:      new(false),
+		ForceSSL:       new(false),
+		HashKeys:       new(""),
+		TimerSupport:   new(false),
 	}
 
 	createAction := ""        // initially we expect no action to be set in HTTP request.

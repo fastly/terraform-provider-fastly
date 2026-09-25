@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/apisecurity/operations"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -76,10 +75,10 @@ func dataSourceFastlyAPISecurityOperationTagsRead(ctx context.Context, d *schema
 	serviceID := d.Get("service_id").(string)
 
 	in := &operations.ListTagsInput{
-		ServiceID: gofastly.ToPointer(serviceID),
+		ServiceID: new(serviceID),
 		// Keep pagination internal; go-fastly will paginate across all pages.
-		Page:  gofastly.ToPointer(0),
-		Limit: gofastly.ToPointer(apiSecurityDefaultPageLimit),
+		Page:  new(0),
+		Limit: new(apiSecurityDefaultPageLimit),
 	}
 
 	// Capture meta.total from the first page.

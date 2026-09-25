@@ -49,9 +49,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*APIClient).conn
 
 	u, err := conn.CreateUser(ctx, &gofastly.CreateUserInput{
-		Login: gofastly.ToPointer(d.Get("login").(string)),
-		Name:  gofastly.ToPointer(d.Get("name").(string)),
-		Role:  gofastly.ToPointer(d.Get("role").(string)),
+		Login: new(d.Get("login").(string)),
+		Name:  new(d.Get("name").(string)),
+		Role:  new(d.Get("role").(string)),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -105,8 +105,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	if d.HasChanges("name", "role") {
 		_, err := conn.UpdateUser(ctx, &gofastly.UpdateUserInput{
 			UserID: d.Id(),
-			Name:   gofastly.ToPointer(d.Get("name").(string)),
-			Role:   gofastly.ToPointer(d.Get("role").(string)),
+			Name:   new(d.Get("name").(string)),
+			Role:   new(d.Get("role").(string)),
 		})
 		if err != nil {
 			return diag.FromErr(err)

@@ -71,9 +71,9 @@ func resourceFastlyAIRuntimeControlProviderConnectionCreate(ctx context.Context,
 	conn := meta.(*APIClient).conn
 
 	i := providerconnection.CreateInput{
-		Name:    gofastly.ToPointer(d.Get("name").(string)),
-		BaseURL: gofastly.ToPointer(d.Get("base_url").(string)),
-		APIKey:  gofastly.ToPointer(d.Get("api_key").(string)),
+		Name:    new(d.Get("name").(string)),
+		BaseURL: new(d.Get("base_url").(string)),
+		APIKey:  new(d.Get("api_key").(string)),
 		Models:  expandAIRuntimeControlModels(d.Get("models").(*schema.Set)),
 	}
 
@@ -95,7 +95,7 @@ func resourceFastlyAIRuntimeControlProviderConnectionRead(ctx context.Context, d
 	conn := meta.(*APIClient).conn
 
 	i := providerconnection.GetInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] REFRESH: AI Runtime Control provider connection input: %#v", i)
@@ -137,14 +137,14 @@ func resourceFastlyAIRuntimeControlProviderConnectionUpdate(ctx context.Context,
 
 	// The API applies a partial update, so only send what actually changed.
 	i := providerconnection.UpdateInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	}
 
 	if d.HasChange("base_url") {
-		i.BaseURL = gofastly.ToPointer(d.Get("base_url").(string))
+		i.BaseURL = new(d.Get("base_url").(string))
 	}
 	if d.HasChange("api_key") {
-		i.APIKey = gofastly.ToPointer(d.Get("api_key").(string))
+		i.APIKey = new(d.Get("api_key").(string))
 	}
 	if d.HasChange("models") {
 		i.Models = expandAIRuntimeControlModels(d.Get("models").(*schema.Set))
@@ -165,7 +165,7 @@ func resourceFastlyAIRuntimeControlProviderConnectionDelete(ctx context.Context,
 	conn := meta.(*APIClient).conn
 
 	i := providerconnection.DeleteInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] DELETE: AI Runtime Control provider connection input: %#v", i)

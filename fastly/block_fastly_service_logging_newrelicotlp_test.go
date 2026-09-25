@@ -20,42 +20,42 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelicOTLP{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("newrelicotlp-endpoint"),
-		Token:          gofastly.ToPointer("token"),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
+		ServiceVersion: new(1),
+		Name:           new("newrelicotlp-endpoint"),
+		Token:          new("token"),
+		Region:         new("US"),
+		FormatVersion:  new(2),
+		Format:         new(LoggingNewRelicOLTPDefaultFormat),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
-		ResponseCondition: gofastly.ToPointer(""),
-		URL:               gofastly.ToPointer(""),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		ResponseCondition: new(""),
+		URL:               new(""),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.NewRelicOTLP{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("newrelicotlp-endpoint"),
-		Token:          gofastly.ToPointer("t0k3n"),
-		Region:         gofastly.ToPointer("EU"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer(LoggingFormatUpdate),
+		ServiceVersion: new(1),
+		Name:           new("newrelicotlp-endpoint"),
+		Token:          new("t0k3n"),
+		Region:         new("EU"),
+		FormatVersion:  new(2),
+		Format:         new(LoggingFormatUpdate),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
-		ResponseCondition: gofastly.ToPointer(""),
-		URL:               gofastly.ToPointer(""),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		ResponseCondition: new(""),
+		URL:               new(""),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.NewRelicOTLP{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("another-newrelicotlp-endpoint"),
-		Token:          gofastly.ToPointer("another-token"),
-		Region:         gofastly.ToPointer("US"),
-		URL:            gofastly.ToPointer("https://example.nr-data.net"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer(LoggingFormatUpdate),
+		ServiceVersion: new(1),
+		Name:           new("another-newrelicotlp-endpoint"),
+		Token:          new("another-token"),
+		Region:         new("US"),
+		URL:            new("https://example.nr-data.net"),
+		FormatVersion:  new(2),
+		Format:         new(LoggingFormatUpdate),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
-		ResponseCondition: gofastly.ToPointer(""),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		ResponseCondition: new(""),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -210,12 +210,12 @@ func TestAccFastlyServiceLoggingNewRelicOTLP_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelicOTLP{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("newrelicotlp-endpoint"),
-		Token:            gofastly.ToPointer("token"),
-		Region:           gofastly.ToPointer(""),
-		Placement:        gofastly.ToPointer("none"),
-		ProcessingRegion: gofastly.ToPointer("none"),
+		ServiceVersion:   new(1),
+		Name:             new("newrelicotlp-endpoint"),
+		Token:            new("token"),
+		Region:           new(""),
+		Placement:        new("none"),
+		ProcessingRegion: new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -284,26 +284,26 @@ func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
 		{
 			remote: []*gofastly.NewRelicOTLP{
 				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("newrelicotlp-endpoint"),
-					Token:            gofastly.ToPointer("token"),
-					Region:           gofastly.ToPointer("US"),
-					FormatVersion:    gofastly.ToPointer(2),
-					Format:           gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
-					ProcessingRegion: gofastly.ToPointer("eu"),
+					ServiceVersion:   new(1),
+					Name:             new("newrelicotlp-endpoint"),
+					Token:            new("token"),
+					Region:           new("US"),
+					FormatVersion:    new(2),
+					Format:           new(LoggingNewRelicOLTPDefaultFormat),
+					ProcessingRegion: new("eu"),
 				},
 			},
 			local: []map[string]any{
 				{
-					"format":             gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
-					"format_version":     gofastly.ToPointer(2),
-					"name":               gofastly.ToPointer("newrelicotlp-endpoint"),
+					"format":             new(LoggingNewRelicOLTPDefaultFormat),
+					"format_version":     new(2),
+					"name":               new("newrelicotlp-endpoint"),
 					"placement":          placement, // implies nil
-					"region":             gofastly.ToPointer("US"),
+					"region":             new("US"),
 					"response_condition": responseCondition, // implies nil
-					"token":              gofastly.ToPointer("token"),
+					"token":              new("token"),
 					"url":                loggingURL, // implies nil
-					"processing_region":  gofastly.ToPointer("eu"),
+					"processing_region":  new("eu"),
 				},
 			},
 		},

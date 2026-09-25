@@ -49,11 +49,11 @@ func resourceFastlyNGWAFAlertMailingListIntegrationCreate(ctx context.Context, d
 
 	i := mailingListAlerts.CreateInput{
 		Config: &mailingListAlerts.CreateConfig{
-			Address: gofastly.ToPointer(d.Get("address").(string)),
+			Address: new(d.Get("address").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF MailingList alert input: %#v", i)
@@ -75,8 +75,8 @@ func resourceFastlyNGWAFAlertMailingListIntegrationRead(ctx context.Context, d *
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := mailingListAlerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF MailingList alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -104,11 +104,11 @@ func resourceFastlyNGWAFAlertMailingListIntegrationUpdate(ctx context.Context, d
 	conn := meta.(*APIClient).conn
 
 	i := mailingListAlerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &mailingListAlerts.UpdateConfig{
-			Address: gofastly.ToPointer(d.Get("address").(string)),
+			Address: new(d.Get("address").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF MailingList alert input: %#v", i)
@@ -127,8 +127,8 @@ func resourceFastlyNGWAFAlertMailingListIntegrationDelete(ctx context.Context, d
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := mailingListAlerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF MailingList alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

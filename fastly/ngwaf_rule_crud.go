@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/rules"
 )
 
@@ -42,7 +41,7 @@ func resourceFastlyNGWAFRuleRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	i := &rules.GetInput{
-		RuleID: fastly.ToPointer(d.Id()),
+		RuleID: new(d.Id()),
 		Scope:  rsc.scope,
 	}
 
@@ -89,7 +88,7 @@ func resourceFastlyNGWAFRuleDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	i := &rules.DeleteInput{
-		RuleID: fastly.ToPointer(d.Id()),
+		RuleID: new(d.Id()),
 		Scope:  rsc.scope,
 	}
 

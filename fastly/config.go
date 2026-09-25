@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"golang.org/x/net/http2"
 
 	gofastly "github.com/fastly/go-fastly/v17/fastly"
 )
@@ -73,7 +72,7 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	// NOTE: "force_http2" provider option is an experimental feature.
 	// http2.Transport struct fields are largely different than http.Transport
 	// so leave it to default values for now.
-	http2DefaultTransport := &http2.Transport{}
+	http2DefaultTransport := &http.Transport{}
 
 	redactedHeaders := []string{"Fastly-Key"}
 

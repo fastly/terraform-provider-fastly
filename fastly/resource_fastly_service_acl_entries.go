@@ -227,8 +227,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if !d.Get("manage_entries").(bool) {
-		log.Print("[DEBUG] Skipping ACL entries refresh after update: manage_entries is false")
-		return nil
+		return resourceServiceACLEntriesRead(ctx, d, meta)
 	}
 
 	return refreshServiceACLEntries(ctx, d, meta)

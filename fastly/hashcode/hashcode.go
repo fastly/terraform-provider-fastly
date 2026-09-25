@@ -28,7 +28,7 @@ func Strings(strings []string) (string, error) {
 	var buf bytes.Buffer
 
 	for _, s := range strings {
-		_, err := buf.WriteString(fmt.Sprintf("%s-", s))
+		_, err := fmt.Fprintf(&buf, "%s-", s)
 		if err != nil {
 			return "", err
 		}

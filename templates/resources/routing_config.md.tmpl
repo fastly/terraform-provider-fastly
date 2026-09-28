@@ -1,0 +1,38 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_routing_config"
+sidebar_current: "docs-fastly-resource-routing-config"
+description: |-
+  Provides a routing config with automatic versioning
+---
+
+# fastly_routing_config
+
+Routing configs let you route requests to different services (or other destinations) based on
+URL path, using conditional rules. This resource manages a routing config's `path` and `rule`
+configuration using **automatic versioning**: every apply reconciles the routing config's draft
+paths and rules against this resource's configuration, then activates the result as the new
+active version. The underlying draft/version workflow exposed by the API is never surfaced to
+Terraform — there's no `version` or `activate` argument for you to manage.
+
+A routing config isn't useful on its own; it must be linked to one or more domains via
+[`fastly_routing_config_domain_link`](routing_config_domain_link.md) before it will route traffic.
+
+-> **Note:** This resource refreshes each `path` and `rule` it manages individually by ID rather
+than listing a routing config's current paths/rules. This means it will not detect a path or rule
+added to the routing config outside of Terraform (e.g. via the API or UI directly) — only drift on
+paths/rules this resource already created.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/routing_config_basic_usage.tf" }}
+
+## Import
+
+Routing configs can be imported using their ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/routing_config_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

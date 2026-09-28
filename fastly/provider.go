@@ -137,6 +137,8 @@ func Provider() *schema.Provider {
 			"fastly_ngwaf_alert_webhook_integration":         resourceFastlyNGWAFAlertWebhookIntegration(),
 			"fastly_ngwaf_redaction":                         resourceFastlyNGWAFRedaction(),
 			"fastly_ngwaf_thresholds":                        resourceFastlyNGWAFThresholds(),
+			"fastly_routing_config":                          resourceFastlyRoutingConfig(),
+			"fastly_routing_config_domain_link":              resourceFastlyRoutingConfigDomainLink(),
 			"fastly_ngwaf_virtual_patches":                   resourceFastlyNGWAFVirtualPatches(),
 			"fastly_ngwaf_workspace":                         resourceFastlyNGWAFWorkspace(),
 			"fastly_ngwaf_workspace_list":                    resourceFastlyNGWAFWorkspaceList(),

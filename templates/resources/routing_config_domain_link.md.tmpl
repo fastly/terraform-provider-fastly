@@ -1,0 +1,30 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_routing_config_domain_link"
+sidebar_current: "docs-fastly-resource-routing-config-domain-link"
+description: |-
+  A link between a versionless domain and a routing config
+---
+
+# fastly_routing_config_domain_link
+
+Routing config domain links are for managing versionless domains for routing configs. The link
+associates an existing [`fastly_routing_config`](routing_config.md) with an existing
+[`fastly_domain`](domain.md), but doesn't create or delete either resource.
+
+If you are managing a domain's routing config with a link, you may not also set `routing_config_id`
+on the domain by any other means.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/routing_config_domain_link_basic_usage.tf" }}
+
+## Import
+
+Routing config domain links can be imported using the domain ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/routing_config_domain_link_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

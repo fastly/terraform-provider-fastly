@@ -9,6 +9,7 @@
 ### Dependencies
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.3.2 to 17.4.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))
 - build(deps): `golang.org/x/net` from 0.58.0 to 0.59.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.5.0 to 17.6.0 ([#1443](https://github.com/fastly/terraform-provider-fastly/pull/1443))
 
 ## 9.7.0 (September 17, 2026)
 

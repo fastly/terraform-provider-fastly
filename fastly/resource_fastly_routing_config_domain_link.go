@@ -48,7 +48,17 @@ func resourceFastlyRoutingConfigDomainLinkRead(ctx context.Context, d *schema.Re
 
 	data, err := domains.Get(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)
 	if err != nil {
+		if isNotFoundErr(err) {
+			log.Printf("[WARN] Domain (%s) not found, removing routing config domain link from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
+	}
+	if data.RoutingConfigurationID == nil {
+		log.Printf("[WARN] Domain (%s) has no routing config linked, removing routing config domain link from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 	if err := d.Set("domain_id", data.DomainID); err != nil {
 		return diag.FromErr(err)
@@ -84,11 +94,12 @@ func resourceFastlyRoutingConfigDomainLinkDelete(ctx context.Context, d *schema.
 		RoutingConfigurationID: gofastly.NullValue[string](),
 	}
 	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, input)
-	if err != nil {
+	if err != nil && !isNotFoundErr(err) {
 		return diag.FromErr(err)
 	}
 
-	return resourceFastlyRoutingConfigDomainLinkRead(ctx, d, meta)
+	d.SetId("")
+	return nil
 }
 
 func resourceFastlyRoutingConfigDomainLinkImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

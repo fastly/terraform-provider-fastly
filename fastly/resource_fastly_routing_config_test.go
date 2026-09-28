@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -45,6 +46,58 @@ func TestAccFastlyRoutingConfig_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccFastlyRoutingConfig_DuplicatePath(t *testing.T) {
+	suffix := acctest.RandString(6)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRoutingConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoutingConfigDuplicatePathConfig(suffix),
+				ExpectError: regexp.MustCompile(`duplicate path`),
+			},
+		},
+	})
+}
+
+func testAccRoutingConfigDuplicatePathConfig(suffix string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "svc1" {
+  name          = "tf-test-routing-config-dup-%[1]s"
+  force_destroy = true
+
+  backend {
+    address = "example.com"
+    name    = "tf-test-backend-1"
+  }
+}
+
+resource "fastly_routing_config" "example" {
+  name = "tf-test-routing-config-dup-%[1]s"
+
+  path {
+    path = "/api/*"
+
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.svc1.id
+    }
+  }
+
+  path {
+    path = "/api/*"
+
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.svc1.id
+    }
+  }
+}
+`, suffix)
 }
 
 func testAccRoutingConfigConfig(suffix, serviceRef string) string {

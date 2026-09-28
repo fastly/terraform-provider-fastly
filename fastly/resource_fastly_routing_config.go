@@ -38,6 +38,7 @@ func resourceFastlyRoutingConfig() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceFastlyRoutingConfigImport,
 		},
+		CustomizeDiff: resourceFastlyRoutingConfigCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"activated_at": {
@@ -141,6 +142,23 @@ func resourceFastlyRoutingConfig() *schema.Resource {
 			},
 		},
 	}
+}
+
+// resourceFastlyRoutingConfigCustomizeDiff rejects configurations with
+// duplicate `path` blocks, since Create/Update key paths by their `path`
+// string and would otherwise silently collide.
+func resourceFastlyRoutingConfigCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	desiredPaths := d.Get("path").([]interface{})
+	seen := make(map[string]bool, len(desiredPaths))
+	for _, raw := range desiredPaths {
+		pm := raw.(map[string]interface{})
+		pathStr := pm["path"].(string)
+		if seen[pathStr] {
+			return fmt.Errorf("duplicate path %q: each `path` block must have a unique `path` value", pathStr)
+		}
+		seen[pathStr] = true
+	}
+	return nil
 }
 
 func resourceFastlyRoutingConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -478,7 +496,11 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 	for i, raw := range oldRules {
 		rm := raw.(map[string]interface{})
 		action, conditions := expandRoutingConfigRule(rm)
-		oldSigs[i] = ruleSignature(action, conditions)
+		sig, err := ruleSignature(action, conditions)
+		if err != nil {
+			return nil, err
+		}
+		oldSigs[i] = sig
 		oldIDs[i] = rm["rule_id"].(string)
 	}
 
@@ -490,7 +512,11 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 		action, conditions := expandRoutingConfigRule(rm)
 		desiredActions[i] = action
 		desiredConditions[i] = conditions
-		desiredSigs[i] = ruleSignature(action, conditions)
+		sig, err := ruleSignature(action, conditions)
+		if err != nil {
+			return nil, err
+		}
+		desiredSigs[i] = sig
 	}
 
 	if sameSignatureSet(oldSigs, desiredSigs) {
@@ -579,7 +605,7 @@ func flattenRoutingConfigRule(r rules.Data) map[string]any {
 // ruleSignature produces a normalized, order-independent (across conditions)
 // signature for a rule's action and conditions so that actual and desired
 // rule sets can be compared for equality regardless of API/HCL ordering.
-func ruleSignature(action rules.Action, conditions []rules.Condition) string {
+func ruleSignature(action rules.Action, conditions []rules.Condition) (string, error) {
 	sorted := make([]rules.Condition, len(conditions))
 	copy(sorted, conditions)
 	sort.Slice(sorted, func(i, j int) bool {
@@ -602,13 +628,16 @@ func ruleSignature(action rules.Action, conditions []rules.Condition) string {
 		return sorted[i].Value < sorted[j].Value
 	})
 
-	b, _ := json.Marshal(struct {
+	b, err := json.Marshal(struct {
 		Action     rules.Action      `json:"action"`
 		Conditions []rules.Condition `json:"conditions"`
 	}{Action: action, Conditions: sorted})
+	if err != nil {
+		return "", fmt.Errorf("failed to compute rule signature: %w", err)
+	}
 
 	sum := sha256.Sum256(b)
-	return hex.EncodeToString(sum[:])
+	return hex.EncodeToString(sum[:]), nil
 }
 
 // sameSignatureSet reports whether two signature slices contain the same

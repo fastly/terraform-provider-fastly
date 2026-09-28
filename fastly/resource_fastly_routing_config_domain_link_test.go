@@ -37,6 +37,61 @@ func TestAccFastlyRoutingConfigDomainLink_Basic(t *testing.T) {
 	})
 }
 
+// TestAccFastlyRoutingConfigDomainLink_Drift verifies that if the link is
+// removed out-of-band (e.g. by unlinking the domain directly through the
+// API), Read drops the resource from state instead of erroring or leaving a
+// stale link behind, so the next plan proposes recreating it.
+func TestAccFastlyRoutingConfigDomainLink_Drift(t *testing.T) {
+	suffix := acctest.RandString(6)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRoutingConfigDomainLinkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingConfigDomainLinkConfig(suffix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("fastly_routing_config_domain_link.example", "domain_id"),
+					testAccRoutingConfigDomainLinkUnlink("fastly_routing_config_domain_link.example"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:             testAccRoutingConfigDomainLinkConfig(suffix),
+				Check:              resource.TestCheckResourceAttrSet("fastly_routing_config_domain_link.example", "domain_id"),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+// testAccRoutingConfigDomainLinkUnlink unlinks the domain identified by the
+// named resource's `domain_id` directly through the API, simulating drift
+// that happened outside of Terraform.
+func testAccRoutingConfigDomainLinkUnlink(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		domainID := rs.Primary.Attributes["domain_id"]
+		if domainID == "" {
+			return fmt.Errorf("no domain_id set for %s", resourceName)
+		}
+
+		conn := testAccProvider.Meta().(*APIClient).conn
+		_, err := domains.Update(context.Background(), conn, &domains.UpdateInput{
+			DomainID:               new(domainID),
+			RoutingConfigurationID: gofastly.NullValue[string](),
+		})
+		if err != nil {
+			return fmt.Errorf("error unlinking domain %s: %w", domainID, err)
+		}
+		return nil
+	}
+}
+
 func testAccRoutingConfigDomainLinkConfig(suffix string) string {
 	return fmt.Sprintf(`
 resource "fastly_routing_config" "example" {

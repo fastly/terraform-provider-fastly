@@ -212,6 +212,8 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 		desiredPathStrings[pm["path"].(string)] = true
 	}
 
+	changed := false
+
 	for pathStr, pm := range oldByPath {
 		if desiredPathStrings[pathStr] {
 			continue
@@ -223,6 +225,7 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 		}); err != nil && !isNotFoundErr(err) {
 			return diag.FromErr(fmt.Errorf("failed to delete routing config path %q: %w", pathStr, err))
 		}
+		changed = true
 	}
 
 	pathList := make([]map[string]any, 0, len(desiredPaths))
@@ -233,9 +236,12 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 
 		if old, ok := oldByPath[pathStr]; ok {
 			pathID := old["path_id"].(string)
-			ruleList, err := reconcileRoutingConfigRulesTracked(ctx, conn, id, pathID, old["rule"].([]interface{}), desiredRules)
+			ruleList, rulesChanged, err := reconcileRoutingConfigRulesTracked(ctx, conn, id, pathID, old["rule"].([]interface{}), desiredRules)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to reconcile rules for routing config path %q: %w", pathStr, err))
+			}
+			if rulesChanged {
+				changed = true
 			}
 			pathList = append(pathList, map[string]any{
 				"path":    pathStr,
@@ -261,13 +267,14 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 			"path_id": created.PathID,
 			"rule":    ruleList,
 		})
+		changed = true
 	}
 
 	if err := d.Set("path", pathList); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if len(desiredPaths) > 0 || len(oldPaths) > 0 {
+	if changed {
 		if _, err := routingconfigs.Activate(ctx, conn, &routingconfigs.ActivateInput{
 			RoutingConfigID: &id,
 		}); err != nil {
@@ -368,10 +375,12 @@ func resourceFastlyRoutingConfigReadTopLevel(ctx context.Context, d *schema.Reso
 	if err := d.Set("state", data.State); err != nil {
 		return diag.FromErr(err)
 	}
+	activatedAt := ""
 	if data.ActivatedAt != nil {
-		if err := d.Set("activated_at", data.ActivatedAt.Format(time.RFC3339)); err != nil {
-			return diag.FromErr(err)
-		}
+		activatedAt = data.ActivatedAt.Format(time.RFC3339)
+	}
+	if err := d.Set("activated_at", activatedAt); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -490,7 +499,9 @@ func createRoutingConfigRules(ctx context.Context, conn *gofastly.Client, routin
 // returned untouched; otherwise every existing rule (by its known ID) is
 // deleted and the desired rules are recreated fresh, since rules have no
 // user-supplied natural key to reconcile against individually.
-func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Client, routingConfigID, pathID string, oldRules, desiredRules []interface{}) ([]map[string]any, error) {
+// reconcileRoutingConfigRulesTracked returns whether it actually deleted or
+// created any rule, so the caller can skip activation when nothing changed.
+func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Client, routingConfigID, pathID string, oldRules, desiredRules []interface{}) ([]map[string]any, bool, error) {
 	oldIDs := make([]string, len(oldRules))
 	oldSigs := make([]string, len(oldRules))
 	for i, raw := range oldRules {
@@ -498,7 +509,7 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 		action, conditions := expandRoutingConfigRule(rm)
 		sig, err := ruleSignature(action, conditions)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		oldSigs[i] = sig
 		oldIDs[i] = rm["rule_id"].(string)
@@ -514,7 +525,7 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 		desiredConditions[i] = conditions
 		sig, err := ruleSignature(action, conditions)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		desiredSigs[i] = sig
 	}
@@ -524,7 +535,7 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 		for i, raw := range oldRules {
 			result[i] = raw.(map[string]interface{})
 		}
-		return result, nil
+		return result, false, nil
 	}
 
 	for _, ruleID := range oldIDs {
@@ -533,7 +544,7 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 			PathID:          &pathID,
 			RuleID:          new(ruleID),
 		}); err != nil && !isNotFoundErr(err) {
-			return nil, fmt.Errorf("failed to delete rule %q: %w", ruleID, err)
+			return nil, false, fmt.Errorf("failed to delete rule %q: %w", ruleID, err)
 		}
 	}
 
@@ -547,12 +558,12 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 			Conditions:      desiredConditions[i],
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create rule: %w", err)
+			return nil, false, fmt.Errorf("failed to create rule: %w", err)
 		}
 		result = append(result, flattenRoutingConfigRule(*created))
 	}
 
-	return result, nil
+	return result, true, nil
 }
 
 func expandRoutingConfigRule(rm map[string]interface{}) (rules.Action, []rules.Condition) {
@@ -561,7 +572,7 @@ func expandRoutingConfigRule(rm map[string]interface{}) (rules.Action, []rules.C
 		Value: rm["action_value"].(string),
 	}
 
-	rawConditions := rm["condition"].([]interface{})
+	rawConditions, _ := rm["condition"].([]interface{})
 	conditions := make([]rules.Condition, 0, len(rawConditions))
 	for _, raw := range rawConditions {
 		cm := raw.(map[string]interface{})

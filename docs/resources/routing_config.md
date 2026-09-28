@@ -11,9 +11,9 @@ description: |-
 Routing configs let you route requests to different services (or other destinations) based on
 URL path, using conditional rules. This resource manages a routing config's `path` and `rule`
 configuration using **automatic versioning**: every apply reconciles the routing config's draft
-paths and rules against this resource's configuration, then activates the result as the new
-active version. The underlying draft/version workflow exposed by the API is never surfaced to
-Terraform — there's no `version` or `activate` argument for you to manage.
+paths and rules against this resource's configuration and, if anything changed, activates the
+result as the new active version. The underlying draft/version workflow exposed by the API is
+never surfaced to Terraform — there's no `version` or `activate` argument for you to manage.
 
 A routing config isn't useful on its own; it must be linked to one or more domains via
 [`fastly_routing_config_domain_link`](routing_config_domain_link.md) before it will route traffic.
@@ -29,37 +29,37 @@ Basic usage:
 
 ```terraform
 resource "fastly_routing_config" "example" {
-    name = "example-routing-config"
+  name = "example-routing-config"
 
-    path {
-        path = "/api/*"
+  path {
+    path = "/api/*"
 
-        rule {
-            action_type  = "service"
-            action_value = fastly_service_vcl.example.id
-        }
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.example.id
+    }
+  }
+
+  path {
+    path = "/"
+
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.example.id
+
+      condition {
+        type     = "header"
+        key      = "X-Beta"
+        operator = "equals"
+        value    = "true"
+      }
     }
 
-    path {
-        path = "/"
-
-        rule {
-            action_type  = "service"
-            action_value = fastly_service_vcl.example.id
-
-            condition {
-                type     = "header"
-                key      = "X-Beta"
-                operator = "equals"
-                value    = "true"
-            }
-        }
-
-        rule {
-            action_type  = "service"
-            action_value = fastly_service_vcl.example.id
-        }
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.example.id
     }
+  }
 }
 ```
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	gofastly "github.com/fastly/go-fastly/v17/fastly"
@@ -46,6 +47,48 @@ func TestResourceFastlyFlattenComputeACLEntries(t *testing.T) {
 	}
 }
 
+func TestResourceFastlyComputeACLEntriesReadClearsEntriesWhenManageEntriesFalse(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceFastlyComputeACLEntries().Schema, map[string]any{
+		"compute_acl_id": "compute-acl-id",
+		"manage_entries": false,
+	})
+	if err := d.Set("entries", map[string]string{
+		"192.0.2.0/24":    "ALLOW",
+		"198.51.100.0/24": "BLOCK",
+	}); err != nil {
+		t.Fatalf("failed to seed Compute ACL entries in test state: %v", err)
+	}
+	d.SetId("compute-acl-id/entries")
+
+	diags := resourceFastlyComputeACLEntriesRead(context.Background(), d, nil)
+	if diags.HasError() {
+		t.Fatalf("expected Compute ACL entries read to clear unmanaged entries without refreshing, got diagnostics: %v", diags)
+	}
+
+	entries := d.Get("entries").(map[string]any)
+	if len(entries) != 0 {
+		t.Fatalf("expected unmanaged Compute ACL entries to be cleared from state, got %d entries", len(entries))
+	}
+}
+
+func TestResourceFastlyComputeACLEntriesImportEnablesManageEntries(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, resourceFastlyComputeACLEntries().Schema, map[string]any{})
+	d.SetId("compute-acl-id/entries")
+
+	result, err := resourceFastlyComputeACLEntriesImport(context.Background(), d, nil)
+	if err != nil {
+		t.Fatalf("unexpected import error: %s", err)
+	}
+
+	if len(result) != 1 {
+		t.Fatalf("expected one imported resource, got %d", len(result))
+	}
+
+	if got := result[0].Get("manage_entries").(bool); !got {
+		t.Fatal("expected manage_entries to be true after import")
+	}
+}
+
 func TestAccFastlyComputeACLEntries_validate(t *testing.T) {
 	aclName := fmt.Sprintf("tf_test_acl_%s", acctest.RandString(10))
 
@@ -67,15 +110,15 @@ func TestAccFastlyComputeACLEntries_validate(t *testing.T) {
 			{
 				Config: testAccComputeACLWithEntriesValidate(aclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyComputeACLEntriesExist("fastly_compute_acl_entries.example"),
-					testAccCheckFastlyComputeACLEntriesRemoteState("fastly_compute_acl_entries.example", want1),
+					testAccCheckFastlyComputeACLEntriesExist(),
+					testAccCheckFastlyComputeACLEntriesRemoteState(want1),
 				),
 			},
 			{
 				Config: testAccComputeACLWithEntriesValidateUpdate(aclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyComputeACLEntriesExist("fastly_compute_acl_entries.example"),
-					testAccCheckFastlyComputeACLEntriesRemoteState("fastly_compute_acl_entries.example", want2),
+					testAccCheckFastlyComputeACLEntriesExist(),
+					testAccCheckFastlyComputeACLEntriesRemoteState(want2),
 				),
 			},
 			{
@@ -83,6 +126,51 @@ func TestAccFastlyComputeACLEntries_validate(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"manage_entries"},
+			},
+		},
+	})
+}
+
+func TestAccFastlyComputeACLEntries_manage_entries_false(t *testing.T) {
+	aclName := fmt.Sprintf("tf_test_acl_%s", acctest.RandString(10))
+
+	initialEntries := map[string]string{
+		"192.0.2.0/24":    "ALLOW",
+		"198.51.100.0/24": "BLOCK",
+	}
+
+	updatedEntries := map[string]string{
+		"192.0.2.0/24":   "BLOCK",
+		"203.0.113.0/24": "ALLOW",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckFastlyComputeACLEntriesDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeACLWithEntriesManageEntriesFalse(aclName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyComputeACLEntriesExist(),
+					testAccCheckFastlyComputeACLEntriesRemoteState(initialEntries),
+				),
+			},
+			{
+				Config: testAccComputeACLWithEntriesManageEntriesFalse(aclName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyComputeACLEntriesExist(),
+					testAccCheckFastlyComputeACLEntriesRemoteState(initialEntries),
+					resource.TestCheckResourceAttr("fastly_compute_acl_entries.example", "entries.%", "0"),
+				),
+			},
+			{
+				Config: testAccComputeACLWithEntriesManageEntriesTrue(aclName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyComputeACLEntriesExist(),
+					testAccCheckFastlyComputeACLEntriesRemoteState(updatedEntries),
+					resource.TestCheckResourceAttr("fastly_compute_acl_entries.example", "entries.%", "2"),
+				),
 			},
 		},
 	})
@@ -106,21 +194,23 @@ func TestAccFastlyComputeACLEntries_invalidPrefix(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyComputeACLEntriesExist(n string) resource.TestCheckFunc {
+const testAccFastlyComputeACLEntriesResourceName = "fastly_compute_acl_entries.example"
+
+func testAccCheckFastlyComputeACLEntriesExist() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		r := s.RootModule().Resources[n]
+		r := s.RootModule().Resources[testAccFastlyComputeACLEntriesResourceName]
 		if r == nil {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", testAccFastlyComputeACLEntriesResourceName)
 		}
 		return nil
 	}
 }
 
-func testAccCheckFastlyComputeACLEntriesRemoteState(n string, want map[string]string) resource.TestCheckFunc {
+func testAccCheckFastlyComputeACLEntriesRemoteState(want map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		r := s.RootModule().Resources[n]
+		r := s.RootModule().Resources[testAccFastlyComputeACLEntriesResourceName]
 		if r == nil {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", testAccFastlyComputeACLEntriesResourceName)
 		}
 
 		id := r.Primary.Attributes["compute_acl_id"]
@@ -196,6 +286,48 @@ resource "fastly_compute_acl_entries" "example" {
   entries = {
     "203.0.113.0/24"  = "BLOCK"
     "198.51.100.0/24" = "ALLOW"
+  }
+  manage_entries = true
+}
+`, name)
+}
+
+func testAccComputeACLWithEntriesManageEntriesFalse(name string, updated bool) string {
+	entries := `
+    "192.0.2.0/24"    = "ALLOW"
+    "198.51.100.0/24" = "BLOCK"
+`
+	if updated {
+		entries = `
+    "192.0.2.0/24" = "BLOCK"
+    "203.0.113.0/24" = "ALLOW"
+`
+	}
+
+	return fmt.Sprintf(`
+resource "fastly_compute_acl" "example" {
+  name = "%s"
+}
+
+resource "fastly_compute_acl_entries" "example" {
+  compute_acl_id = fastly_compute_acl.example.id
+  entries = {%s  }
+  manage_entries = false
+}
+`, name, entries)
+}
+
+func testAccComputeACLWithEntriesManageEntriesTrue(name string) string {
+	return fmt.Sprintf(`
+resource "fastly_compute_acl" "example" {
+  name = "%s"
+}
+
+resource "fastly_compute_acl_entries" "example" {
+  compute_acl_id = fastly_compute_acl.example.id
+  entries = {
+    "192.0.2.0/24" = "BLOCK"
+    "203.0.113.0/24" = "ALLOW"
   }
   manage_entries = true
 }

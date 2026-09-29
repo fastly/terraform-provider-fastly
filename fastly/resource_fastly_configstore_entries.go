@@ -77,6 +77,14 @@ func resourceFastlyConfigStoreEntriesCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceFastlyConfigStoreEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if !d.Get("manage_entries").(bool) {
+		log.Print("[DEBUG] Skipping Config Store entries refresh: manage_entries is false (clearing entries from state)")
+		if err := d.Set("entries", map[string]string{}); err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
+	}
+
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] REFRESH: Config Store Entries")
@@ -104,6 +112,17 @@ func resourceFastlyConfigStoreEntriesRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceFastlyConfigStoreEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if d.HasChange("manage_entries") {
+		oldManageEntries, newManageEntries := d.GetChange("manage_entries")
+		if !oldManageEntries.(bool) && newManageEntries.(bool) {
+			return reconcileConfigStoreEntriesAfterEnablingManagement(ctx, d, meta)
+		}
+	}
+
+	if !d.Get("manage_entries").(bool) && !d.HasChange("store_id") {
+		return resourceFastlyConfigStoreEntriesRead(ctx, d, meta)
+	}
+
 	conn := meta.(*APIClient).conn
 
 	storeID := d.Get("store_id").(string)
@@ -155,6 +174,56 @@ func resourceFastlyConfigStoreEntriesUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	return nil
+}
+
+func reconcileConfigStoreEntriesAfterEnablingManagement(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
+	storeID := d.Get("store_id").(string)
+	desiredEntries := d.Get("entries").(map[string]any)
+
+	remoteState, err := conn.ListConfigStoreItems(ctx, &gofastly.ListConfigStoreItemsInput{
+		StoreID: storeID,
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	remoteEntries := flattenConfigStoreEntries(remoteState)
+	var batchEntries []*gofastly.BatchConfigStoreItem
+
+	for key := range remoteEntries {
+		if _, ok := desiredEntries[key]; !ok {
+			batchEntries = append(batchEntries, &gofastly.BatchConfigStoreItem{
+				Operation: gofastly.DeleteBatchOperation,
+				ItemKey:   key,
+			})
+		}
+	}
+
+	for key, rawValue := range desiredEntries {
+		value := rawValue.(string)
+		remoteValue, exists := remoteEntries[key]
+
+		operation := gofastly.CreateBatchOperation
+		if exists {
+			if remoteValue == value {
+				continue
+			}
+			operation = gofastly.UpdateBatchOperation
+		}
+
+		batchEntries = append(batchEntries, &gofastly.BatchConfigStoreItem{
+			Operation: operation,
+			ItemKey:   key,
+			ItemValue: value,
+		})
+	}
+
+	if err := executeBatchConfigStoreOperations(ctx, conn, storeID, batchEntries); err != nil {
+		return diag.Errorf("error reconciling Config Store (%s) entries after enabling management: %s", storeID, err)
+	}
+
+	return resourceFastlyConfigStoreEntriesRead(ctx, d, meta)
 }
 
 func resourceFastlyConfigStoreEntriesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -229,6 +298,10 @@ func resourceConfigStoreEntriesImport(_ context.Context, d *schema.ResourceData,
 	err := d.Set("store_id", storeID)
 	if err != nil {
 		return nil, fmt.Errorf("error setting Config Store ID (%s): %s", storeID, err)
+	}
+
+	if err := d.Set("manage_entries", true); err != nil {
+		return nil, fmt.Errorf("error enabling management for imported Config Store (%s) entries: %s", storeID, err)
 	}
 
 	return []*schema.ResourceData{d}, nil

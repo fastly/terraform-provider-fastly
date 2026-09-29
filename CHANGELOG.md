@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 - fix(acl-entries): clear unmanaged ACL entries from Terraform state ([#1440](https://github.com/fastly/terraform-provider-fastly/pull/1440))
+- fix(configstore-entries): skip refresh and clear unmanaged Config Store entries from state ([#1446](https://github.com/fastly/terraform-provider-fastly/pull/1446))
 
 ### Dependencies
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.3.2 to 17.4.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))

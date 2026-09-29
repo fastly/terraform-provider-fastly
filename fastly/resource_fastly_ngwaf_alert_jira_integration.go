@@ -70,15 +70,15 @@ func resourceFastlyNGWAFAlertJiraIntegrationCreate(ctx context.Context, d *schem
 
 	i := jiraAlerts.CreateInput{
 		Config: &jiraAlerts.CreateConfig{
-			Host:      gofastly.ToPointer(d.Get("host").(string)),
-			IssueType: gofastly.ToPointer(d.Get("issue_type").(string)),
-			Key:       gofastly.ToPointer(d.Get("key").(string)),
-			Project:   gofastly.ToPointer(d.Get("project").(string)),
-			Username:  gofastly.ToPointer(d.Get("username").(string)),
+			Host:      new(d.Get("host").(string)),
+			IssueType: new(d.Get("issue_type").(string)),
+			Key:       new(d.Get("key").(string)),
+			Project:   new(d.Get("project").(string)),
+			Username:  new(d.Get("username").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF Jira alert input: %#v", i)
@@ -100,8 +100,8 @@ func resourceFastlyNGWAFAlertJiraIntegrationRead(ctx context.Context, d *schema.
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := jiraAlerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Jira alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -141,15 +141,15 @@ func resourceFastlyNGWAFAlertJiraIntegrationUpdate(ctx context.Context, d *schem
 	conn := meta.(*APIClient).conn
 
 	i := jiraAlerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &jiraAlerts.UpdateConfig{
-			Host:      gofastly.ToPointer(d.Get("host").(string)),
-			IssueType: gofastly.ToPointer(d.Get("issue_type").(string)),
-			Key:       gofastly.ToPointer(d.Get("key").(string)),
-			Project:   gofastly.ToPointer(d.Get("project").(string)),
-			Username:  gofastly.ToPointer(d.Get("username").(string)),
+			Host:      new(d.Get("host").(string)),
+			IssueType: new(d.Get("issue_type").(string)),
+			Key:       new(d.Get("key").(string)),
+			Project:   new(d.Get("project").(string)),
+			Username:  new(d.Get("username").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Jira alert input: %#v", i)
@@ -168,8 +168,8 @@ func resourceFastlyNGWAFAlertJiraIntegrationDelete(ctx context.Context, d *schem
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := jiraAlerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF Jira alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

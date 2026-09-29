@@ -22,9 +22,9 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 		{
 			remote: []*gofastly.Dictionary{
 				{
-					DictionaryID: gofastly.ToPointer("1234567890"),
-					Name:         gofastly.ToPointer("dictionary-example"),
-					WriteOnly:    gofastly.ToPointer(false),
+					DictionaryID: new("1234567890"),
+					Name:         new("dictionary-example"),
+					WriteOnly:    new(false),
 				},
 			},
 			local: []map[string]any{
@@ -197,8 +197,8 @@ func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestChe
 		_, err := conn.CreateDictionaryItem(context.TODO(), &gofastly.CreateDictionaryItemInput{
 			ServiceID:    gofastly.ToValue(dictionary.ServiceID),
 			DictionaryID: gofastly.ToValue(dictionary.DictionaryID),
-			ItemKey:      gofastly.ToPointer("testKey"),
-			ItemValue:    gofastly.ToPointer("testItem"),
+			ItemKey:      new("testKey"),
+			ItemValue:    new("testItem"),
 		})
 		if err != nil {
 			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", gofastly.ToValue(dictionary.DictionaryID), gofastly.ToValue(dictionary.ServiceID), err)

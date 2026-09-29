@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/objectstorage/accesskeys"
 )
 
@@ -100,7 +99,7 @@ func testAccCheckObjectStorageAccessKeyExists(n string, accessKey *accesskeys.Ac
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		opts := accesskeys.GetInput{
-			AccessKeyID: gofastly.ToPointer(rs.Primary.ID),
+			AccessKeyID: new(rs.Primary.ID),
 		}
 		ak, err := accesskeys.Get(context.TODO(), conn, &opts)
 		if err != nil {

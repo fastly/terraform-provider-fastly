@@ -50,11 +50,11 @@ func resourceFastlyNGWAFAlertSlackIntegrationCreate(ctx context.Context, d *sche
 
 	i := slackAlerts.CreateInput{
 		Config: &slackAlerts.CreateConfig{
-			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
+			Webhook: new(d.Get("webhook").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF Slack alert input: %#v", i)
@@ -76,8 +76,8 @@ func resourceFastlyNGWAFAlertSlackIntegrationRead(ctx context.Context, d *schema
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := slackAlerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Slack alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -105,11 +105,11 @@ func resourceFastlyNGWAFAlertSlackIntegrationUpdate(ctx context.Context, d *sche
 	conn := meta.(*APIClient).conn
 
 	i := slackAlerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &slackAlerts.UpdateConfig{
-			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
+			Webhook: new(d.Get("webhook").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Slack alert input: %#v", i)
@@ -128,8 +128,8 @@ func resourceFastlyNGWAFAlertSlackIntegrationDelete(ctx context.Context, d *sche
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := slackAlerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF Slack alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

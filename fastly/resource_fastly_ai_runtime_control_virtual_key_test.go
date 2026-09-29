@@ -104,7 +104,7 @@ func testAccCheckAIRuntimeControlVirtualKeyRemoteState(resourceName, expectedNam
 		conn := testAccProvider.Meta().(*APIClient).conn
 
 		got, err := key.Get(context.TODO(), conn, &key.GetInput{
-			KeyID: gofastly.ToPointer(rs.Primary.ID),
+			KeyID: new(rs.Primary.ID),
 		})
 		if err != nil {
 			return fmt.Errorf("error fetching AI Runtime Control virtual key (%s): %s", rs.Primary.ID, err)
@@ -129,7 +129,7 @@ func testAccCheckAIRuntimeControlVirtualKeyDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		got, err := key.Get(context.TODO(), conn, &key.GetInput{
-			KeyID: gofastly.ToPointer(rs.Primary.ID),
+			KeyID: new(rs.Primary.ID),
 		})
 		if err != nil {
 			continue

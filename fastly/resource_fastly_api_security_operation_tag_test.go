@@ -89,8 +89,8 @@ func testAccCheckAPISecurityOperationTagDestroy(s *terraform.State) error {
 		}
 
 		_, err = operations.DescribeTag(context.Background(), conn, &operations.DescribeTagInput{
-			ServiceID: gofastly.ToPointer(serviceID),
-			TagID:     gofastly.ToPointer(tagID),
+			ServiceID: new(serviceID),
+			TagID:     new(tagID),
 		})
 		if err == nil {
 			return fmt.Errorf("API Security operation tag still exists after destroy: %s/%s", serviceID, tagID)

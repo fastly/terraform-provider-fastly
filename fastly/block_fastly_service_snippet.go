@@ -116,23 +116,23 @@ func (h *SnippetServiceAttributeHandler) Update(ctx context.Context, d *schema.R
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           name,
-		NewName:        gofastly.ToPointer(name),
-		Priority:       gofastly.ToPointer(priority),
-		Content:        gofastly.ToPointer(content),
-		Type:           gofastly.ToPointer(gofastly.SnippetType(stype)),
+		NewName:        new(name),
+		Priority:       new(priority),
+		Content:        new(content),
+		Type:           new(gofastly.SnippetType(stype)),
 	}
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(strconv.Itoa(v.(int)))
+		opts.Priority = new(strconv.Itoa(v.(int)))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.ToPointer(v.(string))
+		opts.Content = new(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
 		snippetType := strings.ToLower(v.(string))
-		opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
+		opts.Type = new(gofastly.SnippetType(snippetType))
 	}
 
 	log.Printf("[DEBUG] Update VCL Snippet Opts: %#v", opts)
@@ -166,14 +166,14 @@ func (h *SnippetServiceAttributeHandler) Delete(ctx context.Context, d *schema.R
 func buildSnippet(snippetMap any) *gofastly.CreateSnippetInput {
 	resource := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     gofastly.ToPointer(resource["name"].(string)),
-		Content:  gofastly.ToPointer(resource["content"].(string)),
-		Priority: gofastly.ToPointer(strconv.Itoa(resource["priority"].(int))),
-		Dynamic:  gofastly.ToPointer(0),
+		Name:     new(resource["name"].(string)),
+		Content:  new(resource["content"].(string)),
+		Priority: new(strconv.Itoa(resource["priority"].(int))),
+		Dynamic:  new(0),
 	}
 
 	snippetType := strings.ToLower(resource["type"].(string))
-	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
+	opts.Type = new(gofastly.SnippetType(snippetType))
 
 	return &opts
 }

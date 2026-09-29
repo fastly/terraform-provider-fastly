@@ -147,29 +147,29 @@ func (h *SyslogServiceAttributeHandler) Create(ctx context.Context, d *schema.Re
 	opts := gofastly.CreateSyslogInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		Address:          gofastly.ToPointer(resource["address"].(string)),
-		Port:             gofastly.ToPointer(resource["port"].(int)),
-		Token:            gofastly.ToPointer(resource["token"].(string)),
-		UseTLS:           gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
-		TLSHostname:      gofastly.ToPointer(resource["tls_hostname"].(string)),
-		TLSCACert:        gofastly.ToPointer(resource["tls_ca_cert"].(string)),
-		TLSClientCert:    gofastly.ToPointer(resource["tls_client_cert"].(string)),
-		TLSClientKey:     gofastly.ToPointer(resource["tls_client_key"].(string)),
-		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
-		Format:           gofastly.ToPointer(vla.format),
+		Name:             new(resource["name"].(string)),
+		Address:          new(resource["address"].(string)),
+		Port:             new(resource["port"].(int)),
+		Token:            new(resource["token"].(string)),
+		UseTLS:           new(gofastly.Compatibool(resource["use_tls"].(bool))),
+		TLSHostname:      new(resource["tls_hostname"].(string)),
+		TLSCACert:        new(resource["tls_ca_cert"].(string)),
+		TLSClientCert:    new(resource["tls_client_cert"].(string)),
+		TLSClientKey:     new(resource["tls_client_key"].(string)),
+		MessageType:      new(resource["message_type"].(string)),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 
 	log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -219,52 +219,52 @@ func (h *SyslogServiceAttributeHandler) Update(ctx context.Context, d *schema.Re
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.ToPointer(v.(string))
+		opts.Address = new(v.(string))
 	}
 	if v, ok := modified["hostname"]; ok {
-		opts.Hostname = gofastly.ToPointer(v.(string))
+		opts.Hostname = new(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.ToPointer(v.(int))
+		opts.Port = new(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
-		opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
+		opts.UseTLS = new(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["ipv4"]; ok {
-		opts.IPV4 = gofastly.ToPointer(v.(string))
+		opts.IPV4 = new(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
-		opts.TLSCACert = gofastly.ToPointer(v.(string))
+		opts.TLSCACert = new(v.(string))
 	}
 	if v, ok := modified["tls_hostname"]; ok {
-		opts.TLSHostname = gofastly.ToPointer(v.(string))
+		opts.TLSHostname = new(v.(string))
 	}
 	if v, ok := modified["tls_client_cert"]; ok {
-		opts.TLSClientCert = gofastly.ToPointer(v.(string))
+		opts.TLSClientCert = new(v.(string))
 	}
 	if v, ok := modified["tls_client_key"]; ok {
-		opts.TLSClientKey = gofastly.ToPointer(v.(string))
+		opts.TLSClientKey = new(v.(string))
 	}
 	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.ToPointer(v.(string))
+		opts.Token = new(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.ToPointer(v.(string))
+		opts.MessageType = new(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Syslog Opts: %#v", opts)

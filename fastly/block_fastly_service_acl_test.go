@@ -22,8 +22,8 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 		{
 			remote: []*gofastly.ACL{
 				{
-					ACLID: gofastly.ToPointer("1234567890"),
-					Name:  gofastly.ToPointer("acl-example"),
+					ACLID: new("1234567890"),
+					Name:  new("acl-example"),
 				},
 			},
 			local: []map[string]any{
@@ -150,7 +150,7 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 		_, err := conn.CreateACLEntry(context.TODO(), &gofastly.CreateACLEntryInput{
 			ServiceID: gofastly.ToValue(acl.ServiceID),
 			ACLID:     gofastly.ToValue(acl.ACLID),
-			IP:        gofastly.ToPointer("192.168.0.1"),
+			IP:        new("192.168.0.1"),
 		})
 		if err != nil {
 			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", gofastly.ToValue(acl.ACLID), gofastly.ToValue(acl.ServiceID), err)

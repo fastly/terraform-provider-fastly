@@ -111,7 +111,7 @@ func resourceFastlyComputeACLEntriesUpdate(ctx context.Context, d *schema.Resour
 				prefix := prefix // avoid reference issue
 				batch = append(batch, &computeacls.BatchComputeACLEntry{
 					Prefix:    &prefix,
-					Operation: gofastly.ToPointer("delete"),
+					Operation: new("delete"),
 				})
 			}
 		}
@@ -155,7 +155,7 @@ func resourceFastlyComputeACLEntriesDelete(ctx context.Context, d *schema.Resour
 		prefix := prefix // avoid reference issue
 		batch = append(batch, &computeacls.BatchComputeACLEntry{
 			Prefix:    &prefix,
-			Operation: gofastly.ToPointer("delete"),
+			Operation: new("delete"),
 		})
 	}
 

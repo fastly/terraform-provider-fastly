@@ -16,13 +16,13 @@ import (
 func TestAccFastlyTSIGKey_Basic(t *testing.T) {
 	keyName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	create := tsigkeys.TSIGKey{
-		Name:      gofastly.ToPointer(keyName),
-		Algorithm: gofastly.ToPointer("hmac-sha256"),
+		Name:      new(keyName),
+		Algorithm: new("hmac-sha256"),
 	}
 	update := tsigkeys.TSIGKey{
-		Name:        gofastly.ToPointer(keyName),
-		Algorithm:   gofastly.ToPointer("hmac-sha256"),
-		Description: gofastly.ToPointer("updated description"),
+		Name:        new(keyName),
+		Algorithm:   new("hmac-sha256"),
+		Description: new("updated description"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,8 +71,8 @@ func TestAccFastlyTSIGKey_Algorithms(t *testing.T) {
 		t.Run(tc.algorithm, func(t *testing.T) {
 			keyName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 			key := tsigkeys.TSIGKey{
-				Name:      gofastly.ToPointer(keyName),
-				Algorithm: gofastly.ToPointer(tc.algorithm),
+				Name:      new(keyName),
+				Algorithm: new(tc.algorithm),
 			}
 
 			resource.ParallelTest(t, resource.TestCase{
@@ -104,7 +104,7 @@ func testAccCheckFastlyTSIGKeyRemoteState(resourceName string, expected tsigkeys
 		conn := testAccProvider.Meta().(*APIClient).conn
 
 		got, err := tsigkeys.Get(context.TODO(), conn, &tsigkeys.GetInput{
-			TSIGKeyID: gofastly.ToPointer(rs.Primary.ID),
+			TSIGKeyID: new(rs.Primary.ID),
 		})
 		if err != nil {
 			return fmt.Errorf("error fetching TSIG key (%s): %s", rs.Primary.ID, err)
@@ -134,7 +134,7 @@ func testAccCheckTSIGKeyDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := tsigkeys.Get(context.TODO(), conn, &tsigkeys.GetInput{
-			TSIGKeyID: gofastly.ToPointer(rs.Primary.ID),
+			TSIGKeyID: new(rs.Primary.ID),
 		})
 		if err == nil {
 			return fmt.Errorf("tried deleting TSIG key (%s), but was still found", rs.Primary.ID)

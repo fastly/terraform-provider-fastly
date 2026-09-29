@@ -140,16 +140,16 @@ func dataSourceFastlyAIRuntimeControlVirtualKeysRead(ctx context.Context, d *sch
 
 	i := key.ListInput{
 		Limit:          &limit,
-		IncludeDeleted: gofastly.ToPointer(d.Get("include_deleted").(bool)),
+		IncludeDeleted: new(d.Get("include_deleted").(bool)),
 	}
 	if v, ok := d.GetOk("model"); ok {
-		i.Model = gofastly.ToPointer(v.(string))
+		i.Model = new(v.(string))
 	}
 	if v, ok := d.GetOk("provider_name"); ok {
-		i.Provider = gofastly.ToPointer(v.(string))
+		i.Provider = new(v.(string))
 	}
 	if v, ok := d.GetOk("search"); ok {
-		i.Search = gofastly.ToPointer(v.(string))
+		i.Search = new(v.(string))
 	}
 
 	all, err := key.List(ctx, conn, &i)

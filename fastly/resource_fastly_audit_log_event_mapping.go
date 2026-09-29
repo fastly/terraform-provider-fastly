@@ -109,14 +109,14 @@ func resourceFastlyAuditLogEventMappingCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*APIClient).conn
 
 	i := eventmappings.CreateInput{
-		Name:           gofastly.ToPointer(d.Get("name").(string)),
-		ScopeType:      gofastly.ToPointer(d.Get("scope_type").(string)),
+		Name:           new(d.Get("name").(string)),
+		ScopeType:      new(d.Get("scope_type").(string)),
 		EventTypes:     expandStringSet(d.Get("event_types").(*schema.Set)),
 		IntegrationIDs: expandStringSet(d.Get("integration_ids").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		i.Description = gofastly.ToPointer(v.(string))
+		i.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("scope_ids"); ok {
 		i.ScopeIDs = expandStringSet(v.(*schema.Set))
@@ -138,7 +138,7 @@ func resourceFastlyAuditLogEventMappingRead(ctx context.Context, d *schema.Resou
 	conn := meta.(*APIClient).conn
 
 	i := eventmappings.GetInput{
-		MappingID: gofastly.ToPointer(d.Id()),
+		MappingID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] REFRESH: Audit log event mapping input: %#v", i)
@@ -188,15 +188,15 @@ func resourceFastlyAuditLogEventMappingUpdate(ctx context.Context, d *schema.Res
 	conn := meta.(*APIClient).conn
 
 	i := eventmappings.UpdateInput{
-		MappingID:      gofastly.ToPointer(d.Id()),
-		Name:           gofastly.ToPointer(d.Get("name").(string)),
-		ScopeType:      gofastly.ToPointer(d.Get("scope_type").(string)),
+		MappingID:      new(d.Id()),
+		Name:           new(d.Get("name").(string)),
+		ScopeType:      new(d.Get("scope_type").(string)),
 		EventTypes:     expandStringSet(d.Get("event_types").(*schema.Set)),
 		IntegrationIDs: expandStringSet(d.Get("integration_ids").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		i.Description = gofastly.ToPointer(v.(string))
+		i.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("scope_ids"); ok {
 		i.ScopeIDs = expandStringSet(v.(*schema.Set))
@@ -216,7 +216,7 @@ func resourceFastlyAuditLogEventMappingDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*APIClient).conn
 
 	i := eventmappings.DeleteInput{
-		MappingID: gofastly.ToPointer(d.Id()),
+		MappingID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] DELETE: Audit log event mapping input: %#v", i)

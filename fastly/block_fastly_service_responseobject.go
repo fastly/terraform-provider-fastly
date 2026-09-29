@@ -88,13 +88,13 @@ func (h *ResponseObjectServiceAttributeHandler) Create(ctx context.Context, d *s
 	opts := gofastly.CreateResponseObjectInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		Status:           gofastly.ToPointer(resource["status"].(int)),
-		Response:         gofastly.ToPointer(resource["response"].(string)),
-		Content:          gofastly.ToPointer(resource["content"].(string)),
-		ContentType:      gofastly.ToPointer(resource["content_type"].(string)),
-		RequestCondition: gofastly.ToPointer(resource["request_condition"].(string)),
-		CacheCondition:   gofastly.ToPointer(resource["cache_condition"].(string)),
+		Name:             new(resource["name"].(string)),
+		Status:           new(resource["status"].(int)),
+		Response:         new(resource["response"].(string)),
+		Content:          new(resource["content"].(string)),
+		ContentType:      new(resource["content_type"].(string)),
+		RequestCondition: new(resource["request_condition"].(string)),
+		CacheCondition:   new(resource["cache_condition"].(string)),
 	}
 
 	log.Printf("[DEBUG] Create Response Object Opts: %#v", opts)
@@ -140,22 +140,22 @@ func (h *ResponseObjectServiceAttributeHandler) Update(ctx context.Context, d *s
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["status"]; ok {
-		opts.Status = gofastly.ToPointer(v.(int))
+		opts.Status = new(v.(int))
 	}
 	if v, ok := modified["response"]; ok {
-		opts.Response = gofastly.ToPointer(v.(string))
+		opts.Response = new(v.(string))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.ToPointer(v.(string))
+		opts.Content = new(v.(string))
 	}
 	if v, ok := modified["content_type"]; ok {
-		opts.ContentType = gofastly.ToPointer(v.(string))
+		opts.ContentType = new(v.(string))
 	}
 	if v, ok := modified["request_condition"]; ok {
-		opts.RequestCondition = gofastly.ToPointer(v.(string))
+		opts.RequestCondition = new(v.(string))
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.ToPointer(v.(string))
+		opts.CacheCondition = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Response Object Opts: %#v", opts)

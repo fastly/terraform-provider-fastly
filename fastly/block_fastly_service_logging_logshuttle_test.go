@@ -20,37 +20,37 @@ func TestAccFastlyServiceLoggingLogshuttle_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Format:            gofastly.ToPointer(LoggingLogshuttleDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("logshuttle-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("s3cr3t"),
-		URL:               gofastly.ToPointer("https://example.com"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingLogshuttleDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("logshuttle-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("s3cr3t"),
+		URL:               new("https://example.com"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Logshuttle{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("logshuttle-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("secret"),
-		URL:               gofastly.ToPointer("https://new.example.com"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("logshuttle-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("secret"),
+		URL:               new("https://new.example.com"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Logshuttle{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-logshuttle-endpoint"),
-		Placement:         gofastly.ToPointer("none"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("another-token"),
-		URL:               gofastly.ToPointer("https://another.example.com"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-logshuttle-endpoint"),
+		Placement:         new("none"),
+		ResponseCondition: new("response_condition_test"),
+		ServiceVersion:    new(1),
+		Token:             new("another-token"),
+		URL:               new("https://another.example.com"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,11 +89,11 @@ func TestAccFastlyServiceLoggingLogshuttle_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Name:             gofastly.ToPointer("logshuttle-endpoint"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		Token:            gofastly.ToPointer("s3cr3t"),
-		URL:              gofastly.ToPointer("https://example.com"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Name:             new("logshuttle-endpoint"),
+		ServiceVersion:   new(1),
+		Token:            new("s3cr3t"),
+		URL:              new("https://example.com"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,15 +278,15 @@ func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
 		{
 			remote: []*gofastly.Logshuttle{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("logshuttle-endpoint"),
-					Token:             gofastly.ToPointer("token"),
-					URL:               gofastly.ToPointer("https://example.com"),
-					Format:            gofastly.ToPointer(LoggingLogshuttleDefaultFormat),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					ServiceVersion:    new(1),
+					Name:              new("logshuttle-endpoint"),
+					Token:             new("token"),
+					URL:               new("https://example.com"),
+					Format:            new(LoggingLogshuttleDefaultFormat),
+					Placement:         new("none"),
+					ResponseCondition: new("always"),
+					FormatVersion:     new(2),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

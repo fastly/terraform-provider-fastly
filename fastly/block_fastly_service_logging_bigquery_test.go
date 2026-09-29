@@ -27,45 +27,45 @@ func TestAccFastlyServiceLoggingBigQuery_vcl_basic(t *testing.T) {
 	}
 
 	bigQueryLogOne := gofastly.BigQuery{
-		Dataset:           gofastly.ToPointer("example_bq_dataset"),
-		User:              gofastly.ToPointer(email),
-		Format:            gofastly.ToPointer(LoggingBigQueryDefaultFormat),
-		Name:              gofastly.ToPointer("test-bigquery-1"),
-		Placement:         gofastly.ToPointer("none"),
-		ProjectID:         gofastly.ToPointer("example-gcp-project"),
-		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
-		SecretKey:         gofastly.ToPointer(secretKey),
-		Table:             gofastly.ToPointer("example_bq_table"),
-		Template:          gofastly.ToPointer("_1"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Dataset:           new("example_bq_dataset"),
+		User:              new(email),
+		Format:            new(LoggingBigQueryDefaultFormat),
+		Name:              new("test-bigquery-1"),
+		Placement:         new("none"),
+		ProjectID:         new("example-gcp-project"),
+		ResponseCondition: new("error_response_5XX"),
+		SecretKey:         new(secretKey),
+		Table:             new("example_bq_table"),
+		Template:          new("_1"),
+		ProcessingRegion:  new("us"),
 	}
 
 	bigQueryLogOneUpdated := gofastly.BigQuery{
-		Dataset:           gofastly.ToPointer("example_bq_dataset"),
-		User:              gofastly.ToPointer(emailUpdate),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		Name:              gofastly.ToPointer("test-bigquery-1"),
-		Placement:         gofastly.ToPointer("none"),
-		ProjectID:         gofastly.ToPointer("example-gcp-project"),
-		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
-		SecretKey:         gofastly.ToPointer(secretKey),
-		Table:             gofastly.ToPointer("example_bq_table"),
-		Template:          gofastly.ToPointer("_1_updated"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Dataset:           new("example_bq_dataset"),
+		User:              new(emailUpdate),
+		Format:            new(LoggingFormatUpdate),
+		Name:              new("test-bigquery-1"),
+		Placement:         new("none"),
+		ProjectID:         new("example-gcp-project"),
+		ResponseCondition: new("error_response_5XX"),
+		SecretKey:         new(secretKey),
+		Table:             new("example_bq_table"),
+		Template:          new("_1_updated"),
+		ProcessingRegion:  new("none"),
 	}
 
 	bigQueryLogTwo := gofastly.BigQuery{
-		Dataset:           gofastly.ToPointer("example_bq_dataset_2"),
-		User:              gofastly.ToPointer(emailUpdate),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		Name:              gofastly.ToPointer("test-bigquery-2"),
-		Placement:         gofastly.ToPointer("none"),
-		ProjectID:         gofastly.ToPointer("example-gcp-project-2"),
-		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
-		SecretKey:         gofastly.ToPointer(secretKey),
-		Table:             gofastly.ToPointer("example_bq_table_2"),
-		Template:          gofastly.ToPointer("_2"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Dataset:           new("example_bq_dataset_2"),
+		User:              new(emailUpdate),
+		Format:            new(LoggingFormatUpdate),
+		Name:              new("test-bigquery-2"),
+		Placement:         new("none"),
+		ProjectID:         new("example-gcp-project-2"),
+		ResponseCondition: new("ok_response_2XX"),
+		SecretKey:         new(secretKey),
+		Table:             new("example_bq_table_2"),
+		Template:          new("_2"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -109,14 +109,14 @@ func TestAccFastlyServiceLoggingBigQuery_compute_basic(t *testing.T) {
 	}
 
 	bigQueryLogOne := gofastly.BigQuery{
-		Dataset:          gofastly.ToPointer("example_bq_dataset"),
-		User:             gofastly.ToPointer(email),
-		Name:             gofastly.ToPointer("test-bigquery-1"),
-		ProjectID:        gofastly.ToPointer("example-gcp-project"),
-		SecretKey:        gofastly.ToPointer(secretKey),
-		Table:            gofastly.ToPointer("example_bq_table"),
-		Template:         gofastly.ToPointer("_1"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Dataset:          new("example_bq_dataset"),
+		User:             new(email),
+		Name:             new("test-bigquery-1"),
+		ProjectID:        new("example-gcp-project"),
+		SecretKey:        new(secretKey),
+		Table:            new("example_bq_table"),
+		Template:         new("_1"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -150,16 +150,16 @@ func TestAccFastlyServiceLoggingBigQuery_vcl_default(t *testing.T) {
 	}
 
 	bigQueryLog := gofastly.BigQuery{
-		Dataset:           gofastly.ToPointer("example_bq_dataset"),
-		User:              gofastly.ToPointer(email),
-		Format:            gofastly.ToPointer(LoggingBigQueryDefaultFormat),
-		Name:              gofastly.ToPointer("test-bigquery"),
-		ProjectID:         gofastly.ToPointer("example-gcp-project"),
-		ResponseCondition: gofastly.ToPointer(""),
-		SecretKey:         gofastly.ToPointer(secretKey),
-		Table:             gofastly.ToPointer("example_bq_table"),
-		Template:          gofastly.ToPointer(""),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Dataset:           new("example_bq_dataset"),
+		User:              new(email),
+		Format:            new(LoggingBigQueryDefaultFormat),
+		Name:              new("test-bigquery"),
+		ProjectID:         new("example-gcp-project"),
+		ResponseCondition: new(""),
+		SecretKey:         new(secretKey),
+		Table:             new("example_bq_table"),
+		Template:          new(""),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -508,14 +508,14 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 		{
 			remote: []*gofastly.BigQuery{
 				{
-					Name:      gofastly.ToPointer("bigquery-example"),
-					User:      gofastly.ToPointer("email@example.com"),
-					ProjectID: gofastly.ToPointer("example-gcp-project"),
-					Dataset:   gofastly.ToPointer("example_bq_dataset"),
-					Table:     gofastly.ToPointer("example_bq_table"),
-					Format:    gofastly.ToPointer(LoggingBigQueryDefaultFormat),
-					SecretKey: gofastly.ToPointer(secretKey),
-					Template:  gofastly.ToPointer("_1"),
+					Name:      new("bigquery-example"),
+					User:      new("email@example.com"),
+					ProjectID: new("example-gcp-project"),
+					Dataset:   new("example_bq_dataset"),
+					Table:     new("example_bq_table"),
+					Format:    new(LoggingBigQueryDefaultFormat),
+					SecretKey: new(secretKey),
+					Template:  new("_1"),
 				},
 			},
 			local: []map[string]any{
@@ -534,17 +534,17 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 		{
 			remote: []*gofastly.BigQuery{
 				{
-					Name:              gofastly.ToPointer("bigquery-example"),
-					User:              gofastly.ToPointer("email@example.com"),
-					ProjectID:         gofastly.ToPointer("example-gcp-project"),
-					Dataset:           gofastly.ToPointer("example_bq_dataset"),
-					Table:             gofastly.ToPointer("example_bq_table"),
-					Format:            gofastly.ToPointer(LoggingFormatUpdate),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("error_response"),
-					SecretKey:         gofastly.ToPointer(secretKey),
-					Template:          gofastly.ToPointer("_updated"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					Name:              new("bigquery-example"),
+					User:              new("email@example.com"),
+					ProjectID:         new("example-gcp-project"),
+					Dataset:           new("example_bq_dataset"),
+					Table:             new("example_bq_table"),
+					Format:            new(LoggingFormatUpdate),
+					Placement:         new("none"),
+					ResponseCondition: new("error_response"),
+					SecretKey:         new(secretKey),
+					Template:          new("_updated"),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

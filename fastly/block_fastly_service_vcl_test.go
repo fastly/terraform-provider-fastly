@@ -21,9 +21,9 @@ func TestResourceFastlyFlattenVCLs(t *testing.T) {
 		{
 			remote: []*gofastly.VCL{
 				{
-					Name:    gofastly.ToPointer("myVCL"),
-					Content: gofastly.ToPointer("<<EOF somecontent EOF"),
-					Main:    gofastly.ToPointer(true),
+					Name:    new("myVCL"),
+					Content: new("<<EOF somecontent EOF"),
+					Main:    new(true),
 				},
 			},
 			local: []map[string]any{

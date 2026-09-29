@@ -65,9 +65,9 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 
 	for key, val := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-			Operation: gofastly.ToPointer(gofastly.CreateBatchOperation),
-			ItemKey:   gofastly.ToPointer(key),
-			ItemValue: gofastly.ToPointer(val.(string)),
+			Operation: new(gofastly.CreateBatchOperation),
+			ItemKey:   new(key),
+			ItemValue: new(val.(string)),
 		})
 	}
 
@@ -99,8 +99,8 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		for key := range os {
 			if _, ok := ns[key]; !ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-					ItemKey:   gofastly.ToPointer(key),
+					Operation: new(gofastly.DeleteBatchOperation),
+					ItemKey:   new(key),
 				})
 			}
 		}
@@ -109,18 +109,18 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 			// Handle replaces
 			if _, ok := os[key]; ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.ToPointer(gofastly.UpdateBatchOperation),
-					ItemKey:   gofastly.ToPointer(key),
-					ItemValue: gofastly.ToPointer(val.(string)),
+					Operation: new(gofastly.UpdateBatchOperation),
+					ItemKey:   new(key),
+					ItemValue: new(val.(string)),
 				})
 			}
 
 			// Handle additions
 			if _, ok := os[key]; !ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.ToPointer(gofastly.CreateBatchOperation),
-					ItemKey:   gofastly.ToPointer(key),
-					ItemValue: gofastly.ToPointer(val.(string)),
+					Operation: new(gofastly.CreateBatchOperation),
+					ItemKey:   new(key),
+					ItemValue: new(val.(string)),
 				})
 			}
 		}
@@ -171,8 +171,8 @@ func resourceServiceDictionaryItemsDelete(ctx context.Context, d *schema.Resourc
 
 	for key := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-			ItemKey:   gofastly.ToPointer(key),
+			Operation: new(gofastly.DeleteBatchOperation),
+			ItemKey:   new(key),
 		})
 	}
 

@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/scope"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/signals"
 )
@@ -53,8 +52,8 @@ func resourceFastlyNGWAFSignalCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	i := &signals.CreateInput{
-		Description: fastly.ToPointer(d.Get("description").(string)),
-		Name:        fastly.ToPointer(d.Get("name").(string)),
+		Description: new(d.Get("description").(string)),
+		Name:        new(d.Get("name").(string)),
 		Scope:       rsc.scope,
 	}
 
@@ -79,7 +78,7 @@ func resourceFastlyNGWAFSignalRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	i := &signals.GetInput{
-		SignalID: fastly.ToPointer(d.Id()),
+		SignalID: new(d.Id()),
 		Scope:    rsc.scope,
 	}
 
@@ -106,8 +105,8 @@ func resourceFastlyNGWAFSignalUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	i := &signals.UpdateInput{
-		Description: fastly.ToPointer(d.Get("description").(string)),
-		SignalID:    fastly.ToPointer(d.Id()),
+		Description: new(d.Get("description").(string)),
+		SignalID:    new(d.Id()),
 		Scope:       rsc.scope,
 	}
 
@@ -130,7 +129,7 @@ func resourceFastlyNGWAFSignalDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	i := &signals.DeleteInput{
-		SignalID: fastly.ToPointer(d.Id()),
+		SignalID: new(d.Id()),
 		Scope:    rsc.scope,
 	}
 

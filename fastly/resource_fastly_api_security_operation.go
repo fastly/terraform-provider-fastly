@@ -101,14 +101,14 @@ func resourceFastlyAPISecurityOperationCreate(ctx context.Context, d *schema.Res
 	serviceID := d.Get("service_id").(string)
 
 	in := &operations.CreateInput{
-		ServiceID: gofastly.ToPointer(serviceID),
-		Method:    gofastly.ToPointer(strings.ToUpper(d.Get("method").(string))),
-		Domain:    gofastly.ToPointer(d.Get("domain").(string)),
-		Path:      gofastly.ToPointer(d.Get("path").(string)),
+		ServiceID: new(serviceID),
+		Method:    new(strings.ToUpper(d.Get("method").(string))),
+		Domain:    new(d.Get("domain").(string)),
+		Path:      new(d.Get("path").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		in.Description = gofastly.ToPointer(v.(string))
+		in.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("tag_ids"); ok {
 		in.TagIDs = expandStringSet(v.(*schema.Set))
@@ -136,8 +136,8 @@ func resourceFastlyAPISecurityOperationRead(ctx context.Context, d *schema.Resou
 	}
 
 	op, err := operations.Describe(ctx, conn, &operations.DescribeInput{
-		ServiceID:   gofastly.ToPointer(serviceID),
-		OperationID: gofastly.ToPointer(opID),
+		ServiceID:   new(serviceID),
+		OperationID: new(opID),
 	})
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
@@ -176,15 +176,15 @@ func resourceFastlyAPISecurityOperationUpdate(ctx context.Context, d *schema.Res
 	}
 
 	in := &operations.UpdateInput{
-		ServiceID:   gofastly.ToPointer(serviceID),
-		OperationID: gofastly.ToPointer(opID),
+		ServiceID:   new(serviceID),
+		OperationID: new(opID),
 	}
 
 	if d.HasChange("description") {
 		if v, ok := d.GetOk("description"); ok {
-			in.Description = gofastly.ToPointer(v.(string))
+			in.Description = new(v.(string))
 		} else {
-			in.Description = gofastly.ToPointer("")
+			in.Description = new("")
 		}
 	}
 
@@ -215,8 +215,8 @@ func resourceFastlyAPISecurityOperationDelete(ctx context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Deleting API Security operation (%s/%s)", serviceID, opID)
 	err = operations.Delete(gofastly.NewContextForResourceID(ctx, serviceID), conn, &operations.DeleteInput{
-		ServiceID:   gofastly.ToPointer(serviceID),
-		OperationID: gofastly.ToPointer(opID),
+		ServiceID:   new(serviceID),
+		OperationID: new(opID),
 	})
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {

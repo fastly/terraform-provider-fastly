@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/objectstorage/accesskeys"
 )
 
@@ -58,8 +57,8 @@ func resourceObjectStorageAccessKeyCreate(ctx context.Context, resourceData *sch
 	conn := meta.(*APIClient).conn
 
 	opts := accesskeys.CreateInput{
-		Description: gofastly.ToPointer(resourceData.Get("description").(string)),
-		Permission:  gofastly.ToPointer(resourceData.Get("permission").(string)),
+		Description: new(resourceData.Get("description").(string)),
+		Permission:  new(resourceData.Get("permission").(string)),
 	}
 
 	buckets := []string{}
@@ -67,7 +66,7 @@ func resourceObjectStorageAccessKeyCreate(ctx context.Context, resourceData *sch
 		for _, bucket := range val.([]any) {
 			buckets = append(buckets, bucket.(string))
 		}
-		opts.Buckets = gofastly.ToPointer(buckets)
+		opts.Buckets = new(buckets)
 	}
 	createdAK, err := accesskeys.Create(ctx, conn, &opts)
 	if err != nil {
@@ -99,7 +98,7 @@ func resourceObjectStorageAccessKeyRead(ctx context.Context, resourceData *schem
 	conn := meta.(*APIClient).conn
 
 	opts := accesskeys.GetInput{
-		AccessKeyID: gofastly.ToPointer(resourceData.Id()),
+		AccessKeyID: new(resourceData.Id()),
 	}
 
 	readAK, err := accesskeys.Get(ctx, conn, &opts)
@@ -144,7 +143,7 @@ func resourceObjectStorageAccessKeyDelete(ctx context.Context, resourceData *sch
 	conn := meta.(*APIClient).conn
 
 	opts := accesskeys.DeleteInput{
-		AccessKeyID: gofastly.ToPointer(resourceData.Id()),
+		AccessKeyID: new(resourceData.Id()),
 	}
 
 	err := accesskeys.Delete(ctx, conn, &opts)

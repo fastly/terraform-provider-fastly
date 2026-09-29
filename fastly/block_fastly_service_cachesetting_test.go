@@ -21,11 +21,11 @@ func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 		{
 			remote: []*gofastly.CacheSetting{
 				{
-					Name:           gofastly.ToPointer("alt_backend"),
-					Action:         gofastly.ToPointer(gofastly.CacheSettingActionPass),
-					StaleTTL:       gofastly.ToPointer(3600),
-					CacheCondition: gofastly.ToPointer("serve_alt_backend"),
-					TTL:            gofastly.ToPointer(300),
+					Name:           new("alt_backend"),
+					Action:         new(gofastly.CacheSettingActionPass),
+					StaleTTL:       new(3600),
+					CacheCondition: new("serve_alt_backend"),
+					TTL:            new(300),
 				},
 			},
 			local: []map[string]any{
@@ -54,19 +54,19 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	cq1 := gofastly.CacheSetting{
-		Name:           gofastly.ToPointer("alt_backend"),
-		Action:         gofastly.ToPointer(gofastly.CacheSettingActionPass),
-		StaleTTL:       gofastly.ToPointer(3600),
-		CacheCondition: gofastly.ToPointer("serve_alt_backend"),
-		TTL:            gofastly.ToPointer(0), // The default value for the attribute type is sent to API.
+		Name:           new("alt_backend"),
+		Action:         new(gofastly.CacheSettingActionPass),
+		StaleTTL:       new(3600),
+		CacheCondition: new("serve_alt_backend"),
+		TTL:            new(0), // The default value for the attribute type is sent to API.
 	}
 
 	cq2 := gofastly.CacheSetting{
-		Name:           gofastly.ToPointer("cache_backend"),
-		Action:         gofastly.ToPointer(gofastly.CacheSettingActionRestart),
-		StaleTTL:       gofastly.ToPointer(1600),
-		CacheCondition: gofastly.ToPointer("cache_alt_backend"),
-		TTL:            gofastly.ToPointer(300),
+		Name:           new("cache_backend"),
+		Action:         new(gofastly.CacheSettingActionRestart),
+		StaleTTL:       new(1600),
+		CacheCondition: new("cache_alt_backend"),
+		TTL:            new(300),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

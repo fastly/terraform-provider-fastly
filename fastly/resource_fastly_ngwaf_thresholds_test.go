@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	ws "github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/workspaces/thresholds"
 )
 
@@ -110,8 +109,8 @@ func testAccNGWAFThresholdsExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		threshold, err := ws.Get(context.TODO(), conn, &ws.GetInput{
-			WorkspaceID: gofastly.ToPointer(rs.Primary.Attributes["workspace_id"]),
-			ThresholdID: gofastly.ToPointer(rs.Primary.ID),
+			WorkspaceID: new(rs.Primary.Attributes["workspace_id"]),
+			ThresholdID: new(rs.Primary.ID),
 		})
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve NGWAF Thresholds %s: %v", rs.Primary.ID, err)

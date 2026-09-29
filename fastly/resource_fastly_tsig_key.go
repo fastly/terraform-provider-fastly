@@ -64,16 +64,16 @@ func resourceFastlyTSIGKeysCreate(ctx context.Context, d *schema.ResourceData, m
 
 	var input tsigkeys.CreateInput
 	if v, ok := d.GetOk("algorithm"); ok {
-		input.Algorithm = gofastly.ToPointer(v.(string))
+		input.Algorithm = new(v.(string))
 	}
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("name"); ok {
-		input.Name = gofastly.ToPointer(v.(string))
+		input.Name = new(v.(string))
 	}
 	if v, ok := d.GetOk("secret"); ok {
-		input.Secret = gofastly.ToPointer(v.(string))
+		input.Secret = new(v.(string))
 	}
 
 	data, err := tsigkeys.Create(ctx, conn, &input)
@@ -90,7 +90,7 @@ func resourceFastlyTSIGKeysRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*APIClient).conn
 
 	input := &tsigkeys.GetInput{
-		TSIGKeyID: gofastly.ToPointer(d.Id()),
+		TSIGKeyID: new(d.Id()),
 	}
 
 	data, err := tsigkeys.Get(ctx, conn, input)
@@ -118,20 +118,20 @@ func resourceFastlyTSIGKeysUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*APIClient).conn
 
 	input := &tsigkeys.UpdateInput{
-		TSIGKeyID: gofastly.ToPointer(d.Id()),
+		TSIGKeyID: new(d.Id()),
 	}
 
 	if v, ok := d.GetOk("algorithm"); ok {
-		input.Algorithm = gofastly.ToPointer(v.(string))
+		input.Algorithm = new(v.(string))
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := d.GetOk("name"); ok {
-		input.Name = gofastly.ToPointer(v.(string))
+		input.Name = new(v.(string))
 	}
 	if v, ok := d.GetOk("secret"); ok {
-		input.Secret = gofastly.ToPointer(v.(string))
+		input.Secret = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Updating TSIG Key: %#v", input)
@@ -146,7 +146,7 @@ func resourceFastlyTSIGKeysUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceFastlyTSIGKeysDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	input := &tsigkeys.DeleteInput{
-		TSIGKeyID: gofastly.ToPointer(d.Id()),
+		TSIGKeyID: new(d.Id()),
 	}
 	log.Printf("[DEBUG] Deleting TSIG Key: %#v", input)
 	err := tsigkeys.Delete(ctx, conn, input)

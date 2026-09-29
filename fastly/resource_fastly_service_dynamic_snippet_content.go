@@ -60,7 +60,7 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 	_, err := conn.UpdateDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.UpdateDynamicSnippetInput{
 		ServiceID: serviceID,
 		SnippetID: snippetID,
-		Content:   gofastly.ToPointer(content),
+		Content:   new(content),
 	})
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -87,7 +87,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 		_, err := conn.UpdateDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
 			SnippetID: snippetID,
-			Content:   gofastly.ToPointer(content),
+			Content:   new(content),
 		})
 		if err != nil {
 			return diag.Errorf("error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
@@ -133,7 +133,7 @@ func resourceServiceDynamicSnippetDelete(ctx context.Context, d *schema.Resource
 		_, err := conn.UpdateDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
 			SnippetID: snippetID,
-			Content:   gofastly.ToPointer(""),
+			Content:   new(""),
 		})
 		if err != nil {
 			return diag.Errorf("error deleting dynamic snippet content: service %s, snippet %s, %#v", serviceID, snippetID, err)

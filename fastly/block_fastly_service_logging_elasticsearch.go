@@ -196,52 +196,52 @@ func (h *ElasticSearchServiceAttributeHandler) Update(ctx context.Context, d *sc
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["index"]; ok {
-		opts.Index = gofastly.ToPointer(v.(string))
+		opts.Index = new(v.(string))
 	}
 	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.ToPointer(v.(string))
+		opts.URL = new(v.(string))
 	}
 	if v, ok := modified["pipeline"]; ok {
-		opts.Pipeline = gofastly.ToPointer(v.(string))
+		opts.Pipeline = new(v.(string))
 	}
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.ToPointer(v.(string))
+		opts.User = new(v.(string))
 	}
 	if v, ok := modified["password"]; ok {
-		opts.Password = gofastly.ToPointer(v.(string))
+		opts.Password = new(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.ToPointer(v.(int))
+		opts.RequestMaxEntries = new(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
+		opts.RequestMaxBytes = new(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
-		opts.TLSCACert = gofastly.ToPointer(v.(string))
+		opts.TLSCACert = new(v.(string))
 	}
 	if v, ok := modified["tls_client_cert"]; ok {
-		opts.TLSClientCert = gofastly.ToPointer(v.(string))
+		opts.TLSClientCert = new(v.(string))
 	}
 	if v, ok := modified["tls_client_key"]; ok {
-		opts.TLSClientKey = gofastly.ToPointer(v.(string))
+		opts.TLSClientKey = new(v.(string))
 	}
 	if v, ok := modified["tls_hostname"]; ok {
-		opts.TLSHostname = gofastly.ToPointer(v.(string))
+		opts.TLSHostname = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Elasticsearch Opts: %#v", opts)
@@ -346,33 +346,33 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any,
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateElasticsearchInput{
-		Format:            gofastly.ToPointer(vla.format),
+		Format:            new(vla.format),
 		FormatVersion:     vla.formatVersion,
-		Index:             gofastly.ToPointer(resource["index"].(string)),
-		Name:              gofastly.ToPointer(resource["name"].(string)),
-		Password:          gofastly.ToPointer(resource["password"].(string)),
-		Pipeline:          gofastly.ToPointer(resource["pipeline"].(string)),
-		RequestMaxBytes:   gofastly.ToPointer(resource["request_max_bytes"].(int)),
-		RequestMaxEntries: gofastly.ToPointer(resource["request_max_entries"].(int)),
+		Index:             new(resource["index"].(string)),
+		Name:              new(resource["name"].(string)),
+		Password:          new(resource["password"].(string)),
+		Pipeline:          new(resource["pipeline"].(string)),
+		RequestMaxBytes:   new(resource["request_max_bytes"].(int)),
+		RequestMaxEntries: new(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		TLSCACert:         gofastly.ToPointer(resource["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.ToPointer(resource["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.ToPointer(resource["tls_client_key"].(string)),
-		TLSHostname:       gofastly.ToPointer(resource["tls_hostname"].(string)),
-		URL:               gofastly.ToPointer(resource["url"].(string)),
-		User:              gofastly.ToPointer(resource["user"].(string)),
-		ProcessingRegion:  gofastly.ToPointer(resource["processing_region"].(string)),
+		TLSCACert:         new(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     new(resource["tls_client_cert"].(string)),
+		TLSClientKey:      new(resource["tls_client_key"].(string)),
+		TLSHostname:       new(resource["tls_hostname"].(string)),
+		URL:               new(resource["url"].(string)),
+		User:              new(resource["user"].(string)),
+		ProcessingRegion:  new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	return opts

@@ -23,23 +23,23 @@ func TestAccFastlyServiceCompute_package_basic(t *testing.T) {
 
 	want := gofastly.Package{
 		Metadata: &gofastly.PackageMetadata{
-			Name:        gofastly.ToPointer("wasm-test"),
-			Description: gofastly.ToPointer("Test Package"),
+			Name:        new("wasm-test"),
+			Description: new("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    gofastly.ToPointer("rust"),
-			Size:        gofastly.ToPointer(int64(2015936)),
-			FilesHash:   gofastly.ToPointer("a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d"),
+			Language:    new("rust"),
+			Size:        new(int64(2015936)),
+			FilesHash:   new("a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d"),
 		},
 	}
 
 	want2 := gofastly.Package{
 		Metadata: &gofastly.PackageMetadata{
-			Name:        gofastly.ToPointer("edge-compute-test"),
-			Description: gofastly.ToPointer("Test Package"),
+			Name:        new("edge-compute-test"),
+			Description: new("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    gofastly.ToPointer("rust"),
-			Size:        gofastly.ToPointer(int64(2158517)),
-			FilesHash:   gofastly.ToPointer("d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7"),
+			Language:    new("rust"),
+			Size:        new(int64(2158517)),
+			FilesHash:   new("d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7"),
 		},
 	}
 
@@ -98,23 +98,23 @@ func TestAccFastlyServiceCompute_package_content(t *testing.T) {
 
 	want := gofastly.Package{
 		Metadata: &gofastly.PackageMetadata{
-			Name:        gofastly.ToPointer("wasm-test"),
-			Description: gofastly.ToPointer("Test Package"),
+			Name:        new("wasm-test"),
+			Description: new("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    gofastly.ToPointer("rust"),
-			Size:        gofastly.ToPointer(int64(2015936)),
-			FilesHash:   gofastly.ToPointer("a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d"),
+			Language:    new("rust"),
+			Size:        new(int64(2015936)),
+			FilesHash:   new("a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d"),
 		},
 	}
 
 	want2 := gofastly.Package{
 		Metadata: &gofastly.PackageMetadata{
-			Name:        gofastly.ToPointer("edge-compute-test"),
-			Description: gofastly.ToPointer("Test Package"),
+			Name:        new("edge-compute-test"),
+			Description: new("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    gofastly.ToPointer("rust"),
-			Size:        gofastly.ToPointer(int64(2158517)),
-			FilesHash:   gofastly.ToPointer("d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7"),
+			Language:    new("rust"),
+			Size:        new(int64(2158517)),
+			FilesHash:   new("d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7"),
 		},
 	}
 

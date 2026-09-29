@@ -71,16 +71,16 @@ func (h *GzipServiceAttributeHandler) Create(ctx context.Context, d *schema.Reso
 	opts := gofastly.CreateGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
+		Name:           new(resource["name"].(string)),
+		CacheCondition: new(resource["cache_condition"].(string)),
 	}
 
 	if v, ok := resource["content_types"]; ok {
-		opts.ContentTypes = gofastly.ToPointer(sliceToString(v.([]any)))
+		opts.ContentTypes = new(sliceToString(v.([]any)))
 	}
 
 	if v, ok := resource["extensions"]; ok {
-		opts.Extensions = gofastly.ToPointer(sliceToString(v.([]any)))
+		opts.Extensions = new(sliceToString(v.([]any)))
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
@@ -160,22 +160,22 @@ func (h *GzipServiceAttributeHandler) Update(ctx context.Context, d *schema.Reso
 		// where it used to accept an empty value but now will use a default value if no value provided.
 		// To allow "resetting" the value on modify (user removed the attribute or set empty value)
 		// we always default to sending an empty string
-		opts.ContentTypes = gofastly.ToPointer("")
+		opts.ContentTypes = new("")
 
 		list := v.([]any)
 		if len(list) > 0 {
-			opts.ContentTypes = gofastly.ToPointer(sliceToString(list))
+			opts.ContentTypes = new(sliceToString(list))
 		}
 	}
 	if v, ok := modified["extensions"]; ok {
-		opts.Extensions = gofastly.ToPointer("")
+		opts.Extensions = new("")
 		list := v.([]any)
 		if len(list) > 0 {
-			opts.Extensions = gofastly.ToPointer(sliceToString(list))
+			opts.Extensions = new(sliceToString(list))
 		}
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.ToPointer(v.(string))
+		opts.CacheCondition = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Gzip Opts: %#v", opts)

@@ -62,8 +62,8 @@ func (h *ResourceLinkServiceAttributeHandler) Create(ctx context.Context, d *sch
 	input := &gofastly.CreateResourceInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		ResourceID:     gofastly.ToPointer(resource["resource_id"].(string)),
+		Name:           new(resource["name"].(string)),
+		ResourceID:     new(resource["resource_id"].(string)),
 	}
 
 	log.Printf("[DEBUG] CREATE: Resource Links input: %#v", input)
@@ -106,7 +106,7 @@ func (h *ResourceLinkServiceAttributeHandler) Read(ctx context.Context, d *schem
 func (h *ResourceLinkServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.UpdateResourceInput{
 		ResourceID:     resource["link_id"].(string),
-		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Name:           new(resource["name"].(string)),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	}

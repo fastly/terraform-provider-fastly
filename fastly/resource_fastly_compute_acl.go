@@ -34,7 +34,7 @@ func resourceFastlyComputeACLCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*APIClient).conn
 
 	i := computeacls.CreateInput{
-		Name: gofastly.ToPointer(d.Get("name").(string)),
+		Name: new(d.Get("name").(string)),
 	}
 
 	log.Printf("[DEBUG] CREATE: Compute ACL input: %#v", i)
@@ -53,7 +53,7 @@ func resourceFastlyComputeACLRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*APIClient).conn
 
 	i := computeacls.DescribeInput{
-		ComputeACLID: gofastly.ToPointer(d.Id()),
+		ComputeACLID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] REFRESH: Compute ACL input: %#v", i)
@@ -79,7 +79,7 @@ func resourceFastlyComputeACLDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*APIClient).conn
 
 	i := computeacls.DeleteInput{
-		ComputeACLID: gofastly.ToPointer(d.Id()),
+		ComputeACLID: new(d.Id()),
 	}
 
 	log.Printf("[DEBUG] DELETE: Compute ACL input: %#v", i)

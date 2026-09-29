@@ -291,8 +291,8 @@ func reconcileServiceACLEntriesAfterEnablingManagement(ctx context.Context, d *s
 		}
 
 		deletions = append(deletions, &gofastly.BatchACLEntry{
-			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-			EntryID:   gofastly.ToPointer(entryID),
+			Operation: new(gofastly.DeleteBatchOperation),
+			EntryID:   new(entryID),
 		})
 	}
 
@@ -451,7 +451,7 @@ func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.
 	// configuration-derived values. Create operations do not require an ID.
 	if op != gofastly.CreateBatchOperation {
 		if entryID, ok := v["id"].(string); ok && entryID != "" {
-			entry.EntryID = gofastly.ToPointer(entryID)
+			entry.EntryID = new(entryID)
 		}
 	}
 

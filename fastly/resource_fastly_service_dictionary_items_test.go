@@ -50,17 +50,28 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 	}
 }
 
-func TestResourceFastlyServiceDictionaryItemsReadSkipsRefreshWhenManageItemsFalse(t *testing.T) {
+func TestResourceFastlyServiceDictionaryItemsReadClearsItemsWhenManageItemsFalse(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceServiceDictionaryItems().Schema, map[string]any{
 		"service_id":    "service-id",
 		"dictionary_id": "dictionary-id",
 		"manage_items":  false,
 	})
+	if err := d.Set("items", map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}); err != nil {
+		t.Fatalf("failed to seed dictionary items in test state: %v", err)
+	}
 	d.SetId("service-id/dictionary-id")
 
 	diags := resourceServiceDictionaryItemsRead(context.Background(), d, nil)
 	if diags.HasError() {
-		t.Fatalf("expected dictionary items read to be skipped, got diagnostics: %v", diags)
+		t.Fatalf("expected dictionary items read to clear unmanaged items without refreshing, got diagnostics: %v", diags)
+	}
+
+	items := d.Get("items").(map[string]any)
+	if len(items) != 0 {
+		t.Fatalf("expected unmanaged dictionary items to be cleared from state, got %d items", len(items))
 	}
 }
 
@@ -376,7 +387,6 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, initialItems),
-					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
 			},
 			{
@@ -384,7 +394,15 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, initialItems),
-					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "0"),
+				),
+			},
+			{
+				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, updatedItems, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, updatedItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "3"),
 				),
 			},
 		},

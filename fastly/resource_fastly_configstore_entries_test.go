@@ -158,6 +158,7 @@ func TestAccFastlyConfigStoreEntries_manage_entries_false(t *testing.T) {
 				Config: testAccServiceConfigStoreEntriesManageEntriesFalse(storeName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFastlyServiceConfigStoreEntriesRemoteState(storeName, initialEntries),
+					resource.TestCheckResourceAttr("fastly_configstore_entries.example", "entries.%", "2"),
 				),
 			},
 			{

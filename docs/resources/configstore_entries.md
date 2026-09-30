@@ -16,6 +16,8 @@ Set `manage_entries = true` if Terraform should continue to track and reconcile 
 
 ~> **Note:** Because unmanaged entry data is not retained in Terraform state, removing a `fastly_configstore_entries` resource with `manage_entries = false` does not delete the entries that it originally seeded.
 
+~> **Note:** Use `manage_entries = true` cautiously. Terraform will overwrite external changes and delete remote entries that are not present in the configured `entries` map.
+
 ~> **Note:** Terraform should not be used to store large amounts of data, so it's recommended you leave the default behaviour in place and only seed the store with a small amount of key-value pairs. For more information see ["Configuration not data"](https://developer.fastly.com/learning/integrations/orchestration/terraform/#configuration-not-data).
 
 ## Example Usage

@@ -14,6 +14,8 @@ Defines a map of Fastly dictionary items that can be used to populate a service 
 
 ~> **Note:** Because unmanaged item data is not retained in Terraform state, removing a `fastly_service_dictionary_items` resource with `manage_items = false` does not delete the items that it originally seeded. If management is later enabled, Terraform performs one remote reconciliation so existing items can be adopted without blindly recreating them.
 
+~> **Note:** Use `manage_items = true` cautiously. Terraform will overwrite external changes and delete remote items that are not present in the configured `items` map.
+
 ## Limitations
 
 - `write_only` dictionaries are not supported

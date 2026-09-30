@@ -12,9 +12,6 @@ Routing config domain links are for managing versionless domains for routing con
 associates an existing [`fastly_routing_config`](routing_config.md) with an existing
 [`fastly_domain`](domain.md), but doesn't create or delete either resource.
 
-If you are managing a domain's routing config with a link, you may not also set `routing_config_id`
-on the domain by any other means.
-
 ## Example Usage
 
 Basic usage:

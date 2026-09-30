@@ -48,7 +48,7 @@ func resourceFastlyRoutingConfigDomainLinkRead(ctx context.Context, d *schema.Re
 
 	data, err := domains.Get(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)
 	if err != nil {
-		if isNotFoundErr(err) {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] Domain (%s) not found, removing routing config domain link from state", d.Id())
 			d.SetId("")
 			return nil
@@ -94,8 +94,10 @@ func resourceFastlyRoutingConfigDomainLinkDelete(ctx context.Context, d *schema.
 		RoutingConfigurationID: gofastly.NullValue[string](),
 	}
 	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, input)
-	if err != nil && !isNotFoundErr(err) {
-		return diag.FromErr(err)
+	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); !ok || !e.IsNotFound() {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId("")

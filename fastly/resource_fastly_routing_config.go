@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/domainmanagement/v1/routingconfigs"
@@ -19,16 +20,14 @@ import (
 	"github.com/fastly/go-fastly/v17/fastly/domainmanagement/v1/routingconfigs/paths/rules"
 )
 
-// resourceFastlyRoutingConfig manages a Fastly routing config using automatic
-// versioning: every apply reconciles the routing config's draft paths and
-// rules against the resource's configuration, then activates the draft. The
-// draft/version workflow described by the API is never exposed to Terraform.
+// resourceFastlyRoutingConfig manages a routing config using automatic
+// versioning: every apply reconciles the draft's paths and rules against
+// this resource's configuration and activates the draft if anything
+// changed. The draft/version workflow is never exposed to Terraform.
 //
-// Reconciliation and refresh always operate on path/rule IDs this resource
-// already knows about (from its own prior Create/Update calls), fetched
-// individually via Get, rather than by listing a path's/routing config's
-// current children. The list endpoints are only used once, to bootstrap
-// state on import.
+// Reconciliation and refresh only Get path/rule IDs already known from prior
+// Create/Update calls; they never list. The list endpoints are used once, to
+// bootstrap state on import.
 func resourceFastlyRoutingConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFastlyRoutingConfigCreate,
@@ -50,12 +49,13 @@ func resourceFastlyRoutingConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The user-defined name of the routing config. Cannot be changed after creation.",
+				Description: "The user-defined name of the routing config. Can be created, but not updated.",
 			},
 			"path": {
 				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A URL path pattern and the rules used to route matching requests. Fastly manages the draft/active version lifecycle for these automatically; every apply reconciles the desired paths and rules and activates the result.",
+				Required:    true,
+				MinItems:    1,
+				Description: "A URL path pattern and the rules used to route matching requests.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"path": {
@@ -76,9 +76,10 @@ func resourceFastlyRoutingConfig() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action_type": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The action type (e.g. `service`).",
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"service"}, false)),
+										Description:      "The action type. Currently only `service` is supported.",
 									},
 									"action_value": {
 										Type:        schema.TypeString,
@@ -97,14 +98,16 @@ func resourceFastlyRoutingConfig() *schema.Resource {
 													Description: "The header name to match against. Only applicable when `type` is `header`.",
 												},
 												"operator": {
-													Type:        schema.TypeString,
-													Required:    true,
-													Description: "The comparison operator used to evaluate `value` against the request (e.g. `equals`).",
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"equals", "starts_with", "ends_with", "contains"}, false)),
+													Description:      "The comparison operator used to evaluate `value` against the request. One of `equals`, `starts_with`, `ends_with`, or `contains`.",
 												},
 												"type": {
-													Type:        schema.TypeString,
-													Required:    true,
-													Description: "The condition category (e.g. `header`).",
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"header"}, false)),
+													Description:      "The condition category. Currently only `header` is supported.",
 												},
 												"value": {
 													Type:        schema.TypeString,
@@ -134,11 +137,6 @@ func resourceFastlyRoutingConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The routing config identifier.",
-			},
-			"state": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The current lifecycle state of the routing config (e.g. `draft-only`, `active`, or `active-with-draft`).",
 			},
 		},
 	}
@@ -222,8 +220,10 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 		if err := paths.Delete(ctx, conn, &paths.DeleteInput{
 			RoutingConfigID: &id,
 			PathID:          new(pathID),
-		}); err != nil && !isNotFoundErr(err) {
-			return diag.FromErr(fmt.Errorf("failed to delete routing config path %q: %w", pathStr, err))
+		}); err != nil {
+			if e, ok := err.(*gofastly.HTTPError); !ok || !e.IsNotFound() {
+				return diag.FromErr(fmt.Errorf("failed to delete routing config path %q: %w", pathStr, err))
+			}
 		}
 		changed = true
 	}
@@ -288,9 +288,8 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 // resourceFastlyRoutingConfigRead refreshes the routing config, including its
 // paths and rules. It never lists: each path/rule already known to state is
 // re-fetched individually by ID, and any that now 404 are dropped as removed.
-// This intentionally cannot discover a path or rule added out-of-band (i.e.
-// not through this resource); doing so would require the list endpoints,
-// which are unreliable immediately after activation (see CDTOOL-1745).
+// This can't discover a path or rule added out-of-band, since the list
+// endpoints are unreliable immediately after activation.
 func resourceFastlyRoutingConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Routing Config Configuration for (%s)", d.Id())
 
@@ -312,7 +311,7 @@ func resourceFastlyRoutingConfigRead(ctx context.Context, d *schema.ResourceData
 
 		got, err := paths.Get(ctx, conn, &paths.GetInput{RoutingConfigID: &id, PathID: &pathID})
 		if err != nil {
-			if isNotFoundErr(err) {
+			if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 				continue
 			}
 			return diag.FromErr(err)
@@ -328,7 +327,7 @@ func resourceFastlyRoutingConfigRead(ctx context.Context, d *schema.ResourceData
 			}
 			gotRule, err := rules.Get(ctx, conn, &rules.GetInput{RoutingConfigID: &id, PathID: &pathID, RuleID: &ruleID})
 			if err != nil {
-				if isNotFoundErr(err) {
+				if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 					continue
 				}
 				return diag.FromErr(err)
@@ -358,7 +357,7 @@ func resourceFastlyRoutingConfigReadTopLevel(ctx context.Context, d *schema.Reso
 
 	data, err := routingconfigs.Get(ctx, conn, &routingconfigs.GetInput{RoutingConfigID: &id})
 	if err != nil {
-		if isNotFoundErr(err) {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] Routing config (%s) not found, removing from state", id)
 			d.SetId("")
 			return nil
@@ -370,9 +369,6 @@ func resourceFastlyRoutingConfigReadTopLevel(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 	if err := d.Set("routing_config_id", data.RoutingConfigID); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("state", data.State); err != nil {
 		return diag.FromErr(err)
 	}
 	activatedAt := ""
@@ -394,18 +390,19 @@ func resourceFastlyRoutingConfigDelete(ctx context.Context, d *schema.ResourceDa
 		RoutingConfigID: &id,
 		Force:           new(true),
 	})
-	if err != nil && !isNotFoundErr(err) {
-		return diag.FromErr(err)
+	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); !ok || !e.IsNotFound() {
+			return diag.FromErr(err)
+		}
 	}
 	return nil
 }
 
-// resourceFastlyRoutingConfigImport bootstraps state for an existing routing
-// config by listing its current paths and rules. This is the one place this
-// resource relies on the list endpoints, since import has no prior known IDs
-// to Get by; it's safe here because an importable routing config necessarily
-// already has real content, so the list call won't be the "empty config"
-// 404 that gets cached (see CDTOOL-1745).
+// resourceFastlyRoutingConfigImport bootstraps state by listing the routing
+// config's current paths and rules, since import has no known IDs to Get by.
+// This is the only place this resource lists: an importable routing config
+// always has real content, so the list call can't hit the "empty config" 404
+// case that Read avoids.
 func resourceFastlyRoutingConfigImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*APIClient).conn
 	id := d.Id()
@@ -494,13 +491,12 @@ func createRoutingConfigRules(ctx context.Context, conn *gofastly.Client, routin
 }
 
 // reconcileRoutingConfigRulesTracked reconciles a path's rules using only
-// rule IDs already known from prior state (never lists). If the desired rule
-// set is unchanged (by content, ignoring order), the prior rule maps are
-// returned untouched; otherwise every existing rule (by its known ID) is
-// deleted and the desired rules are recreated fresh, since rules have no
-// user-supplied natural key to reconcile against individually.
-// reconcileRoutingConfigRulesTracked returns whether it actually deleted or
-// created any rule, so the caller can skip activation when nothing changed.
+// rule IDs already known from prior state (never lists), and reports whether
+// it actually changed anything so the caller can skip activation otherwise.
+// If the desired rule set is unchanged (by content, ignoring order), the
+// prior rule maps are returned untouched; otherwise every existing rule (by
+// its known ID) is deleted and the desired rules are recreated fresh, since
+// rules have no user-supplied natural key to reconcile against individually.
 func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Client, routingConfigID, pathID string, oldRules, desiredRules []interface{}) ([]map[string]any, bool, error) {
 	oldIDs := make([]string, len(oldRules))
 	oldSigs := make([]string, len(oldRules))
@@ -543,8 +539,10 @@ func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Clie
 			RoutingConfigID: &routingConfigID,
 			PathID:          &pathID,
 			RuleID:          new(ruleID),
-		}); err != nil && !isNotFoundErr(err) {
-			return nil, false, fmt.Errorf("failed to delete rule %q: %w", ruleID, err)
+		}); err != nil {
+			if e, ok := err.(*gofastly.HTTPError); !ok || !e.IsNotFound() {
+				return nil, false, fmt.Errorf("failed to delete rule %q: %w", ruleID, err)
+			}
 		}
 	}
 
@@ -667,10 +665,4 @@ func sameSignatureSet(a, b []string) bool {
 		}
 	}
 	return true
-}
-
-// isNotFoundErr reports whether err is a 404 response from the Fastly API.
-func isNotFoundErr(err error) bool {
-	httpErr, ok := err.(*gofastly.HTTPError)
-	return ok && httpErr.StatusCode == 404
 }

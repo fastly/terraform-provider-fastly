@@ -94,12 +94,31 @@ func testAccRoutingConfigDomainLinkUnlink(resourceName string) resource.TestChec
 
 func testAccRoutingConfigDomainLinkConfig(suffix string) string {
 	return fmt.Sprintf(`
+resource "fastly_service_vcl" "example" {
+  name          = "tf-test-routing-config-link-%[1]s"
+  force_destroy = true
+
+  backend {
+    address = "example.com"
+    name    = "tf-test-backend"
+  }
+}
+
 resource "fastly_routing_config" "example" {
-  name = "tf-test-routing-config-%s"
+  name = "tf-test-routing-config-%[1]s"
+
+  path {
+    path = "/api/*"
+
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.example.id
+    }
+  }
 }
 
 resource "fastly_domain" "domain" {
-  fqdn = "test-%s.example.com"
+  fqdn = "test-%[1]s.example.com"
 
   lifecycle {
     ignore_changes = [service_id]
@@ -110,7 +129,7 @@ resource "fastly_routing_config_domain_link" "example" {
   domain_id         = fastly_domain.domain.domain_id
   routing_config_id = fastly_routing_config.example.routing_config_id
 }
-`, suffix, suffix)
+`, suffix)
 }
 
 func testAccCheckRoutingConfigDomainLinkDestroy(s *terraform.State) error {

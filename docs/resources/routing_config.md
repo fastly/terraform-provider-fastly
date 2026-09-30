@@ -21,7 +21,7 @@ A routing config isn't useful on its own; it must be linked to one or more domai
 -> **Note:** This resource refreshes each `path` and `rule` it manages individually by ID rather
 than listing a routing config's current paths/rules. This means it will not detect a path or rule
 added to the routing config outside of Terraform (e.g. via the API or UI directly) — only drift on
-paths/rules this resource already created.
+paths/rules this resource already created, or that were imported.
 
 ## Example Usage
 
@@ -76,18 +76,14 @@ terraform import fastly_routing_config.example <routing_config_id>
 
 ### Required
 
-- `name` (String) The user-defined name of the routing config. Cannot be changed after creation.
-
-### Optional
-
-- `path` (Block List) A URL path pattern and the rules used to route matching requests. Fastly manages the draft/active version lifecycle for these automatically; every apply reconciles the desired paths and rules and activates the result. (see [below for nested schema](#nestedblock--path))
+- `name` (String) The user-defined name of the routing config. Can be created, but not updated.
+- `path` (Block List, Min: 1) A URL path pattern and the rules used to route matching requests. (see [below for nested schema](#nestedblock--path))
 
 ### Read-Only
 
 - `activated_at` (String) The date and time the routing config's active version was last activated, in ISO 8601 format.
 - `id` (String) The ID of this resource.
 - `routing_config_id` (String) The routing config identifier.
-- `state` (String) The current lifecycle state of the routing config (e.g. `draft-only`, `active`, or `active-with-draft`).
 
 <a id="nestedblock--path"></a>
 ### Nested Schema for `path`
@@ -106,7 +102,7 @@ Read-Only:
 
 Required:
 
-- `action_type` (String) The action type (e.g. `service`).
+- `action_type` (String) The action type. Currently only `service` is supported.
 - `action_value` (String) The destination for the action (e.g. a service ID when `action_type` is `service`).
 
 Optional:
@@ -123,8 +119,8 @@ Read-Only:
 
 Required:
 
-- `operator` (String) The comparison operator used to evaluate `value` against the request (e.g. `equals`).
-- `type` (String) The condition category (e.g. `header`).
+- `operator` (String) The comparison operator used to evaluate `value` against the request. One of `equals`, `starts_with`, `ends_with`, or `contains`.
+- `type` (String) The condition category. Currently only `header` is supported.
 - `value` (String) The value compared against the request using `operator`.
 
 Optional:

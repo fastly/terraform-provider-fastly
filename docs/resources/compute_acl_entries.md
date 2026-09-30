@@ -8,7 +8,7 @@ description: |-
 
 # fastly_compute_acl_entries
 
-The `fastly_compute_acl_entries` resource allows you to seed CIDR-based allow/block rules (ACL entries) inside a Fastly Compute ACL.
+The `fastly_compute_acl_entries` resource allows you to seed or manage CIDR-based allow/block rules (ACL entries) inside a Fastly Compute ACL.
 
 By default (`manage_entries = false`), Terraform seeds the configured entries when the resource is created and then allows the entries to be managed externally using the [Fastly API](https://developer.fastly.com/reference/api/) or [Fastly CLI](https://developer.fastly.com/learning/tools/cli/). In this mode, entry data is cleared from Terraform state during refresh and remote entries are not listed by the provider. Changes to configured `entries` after creation are ignored.
 

@@ -206,7 +206,7 @@ func reconcileServiceDictionaryItemsAfterEnablingManagement(ctx context.Context,
 func resourceServiceDictionaryItemsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if !d.Get("manage_items").(bool) {
 		log.Print("[DEBUG] Skipping dictionary items refresh: manage_items is false (clearing items from state)")
-		if err := d.Set("items", map[string]string{}); err != nil {
+		if err := d.Set("items", map[string]any{}); err != nil {
 			return diag.FromErr(err)
 		}
 		return nil

@@ -154,6 +154,7 @@ func TestAccFastlyComputeACLEntries_manage_entries_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFastlyComputeACLEntriesExist(),
 					testAccCheckFastlyComputeACLEntriesRemoteState(initialEntries),
+					resource.TestCheckResourceAttr("fastly_compute_acl_entries.example", "entries.%", "2"),
 				),
 			},
 			{

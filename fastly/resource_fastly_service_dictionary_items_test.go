@@ -371,7 +371,6 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 
 	updatedItems := map[string]string{
 		"key1": "valueOne",
-		"key2": "value2",
 		"key3": "value3",
 	}
 
@@ -403,7 +402,7 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, updatedItems),
-					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "3"),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
 			},
 		},

@@ -312,7 +312,9 @@ resource "fastly_compute_acl" "example" {
 
 resource "fastly_compute_acl_entries" "example" {
   compute_acl_id = fastly_compute_acl.example.id
-  entries = {%s  }
+  entries = {
+%s
+  }
   manage_entries = false
 }
 `, name, entries)

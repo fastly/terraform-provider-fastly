@@ -162,7 +162,7 @@ func reconcileServiceDictionaryItemsAfterEnablingManagement(ctx context.Context,
 		DictionaryID: dictionaryID,
 	})
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error listing dictionary items during reconciliation after enabling management: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	remoteItems := flattenDictionaryItems(remoteState)

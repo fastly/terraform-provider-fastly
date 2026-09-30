@@ -236,7 +236,9 @@ resource "fastly_configstore" "example" {
 
 resource "fastly_configstore_entries" "example" {
   store_id = fastly_configstore.example.id
-  entries = {%s  }
+  entries = {
+%s
+  }
   manage_entries = false
 }
 `, storeName, entries)

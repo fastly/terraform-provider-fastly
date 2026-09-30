@@ -79,7 +79,7 @@ func resourceFastlyConfigStoreEntriesCreate(ctx context.Context, d *schema.Resou
 func resourceFastlyConfigStoreEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if !d.Get("manage_entries").(bool) {
 		log.Print("[DEBUG] Skipping Config Store entries refresh: manage_entries is false (clearing entries from state)")
-		if err := d.Set("entries", map[string]string{}); err != nil {
+		if err := d.Set("entries", map[string]any{}); err != nil {
 			return diag.FromErr(err)
 		}
 		return nil

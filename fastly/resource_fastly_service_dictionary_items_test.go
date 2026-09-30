@@ -387,6 +387,7 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, initialItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
 			},
 			{

@@ -185,6 +185,11 @@ func reconcileConfigStoreEntriesAfterEnablingManagement(ctx context.Context, d *
 		StoreID: storeID,
 	})
 	if err != nil {
+		if httpErr, ok := err.(*gofastly.HTTPError); ok && httpErr.IsNotFound() {
+			log.Printf("[WARN] No Config Store found '%s'", storeID)
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 

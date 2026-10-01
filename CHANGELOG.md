@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(routing_config): add `fastly_routing_config` and `fastly_routing_config_domain_link` resources for managing Domain Management routing configs (automatic versioning) and linking them to domains ([#1445](https://github.com/fastly/terraform-provider-fastly/pull/1445))
+
 ### BUG FIXES:
 
 - fix(acl-entries): clear unmanaged ACL entries from Terraform state ([#1440](https://github.com/fastly/terraform-provider-fastly/pull/1440))

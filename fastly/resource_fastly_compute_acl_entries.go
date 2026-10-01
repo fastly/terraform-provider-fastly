@@ -66,6 +66,14 @@ func resourceFastlyComputeACLEntriesCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceFastlyComputeACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if !d.Get("manage_entries").(bool) {
+		log.Print("[DEBUG] Skipping Compute ACL entries refresh: manage_entries is false (clearing entries from state)")
+		if err := d.Set("entries", map[string]any{}); err != nil {
+			return diag.FromErr(err)
+		}
+		return nil
+	}
+
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] REFRESH: Compute ACL Entries")
@@ -92,6 +100,20 @@ func resourceFastlyComputeACLEntriesRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceFastlyComputeACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	creating := d.Id() == ""
+
+	if !creating && d.HasChange("manage_entries") {
+		oldManageEntries, newManageEntries := d.GetChange("manage_entries")
+		if !oldManageEntries.(bool) && newManageEntries.(bool) {
+			return reconcileComputeACLEntriesAfterEnablingManagement(ctx, d, meta)
+		}
+	}
+
+	manageEntries := d.Get("manage_entries").(bool)
+	if !creating && !manageEntries && !d.HasChange("compute_acl_id") {
+		return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
+	}
+
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] UPDATE: Compute ACL Entries")
@@ -103,9 +125,8 @@ func resourceFastlyComputeACLEntriesUpdate(ctx context.Context, d *schema.Resour
 	newEntries := newRaw.(map[string]any)
 
 	var batch []*computeacls.BatchComputeACLEntry
-	manage := d.Get("manage_entries").(bool)
 
-	if manage {
+	if manageEntries {
 		for prefix := range oldEntries {
 			if _, ok := newEntries[prefix]; !ok {
 				prefix := prefix // avoid reference issue
@@ -136,8 +157,64 @@ func resourceFastlyComputeACLEntriesUpdate(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	if d.Id() == "" {
+	if creating {
 		d.SetId(fmt.Sprintf("%s/entries", id))
+		if !manageEntries {
+			log.Print("[DEBUG] Skipping Compute ACL entries refresh after create: manage_entries is false")
+			return nil
+		}
+	}
+
+	return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
+}
+
+func reconcileComputeACLEntriesAfterEnablingManagement(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
+	id := d.Get("compute_acl_id").(string)
+	desiredEntries := d.Get("entries").(map[string]any)
+
+	remoteState, err := computeacls.ListEntries(ctx, conn, &computeacls.ListEntriesInput{
+		ComputeACLID: &id,
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	remoteEntries := flattenComputeACLEntries(remoteState.Entries)
+	var batch []*computeacls.BatchComputeACLEntry
+
+	for prefix := range remoteEntries {
+		if _, ok := desiredEntries[prefix]; !ok {
+			prefix := prefix // avoid reference issue
+			batch = append(batch, &computeacls.BatchComputeACLEntry{
+				Prefix:    &prefix,
+				Operation: new("delete"),
+			})
+		}
+	}
+
+	for prefix, rawAction := range desiredEntries {
+		action := rawAction.(string)
+		remoteAction, exists := remoteEntries[prefix]
+
+		op := "create"
+		if exists {
+			if remoteAction == action {
+				continue
+			}
+			op = "update"
+		}
+
+		prefix := prefix // avoid reference issue
+		batch = append(batch, &computeacls.BatchComputeACLEntry{
+			Prefix:    &prefix,
+			Action:    &action,
+			Operation: &op,
+		})
+	}
+
+	if err := batchUpdateComputeACLEntries(ctx, conn, id, batch); err != nil {
+		return diag.Errorf("error reconciling Compute ACL (%s) entries after enabling management: %s", id, err)
 	}
 
 	return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
@@ -199,6 +276,10 @@ func resourceFastlyComputeACLEntriesImport(_ context.Context, d *schema.Resource
 
 	if err := d.Set("compute_acl_id", computeACLID); err != nil {
 		return nil, fmt.Errorf("error setting compute_acl_id (%s): %w", computeACLID, err)
+	}
+
+	if err := d.Set("manage_entries", true); err != nil {
+		return nil, fmt.Errorf("error enabling management for imported Compute ACL (%s) entries: %w", computeACLID, err)
 	}
 
 	// Normalize the ID in case the original had redundant slashes, etc.

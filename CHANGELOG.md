@@ -4,6 +4,14 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### Dependencies
+
+## 9.8.0 (October 01, 2026)
+
+### ENHANCEMENTS:
+
 - feat(routing_config): add `fastly_routing_config` and `fastly_routing_config_domain_link` resources for managing Domain Management routing configs (automatic versioning) and linking them to domains ([#1445](https://github.com/fastly/terraform-provider-fastly/pull/1445))
 
 ### BUG FIXES:
@@ -14,6 +22,7 @@
 - fix(configstore-entries): skip refresh and clear unmanaged Config Store entries from state ([#1446](https://github.com/fastly/terraform-provider-fastly/pull/1446))
 
 ### Dependencies
+
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.3.2 to 17.4.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))
 - build(deps): `golang.org/x/net` from 0.58.0 to 0.59.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.5.0 to 17.6.0 ([#1443](https://github.com/fastly/terraform-provider-fastly/pull/1443))

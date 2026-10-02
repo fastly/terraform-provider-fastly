@@ -13,6 +13,7 @@
 ### ENHANCEMENTS:
 
 - feat(routing_config): add `fastly_routing_config` and `fastly_routing_config_domain_link` resources for managing Domain Management routing configs (automatic versioning) and linking them to domains ([#1445](https://github.com/fastly/terraform-provider-fastly/pull/1445))
+- feat(logging_gcl): add support for the `public_key` attribute ([#1451](https://github.com/fastly/terraform-provider-fastly/pull/1451))
 
 ### BUG FIXES:
 

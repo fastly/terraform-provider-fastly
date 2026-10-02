@@ -37,6 +37,7 @@ func TestAccFastlyServiceLoggingGCS_vcl_basic(t *testing.T) {
 		Period:            new(12),
 		Placement:         new("none"),
 		ProjectID:         new("project-id"),
+		PublicKey:         new(pgpPublicKey(t)),
 		ResponseCondition: new("error_response_5XX"),
 		SecretKey:         new(secretKey),
 		TimestampFormat:   new("%Y-%m-%dT%H:%M:%S.000"),
@@ -56,6 +57,7 @@ func TestAccFastlyServiceLoggingGCS_vcl_basic(t *testing.T) {
 		Period:            new(12),
 		Placement:         new("none"),
 		ProjectID:         new("project-id1"),
+		PublicKey:         new(pgpPublicKey(t)),
 		ResponseCondition: new("error_response_5XX"),
 		SecretKey:         new(secretKey),
 		TimestampFormat:   new("%Y-%m-%dT%H:%M:%S.000"),
@@ -76,6 +78,7 @@ func TestAccFastlyServiceLoggingGCS_vcl_basic(t *testing.T) {
 		Period:            new(12),
 		Placement:         new("none"),
 		ProjectID:         new("project-id2"),
+		PublicKey:         new(""),
 		ResponseCondition: new("ok_response_2XX"),
 		SecretKey:         new(secretKey),
 		TimestampFormat:   new("%Y-%m-%dT%H:%M:%S.000"),
@@ -131,6 +134,7 @@ func TestAccFastlyServiceLoggingGCS_compute_basic(t *testing.T) {
 		Path:             new("/5XX/"),
 		Period:           new(12),
 		ProjectID:        new("project-id"),
+		PublicKey:        new(pgpPublicKey(t)),
 		SecretKey:        new(secretKey),
 		TimestampFormat:  new("%Y-%m-%dT%H:%M:%S.000"),
 		User:             new("email@example.com"),
@@ -279,6 +283,7 @@ resource "fastly_service_vcl" "foo" {
     bucket_name = "bucketname"
     account_name = "service-account"
     project_id = "project-id"
+    public_key = file("test_fixtures/fastly_test_publickey")
     secret_key = %q
     path = "/5XX/"
     period = 12
@@ -323,6 +328,7 @@ resource "fastly_service_compute" "foo" {
     path = "/5XX/"
     period = 12
     project_id = "project-id"
+    public_key = file("test_fixtures/fastly_test_publickey")
     secret_key = %q
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     user = "email@example.com"
@@ -375,6 +381,7 @@ resource "fastly_service_vcl" "foo" {
     bucket_name = "bucketname"
     account_name = "service-account"
     project_id = "project-id1"
+    public_key = file("test_fixtures/fastly_test_publickey")
     secret_key = %q
     path = "/5XX/"
     period = 12
@@ -469,6 +476,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					CompressionCodec: new("zstd"),
 					AccountName:      new("service-account"),
 					ProjectID:        new("project-id"),
+					PublicKey:        new(pgpPublicKey(t)),
 					ProcessingRegion: new("eu"),
 				},
 			},
@@ -486,6 +494,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"compression_codec": "zstd",
 					"account_name":      "service-account",
 					"project_id":        "project-id",
+					"public_key":        pgpPublicKey(t),
 					"processing_region": "eu",
 				},
 			},

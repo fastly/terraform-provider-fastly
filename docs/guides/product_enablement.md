@@ -5,7 +5,7 @@ subcategory: "Guides"
 
 ## Product Enablement
 
-The [Product Enablement](https://developer.fastly.com/reference/api/products/enablement/) APIs allow customers to enable and disable specific products.
+The [Product Enablement](https://www.fastly.com/documentation/reference/api/products/) APIs allow customers to enable and disable specific products. To make use of these APIs in your Terraform configuration, refer to the [CDN (VCL) service](../resources/service_vcl#nestedblock--product_enablement) and [Compute (WASM) service](../resources/service_compute#nestedblock--product_enablement) resource documentation.
 
 Not all customers are entitled to use these endpoints and so care needs to be given when configuring a `product_enablement` block in your Terraform configuration.
 
@@ -31,7 +31,7 @@ If it's set to `true`, then the provider will attempt to call the Fastly API to 
 
 The important part to pay attention to here is the 'entitlement' to call the Fastly API. Some customers don't have access to programmatically enable/disable products. Products have to then be set up manually by Fastly customer support.
 
-If you _do_ have programmatic access to the [Product Enablement](https://developer.fastly.com/reference/api/products/enablement/) APIs, then you should ensure the correct value is assigned in your Terraform configuration to avoid accidentally disabling a product.
+If you _do_ have programmatic access to the [Product Enablement](https://www.fastly.com/documentation/reference/api/products/) APIs, then you should ensure the correct value is assigned in your Terraform configuration to avoid accidentally disabling a product.
 
 If you're unsure about whether you have API access, then we recommend reaching out to [support@fastly.com](mailto:support@fastly.com) to have them review your account settings.
 

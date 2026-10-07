@@ -96,6 +96,12 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Description: "The ID of your Google Cloud Platform project",
 		},
+		"public_key": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -167,6 +173,7 @@ func (h *GCSLoggingServiceAttributeHandler) Create(ctx context.Context, d *schem
 		Path:             new(resource["path"].(string)),
 		Period:           new(resource["period"].(int)),
 		ProjectID:        new(resource["project_id"].(string)),
+		PublicKey:        new(resource["public_key"].(string)),
 		SecretKey:        new(resource["secret_key"].(string)),
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
@@ -259,6 +266,9 @@ func (h *GCSLoggingServiceAttributeHandler) Update(ctx context.Context, d *schem
 	}
 	if v, ok := modified["period"]; ok {
 		opts.Period = new(v.(int))
+	}
+	if v, ok := modified["public_key"]; ok {
+		opts.PublicKey = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = new(v.(int))
@@ -414,6 +424,9 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 		}
 		if resources.ProcessingRegion != nil {
 			data["processing_region"] = *resources.ProcessingRegion
+		}
+		if resources.PublicKey != nil {
+			data["public_key"] = *resources.PublicKey
 		}
 
 		// prune any empty values that come from the default string value in structs

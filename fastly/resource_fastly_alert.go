@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -26,6 +27,7 @@ func resourceFastlyAlert() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: validateDimensionsForSource,
 
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -38,7 +40,7 @@ func resourceFastlyAlert() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				MaxItems:    1,
-				Description: "More filters depending on the source type.",
+				Description: "Additional filters and aggregation criteria depending on the source type. For source type `stats`, use empty `{}` to monitor a single service or all services (aggregated), or include the `services` array to monitor all or a set of services (not aggregated). For source types `domains` or `origins`, the `domains` or `origins` array may be included to monitor all or a set (not aggregated).",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domains": {
@@ -51,6 +53,12 @@ func resourceFastlyAlert() *schema.Resource {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "Addresses of a subset of backends that the alert monitors.",
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+						"services": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Description: "List of service IDs to monitor individually, or empty array `[]` to monitor all services.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -112,7 +120,7 @@ func resourceFastlyAlert() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "The service which the alert monitors. Optional when using `stats` as the `source`.",
+				Description: "The service to monitor. Can be a specific service ID to monitor a single service, or omit to monitor all services (aggregated) or all or a set of services (not aggregated) (see `dimensions` for details).",
 			},
 
 			"source": {
@@ -146,14 +154,7 @@ func resourceFastlyAlertCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	input.Description = gofastly.ToPointer(description)
 
-	input.Dimensions = map[string][]string{}
-	if v, ok := d.GetOk("dimensions"); ok {
-		for _, r := range v.([]any) {
-			if m, ok := r.(map[string]any); ok {
-				input.Dimensions = buildDimensions(input.Dimensions, m)
-			}
-		}
-	}
+	input.Dimensions = buildDimensions(d)
 
 	if v, ok := d.GetOk("evaluation_strategy"); ok {
 		for _, r := range v.([]any) {
@@ -255,14 +256,7 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	input.Description = gofastly.ToPointer(description)
 
-	input.Dimensions = map[string][]string{}
-	if v, ok := d.GetOk("dimensions"); ok {
-		for _, r := range v.([]any) {
-			if m, ok := r.(map[string]any); ok {
-				input.Dimensions = buildDimensions(input.Dimensions, m)
-			}
-		}
-	}
+	input.Dimensions = buildDimensions(d)
 
 	if v, ok := d.GetOk("evaluation_strategy"); ok {
 		for _, r := range v.([]any) {
@@ -311,10 +305,50 @@ func flattenDimensions(remoteState map[string][]string) []map[string]any {
 	return []map[string]any{data}
 }
 
-func buildDimensions(data map[string][]string, v map[string]any) map[string][]string {
-	for dimension, values := range v {
-		data[dimension] = buildStringSlice(values.(*schema.Set))
+func getDimensionsMapFromRawConfig(c cty.Value) (map[string]cty.Value, bool) {
+	if c.IsNull() {
+		return nil, false
 	}
+
+	m := c.AsValueMap()
+	dimensionsVal, ok := m["dimensions"]
+	if !ok || dimensionsVal.IsNull() || dimensionsVal.LengthInt() == 0 {
+		return nil, false
+	}
+
+	dimsList := dimensionsVal.AsValueSlice()
+	if len(dimsList) == 0 {
+		return nil, false
+	}
+
+	return dimsList[0].AsValueMap(), true
+}
+
+func buildDimensions(d *schema.ResourceData) map[string][]string {
+	data := map[string][]string{}
+
+	dimsMap, ok := getDimensionsMapFromRawConfig(d.GetRawConfig())
+	if !ok {
+		return data
+	}
+
+	var stateMap map[string]any
+	if v := d.Get("dimensions").([]any); len(v) > 0 && v[0] != nil {
+		stateMap, _ = v[0].(map[string]any)
+	}
+
+	for key, val := range dimsMap {
+		if !val.IsNull() {
+			if stateMap != nil {
+				if set, ok := stateMap[key].(*schema.Set); ok {
+					data[key] = buildStringSlice(set)
+					continue
+				}
+			}
+			data[key] = []string{}
+		}
+	}
+
 	return data
 }
 
@@ -350,6 +384,46 @@ func buildStringSlice(s *schema.Set) []string {
 func validateSourceWithServiceID(source string, serviceID string) error {
 	if source != "stats" && serviceID == "" {
 		return errors.New(badAlertSourceServiceIDConfig)
+	}
+
+	return nil
+}
+
+func validateDimensionsForSource(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	source := d.Get("source").(string)
+
+	dimsMap, ok := getDimensionsMapFromRawConfig(d.GetRawConfig())
+	if !ok {
+		return nil
+	}
+
+	switch source {
+	case "origins":
+		originsVal, hasOrigins := dimsMap["origins"]
+		if !hasOrigins || originsVal.IsNull() {
+			return errors.New("dimensions.origins must be explicitly set when using source 'origins'")
+		}
+		for key := range dimsMap {
+			if key != "origins" && !dimsMap[key].IsNull() {
+				return errors.New("only dimensions.origins is valid for source 'origins'")
+			}
+		}
+	case "domains":
+		domainsVal, hasDomains := dimsMap["domains"]
+		if !hasDomains || domainsVal.IsNull() {
+			return errors.New("dimensions.domains must be explicitly set when using source 'domains'")
+		}
+		for key := range dimsMap {
+			if key != "domains" && !dimsMap[key].IsNull() {
+				return errors.New("only dimensions.domains is valid for source 'domains'")
+			}
+		}
+	case "stats":
+		for key := range dimsMap {
+			if key != "services" && !dimsMap[key].IsNull() {
+				return errors.New("only dimensions.services is valid for source 'stats'")
+			}
+		}
 	}
 
 	return nil

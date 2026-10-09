@@ -491,3 +491,316 @@ resource "fastly_alert" "tf_percent" {
   }
 }`, alert.Name, alert.Description, alert.Source, alert.Metric, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"], alert.EvaluationStrategy["ignore_below"])
 }
+
+func TestAccFastlyAlert_MultiServiceStats(t *testing.T) {
+	var testService gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	alertName := fmt.Sprintf("Terraform multi-service alert %s", acctest.RandString(10))
+
+	service := gofastly.ServiceDetail{
+		Name:      gofastly.ToPointer(""),
+		ServiceID: gofastly.ToPointer(""),
+	}
+
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform multi-service test",
+		Dimensions: map[string][]string{
+			"services": {},
+		},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "status_5xx",
+		Name:   alertName,
+		Source: "stats",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlertMultiServiceStatsConfig(serviceName, domainName, alertName, createAlert, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_test_service", &testService),
+					testAccCheckFastlyAlertsRemoteState(&service, "", createAlert),
+				),
+			},
+			{
+				Config: testAccAlertMultiServiceStatsConfig(serviceName, domainName, alertName, createAlert, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_test_service", &testService),
+					func(s *terraform.State) error {
+						updateAlert := gofastly.AlertDefinition{
+							Description: createAlert.Description,
+							Dimensions: map[string][]string{
+								"services": {gofastly.ToValue(testService.ServiceID)},
+							},
+							EvaluationStrategy: createAlert.EvaluationStrategy,
+							Metric:             createAlert.Metric,
+							Name:               createAlert.Name,
+							Source:             createAlert.Source,
+						}
+						return testAccCheckFastlyAlertsRemoteState(&service, "", updateAlert)(s)
+					},
+				),
+			},
+			{
+				ResourceName:      "fastly_alert.tf_multi",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyAlert_OriginsDimensions(t *testing.T) {
+	var testService gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	alertName := fmt.Sprintf("Terraform origins alert %s", acctest.RandString(10))
+
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform origins test",
+		Dimensions: map[string][]string{
+			"origins": {},
+		},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "all_status_5xx",
+		Name:   alertName,
+		Source: "origins",
+	}
+
+	updateAlert := gofastly.AlertDefinition{
+		Description: "Terraform origins test",
+		Dimensions: map[string][]string{
+			"origins": {"origin1.example.com"},
+		},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "all_status_5xx",
+		Name:   alertName,
+		Source: "origins",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlertOriginsConfig(serviceName, domainName, alertName, createAlert, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_origins_test", &testService),
+					testAccCheckFastlyAlertsRemoteState(&testService, serviceName, createAlert),
+				),
+			},
+			{
+				Config: testAccAlertOriginsConfig(serviceName, domainName, alertName, updateAlert, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_origins_test", &testService),
+					testAccCheckFastlyAlertsRemoteState(&testService, serviceName, updateAlert),
+				),
+			},
+			{
+				ResourceName:      "fastly_alert.tf_origins",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyAlert_DimensionsValidation(t *testing.T) {
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	alertName := fmt.Sprintf("Terraform alert %s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAlertOriginsEmptyDimensionsConfig(serviceName, domainName, alertName),
+				ExpectError: regexp.MustCompile("dimensions.origins must be explicitly set when using source 'origins'"),
+			},
+			{
+				Config:      testAccAlertStatsInvalidDimensionKeyConfig(serviceName, domainName, alertName),
+				ExpectError: regexp.MustCompile("only dimensions.services is valid for source 'stats'"),
+			},
+		},
+	})
+}
+
+func testAccAlertOriginsEmptyDimensionsConfig(serviceName, domainName, alertName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "tf_origins_test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    name    = "origin1"
+    address = "origin1.example.com"
+  }
+
+  product_enablement {
+    origin_inspector = true
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_alert" "tf_origins" {
+  name = "%s"
+  description = "Test validation"
+  service_id = fastly_service_vcl.tf_origins_test.id
+  source = "origins"
+  metric = "all_status_5xx"
+  dimensions {}
+
+  evaluation_strategy {
+    type = "above_threshold"
+    period = "5m"
+    threshold = 10
+  }
+}`, serviceName, domainName, alertName)
+}
+
+func testAccAlertStatsInvalidDimensionKeyConfig(serviceName, domainName, alertName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "tf_stats_test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_alert" "tf_stats" {
+  name = "%s"
+  description = "Test validation"
+  service_id = fastly_service_vcl.tf_stats_test.id
+  source = "stats"
+  metric = "status_5xx"
+  dimensions {
+    origins = []
+  }
+
+  evaluation_strategy {
+    type = "above_threshold"
+    period = "5m"
+    threshold = 10
+  }
+}`, serviceName, domainName, alertName)
+}
+
+func testAccAlertOriginsConfig(serviceName, domainName, alertName string, alert gofastly.AlertDefinition, withOrigins bool) string {
+	dimensionsConfig := `
+  dimensions {
+    origins = []
+  }`
+	if withOrigins {
+		dimensionsConfig = `
+  dimensions {
+    origins = ["origin1.example.com"]
+  }`
+	}
+
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "tf_origins_test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    name    = "origin1"
+    address = "origin1.example.com"
+  }
+
+  product_enablement {
+    origin_inspector = true
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_alert" "tf_origins" {
+  name = "%s"
+  description = "%s"
+  service_id = fastly_service_vcl.tf_origins_test.id
+  source = "%s"
+  metric = "%s"
+%s
+  evaluation_strategy {
+    type = "%s"
+    period = "%s"
+    threshold = %v
+  }
+}`, serviceName, domainName, alertName, alert.Description, alert.Source, alert.Metric, dimensionsConfig, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
+}
+
+func testAccAlertMultiServiceStatsConfig(serviceName, domainName, alertName string, alert gofastly.AlertDefinition, withServiceID bool) string {
+	servicesConfig := ""
+	if withServiceID {
+		servicesConfig = `
+  dimensions {
+    services = [fastly_service_vcl.tf_test_service.id]
+  }`
+	} else {
+		servicesConfig = `
+  dimensions {
+    services = []
+  }`
+	}
+
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "tf_test_service" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_alert" "tf_multi" {
+  name = "%s"
+  description = "%s"
+  service_id = ""
+  source = "%s"
+  metric = "%s"
+%s
+  evaluation_strategy {
+    type = "%s"
+    period = "%s"
+    threshold = %v
+  }
+}`, serviceName, domainName, alertName, alert.Description, alert.Source, alert.Metric, servicesConfig, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
+}
+

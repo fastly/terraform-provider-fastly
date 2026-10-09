@@ -40,19 +40,19 @@ func resourceFastlyAlert() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				MaxItems:    1,
-				Description: "Additional filters and aggregation criteria depending on the source type. For source type `stats`, use empty `{}` to monitor a single service or all services (aggregated), or include the `services` array to monitor all or a set of services (not aggregated). For source types `domains` or `origins`, the `domains` or `origins` array may be included to monitor all or a set (not aggregated).",
+				Description: "Additional filters and aggregation criteria depending on the source type. For source type `stats`, use empty `{}` to monitor a single service or all services (aggregated), or include the `services` array to monitor all or a set of services (not aggregated). For source type `domains` or `origins`, the `domains` or `origins` array must be included to monitor all or a set (not aggregated).",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domains": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Names of a subset of domains that the alert monitors.",
+							Description: "Names of a subset of domains that the alert monitors, or empty array `[]` to monitor all domains.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"origins": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Addresses of a subset of backends that the alert monitors.",
+							Description: "Addresses of a subset of backends that the alert monitors, or empty array `[]` to monitor all origins.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"services": {

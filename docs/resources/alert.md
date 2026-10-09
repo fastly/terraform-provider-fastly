@@ -67,7 +67,7 @@ $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
 ### Optional
 
 - `description` (String) Additional text that is included in the alert notification.
-- `dimensions` (Block List, Max: 1) Additional filters and aggregation criteria depending on the source type. For source type `stats`, use empty `{}` to monitor a single service or all services (aggregated), or include the `services` array to monitor all or a set of services (not aggregated). For source types `domains` or `origins`, the `domains` or `origins` array may be included to monitor all or a set (not aggregated). (see [below for nested schema](#nestedblock--dimensions))
+- `dimensions` (Block List, Max: 1) Additional filters and aggregation criteria depending on the source type. For source type `stats`, use empty `{}` to monitor a single service or all services (aggregated), or include the `services` array to monitor all or a set of services (not aggregated). For source type `domains` or `origins`, the `domains` or `origins` array must be included to monitor all or a set (not aggregated). (see [below for nested schema](#nestedblock--dimensions))
 - `integration_ids` (Set of String) List of integrations used to notify when alert fires.
 - `service_id` (String) The service to monitor. Can be a specific service ID to monitor a single service, or omit to monitor all services (aggregated) or all or a set of services (not aggregated) (see `dimensions` for details).
 
@@ -94,6 +94,6 @@ Optional:
 
 Optional:
 
-- `domains` (Set of String) Names of a subset of domains that the alert monitors.
-- `origins` (Set of String) Addresses of a subset of backends that the alert monitors.
+- `domains` (Set of String) Names of a subset of domains that the alert monitors, or empty array `[]` to monitor all domains.
+- `origins` (Set of String) Addresses of a subset of backends that the alert monitors, or empty array `[]` to monitor all origins.
 - `services` (Set of String) List of service IDs to monitor individually, or empty array `[]` to monitor all services.

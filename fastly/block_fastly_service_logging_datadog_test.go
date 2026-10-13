@@ -20,36 +20,36 @@ func TestAccFastlyServiceLoggingDatadog_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		Format:            gofastly.ToPointer(LoggingDatadogDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("datadog-endpoint"),
-		Region:            gofastly.ToPointer("US"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("token"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingDatadogDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("datadog-endpoint"),
+		Region:            new("US"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("token"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Datadog{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("datadog-endpoint"),
-		Region:            gofastly.ToPointer("EU"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("t0k3n"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("datadog-endpoint"),
+		Region:            new("EU"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("t0k3n"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Datadog{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-datadog-endpoint"),
-		Region:            gofastly.ToPointer("US"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("another-token"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-datadog-endpoint"),
+		Region:            new("US"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("another-token"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,11 +88,11 @@ func TestAccFastlyServiceLoggingDatadog_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("datadog-endpoint"),
-		Token:            gofastly.ToPointer("token"),
-		Region:           gofastly.ToPointer("US"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		ServiceVersion:   new(1),
+		Name:             new("datadog-endpoint"),
+		Token:            new("token"),
+		Region:           new("US"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -275,13 +275,13 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 		{
 			remote: []*gofastly.Datadog{
 				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("datadog-endpoint"),
-					Token:            gofastly.ToPointer("token"),
-					Region:           gofastly.ToPointer("US"),
-					FormatVersion:    gofastly.ToPointer(2),
-					Format:           gofastly.ToPointer(LoggingDatadogDefaultFormat),
-					ProcessingRegion: gofastly.ToPointer("eu"),
+					ServiceVersion:   new(1),
+					Name:             new("datadog-endpoint"),
+					Token:            new("token"),
+					Region:           new("US"),
+					FormatVersion:    new(2),
+					Format:           new(LoggingDatadogDefaultFormat),
+					ProcessingRegion: new("eu"),
 				},
 			},
 			local: []map[string]any{

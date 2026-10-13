@@ -84,13 +84,13 @@ func resourceFastlyDNSZoneCreate(ctx context.Context, d *schema.ResourceData, me
 
 	var input dnszones.CreateInput
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 	if v, ok := d.GetOk("name"); ok {
-		input.Name = gofastly.ToPointer(v.(string))
+		input.Name = new(v.(string))
 	}
 	// Type can only have the value of [secondary], so we'll set that here as it's a required field.
-	input.Type = gofastly.ToPointer("secondary")
+	input.Type = new("secondary")
 
 	if v, ok := d.GetOk("xfr_config_inbound"); ok {
 		for _, r := range v.([]any) {
@@ -108,10 +108,10 @@ func resourceFastlyDNSZoneCreate(ctx context.Context, d *schema.ResourceData, me
 						if pm, ok := p.(map[string]any); ok {
 							primary := dnszones.Primary{}
 							if v, ok := pm["address"].(string); ok {
-								primary.Address = gofastly.ToPointer(v)
+								primary.Address = new(v)
 							}
 							if v, ok := pm["description"].(string); ok {
-								primary.Description = gofastly.ToPointer(v)
+								primary.Description = new(v)
 							}
 							xfrInput.Primaries = append(xfrInput.Primaries, primary)
 						}
@@ -135,7 +135,7 @@ func resourceFastlyDNSZoneRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*APIClient).conn
 
 	input := &dnszones.GetInput{
-		ZoneID: gofastly.ToPointer(d.Id()),
+		ZoneID: new(d.Id()),
 	}
 
 	data, err := dnszones.Get(ctx, conn, input)
@@ -168,7 +168,7 @@ func resourceFastlyDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*APIClient).conn
 
 	input := &dnszones.UpdateInput{
-		ZoneID: gofastly.ToPointer(d.Id()),
+		ZoneID: new(d.Id()),
 	}
 	if d.HasChange("description") {
 		input.Description = gofastly.NewNullable(d.Get("description").(string))
@@ -190,10 +190,10 @@ func resourceFastlyDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, me
 						if pm, ok := p.(map[string]any); ok {
 							primary := dnszones.Primary{}
 							if v, ok := pm["address"].(string); ok {
-								primary.Address = gofastly.ToPointer(v)
+								primary.Address = new(v)
 							}
 							if v, ok := pm["description"].(string); ok {
-								primary.Description = gofastly.ToPointer(v)
+								primary.Description = new(v)
 							}
 							xfrInput.Primaries = append(xfrInput.Primaries, primary)
 						}
@@ -215,7 +215,7 @@ func resourceFastlyDNSZoneUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceFastlyDNSZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	input := &dnszones.DeleteInput{
-		ZoneID: gofastly.ToPointer(d.Id()),
+		ZoneID: new(d.Id()),
 	}
 	err := dnszones.Delete(ctx, conn, input)
 	if err != nil {

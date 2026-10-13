@@ -10,9 +10,13 @@ description: |-
 
 The Config Store (`fastly_configstore`) can be seeded with initial key-value pairs using the `fastly_configstore_entries` resource.
 
-After the first `terraform apply` the default behaviour is to ignore any further configuration changes to those key-value pairs. Terraform will expect modifications to happen outside of Terraform (e.g. new key-value pairs to be managed using the [Fastly API](https://developer.fastly.com/reference/api/) or [Fastly CLI](https://developer.fastly.com/learning/tools/cli/)).
+By default (`manage_entries = false`), Terraform seeds the configured key-value pairs when the resource is created and then allows the entries to be managed externally using the [Fastly API](https://developer.fastly.com/reference/api/) or [Fastly CLI](https://developer.fastly.com/learning/tools/cli/). In this mode, entry data is cleared from Terraform state during refresh and remote entries are not listed by the provider. Changes to configured `entries` after creation are ignored.
 
-To change the default behaviour (so Terraform continues to manage the key-value pairs within the configuration) set `manage_entries = true`.
+Set `manage_entries = true` if Terraform should continue to track and reconcile the Config Store entries. If management is enabled after being disabled, Terraform performs one remote reconciliation so existing entries can be adopted without blindly recreating them.
+
+~> **Note:** Because unmanaged entry data is not retained in Terraform state, removing a `fastly_configstore_entries` resource with `manage_entries = false` does not delete the entries that it originally seeded.
+
+~> **Note:** Use `manage_entries = true` cautiously. Terraform will overwrite external changes and delete remote entries that are not present in the configured `entries` map.
 
 ~> **Note:** Terraform should not be used to store large amounts of data, so it's recommended you leave the default behaviour in place and only seed the store with a small amount of key-value pairs. For more information see ["Configuration not data"](https://developer.fastly.com/learning/integrations/orchestration/terraform/#configuration-not-data).
 

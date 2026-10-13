@@ -8,10 +8,11 @@ description: |-
 
 # fastly_service_acl_entries
 
-Defines a set of Fastly ACL entries that can be used to populate a service ACL.  This resource will populate an ACL with the entries and will track their state.
+Defines a set of Fastly ACL entries that can be used to populate a service ACL. This resource seeds configured entries when it is created.
 
-~> **Note:** By default the Terraform provider allows you to externally manage the entries via API or UI.
-If you wish to apply your changes in the HCL, then you should explicitly set the `manage_entries` attribute. An example of this configuration is provided below.
+~> **Note:** By default (`manage_entries = false`), the Terraform provider allows you to externally manage ACL entries via API or UI. In this mode, entry data is cleared from Terraform state during refresh so large externally managed ACLs are not retained in state. Changes to configured `entry` blocks after creation are ignored. Set `manage_entries = true` if Terraform should track and reconcile the ACL entries.
+
+~> **Note:** Because unmanaged entry data is not retained in Terraform state, removing a `fastly_service_acl_entries` resource with `manage_entries = false` does not delete the ACL entries that it originally seeded.
 
 ## Example Usage (Terraform >= 0.12.6)
 

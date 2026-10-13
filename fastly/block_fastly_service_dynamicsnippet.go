@@ -121,13 +121,13 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(ctx context.Context, d *s
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(strconv.Itoa(v.(int)))
+		opts.Priority = new(strconv.Itoa(v.(int)))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.ToPointer(v.(string))
+		opts.Content = new(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.ToPointer(gofastly.SnippetType(v.(string)))
+		opts.Type = new(gofastly.SnippetType(v.(string)))
 	}
 
 	log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
@@ -161,14 +161,14 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(ctx context.Context, d *s
 func buildDynamicSnippet(dynamicSnippetMap any) *gofastly.CreateSnippetInput {
 	resource := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Content:  gofastly.ToPointer(resource["content"].(string)),
-		Dynamic:  gofastly.ToPointer(1),
-		Name:     gofastly.ToPointer(resource["name"].(string)),
-		Priority: gofastly.ToPointer(strconv.Itoa(resource["priority"].(int))),
+		Content:  new(resource["content"].(string)),
+		Dynamic:  new(1),
+		Name:     new(resource["name"].(string)),
+		Priority: new(strconv.Itoa(resource["priority"].(int))),
 	}
 
 	snippetType := strings.ToLower(resource["type"].(string))
-	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
+	opts.Type = new(gofastly.SnippetType(snippetType))
 
 	return &opts
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	ws "github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/workspaces/virtualpatches"
 )
 
@@ -76,8 +75,8 @@ func testAccNGWAFVirtualPatchExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		virtualpatch, err := ws.Get(context.TODO(), conn, &ws.GetInput{
-			WorkspaceID:    gofastly.ToPointer(rs.Primary.Attributes["workspace_id"]),
-			VirtualPatchID: gofastly.ToPointer(rs.Primary.Attributes["virtual_patch_id"]),
+			WorkspaceID:    new(rs.Primary.Attributes["workspace_id"]),
+			VirtualPatchID: new(rs.Primary.Attributes["virtual_patch_id"]),
 		})
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve NGWAF Virtual Patch %s: %v", rs.Primary.ID, err)

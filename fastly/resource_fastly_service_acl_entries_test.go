@@ -24,20 +24,20 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 		{
 			remote: []*gofastly.ACLEntry{
 				{
-					ServiceID: gofastly.ToPointer("service-id"),
-					ACLID:     gofastly.ToPointer("1234567890"),
-					IP:        gofastly.ToPointer("127.0.0.1"),
-					Subnet:    gofastly.ToPointer(24),
-					Negated:   gofastly.ToPointer(false),
-					Comment:   gofastly.ToPointer("ACL Entry 1"),
+					ServiceID: new("service-id"),
+					ACLID:     new("1234567890"),
+					IP:        new("127.0.0.1"),
+					Subnet:    new(24),
+					Negated:   new(false),
+					Comment:   new("ACL Entry 1"),
 				},
 				{
-					ServiceID: gofastly.ToPointer("service-id"),
-					ACLID:     gofastly.ToPointer("0987654321"),
-					IP:        gofastly.ToPointer("192.168.0.1"),
-					Subnet:    gofastly.ToPointer(16),
-					Negated:   gofastly.ToPointer(true),
-					Comment:   gofastly.ToPointer("ACL Entry 2"),
+					ServiceID: new("service-id"),
+					ACLID:     new("0987654321"),
+					IP:        new("192.168.0.1"),
+					Subnet:    new(16),
+					Negated:   new(true),
+					Comment:   new("ACL Entry 2"),
 				},
 			},
 			local: []map[string]any{
@@ -65,17 +65,59 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 	}
 }
 
-func TestResourceFastlyServiceACLEntriesReadSkipsRefreshWhenManageEntriesFalse(t *testing.T) {
+func TestNewACLEntryKeyIgnoresID(t *testing.T) {
+	configured := map[string]any{
+		"id":      "",
+		"ip":      "127.0.0.1",
+		"subnet":  "24",
+		"negated": false,
+		"comment": "ACL Entry 1",
+	}
+	remote := map[string]any{
+		"id":      "entry-id",
+		"ip":      "127.0.0.1",
+		"subnet":  "24",
+		"negated": false,
+		"comment": "ACL Entry 1",
+	}
+
+	if newACLEntryKey(configured) != newACLEntryKey(remote) {
+		t.Fatal("expected ACL entry keys to ignore the state-only entry ID")
+	}
+
+	remote["ip"] = "127.0.0.2"
+	if newACLEntryKey(configured) == newACLEntryKey(remote) {
+		t.Fatal("expected ACL entry keys to include configurable fields")
+	}
+}
+
+func TestResourceFastlyServiceACLEntriesReadClearsEntriesWhenManageEntriesFalse(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceServiceACLEntries().Schema, map[string]any{
 		"service_id":     "service-id",
 		"acl_id":         "acl-id",
 		"manage_entries": false,
 	})
+	if err := d.Set("entry", []map[string]any{
+		{
+			"id":      "entry-id",
+			"ip":      "127.0.0.1",
+			"subnet":  "24",
+			"negated": false,
+			"comment": "ACL Entry 1",
+		},
+	}); err != nil {
+		t.Fatalf("failed to seed ACL entries in test state: %v", err)
+	}
 	d.SetId("service-id/acl-id")
 
 	diags := resourceServiceACLEntriesRead(context.Background(), d, nil)
 	if diags.HasError() {
-		t.Fatalf("expected ACL entries read to be skipped, got diagnostics: %v", diags)
+		t.Fatalf("expected ACL entries read to clear unmanaged entries without refreshing, got diagnostics: %v", diags)
+	}
+
+	entries := d.Get("entry").(*schema.Set)
+	if entries.Len() != 0 {
+		t.Fatalf("expected unmanaged ACL entries to be cleared from state, got %d entries", entries.Len())
 	}
 }
 
@@ -435,7 +477,6 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceACLEntriesRemoteState(&service, serviceName, aclName, initialEntries),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "1"),
 				),
 			},
 			{
@@ -443,7 +484,15 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceACLEntriesRemoteState(&service, serviceName, aclName, initialEntries),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "0"),
+				),
+			},
+			{
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, updatedEntries, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceACLEntriesRemoteState(&service, serviceName, aclName, updatedEntries),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "2"),
 				),
 			},
 		},

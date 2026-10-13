@@ -20,37 +20,37 @@ func TestAccFastlyServiceLoggingHeroku_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		Format:            gofastly.ToPointer(LoggingHerokuDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("heroku-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("s3cr3t"),
-		URL:               gofastly.ToPointer("https://example.com"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingHerokuDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("heroku-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("s3cr3t"),
+		URL:               new("https://example.com"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Heroku{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("heroku-endpoint"),
-		Placement:         gofastly.ToPointer("none"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("secret"),
-		URL:               gofastly.ToPointer("https://example.com"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("heroku-endpoint"),
+		Placement:         new("none"),
+		ResponseCondition: new("response_condition_test"),
+		ServiceVersion:    new(1),
+		Token:             new("secret"),
+		URL:               new("https://example.com"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Heroku{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-heroku-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("another-token"),
-		URL:               gofastly.ToPointer("https://new.example.com"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-heroku-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("another-token"),
+		URL:               new("https://new.example.com"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,11 +89,11 @@ func TestAccFastlyServiceLoggingHeroku_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		Name:             gofastly.ToPointer("heroku-endpoint"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		Token:            gofastly.ToPointer("s3cr3t"),
-		URL:              gofastly.ToPointer("https://example.com"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Name:             new("heroku-endpoint"),
+		ServiceVersion:   new(1),
+		Token:            new("s3cr3t"),
+		URL:              new("https://example.com"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,15 +278,15 @@ func TestResourceFastlyFlattenHeroku(t *testing.T) {
 		{
 			remote: []*gofastly.Heroku{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("heroku-endpoint"),
-					URL:               gofastly.ToPointer("https://example.com"),
-					Token:             gofastly.ToPointer("token"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					Format:            gofastly.ToPointer(LoggingHerokuDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					ServiceVersion:    new(1),
+					Name:              new("heroku-endpoint"),
+					URL:               new("https://example.com"),
+					Token:             new("token"),
+					Placement:         new("none"),
+					ResponseCondition: new("always"),
+					Format:            new(LoggingHerokuDefaultFormat),
+					FormatVersion:     new(2),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

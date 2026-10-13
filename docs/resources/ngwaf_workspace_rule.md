@@ -69,10 +69,10 @@ resource "fastly_ngwaf_workspace" "example" {
 
 resource "fastly_ngwaf_workspace_rule" "example" {
   workspace_id    = fastly_ngwaf_workspace.example.id
-  type            = "request"
   description     = ""
   enabled         = true
   group_operator  = "all"
+  type            = "templated_signal"
 
   condition {
     field    = "method"

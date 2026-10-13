@@ -18,17 +18,17 @@ func TestAccFastlyIntegration_mailinglist(t *testing.T) {
 		Config: map[string]string{
 			"address": fmt.Sprintf("noreply-%s@fastly.com", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("mailinglist"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("mailinglist"),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"address": fmt.Sprintf("noreply-%s@fastly.com", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("mailinglist"),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("mailinglist"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -39,18 +39,18 @@ func TestAccFastlyIntegration_datadog(t *testing.T) {
 			"apikey": acctest.RandString(10),
 			"site":   "datadoghq.eu",
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeDatadog),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeDatadog),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"apikey": acctest.RandString(10),
 			"site":   "datadoghq.com",
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeDatadog),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeDatadog),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -64,9 +64,9 @@ func TestAccFastlyIntegration_jiraissue(t *testing.T) {
 			"projectkey": acctest.RandString(5),
 			"issuetype":  "Bug",
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJiraIssue),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeJiraIssue),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
@@ -76,9 +76,9 @@ func TestAccFastlyIntegration_jiraissue(t *testing.T) {
 			"projectkey": acctest.RandString(5),
 			"issuetype":  "Task",
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJiraIssue),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeJiraIssue),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -88,17 +88,17 @@ func TestAccFastlyIntegration_jsm(t *testing.T) {
 		Config: map[string]string{
 			"apikey": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJSM),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeJSM),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"apikey": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeJSM),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeJSM),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -108,17 +108,17 @@ func TestAccFastlyIntegration_microsoftteams(t *testing.T) {
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("microsoftteams"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("microsoftteams"),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("microsoftteams"),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("microsoftteams"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -129,18 +129,18 @@ func TestAccFastlyIntegration_newrelic(t *testing.T) {
 			"key":     acctest.RandString(10),
 			"account": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("newrelic"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("newrelic"),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"key":     acctest.RandString(10),
 			"account": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("newrelic"),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("newrelic"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -150,17 +150,17 @@ func TestAccFastlyIntegration_opsgenie(t *testing.T) {
 		Config: map[string]string{
 			"apikey": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeOpsGenie),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeOpsGenie),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"apikey": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeOpsGenie),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeOpsGenie),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -170,17 +170,17 @@ func TestAccFastlyIntegration_pagerduty(t *testing.T) {
 		Config: map[string]string{
 			"key": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("pagerduty"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("pagerduty"),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"key": acctest.RandString(10),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("pagerduty"),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("pagerduty"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -190,17 +190,17 @@ func TestAccFastlyIntegration_slack(t *testing.T) {
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("slack"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("slack"),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("slack"),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("slack"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -210,17 +210,17 @@ func TestAccFastlyIntegration_splunkoncall(t *testing.T) {
 		Config: map[string]string{
 			"url": fmt.Sprintf("https://alert.victorops.com/integrations/generic/20131114/alert/%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeSplunkOnCall),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeSplunkOnCall),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"url": fmt.Sprintf("https://alert.victorops.com/integrations/generic/20131114/alert/%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer(gofastly.IntegrationTypeSplunkOnCall),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new(gofastly.IntegrationTypeSplunkOnCall),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -230,17 +230,17 @@ func TestAccFastlyIntegration_webhook(t *testing.T) {
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("webhook"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("webhook"),
 	}
 	updateIntegration := gofastly.Integration{
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my new description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("webhook"),
+		Description: new("my new description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("webhook"),
 	}
 	testAccFastlyIntegration(createIntegration, updateIntegration, t)
 }
@@ -252,9 +252,9 @@ func TestAccFastlyIntegration_recreateAfterManualDelete(t *testing.T) {
 		Config: map[string]string{
 			"webhook": fmt.Sprintf("https://foo.com/bar-%s", acctest.RandString(10)),
 		},
-		Description: gofastly.ToPointer("my description"),
-		Name:        gofastly.ToPointer(fmt.Sprintf("integration %s", acctest.RandString(10))),
-		Type:        gofastly.ToPointer("slack"),
+		Description: new("my description"),
+		Name:        new(fmt.Sprintf("integration %s", acctest.RandString(10))),
+		Type:        new("slack"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

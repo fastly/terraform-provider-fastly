@@ -120,45 +120,45 @@ func TestAccFastlyServiceLoggingGooglePubSub_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("googlepubsublogger"),
-		User:              gofastly.ToPointer("user"),
-		SecretKey:         gofastly.ToPointer(privateKey(t)),
-		ProjectID:         gofastly.ToPointer("project-id"),
-		Topic:             gofastly.ToPointer("topic"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(LoggingGooglePubSubDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Placement:         gofastly.ToPointer("none"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		ServiceVersion:    new(1),
+		Name:              new("googlepubsublogger"),
+		User:              new("user"),
+		SecretKey:         new(privateKey(t)),
+		ProjectID:         new("project-id"),
+		Topic:             new("topic"),
+		ResponseCondition: new("response_condition_test"),
+		Format:            new(LoggingGooglePubSubDefaultFormat),
+		FormatVersion:     new(2),
+		Placement:         new("none"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Pubsub{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("googlepubsublogger"),
-		User:              gofastly.ToPointer("newuser"),
-		SecretKey:         gofastly.ToPointer(privateKey(t)),
-		ProjectID:         gofastly.ToPointer("new-project-id"),
-		Topic:             gofastly.ToPointer("newtopic"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Placement:         gofastly.ToPointer("none"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		ServiceVersion:    new(1),
+		Name:              new("googlepubsublogger"),
+		User:              new("newuser"),
+		SecretKey:         new(privateKey(t)),
+		ProjectID:         new("new-project-id"),
+		Topic:             new("newtopic"),
+		ResponseCondition: new("response_condition_test"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Placement:         new("none"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Pubsub{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("googlepubsublogger2"),
-		User:              gofastly.ToPointer("user2"),
-		SecretKey:         gofastly.ToPointer(privateKey(t)),
-		ProjectID:         gofastly.ToPointer("project-id"),
-		Topic:             gofastly.ToPointer("topicb"),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Placement:         gofastly.ToPointer("none"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		ServiceVersion:    new(1),
+		Name:              new("googlepubsublogger2"),
+		User:              new("user2"),
+		SecretKey:         new(privateKey(t)),
+		ProjectID:         new("project-id"),
+		Topic:             new("topicb"),
+		ResponseCondition: new("response_condition_test"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Placement:         new("none"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,13 +201,13 @@ func TestAccFastlyServiceLoggingGooglePubSub_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("googlepubsublogger"),
-		User:             gofastly.ToPointer("user"),
-		SecretKey:        gofastly.ToPointer(privateKey(t)),
-		ProjectID:        gofastly.ToPointer("project-id"),
-		Topic:            gofastly.ToPointer("topic"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		ServiceVersion:   new(1),
+		Name:             new("googlepubsublogger"),
+		User:             new("user"),
+		SecretKey:        new(privateKey(t)),
+		ProjectID:        new("project-id"),
+		Topic:            new("topic"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -421,17 +421,17 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 		{
 			remote: []*gofastly.Pubsub{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("googlepubsub-endpoint"),
-					User:              gofastly.ToPointer("user"),
-					SecretKey:         gofastly.ToPointer(privateKey(t)),
-					ProjectID:         gofastly.ToPointer("project-id"),
-					Topic:             gofastly.ToPointer("topic"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					Format:            gofastly.ToPointer(LoggingGooglePubSubDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					Placement:         gofastly.ToPointer("none"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
+					ServiceVersion:    new(1),
+					Name:              new("googlepubsub-endpoint"),
+					User:              new("user"),
+					SecretKey:         new(privateKey(t)),
+					ProjectID:         new("project-id"),
+					Topic:             new("topic"),
+					ResponseCondition: new("response_condition"),
+					Format:            new(LoggingGooglePubSubDefaultFormat),
+					FormatVersion:     new(2),
+					Placement:         new("none"),
+					ProcessingRegion:  new("eu"),
 				},
 			},
 			local: []map[string]any{

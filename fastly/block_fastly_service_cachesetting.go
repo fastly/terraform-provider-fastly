@@ -72,23 +72,23 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 // Create creates the resource.
 func (h *CacheSettingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := &gofastly.CreateCacheSettingInput{
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		StaleTTL:       gofastly.ToPointer(resource["stale_ttl"].(int)),
-		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
+		Name:           new(resource["name"].(string)),
+		StaleTTL:       new(resource["stale_ttl"].(int)),
+		CacheCondition: new(resource["cache_condition"].(string)),
 	}
 
 	if v, ok := resource["ttl"]; ok {
-		opts.TTL = gofastly.ToPointer(v.(int))
+		opts.TTL = new(v.(int))
 	}
 
 	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "cache":
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionCache)
+		opts.Action = new(gofastly.CacheSettingActionCache)
 	case "pass":
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionPass)
+		opts.Action = new(gofastly.CacheSettingActionPass)
 	case "restart":
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionRestart)
+		opts.Action = new(gofastly.CacheSettingActionRestart)
 	}
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
@@ -135,16 +135,16 @@ func (h *CacheSettingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["action"]; ok {
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingAction(v.(string)))
+		opts.Action = new(gofastly.CacheSettingAction(v.(string)))
 	}
 	if v, ok := modified["ttl"]; ok {
-		opts.TTL = gofastly.ToPointer(v.(int))
+		opts.TTL = new(v.(int))
 	}
 	if v, ok := modified["stale_ttl"]; ok {
-		opts.StaleTTL = gofastly.ToPointer(v.(int))
+		opts.StaleTTL = new(v.(int))
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.ToPointer(v.(string))
+		opts.CacheCondition = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Cache Setting Opts: %#v", opts)

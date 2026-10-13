@@ -134,18 +134,18 @@ func (h *HealthCheckServiceAttributeHandler) Create(ctx context.Context, d *sche
 	opts := gofastly.CreateHealthCheckInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Name:             new(resource["name"].(string)),
 		Headers:          &hs,
-		Host:             gofastly.ToPointer(resource["host"].(string)),
-		Path:             gofastly.ToPointer(resource["path"].(string)),
-		CheckInterval:    gofastly.ToPointer(resource["check_interval"].(int)),
-		ExpectedResponse: gofastly.ToPointer(resource["expected_response"].(int)),
-		HTTPVersion:      gofastly.ToPointer(resource["http_version"].(string)),
-		Initial:          gofastly.ToPointer(resource["initial"].(int)),
-		Method:           gofastly.ToPointer(resource["method"].(string)),
-		Threshold:        gofastly.ToPointer(resource["threshold"].(int)),
-		Timeout:          gofastly.ToPointer(resource["timeout"].(int)),
-		Window:           gofastly.ToPointer(resource["window"].(int)),
+		Host:             new(resource["host"].(string)),
+		Path:             new(resource["path"].(string)),
+		CheckInterval:    new(resource["check_interval"].(int)),
+		ExpectedResponse: new(resource["expected_response"].(int)),
+		HTTPVersion:      new(resource["http_version"].(string)),
+		Initial:          new(resource["initial"].(int)),
+		Method:           new(resource["method"].(string)),
+		Threshold:        new(resource["threshold"].(int)),
+		Timeout:          new(resource["timeout"].(int)),
+		Window:           new(resource["window"].(int)),
 	}
 
 	log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)
@@ -191,37 +191,37 @@ func (h *HealthCheckServiceAttributeHandler) Update(ctx context.Context, d *sche
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
-		opts.Comment = gofastly.ToPointer(v.(string))
+		opts.Comment = new(v.(string))
 	}
 	if v, ok := modified["method"]; ok {
-		opts.Method = gofastly.ToPointer(v.(string))
+		opts.Method = new(v.(string))
 	}
 	if v, ok := modified["host"]; ok {
-		opts.Host = gofastly.ToPointer(v.(string))
+		opts.Host = new(v.(string))
 	}
 	if v, ok := modified["path"]; ok {
-		opts.Path = gofastly.ToPointer(v.(string))
+		opts.Path = new(v.(string))
 	}
 	if v, ok := modified["http_version"]; ok {
-		opts.HTTPVersion = gofastly.ToPointer(v.(string))
+		opts.HTTPVersion = new(v.(string))
 	}
 	if v, ok := modified["timeout"]; ok {
-		opts.Timeout = gofastly.ToPointer(v.(int))
+		opts.Timeout = new(v.(int))
 	}
 	if v, ok := modified["check_interval"]; ok {
-		opts.CheckInterval = gofastly.ToPointer(v.(int))
+		opts.CheckInterval = new(v.(int))
 	}
 	if v, ok := modified["expected_response"]; ok {
-		opts.ExpectedResponse = gofastly.ToPointer(v.(int))
+		opts.ExpectedResponse = new(v.(int))
 	}
 	if v, ok := modified["window"]; ok {
-		opts.Window = gofastly.ToPointer(v.(int))
+		opts.Window = new(v.(int))
 	}
 	if v, ok := modified["threshold"]; ok {
-		opts.Threshold = gofastly.ToPointer(v.(int))
+		opts.Threshold = new(v.(int))
 	}
 	if v, ok := modified["initial"]; ok {
-		opts.Initial = gofastly.ToPointer(v.(int))
+		opts.Initial = new(v.(int))
 	}
 	if v, ok := modified["headers"]; ok {
 		h, ok := v.(*schema.Set)

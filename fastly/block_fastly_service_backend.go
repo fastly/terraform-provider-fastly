@@ -310,72 +310,72 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 
 func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, resource map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
-		Address:             gofastly.ToPointer(resource["address"].(string)),
-		BetweenBytesTimeout: gofastly.ToPointer(resource["between_bytes_timeout"].(int)),
-		ConnectTimeout:      gofastly.ToPointer(resource["connect_timeout"].(int)),
-		ErrorThreshold:      gofastly.ToPointer(resource["error_threshold"].(int)),
-		FirstByteTimeout:    gofastly.ToPointer(resource["first_byte_timeout"].(int)),
-		HealthCheck:         gofastly.ToPointer(resource["healthcheck"].(string)),
-		MaxConn:             gofastly.ToPointer(resource["max_conn"].(int)),
-		Name:                gofastly.ToPointer(resource["name"].(string)),
-		Port:                gofastly.ToPointer(resource["port"].(int)),
-		PreferIPv6:          gofastly.ToPointer(gofastly.Compatibool(resource["prefer_ipv6"].(bool))),
-		SSLCheckCert:        gofastly.ToPointer(gofastly.Compatibool(resource["ssl_check_cert"].(bool))),
+		Address:             new(resource["address"].(string)),
+		BetweenBytesTimeout: new(resource["between_bytes_timeout"].(int)),
+		ConnectTimeout:      new(resource["connect_timeout"].(int)),
+		ErrorThreshold:      new(resource["error_threshold"].(int)),
+		FirstByteTimeout:    new(resource["first_byte_timeout"].(int)),
+		HealthCheck:         new(resource["healthcheck"].(string)),
+		MaxConn:             new(resource["max_conn"].(int)),
+		Name:                new(resource["name"].(string)),
+		Port:                new(resource["port"].(int)),
+		PreferIPv6:          new(gofastly.Compatibool(resource["prefer_ipv6"].(bool))),
+		SSLCheckCert:        new(gofastly.Compatibool(resource["ssl_check_cert"].(bool))),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
-		Shield:              gofastly.ToPointer(resource["shield"].(string)),
-		UseSSL:              gofastly.ToPointer(gofastly.Compatibool(resource["use_ssl"].(bool))),
-		Weight:              gofastly.ToPointer(resource["weight"].(int)),
+		Shield:              new(resource["shield"].(string)),
+		UseSSL:              new(gofastly.Compatibool(resource["use_ssl"].(bool))),
+		Weight:              new(resource["weight"].(int)),
 	}
 
 	if resource["keepalive_time"].(int) > 0 {
-		opts.KeepAliveTime = gofastly.ToPointer(resource["keepalive_time"].(int))
+		opts.KeepAliveTime = new(resource["keepalive_time"].(int))
 	}
 
 	if resource["max_lifetime"].(int) > 0 {
-		opts.MaxLifetime = gofastly.ToPointer(resource["max_lifetime"].(int))
+		opts.MaxLifetime = new(resource["max_lifetime"].(int))
 	}
 	if resource["max_use"].(int) > 0 {
-		opts.MaxUse = gofastly.ToPointer(resource["max_use"].(int))
+		opts.MaxUse = new(resource["max_use"].(int))
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if resource["min_tls_version"].(string) != "" {
-		opts.MinTLSVersion = gofastly.ToPointer(resource["min_tls_version"].(string))
+		opts.MinTLSVersion = new(resource["min_tls_version"].(string))
 	}
 	if resource["max_tls_version"].(string) != "" {
-		opts.MaxTLSVersion = gofastly.ToPointer(resource["max_tls_version"].(string))
+		opts.MaxTLSVersion = new(resource["max_tls_version"].(string))
 	}
 	if resource["override_host"].(string) != "" {
-		opts.OverrideHost = gofastly.ToPointer(resource["override_host"].(string))
+		opts.OverrideHost = new(resource["override_host"].(string))
 	}
 	if resource["share_key"].(string) != "" {
-		opts.ShareKey = gofastly.ToPointer(resource["share_key"].(string))
+		opts.ShareKey = new(resource["share_key"].(string))
 	}
 	if resource["ssl_ca_cert"].(string) != "" {
-		opts.SSLCACert = gofastly.ToPointer(resource["ssl_ca_cert"].(string))
+		opts.SSLCACert = new(resource["ssl_ca_cert"].(string))
 	}
 	if resource["ssl_cert_hostname"].(string) != "" {
-		opts.SSLCertHostname = gofastly.ToPointer(resource["ssl_cert_hostname"].(string))
+		opts.SSLCertHostname = new(resource["ssl_cert_hostname"].(string))
 	}
 	if resource["ssl_ciphers"].(string) != "" {
-		opts.SSLCiphers = gofastly.ToPointer(resource["ssl_ciphers"].(string))
+		opts.SSLCiphers = new(resource["ssl_ciphers"].(string))
 	}
 	if resource["ssl_client_cert"].(string) != "" {
-		opts.SSLClientCert = gofastly.ToPointer(resource["ssl_client_cert"].(string))
+		opts.SSLClientCert = new(resource["ssl_client_cert"].(string))
 	}
 	if resource["ssl_client_key"].(string) != "" {
-		opts.SSLClientKey = gofastly.ToPointer(resource["ssl_client_key"].(string))
+		opts.SSLClientKey = new(resource["ssl_client_key"].(string))
 	}
 	if resource["ssl_sni_hostname"].(string) != "" {
-		opts.SSLSNIHostname = gofastly.ToPointer(resource["ssl_sni_hostname"].(string))
+		opts.SSLSNIHostname = new(resource["ssl_sni_hostname"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
-		opts.RequestCondition = gofastly.ToPointer(resource["request_condition"].(string))
+		opts.AutoLoadbalance = new(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
+		opts.RequestCondition = new(resource["request_condition"].(string))
 	}
 	return opts
 }
@@ -390,87 +390,87 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.ToPointer(v.(string))
+		opts.Address = new(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.ToPointer(v.(int))
+		opts.Port = new(v.(int))
 	}
 	if v, ok := modified["override_host"]; ok {
-		opts.OverrideHost = gofastly.ToPointer(v.(string))
+		opts.OverrideHost = new(v.(string))
 	}
 	if v, ok := modified["connect_timeout"]; ok {
-		opts.ConnectTimeout = gofastly.ToPointer(v.(int))
+		opts.ConnectTimeout = new(v.(int))
 	}
 	if v, ok := modified["keepalive_time"]; ok {
-		opts.KeepAliveTime = gofastly.ToPointer(v.(int))
+		opts.KeepAliveTime = new(v.(int))
 	}
 	if v, ok := modified["max_lifetime"]; ok {
-		opts.MaxLifetime = gofastly.ToPointer(v.(int))
+		opts.MaxLifetime = new(v.(int))
 	}
 	if v, ok := modified["max_use"]; ok {
-		opts.MaxUse = gofastly.ToPointer(v.(int))
+		opts.MaxUse = new(v.(int))
 	}
 	if v, ok := modified["max_conn"]; ok {
-		opts.MaxConn = gofastly.ToPointer(v.(int))
+		opts.MaxConn = new(v.(int))
 	}
 	if v, ok := modified["error_threshold"]; ok {
-		opts.ErrorThreshold = gofastly.ToPointer(v.(int))
+		opts.ErrorThreshold = new(v.(int))
 	}
 	if v, ok := modified["first_byte_timeout"]; ok {
-		opts.FirstByteTimeout = gofastly.ToPointer(v.(int))
+		opts.FirstByteTimeout = new(v.(int))
 	}
 	if v, ok := modified["between_bytes_timeout"]; ok {
-		opts.BetweenBytesTimeout = gofastly.ToPointer(v.(int))
+		opts.BetweenBytesTimeout = new(v.(int))
 	}
 	if v, ok := modified["weight"]; ok {
-		opts.Weight = gofastly.ToPointer(v.(int))
+		opts.Weight = new(v.(int))
 	}
 	if v, ok := modified["request_condition"]; ok {
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			opts.RequestCondition = gofastly.ToPointer(v.(string))
+			opts.RequestCondition = new(v.(string))
 		}
 	}
 	if v, ok := modified["healthcheck"]; ok {
-		opts.HealthCheck = gofastly.ToPointer(v.(string))
+		opts.HealthCheck = new(v.(string))
 	}
 	// NOTE: An empty string value will be coerced by Northstar into a null.
 	// This will allow the share_key to be unset.
 	if v, ok := modified["share_key"]; ok {
-		opts.ShareKey = gofastly.ToPointer(v.(string))
+		opts.ShareKey = new(v.(string))
 	}
 	if v, ok := modified["shield"]; ok {
-		opts.Shield = gofastly.ToPointer(v.(string))
+		opts.Shield = new(v.(string))
 	}
 	if v, ok := modified["ssl_ca_cert"]; ok {
-		opts.SSLCACert = gofastly.ToPointer(v.(string))
+		opts.SSLCACert = new(v.(string))
 	}
 	if v, ok := modified["ssl_client_cert"]; ok {
-		opts.SSLClientCert = gofastly.ToPointer(v.(string))
+		opts.SSLClientCert = new(v.(string))
 	}
 	if v, ok := modified["ssl_client_key"]; ok {
-		opts.SSLClientKey = gofastly.ToPointer(v.(string))
+		opts.SSLClientKey = new(v.(string))
 	}
 	if v, ok := modified["ssl_cert_hostname"]; ok {
-		opts.SSLCertHostname = gofastly.ToPointer(v.(string))
+		opts.SSLCertHostname = new(v.(string))
 	}
 	if v, ok := modified["ssl_sni_hostname"]; ok {
-		opts.SSLSNIHostname = gofastly.ToPointer(v.(string))
+		opts.SSLSNIHostname = new(v.(string))
 	}
 	if v, ok := modified["min_tls_version"]; ok {
-		opts.MinTLSVersion = gofastly.ToPointer(v.(string))
+		opts.MinTLSVersion = new(v.(string))
 	}
 	if v, ok := modified["max_tls_version"]; ok {
-		opts.MaxTLSVersion = gofastly.ToPointer(v.(string))
+		opts.MaxTLSVersion = new(v.(string))
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
-		opts.SSLCiphers = gofastly.ToPointer(v.(string))
+		opts.SSLCiphers = new(v.(string))
 	}
 	// Always set optional boolean values to preserve state
-	opts.UseSSL = gofastly.ToPointer(gofastly.Compatibool(resource["use_ssl"].(bool)))
-	opts.SSLCheckCert = gofastly.ToPointer(gofastly.Compatibool(resource["ssl_check_cert"].(bool)))
-	opts.PreferIPv6 = gofastly.ToPointer(gofastly.Compatibool(resource["prefer_ipv6"].(bool)))
+	opts.UseSSL = new(gofastly.Compatibool(resource["use_ssl"].(bool)))
+	opts.SSLCheckCert = new(gofastly.Compatibool(resource["ssl_check_cert"].(bool)))
+	opts.PreferIPv6 = new(gofastly.Compatibool(resource["prefer_ipv6"].(bool)))
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
+		opts.AutoLoadbalance = new(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
 	}
 
 	return opts

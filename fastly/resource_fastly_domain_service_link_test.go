@@ -94,7 +94,7 @@ func testAccCheckDomainServiceLinkDestroy(s *terraform.State) error {
 		}
 
 		input := &domains.GetInput{
-			DomainID: gofastly.ToPointer(domainID),
+			DomainID: new(domainID),
 		}
 
 		domain, err := domains.Get(context.Background(), conn, input)

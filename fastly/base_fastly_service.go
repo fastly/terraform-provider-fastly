@@ -289,9 +289,9 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*APIClient).conn
 	service, err := conn.CreateService(ctx, &gofastly.CreateServiceInput{
-		Name:    gofastly.ToPointer(d.Get("name").(string)),
-		Comment: gofastly.ToPointer(d.Get("comment").(string)),
-		Type:    gofastly.ToPointer(serviceDef.GetType()),
+		Name:    new(d.Get("name").(string)),
+		Comment: new(d.Get("comment").(string)),
+		Type:    new(serviceDef.GetType()),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -327,8 +327,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	if d.HasChanges("name", "comment") {
 		_, err := conn.UpdateService(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
-			Name:      gofastly.ToPointer(d.Get("name").(string)),
-			Comment:   gofastly.ToPointer(d.Get("comment").(string)),
+			Name:      new(d.Get("name").(string)),
+			Comment:   new(d.Get("comment").(string)),
 		})
 		if err != nil {
 			return diag.FromErr(err)
@@ -353,7 +353,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		opts := gofastly.UpdateVersionInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: d.Get("cloned_version").(int),
-			Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
+			Comment:        new(d.Get("version_comment").(string)),
 		}
 
 		log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -429,7 +429,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					opts := gofastly.UpdateVersionInput{
 						ServiceID:      d.Id(),
 						ServiceVersion: latestVersion,
-						Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
+						Comment:        new(d.Get("version_comment").(string)),
 					}
 
 					log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -658,7 +658,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// the active version.
 	// Otherwise, cloned_version should track the active version
 	if !d.Get("activate").(bool) {
-		s.ActiveVersion.Number = gofastly.ToPointer(d.Get("cloned_version").(int))
+		s.ActiveVersion.Number = new(d.Get("cloned_version").(int))
 	} else if s.ActiveVersion.Number != nil {
 		err := d.Set("cloned_version", s.ActiveVersion.Number)
 		if err != nil {

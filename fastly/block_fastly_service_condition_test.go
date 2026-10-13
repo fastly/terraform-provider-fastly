@@ -21,10 +21,10 @@ func TestResourceFastlyFlattenConditions(t *testing.T) {
 		{
 			remote: []*gofastly.Condition{
 				{
-					Name:      gofastly.ToPointer("some amz condition"),
-					Priority:  gofastly.ToPointer(10),
-					Type:      gofastly.ToPointer("REQUEST"),
-					Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
+					Name:      new("some amz condition"),
+					Priority:  new(10),
+					Type:      new("REQUEST"),
+					Statement: new(`req.url ~ "^/yolo/"`),
 				},
 			},
 			local: []map[string]any{
@@ -52,19 +52,19 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	con1 := gofastly.Condition{
-		Comment:   gofastly.ToPointer(""),
-		Name:      gofastly.ToPointer("some test condition"),
-		Priority:  gofastly.ToPointer(10),
-		Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
-		Type:      gofastly.ToPointer("REQUEST"),
+		Comment:   new(""),
+		Name:      new("some test condition"),
+		Priority:  new(10),
+		Statement: new(`req.url ~ "^/yolo/"`),
+		Type:      new("REQUEST"),
 	}
 
 	con2 := gofastly.Condition{
-		Comment:   gofastly.ToPointer(""),
-		Name:      gofastly.ToPointer("some test condition"),
-		Priority:  gofastly.ToPointer(10),
-		Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
-		Type:      gofastly.ToPointer("CACHE"),
+		Comment:   new(""),
+		Name:      new("some test condition"),
+		Priority:  new(10),
+		Statement: new(`req.url ~ "^/yolo/"`),
+		Type:      new("CACHE"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

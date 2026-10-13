@@ -58,12 +58,12 @@ func resourceFastlyNGWAFAlertDatadogIntegrationCreate(ctx context.Context, d *sc
 
 	i := ddalerts.CreateInput{
 		Config: &ddalerts.CreateConfig{
-			Key:  gofastly.ToPointer(d.Get("key").(string)),
-			Site: gofastly.ToPointer(d.Get("site").(string)),
+			Key:  new(d.Get("key").(string)),
+			Site: new(d.Get("site").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF Datadog alert input: %#v", i)
@@ -85,8 +85,8 @@ func resourceFastlyNGWAFAlertDatadogIntegrationRead(ctx context.Context, d *sche
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := ddalerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Datadog alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -117,12 +117,12 @@ func resourceFastlyNGWAFAlertDatadogIntegrationUpdate(ctx context.Context, d *sc
 	conn := meta.(*APIClient).conn
 
 	i := ddalerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &ddalerts.UpdateConfig{
-			Key:  gofastly.ToPointer(d.Get("key").(string)),
-			Site: gofastly.ToPointer(d.Get("site").(string)),
+			Key:  new(d.Get("key").(string)),
+			Site: new(d.Get("site").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Datadog alert input: %#v", i)
@@ -141,8 +141,8 @@ func resourceFastlyNGWAFAlertDatadogIntegrationDelete(ctx context.Context, d *sc
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := ddalerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF Datadog alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

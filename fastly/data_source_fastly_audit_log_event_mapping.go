@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	eventmappings "github.com/fastly/go-fastly/v17/fastly/notifications/v1/eventmappings"
 )
 
@@ -101,7 +100,7 @@ func dataSourceFastlyAuditLogEventMappingRead(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("id"); ok {
 		m, err := eventmappings.Get(ctx, conn, &eventmappings.GetInput{
-			MappingID: gofastly.ToPointer(v.(string)),
+			MappingID: new(v.(string)),
 		})
 		if err != nil {
 			return diag.FromErr(err)
@@ -110,19 +109,19 @@ func dataSourceFastlyAuditLogEventMappingRead(ctx context.Context, d *schema.Res
 	} else {
 		i := eventmappings.ListInput{}
 		if v, ok := d.GetOk("name"); ok {
-			i.Name = gofastly.ToPointer(v.(string))
+			i.Name = new(v.(string))
 		}
 		if v, ok := d.GetOk("scope_type"); ok {
-			i.ScopeType = gofastly.ToPointer(v.(string))
+			i.ScopeType = new(v.(string))
 		}
 		if v, ok := d.GetOk("scope_id"); ok {
-			i.ScopeID = gofastly.ToPointer(v.(string))
+			i.ScopeID = new(v.(string))
 		}
 		if v, ok := d.GetOk("integration_id"); ok {
-			i.IntegrationID = gofastly.ToPointer(v.(string))
+			i.IntegrationID = new(v.(string))
 		}
 		if v, ok := d.GetOk("mapping_status"); ok {
-			i.MappingStatus = gofastly.ToPointer(v.(string))
+			i.MappingStatus = new(v.(string))
 		}
 
 		mappings, err := eventmappings.List(ctx, conn, &i)

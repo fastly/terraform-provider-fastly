@@ -65,9 +65,9 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 
 	for key, val := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-			Operation: gofastly.ToPointer(gofastly.CreateBatchOperation),
-			ItemKey:   gofastly.ToPointer(key),
-			ItemValue: gofastly.ToPointer(val.(string)),
+			Operation: new(gofastly.CreateBatchOperation),
+			ItemKey:   new(key),
+			ItemValue: new(val.(string)),
 		})
 	}
 
@@ -78,10 +78,25 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, dictionaryID))
+	if !d.Get("manage_items").(bool) {
+		log.Print("[DEBUG] Skipping dictionary items refresh after create: manage_items is false")
+		return nil
+	}
 	return resourceServiceDictionaryItemsRead(ctx, d, meta)
 }
 
 func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if d.HasChange("manage_items") {
+		oldManageItems, newManageItems := d.GetChange("manage_items")
+		if !oldManageItems.(bool) && newManageItems.(bool) {
+			return reconcileServiceDictionaryItemsAfterEnablingManagement(ctx, d, meta)
+		}
+	}
+
+	if !d.Get("manage_items").(bool) {
+		return resourceServiceDictionaryItemsRead(ctx, d, meta)
+	}
+
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -99,8 +114,8 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		for key := range os {
 			if _, ok := ns[key]; !ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-					ItemKey:   gofastly.ToPointer(key),
+					Operation: new(gofastly.DeleteBatchOperation),
+					ItemKey:   new(key),
 				})
 			}
 		}
@@ -109,18 +124,18 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 			// Handle replaces
 			if _, ok := os[key]; ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.ToPointer(gofastly.UpdateBatchOperation),
-					ItemKey:   gofastly.ToPointer(key),
-					ItemValue: gofastly.ToPointer(val.(string)),
+					Operation: new(gofastly.UpdateBatchOperation),
+					ItemKey:   new(key),
+					ItemValue: new(val.(string)),
 				})
 			}
 
 			// Handle additions
 			if _, ok := os[key]; !ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.ToPointer(gofastly.CreateBatchOperation),
-					ItemKey:   gofastly.ToPointer(key),
-					ItemValue: gofastly.ToPointer(val.(string)),
+					Operation: new(gofastly.CreateBatchOperation),
+					ItemKey:   new(key),
+					ItemValue: new(val.(string)),
 				})
 			}
 		}
@@ -135,9 +150,65 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 	return resourceServiceDictionaryItemsRead(ctx, d, meta)
 }
 
+func reconcileServiceDictionaryItemsAfterEnablingManagement(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
+
+	serviceID := d.Get("service_id").(string)
+	dictionaryID := d.Get("dictionary_id").(string)
+	desiredItems := d.Get("items").(map[string]any)
+
+	remoteState, err := conn.ListDictionaryItems(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.ListDictionaryItemsInput{
+		ServiceID:    serviceID,
+		DictionaryID: dictionaryID,
+	})
+	if err != nil {
+		return diag.Errorf("error listing dictionary items during reconciliation after enabling management: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+	}
+
+	remoteItems := flattenDictionaryItems(remoteState)
+	var batchDictionaryItems []*gofastly.BatchDictionaryItem
+
+	for key := range remoteItems {
+		if _, ok := desiredItems[key]; !ok {
+			batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+				Operation: new(gofastly.DeleteBatchOperation),
+				ItemKey:   new(key),
+			})
+		}
+	}
+
+	for key, rawValue := range desiredItems {
+		value := rawValue.(string)
+		remoteValue, exists := remoteItems[key]
+
+		operation := gofastly.CreateBatchOperation
+		if exists {
+			if remoteValue == value {
+				continue
+			}
+			operation = gofastly.UpdateBatchOperation
+		}
+
+		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+			Operation: new(operation),
+			ItemKey:   new(key),
+			ItemValue: new(value),
+		})
+	}
+
+	if err := executeBatchDictionaryOperations(ctx, conn, serviceID, dictionaryID, batchDictionaryItems); err != nil {
+		return diag.Errorf("error reconciling dictionary items after enabling management: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+	}
+
+	return resourceServiceDictionaryItemsRead(ctx, d, meta)
+}
+
 func resourceServiceDictionaryItemsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if !d.Get("manage_items").(bool) {
-		log.Print("[DEBUG] Skipping dictionary items refresh: manage_items is false")
+		log.Print("[DEBUG] Skipping dictionary items refresh: manage_items is false (clearing items from state)")
+		if err := d.Set("items", map[string]any{}); err != nil {
+			return diag.FromErr(err)
+		}
 		return nil
 	}
 
@@ -171,8 +242,8 @@ func resourceServiceDictionaryItemsDelete(ctx context.Context, d *schema.Resourc
 
 	for key := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-			ItemKey:   gofastly.ToPointer(key),
+			Operation: new(gofastly.DeleteBatchOperation),
+			ItemKey:   new(key),
 		})
 	}
 

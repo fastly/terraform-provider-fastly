@@ -86,15 +86,15 @@ func resourceFastlyNGWAFThresholdsCreate(ctx context.Context, d *schema.Resource
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.CreateInput{
-		Action:      gofastly.ToPointer(d.Get("action").(string)),
-		DontNotify:  gofastly.ToPointer(d.Get("dont_notify").(bool)),
-		Duration:    gofastly.ToPointer(d.Get("duration").(int)),
-		Enabled:     gofastly.ToPointer(d.Get("enabled").(bool)),
-		Interval:    gofastly.ToPointer(d.Get("interval").(int)),
-		Limit:       gofastly.ToPointer(d.Get("limit").(int)),
-		Name:        gofastly.ToPointer(d.Get("name").(string)),
-		Signal:      gofastly.ToPointer(d.Get("signal").(string)),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Action:      new(d.Get("action").(string)),
+		DontNotify:  new(d.Get("dont_notify").(bool)),
+		Duration:    new(d.Get("duration").(int)),
+		Enabled:     new(d.Get("enabled").(bool)),
+		Interval:    new(d.Get("interval").(int)),
+		Limit:       new(d.Get("limit").(int)),
+		Name:        new(d.Get("name").(string)),
+		Signal:      new(d.Get("signal").(string)),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF threshold input: %#v", i)
@@ -116,8 +116,8 @@ func resourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.ResourceDa
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.GetInput{
-		ThresholdID: gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		ThresholdID: new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF threshold input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -170,16 +170,16 @@ func resourceFastlyNGWAFThresholdsUpdate(ctx context.Context, d *schema.Resource
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.UpdateInput{
-		Action:      gofastly.ToPointer(d.Get("action").(string)),
-		DontNotify:  gofastly.ToPointer(d.Get("dont_notify").(bool)),
-		Duration:    gofastly.ToPointer(d.Get("duration").(int)),
-		Enabled:     gofastly.ToPointer(d.Get("enabled").(bool)),
-		Interval:    gofastly.ToPointer(d.Get("interval").(int)),
-		Limit:       gofastly.ToPointer(d.Get("limit").(int)),
-		Name:        gofastly.ToPointer(d.Get("name").(string)),
-		Signal:      gofastly.ToPointer(d.Get("signal").(string)),
-		ThresholdID: gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Action:      new(d.Get("action").(string)),
+		DontNotify:  new(d.Get("dont_notify").(bool)),
+		Duration:    new(d.Get("duration").(int)),
+		Enabled:     new(d.Get("enabled").(bool)),
+		Interval:    new(d.Get("interval").(int)),
+		Limit:       new(d.Get("limit").(int)),
+		Name:        new(d.Get("name").(string)),
+		Signal:      new(d.Get("signal").(string)),
+		ThresholdID: new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF threshold input: %#v", i)
@@ -198,8 +198,8 @@ func resourceFastlyNGWAFThresholdsDelete(ctx context.Context, d *schema.Resource
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.DeleteInput{
-		ThresholdID: gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		ThresholdID: new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF threshold input: id=%s, workspaceID=%s", d.Id(), workspaceID)

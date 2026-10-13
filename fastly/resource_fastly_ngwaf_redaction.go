@@ -50,9 +50,9 @@ func resourceFastlyNGWAFRedactionCreate(ctx context.Context, d *schema.ResourceD
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.CreateInput{
-		Field:       gofastly.ToPointer(d.Get("field").(string)),
-		Type:        gofastly.ToPointer(d.Get("type").(string)),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Field:       new(d.Get("field").(string)),
+		Type:        new(d.Get("type").(string)),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF redaction input: %#v", i)
@@ -74,8 +74,8 @@ func resourceFastlyNGWAFRedactionRead(ctx context.Context, d *schema.ResourceDat
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.GetInput{
-		RedactionID: gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		RedactionID: new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF redaction input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -104,10 +104,10 @@ func resourceFastlyNGWAFRedactionUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	i := wsr.UpdateInput{
-		Field:       gofastly.ToPointer(d.Get("field").(string)),
-		RedactionID: gofastly.ToPointer(d.Id()),
-		Type:        gofastly.ToPointer(d.Get("type").(string)),
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		Field:       new(d.Get("field").(string)),
+		RedactionID: new(d.Id()),
+		Type:        new(d.Get("type").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF redaction input: %#v", i)
@@ -126,8 +126,8 @@ func resourceFastlyNGWAFRedactionDelete(ctx context.Context, d *schema.ResourceD
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := wsr.DeleteInput{
-		RedactionID: gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		RedactionID: new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF redaction input: id=%s, workspaceID=%s", d.Id(), workspaceID)

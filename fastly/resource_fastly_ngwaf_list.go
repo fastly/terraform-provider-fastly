@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/lists"
 	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/scope"
 )
@@ -125,7 +124,7 @@ func resourceFastlyNGWAFListRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	i := &lists.GetInput{
-		ListID: gofastly.ToPointer(d.Id()),
+		ListID: new(d.Id()),
 		Scope:  rsc.scope,
 	}
 
@@ -152,7 +151,7 @@ func resourceFastlyNGWAFListUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	i := expandNGWAFListUpdateInput(d, rsc.scope)
-	i.ListID = gofastly.ToPointer(d.Id())
+	i.ListID = new(d.Id())
 
 	log.Printf("[DEBUG] UPDATE: NGWAF %s list input: %#v", rsc.scope.Type, i)
 
@@ -173,7 +172,7 @@ func resourceFastlyNGWAFListDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	i := &lists.DeleteInput{
-		ListID: gofastly.ToPointer(d.Id()),
+		ListID: new(d.Id()),
 		Scope:  rsc.scope,
 	}
 
@@ -212,7 +211,7 @@ func expandNGWAFListCreateInput(d *schema.ResourceData, scope *scope.Scope) *lis
 // expandNGWAFListUpdateInput builds the input for updating a list.
 func expandNGWAFListUpdateInput(d *schema.ResourceData, scope *scope.Scope) *lists.UpdateInput {
 	input := &lists.UpdateInput{
-		ListID: gofastly.ToPointer(d.Id()),
+		ListID: new(d.Id()),
 		Scope:  scope,
 	}
 

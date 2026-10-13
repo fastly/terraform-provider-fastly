@@ -16,12 +16,12 @@ import (
 func TestAccFastlyDNSZone_Basic(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.fastly-example.com.", acctest.RandString(10))
 	createZone := dnszones.Zone{
-		Name:        gofastly.ToPointer(zoneName),
-		Description: gofastly.ToPointer("initial description"),
+		Name:        new(zoneName),
+		Description: new("initial description"),
 	}
 	updateZone := dnszones.Zone{
-		Name:        gofastly.ToPointer(zoneName),
-		Description: gofastly.ToPointer("updated description"),
+		Name:        new(zoneName),
+		Description: new("updated description"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,25 +55,25 @@ func TestAccFastlyDNSZone_Basic(t *testing.T) {
 func TestAccFastlyDNSZone_WithXfrConfig(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.fastly-example.com.", acctest.RandString(10))
 	createZone := dnszones.Zone{
-		Name:        gofastly.ToPointer(zoneName),
-		Description: gofastly.ToPointer("zone with xfr config"),
+		Name:        new(zoneName),
+		Description: new("zone with xfr config"),
 		XfrConfigInbound: &dnszones.XfrConfigInbound{
 			Primaries: []dnszones.Primary{
 				{
-					Address:     gofastly.ToPointer("1.2.3.4"),
-					Description: gofastly.ToPointer("primary server"),
+					Address:     new("1.2.3.4"),
+					Description: new("primary server"),
 				},
 			},
 		},
 	}
 	updateZone := dnszones.Zone{
-		Name:        gofastly.ToPointer(zoneName),
-		Description: gofastly.ToPointer("zone with updated xfr config"),
+		Name:        new(zoneName),
+		Description: new("zone with updated xfr config"),
 		XfrConfigInbound: &dnszones.XfrConfigInbound{
 			Primaries: []dnszones.Primary{
 				{
-					Address:     gofastly.ToPointer("5.6.7.8"),
-					Description: gofastly.ToPointer("updated primary server"),
+					Address:     new("5.6.7.8"),
+					Description: new("updated primary server"),
 				},
 			},
 		},
@@ -117,7 +117,7 @@ func testAccCheckFastlyDNSZoneRemoteState(expected dnszones.Zone) resource.TestC
 		conn := testAccProvider.Meta().(*APIClient).conn
 
 		got, err := dnszones.Get(context.TODO(), conn, &dnszones.GetInput{
-			ZoneID: gofastly.ToPointer(rs.Primary.ID),
+			ZoneID: new(rs.Primary.ID),
 		})
 		if err != nil {
 			return fmt.Errorf("error fetching DNS zone (%s): %s", rs.Primary.ID, err)
@@ -161,7 +161,7 @@ func testAccCheckDNSZoneDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := dnszones.Get(context.TODO(), conn, &dnszones.GetInput{
-			ZoneID: gofastly.ToPointer(rs.Primary.ID),
+			ZoneID: new(rs.Primary.ID),
 		})
 		if err == nil {
 			return fmt.Errorf("tried deleting DNS zone (%s), but was still found", rs.Primary.ID)
@@ -174,26 +174,26 @@ func TestAccFastlyDNSZone_ClearFields(t *testing.T) {
 	zoneName := fmt.Sprintf("%s.fastly-example.com.", acctest.RandString(10))
 	tsigKeyName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	createZone := dnszones.Zone{
-		Name:        gofastly.ToPointer(zoneName),
-		Description: gofastly.ToPointer("description to be cleared"),
+		Name:        new(zoneName),
+		Description: new("description to be cleared"),
 		XfrConfigInbound: &dnszones.XfrConfigInbound{
 			Primaries: []dnszones.Primary{
 				{
-					Address:     gofastly.ToPointer("1.2.3.4"),
-					Description: gofastly.ToPointer("primary server"),
+					Address:     new("1.2.3.4"),
+					Description: new("primary server"),
 				},
 			},
 		},
 	}
 	// Clear description to "" and remove inbound_tsig_key_id.
 	updateZone := dnszones.Zone{
-		Name:        gofastly.ToPointer(zoneName),
-		Description: gofastly.ToPointer(""),
+		Name:        new(zoneName),
+		Description: new(""),
 		XfrConfigInbound: &dnszones.XfrConfigInbound{
 			Primaries: []dnszones.Primary{
 				{
-					Address:     gofastly.ToPointer("1.2.3.4"),
-					Description: gofastly.ToPointer("primary server"),
+					Address:     new("1.2.3.4"),
+					Description: new("primary server"),
 				},
 			},
 		},

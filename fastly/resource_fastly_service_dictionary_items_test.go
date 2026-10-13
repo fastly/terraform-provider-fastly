@@ -23,16 +23,16 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 		{
 			remote: []*gofastly.DictionaryItem{
 				{
-					ServiceID:    gofastly.ToPointer("service-id"),
-					DictionaryID: gofastly.ToPointer("1234567890"),
-					ItemKey:      gofastly.ToPointer("key-1"),
-					ItemValue:    gofastly.ToPointer("value-1"),
+					ServiceID:    new("service-id"),
+					DictionaryID: new("1234567890"),
+					ItemKey:      new("key-1"),
+					ItemValue:    new("value-1"),
 				},
 				{
-					ServiceID:    gofastly.ToPointer("service-id"),
-					DictionaryID: gofastly.ToPointer("1234567890"),
-					ItemKey:      gofastly.ToPointer("key-2"),
-					ItemValue:    gofastly.ToPointer("value-2"),
+					ServiceID:    new("service-id"),
+					DictionaryID: new("1234567890"),
+					ItemKey:      new("key-2"),
+					ItemValue:    new("value-2"),
 				},
 			},
 			local: map[string]string{
@@ -50,17 +50,28 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 	}
 }
 
-func TestResourceFastlyServiceDictionaryItemsReadSkipsRefreshWhenManageItemsFalse(t *testing.T) {
+func TestResourceFastlyServiceDictionaryItemsReadClearsItemsWhenManageItemsFalse(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, resourceServiceDictionaryItems().Schema, map[string]any{
 		"service_id":    "service-id",
 		"dictionary_id": "dictionary-id",
 		"manage_items":  false,
 	})
+	if err := d.Set("items", map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}); err != nil {
+		t.Fatalf("failed to seed dictionary items in test state: %v", err)
+	}
 	d.SetId("service-id/dictionary-id")
 
 	diags := resourceServiceDictionaryItemsRead(context.Background(), d, nil)
 	if diags.HasError() {
-		t.Fatalf("expected dictionary items read to be skipped, got diagnostics: %v", diags)
+		t.Fatalf("expected dictionary items read to clear unmanaged items without refreshing, got diagnostics: %v", diags)
+	}
+
+	items := d.Get("items").(map[string]any)
+	if len(items) != 0 {
+		t.Fatalf("expected unmanaged dictionary items to be cleared from state, got %d items", len(items))
 	}
 }
 
@@ -360,7 +371,6 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 
 	updatedItems := map[string]string{
 		"key1": "valueOne",
-		"key2": "value2",
 		"key3": "value3",
 	}
 
@@ -384,6 +394,14 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, initialItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "0"),
+				),
+			},
+			{
+				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, updatedItems, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, updatedItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
 			},
@@ -448,8 +466,8 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 		ServiceID:    gofastly.ToValue(service.ServiceID),
 		DictionaryID: gofastly.ToValue(dict.DictionaryID),
 
-		ItemKey:   gofastly.ToPointer(expectedKey),
-		ItemValue: gofastly.ToPointer(expectedValue),
+		ItemKey:   new(expectedKey),
+		ItemValue: new(expectedValue),
 	})
 	if err != nil {
 		t.Fatalf("[ERR] Error Creating Dictionary item for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.Name), err)

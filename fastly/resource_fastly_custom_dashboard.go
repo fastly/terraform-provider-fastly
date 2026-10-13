@@ -188,7 +188,7 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 
 	items, err := resourceItems(d)
@@ -212,7 +212,7 @@ func resourceFastlyCustomDashboardRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*APIClient).conn
 
 	dash, err := conn.GetObservabilityCustomDashboard(ctx, &gofastly.GetObservabilityCustomDashboardInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -245,9 +245,9 @@ func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*APIClient).conn
 
 	input := gofastly.UpdateObservabilityCustomDashboardInput{
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		ID:          gofastly.ToPointer(d.Id()),
-		Name:        gofastly.ToPointer(d.Get("name").(string)),
+		Description: new(d.Get("description").(string)),
+		ID:          new(d.Id()),
+		Name:        new(d.Get("name").(string)),
 	}
 
 	items, err := resourceItems(d)
@@ -268,7 +268,7 @@ func resourceFastlyCustomDashboardDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteObservabilityCustomDashboard(ctx, &gofastly.DeleteObservabilityCustomDashboardInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -448,8 +448,8 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 		Title:    title,
 		Visualization: gofastly.DashboardVisualization{
 			Config: gofastly.VisualizationConfig{
-				CalculationMethod: gofastly.ToPointer(gofastly.CalculationMethod(calcMethod)),
-				Format:            gofastly.ToPointer(gofastly.VisualizationFormat(format)),
+				CalculationMethod: new(gofastly.CalculationMethod(calcMethod)),
+				Format:            new(gofastly.VisualizationFormat(format)),
 				PlotType:          gofastly.PlotType(plotType),
 			},
 			Type: gofastly.VisualizationType(visualizationType),

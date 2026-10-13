@@ -5,9 +5,39 @@
 ### ENHANCEMENTS:
 
 - feat(alert): Add support for monitoring multiple services using a single alert. ([#TBD](https://github.com/fastly/terraform-provider-fastly/pull/TBD))
-- feat(product_enablement/ddos_protection): Add support for 'client_challenge' mode. ([#1431](https://github.com/fastly/terraform-provider-fastly/pull/1431))
 
 ### BUG FIXES:
+
+### Dependencies
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.7.0 to 17.8.0 ([#1453](https://github.com/fastly/terraform-provider-fastly/pull/1453))
+
+## 9.8.0 (October 01, 2026)
+
+### ENHANCEMENTS:
+
+- feat(routing_config): add `fastly_routing_config` and `fastly_routing_config_domain_link` resources for managing Domain Management routing configs (automatic versioning) and linking them to domains ([#1445](https://github.com/fastly/terraform-provider-fastly/pull/1445))
+- feat(logging_gcl): add support for the `public_key` attribute ([#1451](https://github.com/fastly/terraform-provider-fastly/pull/1451))
+
+### BUG FIXES:
+
+- fix(acl-entries): clear unmanaged ACL entries from Terraform state ([#1440](https://github.com/fastly/terraform-provider-fastly/pull/1440))
+- fix(dictionary-items): clear unmanaged dictionary items from Terraform state ([#1448](https://github.com/fastly/terraform-provider-fastly/pull/1448))
+- fix(compute-acl-entries): skip refresh and clear unmanaged Compute ACL entries from state ([#1447](https://github.com/fastly/terraform-provider-fastly/pull/1447))
+- fix(configstore-entries): skip refresh and clear unmanaged Config Store entries from state ([#1446](https://github.com/fastly/terraform-provider-fastly/pull/1446))
+
+### Dependencies
+
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.3.2 to 17.4.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))
+- build(deps): `golang.org/x/net` from 0.58.0 to 0.59.0 ([#1439](https://github.com/fastly/terraform-provider-fastly/pull/1439))
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.5.0 to 17.6.0 ([#1443](https://github.com/fastly/terraform-provider-fastly/pull/1443))
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.6.0 to 17.7.0 ([#1444](https://github.com/fastly/terraform-provider-fastly/pull/1444))
+
+## 9.7.0 (September 17, 2026)
+
+### ENHANCEMENTS:
+
+- feat(ai_runtime_control): add resources and data sources for managing AI Runtime Control ([#1428](https://github.com/fastly/terraform-provider-fastly/pull/1428))
+- feat(product_enablement/ddos_protection): Add support for 'client_challenge' mode. ([#1431](https://github.com/fastly/terraform-provider-fastly/pull/1431))
 
 ### Dependencies
 - build(deps): `github.com/stretchr/testify` from 1.11.1 to 1.12.0 ([#1419](https://github.com/fastly/terraform-provider-fastly/pull/1419))
@@ -17,6 +47,10 @@
 - build(deps): `google.golang.org/grpc` from 1.82.1 to 1.83.1 ([#1422](https://github.com/fastly/terraform-provider-fastly/pull/1422))
 - build(deps): `google.golang.org/grpc` from 1.83.1 to 1.83.2 ([#1425](https://github.com/fastly/terraform-provider-fastly/pull/1425))
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.3.0 to 17.3.1 ([#1427](https://github.com/fastly/terraform-provider-fastly/pull/1427))
+- build(deps): `golang.org/x/net` from 0.59.0 to 0.58.0 ([#1435](https://github.com/fastly/terraform-provider-fastly/pull/1435))
+
+### DOCUMENTATION:
+- docs(fastly_object_storage): updated examples to use modern region ([#1430](https://github.com/fastly/terraform-provider-fastly/pull/1430))
 
 ## 9.6.0 (August 11, 2026)
 

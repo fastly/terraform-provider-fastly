@@ -42,7 +42,7 @@ func resourceFastlyDomainServiceLinkRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*APIClient).conn
 
 	input := &domains.GetInput{
-		DomainID: gofastly.ToPointer(d.Get("domain_id").(string)),
+		DomainID: new(d.Get("domain_id").(string)),
 	}
 
 	data, err := domains.Get(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)
@@ -64,8 +64,8 @@ func resourceFastlyDomainServiceLinkUpdate(ctx context.Context, d *schema.Resour
 	conn := meta.(*APIClient).conn
 
 	input := &domains.UpdateInput{
-		DomainID:  gofastly.ToPointer(d.Get("domain_id").(string)),
-		ServiceID: gofastly.ToPointer(d.Get("service_id").(string)),
+		DomainID:  new(d.Get("domain_id").(string)),
+		ServiceID: new(d.Get("service_id").(string)),
 	}
 	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)
 	if err != nil {
@@ -79,7 +79,7 @@ func resourceFastlyDomainServiceLinkDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*APIClient).conn
 
 	input := &domains.UpdateInput{
-		DomainID:  gofastly.ToPointer(d.Id()),
+		DomainID:  new(d.Id()),
 		ServiceID: nil,
 	}
 	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, input)
@@ -96,7 +96,7 @@ func resourceFastlyDomainServiceLinkImport(ctx context.Context, d *schema.Resour
 
 	// Fetch the domain to get service_id
 	input := &domains.GetInput{
-		DomainID: gofastly.ToPointer(domainID),
+		DomainID: new(domainID),
 	}
 	data, err := domains.Get(ctx, conn, input)
 	if err != nil {

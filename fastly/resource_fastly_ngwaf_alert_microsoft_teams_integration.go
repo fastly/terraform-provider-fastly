@@ -50,11 +50,11 @@ func resourceFastlyNGWAFAlertMicrosoftTeamsIntegrationCreate(ctx context.Context
 
 	i := microsoftTeamsAlerts.CreateInput{
 		Config: &microsoftTeamsAlerts.CreateConfig{
-			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
+			Webhook: new(d.Get("webhook").(string)),
 		},
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		Events:      gofastly.ToPointer([]string{"flag"}),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		Description: new(d.Get("description").(string)),
+		Events:      new([]string{"flag"}),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF Microsoft Teams alert input: %#v", i)
@@ -76,8 +76,8 @@ func resourceFastlyNGWAFAlertMicrosoftTeamsIntegrationRead(ctx context.Context, 
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := microsoftTeamsAlerts.GetInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Microsoft Teams alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
@@ -105,11 +105,11 @@ func resourceFastlyNGWAFAlertMicrosoftTeamsIntegrationUpdate(ctx context.Context
 	conn := meta.(*APIClient).conn
 
 	i := microsoftTeamsAlerts.UpdateInput{
-		AlertID: gofastly.ToPointer(d.Id()),
+		AlertID: new(d.Id()),
 		Config: &microsoftTeamsAlerts.UpdateConfig{
-			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
+			Webhook: new(d.Get("webhook").(string)),
 		},
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: new(d.Get("workspace_id").(string)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Microsoft Teams alert input: %#v", i)
@@ -128,8 +128,8 @@ func resourceFastlyNGWAFAlertMicrosoftTeamsIntegrationDelete(ctx context.Context
 	workspaceID := d.Get("workspace_id").(string)
 
 	i := microsoftTeamsAlerts.DeleteInput{
-		AlertID:     gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(workspaceID),
+		AlertID:     new(d.Id()),
+		WorkspaceID: new(workspaceID),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF Microsoft	Teams alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)

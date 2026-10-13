@@ -142,17 +142,17 @@ func resourceFastlyAlertCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input := gofastly.CreateAlertDefinitionInput{
-		Metric:    gofastly.ToPointer(d.Get("metric").(string)),
-		Name:      gofastly.ToPointer(d.Get("name").(string)),
-		ServiceID: gofastly.ToPointer(d.Get("service_id").(string)),
-		Source:    gofastly.ToPointer(d.Get("source").(string)),
+		Metric:    new(d.Get("metric").(string)),
+		Name:      new(d.Get("name").(string)),
+		ServiceID: new(d.Get("service_id").(string)),
+		Source:    new(d.Get("source").(string)),
 	}
 
 	description := ManagedByTerraform
 	if v, ok := d.GetOk("description"); ok {
 		description = v.(string) + " " + ManagedByTerraform
 	}
-	input.Description = gofastly.ToPointer(description)
+	input.Description = new(description)
 
 	input.Dimensions = buildDimensions(d)
 
@@ -185,7 +185,7 @@ func resourceFastlyAlertRead(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*APIClient).conn
 
 	ad, err := conn.GetAlertDefinition(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), &gofastly.GetAlertDefinitionInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -245,16 +245,16 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input := gofastly.UpdateAlertDefinitionInput{
-		ID:     gofastly.ToPointer(d.Id()),
-		Metric: gofastly.ToPointer(d.Get("metric").(string)),
-		Name:   gofastly.ToPointer(d.Get("name").(string)),
+		ID:     new(d.Id()),
+		Metric: new(d.Get("metric").(string)),
+		Name:   new(d.Get("name").(string)),
 	}
 
 	description := ManagedByTerraform
 	if v, ok := d.GetOk("description"); ok {
 		description = v.(string) + " " + ManagedByTerraform
 	}
-	input.Description = gofastly.ToPointer(description)
+	input.Description = new(description)
 
 	input.Dimensions = buildDimensions(d)
 
@@ -284,7 +284,7 @@ func resourceFastlyAlertDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteAlertDefinition(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), &gofastly.DeleteAlertDefinitionInput{
-		ID: gofastly.ToPointer(d.Id()),
+		ID: new(d.Id()),
 	})
 	if err != nil {
 		return diag.FromErr(err)

@@ -101,24 +101,24 @@ func (h *PaperTrailServiceAttributeHandler) Create(ctx context.Context, d *schem
 	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
-		Address:          gofastly.ToPointer(resource["address"].(string)),
-		Format:           gofastly.ToPointer(vla.format),
+		Address:          new(resource["address"].(string)),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		Port:             gofastly.ToPointer(resource["port"].(int)),
+		Name:             new(resource["name"].(string)),
+		Port:             new(resource["port"].(int)),
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -168,25 +168,25 @@ func (h *PaperTrailServiceAttributeHandler) Update(ctx context.Context, d *schem
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.ToPointer(v.(string))
+		opts.Address = new(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.ToPointer(v.(int))
+		opts.Port = new(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Papertrail Opts: %#v", opts)

@@ -58,8 +58,8 @@ func resourceFastlyNGWAFVirtualPatchCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*APIClient).conn
 
 	i := ws.GetInput{
-		WorkspaceID:    gofastly.ToPointer(d.Get("workspace_id").(string)),
-		VirtualPatchID: gofastly.ToPointer(d.Get("virtual_patch_id").(string)),
+		WorkspaceID:    new(d.Get("workspace_id").(string)),
+		VirtualPatchID: new(d.Get("virtual_patch_id").(string)),
 	}
 
 	log.Printf("[DEBUG] CREATE: NGWAF virtual patch input: %#v", i)
@@ -86,8 +86,8 @@ func resourceFastlyNGWAFVirtualPatchRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*APIClient).conn
 
 	i := ws.GetInput{
-		WorkspaceID:    gofastly.ToPointer(d.Get("workspace_id").(string)),
-		VirtualPatchID: gofastly.ToPointer(d.Get("virtual_patch_id").(string)),
+		WorkspaceID:    new(d.Get("workspace_id").(string)),
+		VirtualPatchID: new(d.Get("virtual_patch_id").(string)),
 	}
 
 	log.Printf("[DEBUG] REFRESH: NGWAF virtual patch input: %#v", i)
@@ -118,10 +118,10 @@ func resourceFastlyNGWAFVirtualPatchUpdate(ctx context.Context, d *schema.Resour
 	conn := meta.(*APIClient).conn
 
 	i := ws.UpdateInput{
-		WorkspaceID:    gofastly.ToPointer(d.Get("workspace_id").(string)),
-		VirtualPatchID: gofastly.ToPointer(d.Get("virtual_patch_id").(string)),
-		Mode:           gofastly.ToPointer(d.Get("action").(string)),
-		Enabled:        gofastly.ToPointer(d.Get("enabled").(bool)),
+		WorkspaceID:    new(d.Get("workspace_id").(string)),
+		VirtualPatchID: new(d.Get("virtual_patch_id").(string)),
+		Mode:           new(d.Get("action").(string)),
+		Enabled:        new(d.Get("enabled").(bool)),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF virtualpatch input: %#v", i)
@@ -140,11 +140,11 @@ func resourceFastlyNGWAFVirtualPatchDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*APIClient).conn
 
 	i := ws.UpdateInput{
-		WorkspaceID:    gofastly.ToPointer(d.Get("workspace_id").(string)),
-		VirtualPatchID: gofastly.ToPointer(d.Get("virtual_patch_id").(string)),
-		Mode:           gofastly.ToPointer(d.Get("action").(string)),
+		WorkspaceID:    new(d.Get("workspace_id").(string)),
+		VirtualPatchID: new(d.Get("virtual_patch_id").(string)),
+		Mode:           new(d.Get("action").(string)),
 		// Disable virtual patch on delete
-		Enabled: gofastly.ToPointer(false),
+		Enabled: new(false),
 	}
 
 	log.Printf("[DEBUG] DELETE: NGWAF virtual patch input: %#v", i)

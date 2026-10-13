@@ -20,33 +20,33 @@ func TestAccFastlyServiceLoggingLoggly_vcl_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Loggly{
-		Format:            gofastly.ToPointer(LoggingLogglyDefaultFormat),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("loggly-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("s3cr3t"),
-		ProcessingRegion:  gofastly.ToPointer("us"),
+		Format:            new(LoggingLogglyDefaultFormat),
+		FormatVersion:     new(2),
+		Name:              new("loggly-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("s3cr3t"),
+		ProcessingRegion:  new("us"),
 	}
 
 	log1AfterUpdate := gofastly.Loggly{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("loggly-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("secret"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("loggly-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("secret"),
+		ProcessingRegion:  new("none"),
 	}
 
 	log2 := gofastly.Loggly{
-		Format:            gofastly.ToPointer(LoggingFormatUpdate),
-		FormatVersion:     gofastly.ToPointer(2),
-		Name:              gofastly.ToPointer("another-loggly-endpoint"),
-		ResponseCondition: gofastly.ToPointer(""),
-		ServiceVersion:    gofastly.ToPointer(1),
-		Token:             gofastly.ToPointer("another-token"),
-		ProcessingRegion:  gofastly.ToPointer("none"),
+		Format:            new(LoggingFormatUpdate),
+		FormatVersion:     new(2),
+		Name:              new("another-loggly-endpoint"),
+		ResponseCondition: new(""),
+		ServiceVersion:    new(1),
+		Token:             new("another-token"),
+		ProcessingRegion:  new("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -85,10 +85,10 @@ func TestAccFastlyServiceLoggingLoggly_compute_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Loggly{
-		Name:             gofastly.ToPointer("loggly-endpoint"),
-		ServiceVersion:   gofastly.ToPointer(1),
-		Token:            gofastly.ToPointer("s3cr3t"),
-		ProcessingRegion: gofastly.ToPointer("us"),
+		Name:             new("loggly-endpoint"),
+		ServiceVersion:   new(1),
+		Token:            new("s3cr3t"),
+		ProcessingRegion: new("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -266,12 +266,12 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 		{
 			remote: []*gofastly.Loggly{
 				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("loggly-endpoint"),
-					Token:            gofastly.ToPointer("token"),
-					Format:           gofastly.ToPointer(LoggingLogglyDefaultFormat),
-					FormatVersion:    gofastly.ToPointer(2),
-					ProcessingRegion: gofastly.ToPointer("eu"),
+					ServiceVersion:   new(1),
+					Name:             new("loggly-endpoint"),
+					Token:            new("token"),
+					Format:           new(LoggingLogglyDefaultFormat),
+					FormatVersion:    new(2),
+					ProcessingRegion: new("eu"),
 				},
 			},
 			local: []map[string]any{

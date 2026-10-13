@@ -94,12 +94,12 @@ func resourceFastlyIntegrationCreate(ctx context.Context, d *schema.ResourceData
 
 	input := gofastly.CreateIntegrationInput{
 		Config: castToMapString(d.Get("config").(map[string]any)),
-		Name:   gofastly.ToPointer(d.Get("name").(string)),
-		Type:   gofastly.ToPointer(d.Get("type").(string)),
+		Name:   new(d.Get("name").(string)),
+		Type:   new(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 
 	i, err := conn.CreateIntegration(ctx, &input)
@@ -179,12 +179,12 @@ func resourceFastlyIntegrationUpdate(ctx context.Context, d *schema.ResourceData
 	input := gofastly.UpdateIntegrationInput{
 		Config: castToMapString(d.Get("config").(map[string]any)),
 		ID:     d.Id(),
-		Name:   gofastly.ToPointer(d.Get("name").(string)),
-		Type:   gofastly.ToPointer(d.Get("type").(string)),
+		Name:   new(d.Get("name").(string)),
+		Type:   new(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		input.Description = new(v.(string))
 	}
 
 	err := conn.UpdateIntegration(ctx, &input)

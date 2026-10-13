@@ -209,61 +209,61 @@ func (h *KafkaServiceAttributeHandler) Update(ctx context.Context, d *schema.Res
 	}
 
 	// Always preserve optional bool values to prevent drift
-	opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool)))
-	opts.ParseLogKeyvals = gofastly.ToPointer(gofastly.Compatibool(resource["parse_log_keyvals"].(bool)))
+	opts.UseTLS = new(gofastly.Compatibool(resource["use_tls"].(bool)))
+	opts.ParseLogKeyvals = new(gofastly.Compatibool(resource["parse_log_keyvals"].(bool)))
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["brokers"]; ok {
-		opts.Brokers = gofastly.ToPointer(v.(string))
+		opts.Brokers = new(v.(string))
 	}
 	if v, ok := modified["topic"]; ok {
-		opts.Topic = gofastly.ToPointer(v.(string))
+		opts.Topic = new(v.(string))
 	}
 	if v, ok := modified["required_acks"]; ok {
-		opts.RequiredACKs = gofastly.ToPointer(v.(string))
+		opts.RequiredACKs = new(v.(string))
 	}
 	if v, ok := modified["compression_codec"]; ok {
-		opts.CompressionCodec = gofastly.ToPointer(v.(string))
+		opts.CompressionCodec = new(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
-		opts.TLSCACert = gofastly.ToPointer(v.(string))
+		opts.TLSCACert = new(v.(string))
 	}
 	if v, ok := modified["tls_hostname"]; ok {
-		opts.TLSHostname = gofastly.ToPointer(v.(string))
+		opts.TLSHostname = new(v.(string))
 	}
 	if v, ok := modified["tls_client_cert"]; ok {
-		opts.TLSClientCert = gofastly.ToPointer(v.(string))
+		opts.TLSClientCert = new(v.(string))
 	}
 	if v, ok := modified["tls_client_key"]; ok {
-		opts.TLSClientKey = gofastly.ToPointer(v.(string))
+		opts.TLSClientKey = new(v.(string))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
+		opts.RequestMaxBytes = new(v.(int))
 	}
 	if v, ok := modified["auth_method"]; ok {
-		opts.AuthMethod = gofastly.ToPointer(v.(string))
+		opts.AuthMethod = new(v.(string))
 	}
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.ToPointer(v.(string))
+		opts.User = new(v.(string))
 	}
 	if v, ok := modified["password"]; ok {
-		opts.Password = gofastly.ToPointer(v.(string))
+		opts.Password = new(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Kafka Opts: %#v", opts)
@@ -376,36 +376,36 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap any, serviceID strin
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateKafkaInput{
-		AuthMethod:       gofastly.ToPointer(resource["auth_method"].(string)),
-		Brokers:          gofastly.ToPointer(resource["brokers"].(string)),
-		CompressionCodec: gofastly.ToPointer(resource["compression_codec"].(string)),
-		Format:           gofastly.ToPointer(vla.format),
+		AuthMethod:       new(resource["auth_method"].(string)),
+		Brokers:          new(resource["brokers"].(string)),
+		CompressionCodec: new(resource["compression_codec"].(string)),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		ParseLogKeyvals:  gofastly.ToPointer(gofastly.Compatibool(resource["parse_log_keyvals"].(bool))),
-		Password:         gofastly.ToPointer(resource["password"].(string)),
-		RequestMaxBytes:  gofastly.ToPointer(resource["request_max_bytes"].(int)),
-		RequiredACKs:     gofastly.ToPointer(resource["required_acks"].(string)),
+		Name:             new(resource["name"].(string)),
+		ParseLogKeyvals:  new(gofastly.Compatibool(resource["parse_log_keyvals"].(bool))),
+		Password:         new(resource["password"].(string)),
+		RequestMaxBytes:  new(resource["request_max_bytes"].(int)),
+		RequiredACKs:     new(resource["required_acks"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TLSCACert:        gofastly.ToPointer(resource["tls_ca_cert"].(string)),
-		TLSClientCert:    gofastly.ToPointer(resource["tls_client_cert"].(string)),
-		TLSClientKey:     gofastly.ToPointer(resource["tls_client_key"].(string)),
-		TLSHostname:      gofastly.ToPointer(resource["tls_hostname"].(string)),
-		Topic:            gofastly.ToPointer(resource["topic"].(string)),
-		UseTLS:           gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
-		User:             gofastly.ToPointer(resource["user"].(string)),
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		TLSCACert:        new(resource["tls_ca_cert"].(string)),
+		TLSClientCert:    new(resource["tls_client_cert"].(string)),
+		TLSClientKey:     new(resource["tls_client_key"].(string)),
+		TLSHostname:      new(resource["tls_hostname"].(string)),
+		Topic:            new(resource["topic"].(string)),
+		UseTLS:           new(gofastly.Compatibool(resource["use_tls"].(bool))),
+		User:             new(resource["user"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	return opts

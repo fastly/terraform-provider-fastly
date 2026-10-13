@@ -51,7 +51,7 @@ terraform {
 provider "aws" {
   access_key = var.access_key_id
   secret_key = var.secret_key
-  region     = "us-east"
+  region     = "us-east-1"
 
   s3_use_path_style                  = true
   skip_credentials_validation        = true
@@ -60,7 +60,7 @@ provider "aws" {
   skip_requesting_account_id         = true
 
   endpoints {
-    s3 = "https://us-east.object.fastlystorage.app"
+    s3 = "https://us-east-1.object.fastlystorage.app"
   }
 }
 
@@ -75,7 +75,7 @@ resource "aws_s3_bucket" "main" {
 
 ```
 
-Note: This example uses the `us-east` region of Fastly Object Storage.
+Note: This example uses the `us-east-1` region of Fastly Object Storage.
 To use a different region, ensure that the proper region
 code is included in the `endpoints` block above.
 

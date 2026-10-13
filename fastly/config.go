@@ -73,6 +73,7 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	// NOTE: "force_http2" provider option is an experimental feature.
 	// http2.Transport struct fields are largely different than http.Transport
 	// so leave it to default values for now.
+	//nolint:staticcheck // http2.Transport is intentionally used here to force HTTP/2-only connections; see NOTE above.
 	http2DefaultTransport := &http2.Transport{}
 
 	redactedHeaders := []string{"Fastly-Key"}

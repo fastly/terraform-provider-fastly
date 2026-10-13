@@ -435,6 +435,7 @@ Optional:
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default 3600)
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `project_id` (String) The ID of your Google Cloud Platform project
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `secret_key` (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.

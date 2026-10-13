@@ -127,30 +127,30 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(ctx context.Context, d *
 	opts := gofastly.CreateBigQueryInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             gofastly.ToPointer(resource["name"].(string)),
-		ProjectID:        gofastly.ToPointer(resource["project_id"].(string)),
-		Dataset:          gofastly.ToPointer(resource["dataset"].(string)),
-		Table:            gofastly.ToPointer(resource["table"].(string)),
-		User:             gofastly.ToPointer(resource["email"].(string)),
-		SecretKey:        gofastly.ToPointer(resource["secret_key"].(string)),
-		Template:         gofastly.ToPointer(resource["template"].(string)),
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		Name:             new(resource["name"].(string)),
+		ProjectID:        new(resource["project_id"].(string)),
+		Dataset:          new(resource["dataset"].(string)),
+		Table:            new(resource["table"].(string)),
+		User:             new(resource["email"].(string)),
+		SecretKey:        new(resource["secret_key"].(string)),
+		Template:         new(resource["template"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.format != "" {
-		opts.Format = gofastly.ToPointer(vla.format)
+		opts.Format = new(vla.format)
 	}
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 	if v, ok := resource["account_name"].(string); ok && v != "" {
-		opts.AccountName = gofastly.ToPointer(v)
+		opts.AccountName = new(v)
 	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)
@@ -201,40 +201,40 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(ctx context.Context, d *
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["project_id"]; ok {
-		opts.ProjectID = gofastly.ToPointer(v.(string))
+		opts.ProjectID = new(v.(string))
 	}
 	if v, ok := modified["dataset"]; ok {
-		opts.Dataset = gofastly.ToPointer(v.(string))
+		opts.Dataset = new(v.(string))
 	}
 	if v, ok := modified["table"]; ok {
-		opts.Table = gofastly.ToPointer(v.(string))
+		opts.Table = new(v.(string))
 	}
 	if v, ok := modified["template"]; ok {
-		opts.Template = gofastly.ToPointer(v.(string))
+		opts.Template = new(v.(string))
 	}
 	if v, ok := modified["email"]; ok {
-		opts.User = gofastly.ToPointer(v.(string))
+		opts.User = new(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {
-		opts.SecretKey = gofastly.ToPointer(v.(string))
+		opts.SecretKey = new(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["account_name"]; ok {
-		opts.AccountName = gofastly.ToPointer(v.(string))
+		opts.AccountName = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update BigQuery Opts: %#v", opts)

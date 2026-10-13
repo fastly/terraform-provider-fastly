@@ -102,24 +102,24 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SumologicServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
-		Format:           gofastly.ToPointer(vla.format),
+		Format:           new(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
-		Name:             gofastly.ToPointer(resource["name"].(string)),
+		MessageType:      new(resource["message_type"].(string)),
+		Name:             new(resource["name"].(string)),
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		URL:              gofastly.ToPointer(resource["url"].(string)),
-		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
+		URL:              new(resource["url"].(string)),
+		ProcessingRegion: new(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.ToPointer(vla.placement)
+		opts.Placement = new(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
+		opts.ResponseCondition = new(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
@@ -169,28 +169,28 @@ func (h *SumologicServiceAttributeHandler) Update(ctx context.Context, d *schema
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.ToPointer(v.(string))
+		opts.Address = new(v.(string))
 	}
 	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.ToPointer(v.(string))
+		opts.URL = new(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.ToPointer(v.(string))
+		opts.Format = new(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.ToPointer(v.(string))
+		opts.ResponseCondition = new(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.ToPointer(v.(string))
+		opts.MessageType = new(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.ToPointer(v.(int))
+		opts.FormatVersion = new(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.NewNullable(v.(string))
 	}
 	if v, ok := modified["processing_region"]; ok {
-		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+		opts.ProcessingRegion = new(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Sumologic Opts: %#v", opts)

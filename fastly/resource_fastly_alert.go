@@ -389,7 +389,7 @@ func validateSourceWithServiceID(source string, serviceID string) error {
 	return nil
 }
 
-func validateDimensionsForSource(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+func validateDimensionsForSource(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	source := d.Get("source").(string)
 
 	dimsMap, ok := getDimensionsMapFromRawConfig(d.GetRawConfig())

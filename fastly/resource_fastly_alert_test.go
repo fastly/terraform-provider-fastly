@@ -803,4 +803,3 @@ resource "fastly_alert" "tf_multi" {
   }
 }`, serviceName, domainName, alertName, alert.Description, alert.Source, alert.Metric, servicesConfig, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
 }
-

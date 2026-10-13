@@ -626,6 +626,72 @@ func TestAccFastlyAlert_OriginsDimensions(t *testing.T) {
 	})
 }
 
+func TestAccFastlyAlert_DomainsDimensions(t *testing.T) {
+	var testService gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	alertName := fmt.Sprintf("Terraform domains alert %s", acctest.RandString(10))
+
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform domains test",
+		Dimensions: map[string][]string{
+			"domains": {},
+		},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "status_5xx",
+		Name:   alertName,
+		Source: "domains",
+	}
+
+	updateAlert := gofastly.AlertDefinition{
+		Description: "Terraform domains test",
+		Dimensions: map[string][]string{
+			"domains": {"domain1.example.com"},
+		},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "status_5xx",
+		Name:   alertName,
+		Source: "domains",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlertDomainsConfig(serviceName, domainName, alertName, createAlert, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_domains_test", &testService),
+					testAccCheckFastlyAlertsRemoteState(&testService, serviceName, createAlert),
+				),
+			},
+			{
+				Config: testAccAlertDomainsConfig(serviceName, domainName, alertName, updateAlert, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_domains_test", &testService),
+					testAccCheckFastlyAlertsRemoteState(&testService, serviceName, updateAlert),
+				),
+			},
+			{
+				ResourceName:      "fastly_alert.tf_domains",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccFastlyAlert_DimensionsValidation(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -753,6 +819,48 @@ resource "fastly_alert" "tf_origins" {
   name = "%s"
   description = "%s"
   service_id = fastly_service_vcl.tf_origins_test.id
+  source = "%s"
+  metric = "%s"
+%s
+  evaluation_strategy {
+    type = "%s"
+    period = "%s"
+    threshold = %v
+  }
+}`, serviceName, domainName, alertName, alert.Description, alert.Source, alert.Metric, dimensionsConfig, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
+}
+
+func testAccAlertDomainsConfig(serviceName, domainName, alertName string, alert gofastly.AlertDefinition, withDomains bool) string {
+	dimensionsConfig := `
+  dimensions {
+    domains = []
+  }`
+	if withDomains {
+		dimensionsConfig = `
+  dimensions {
+    domains = ["domain1.example.com"]
+  }`
+	}
+
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "tf_domains_test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  product_enablement {
+    domain_inspector = true
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_alert" "tf_domains" {
+  name = "%s"
+  description = "%s"
+  service_id = fastly_service_vcl.tf_domains_test.id
   source = "%s"
   metric = "%s"
 %s

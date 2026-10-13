@@ -499,8 +499,8 @@ func TestAccFastlyAlert_MultiServiceStats(t *testing.T) {
 	alertName := fmt.Sprintf("Terraform multi-service alert %s", acctest.RandString(10))
 
 	service := gofastly.ServiceDetail{
-		Name:      gofastly.ToPointer(""),
-		ServiceID: gofastly.ToPointer(""),
+		Name:      new(""),
+		ServiceID: new(""),
 	}
 
 	createAlert := gofastly.AlertDefinition{

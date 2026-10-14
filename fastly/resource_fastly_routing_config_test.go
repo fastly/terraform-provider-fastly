@@ -12,6 +12,7 @@ import (
 
 	gofastly "github.com/fastly/go-fastly/v17/fastly"
 	"github.com/fastly/go-fastly/v17/fastly/domainmanagement/v1/routingconfigs"
+	"github.com/fastly/go-fastly/v17/fastly/domainmanagement/v1/routingconfigs/paths"
 )
 
 func TestAccFastlyRoutingConfig_Basic(t *testing.T) {
@@ -62,6 +63,55 @@ func TestAccFastlyRoutingConfig_DuplicatePath(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TestAccFastlyRoutingConfig_DetectsOutOfBandPath verifies that Read
+// discovers a path added directly through the API (outside of Terraform),
+// since it now lists the routing config's current paths/rules rather than
+// only re-fetching ones already known to state.
+func TestAccFastlyRoutingConfig_DetectsOutOfBandPath(t *testing.T) {
+	suffix := acctest.RandString(6)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRoutingConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingConfigConfig(suffix, "svc1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_routing_config.example", "path.#", "1"),
+					testAccRoutingConfigCreateOutOfBandPath("fastly_routing_config.example"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// testAccRoutingConfigCreateOutOfBandPath creates an extra path directly
+// through the API, simulating a change made outside of Terraform.
+func testAccRoutingConfigCreateOutOfBandPath(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		routingConfigID := rs.Primary.ID
+		if routingConfigID == "" {
+			return fmt.Errorf("no ID set for %s", resourceName)
+		}
+
+		conn := testAccProvider.Meta().(*APIClient).conn
+		path := "/out-of-band/*"
+		if _, err := paths.Create(context.Background(), conn, &paths.CreateInput{
+			RoutingConfigID: &routingConfigID,
+			Path:            &path,
+		}); err != nil {
+			return fmt.Errorf("error creating out-of-band path: %w", err)
+		}
+		return nil
+	}
 }
 
 func testAccRoutingConfigDuplicatePathConfig(suffix string) string {

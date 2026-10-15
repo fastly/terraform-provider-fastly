@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(alert): Add support for monitoring multiple services using a single alert. ([#1454](https://github.com/fastly/terraform-provider-fastly/pull/1454))
+
 ### BUG FIXES:
 
 ### Dependencies

@@ -24,10 +24,6 @@ import (
 // versioning: every apply reconciles the draft's paths and rules against
 // this resource's configuration and activates the draft if anything
 // changed. The draft/version workflow is never exposed to Terraform.
-//
-// Reconciliation and refresh only Get path/rule IDs already known from prior
-// Create/Update calls; they never list. The list endpoints are used once, to
-// bootstrap state on import.
 func resourceFastlyRoutingConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFastlyRoutingConfigCreate,
@@ -286,10 +282,8 @@ func resourceFastlyRoutingConfigUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 // resourceFastlyRoutingConfigRead refreshes the routing config, including its
-// paths and rules. It never lists: each path/rule already known to state is
-// re-fetched individually by ID, and any that now 404 are dropped as removed.
-// This can't discover a path or rule added out-of-band, since the list
-// endpoints are unreliable immediately after activation.
+// paths and rules, by listing them directly from the API. This also detects
+// any path or rule added outside of Terraform.
 func resourceFastlyRoutingConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Routing Config Configuration for (%s)", d.Id())
 
@@ -298,48 +292,10 @@ func resourceFastlyRoutingConfigRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	conn := meta.(*APIClient).conn
-	id := d.Id()
 
-	currentPaths := d.Get("path").([]interface{})
-	pathList := make([]map[string]any, 0, len(currentPaths))
-	for _, raw := range currentPaths {
-		pm := raw.(map[string]interface{})
-		pathID := pm["path_id"].(string)
-		if pathID == "" {
-			continue
-		}
-
-		got, err := paths.Get(ctx, conn, &paths.GetInput{RoutingConfigID: &id, PathID: &pathID})
-		if err != nil {
-			if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-				continue
-			}
-			return diag.FromErr(err)
-		}
-
-		currentRules := pm["rule"].([]interface{})
-		ruleList := make([]map[string]any, 0, len(currentRules))
-		for _, rraw := range currentRules {
-			rm := rraw.(map[string]interface{})
-			ruleID := rm["rule_id"].(string)
-			if ruleID == "" {
-				continue
-			}
-			gotRule, err := rules.Get(ctx, conn, &rules.GetInput{RoutingConfigID: &id, PathID: &pathID, RuleID: &ruleID})
-			if err != nil {
-				if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-					continue
-				}
-				return diag.FromErr(err)
-			}
-			ruleList = append(ruleList, flattenRoutingConfigRule(*gotRule))
-		}
-
-		pathList = append(pathList, map[string]any{
-			"path":    got.Path,
-			"path_id": got.PathID,
-			"rule":    ruleList,
-		})
+	pathList, err := listRoutingConfigPaths(ctx, conn, d.Id())
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("path", pathList); err != nil {
@@ -398,23 +354,34 @@ func resourceFastlyRoutingConfigDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-// resourceFastlyRoutingConfigImport bootstraps state by listing the routing
-// config's current paths and rules, since import has no known IDs to Get by.
-// This is the only place this resource lists: an importable routing config
-// always has real content, so the list call can't hit the "empty config" 404
-// case that Read avoids.
+// resourceFastlyRoutingConfigImport bootstraps the `path` attribute by
+// listing the routing config's current paths and rules; Terraform populates
+// the rest of the resource's state with the Read call that follows.
 func resourceFastlyRoutingConfigImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*APIClient).conn
-	id := d.Id()
 
-	actualPaths, err := paths.List(ctx, conn, &paths.ListInput{RoutingConfigID: &id})
+	pathList, err := listRoutingConfigPaths(ctx, conn, d.Id())
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("path", pathList); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+// listRoutingConfigPaths lists a routing config's current paths and rules
+// directly from the API, returning the resulting `path` attribute value.
+func listRoutingConfigPaths(ctx context.Context, conn *gofastly.Client, routingConfigID string) ([]map[string]any, error) {
+	actualPaths, err := paths.List(ctx, conn, &paths.ListInput{RoutingConfigID: &routingConfigID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list routing config paths: %w", err)
 	}
 
 	pathList := make([]map[string]any, 0, len(actualPaths))
 	for _, p := range actualPaths {
-		actualRules, err := rules.List(ctx, conn, &rules.ListInput{RoutingConfigID: &id, PathID: &p.PathID})
+		actualRules, err := rules.List(ctx, conn, &rules.ListInput{RoutingConfigID: &routingConfigID, PathID: &p.PathID})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list rules for routing config path %q: %w", p.Path, err)
 		}
@@ -428,17 +395,11 @@ func resourceFastlyRoutingConfigImport(ctx context.Context, d *schema.ResourceDa
 			"rule":    ruleList,
 		})
 	}
-
-	if err := d.Set("path", pathList); err != nil {
-		return nil, err
-	}
-
-	return []*schema.ResourceData{d}, nil
+	return pathList, nil
 }
 
-// createRoutingConfigPaths creates every desired path (and its rules) for a
-// routing config that has none of them yet, returning the resulting `path`
-// attribute value built directly from the create responses.
+// createRoutingConfigPaths builds the `path` attribute value directly from
+// the create responses, without a round-trip Read.
 func createRoutingConfigPaths(ctx context.Context, conn *gofastly.Client, routingConfigID string, desiredPaths []interface{}) ([]map[string]any, error) {
 	pathList := make([]map[string]any, 0, len(desiredPaths))
 	for _, raw := range desiredPaths {
@@ -467,9 +428,8 @@ func createRoutingConfigPaths(ctx context.Context, conn *gofastly.Client, routin
 	return pathList, nil
 }
 
-// createRoutingConfigRules creates every desired rule for a path that has
-// none yet, returning the resulting `rule` attribute value built directly
-// from the create responses.
+// createRoutingConfigRules builds the `rule` attribute value directly from
+// the create responses, without a round-trip Read.
 func createRoutingConfigRules(ctx context.Context, conn *gofastly.Client, routingConfigID, pathID string, desiredRules []interface{}) ([]map[string]any, error) {
 	ruleList := make([]map[string]any, 0, len(desiredRules))
 	for _, raw := range desiredRules {
@@ -490,13 +450,10 @@ func createRoutingConfigRules(ctx context.Context, conn *gofastly.Client, routin
 	return ruleList, nil
 }
 
-// reconcileRoutingConfigRulesTracked reconciles a path's rules using only
-// rule IDs already known from prior state (never lists), and reports whether
-// it actually changed anything so the caller can skip activation otherwise.
-// If the desired rule set is unchanged (by content, ignoring order), the
-// prior rule maps are returned untouched; otherwise every existing rule (by
-// its known ID) is deleted and the desired rules are recreated fresh, since
-// rules have no user-supplied natural key to reconcile against individually.
+// reconcileRoutingConfigRulesTracked reconciles a path's rules by known rule
+// ID, reporting whether anything changed. Rules have no natural key, so any
+// content difference (ignoring order) deletes and recreates the whole set
+// rather than diffing individual rules.
 func reconcileRoutingConfigRulesTracked(ctx context.Context, conn *gofastly.Client, routingConfigID, pathID string, oldRules, desiredRules []interface{}) ([]map[string]any, bool, error) {
 	oldIDs := make([]string, len(oldRules))
 	oldSigs := make([]string, len(oldRules))

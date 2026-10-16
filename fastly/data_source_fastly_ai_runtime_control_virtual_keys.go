@@ -40,7 +40,7 @@ func dataSourceFastlyAIRuntimeControlVirtualKeys() *schema.Resource {
 			"search": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Filter the results by a substring match on the virtual key name.",
+				Description: "Filter the results to virtual keys whose name contains this substring.",
 			},
 			"total": {
 				Type:        schema.TypeInt,
@@ -66,17 +66,17 @@ func dataSourceFastlyAIRuntimeControlVirtualKeys() *schema.Resource {
 						"customer_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The ID of the customer that owns the virtual key.",
+							Description: "The ID of the customer account that owns the virtual key.",
 						},
 						"deleted_at": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Timestamp (UTC) of when the virtual key was deleted, if applicable.",
+							Description: "Timestamp (UTC) of when the virtual key was deleted. Only set when `include_deleted` is `true`.",
 						},
 						"expires_at": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The expiration timestamp of the virtual key, if any.",
+							Description: "The date and time the virtual key expires, in RFC 3339 format. Empty if the virtual key doesn't expire.",
 						},
 						"id": {
 							Type:        schema.TypeString,
@@ -86,7 +86,7 @@ func dataSourceFastlyAIRuntimeControlVirtualKeys() *schema.Resource {
 						"last_used_at": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Timestamp (UTC) of when the virtual key was last used, if applicable.",
+							Description: "Timestamp (UTC) of when the virtual key was last used to make a request. Empty if the virtual key has never been used.",
 						},
 						"model": {
 							Type:        schema.TypeString,
@@ -96,7 +96,7 @@ func dataSourceFastlyAIRuntimeControlVirtualKeys() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The human-readable name of the virtual key.",
+							Description: "The display name of the virtual key.",
 						},
 						"provider": {
 							Type:        schema.TypeString,
@@ -106,7 +106,7 @@ func dataSourceFastlyAIRuntimeControlVirtualKeys() *schema.Resource {
 						"type": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The type of the virtual key.",
+							Description: "The type of the resource.",
 						},
 						"updated_at": {
 							Type:        schema.TypeString,

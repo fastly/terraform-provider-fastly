@@ -36,7 +36,7 @@ output "fastly_ai_runtime_control_openai_connection_id" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `provider_connections` (List of Object) The provider connections configured for the customer. (see [below for nested schema](#nestedatt--provider_connections))
+- `provider_connections` (List of Object) The provider connections configured for your customer account. (see [below for nested schema](#nestedatt--provider_connections))
 - `total` (Number) The total number of provider connections returned.
 
 <a id="nestedatt--provider_connections"></a>

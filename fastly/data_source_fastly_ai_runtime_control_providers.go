@@ -32,7 +32,7 @@ func dataSourceFastlyAIRuntimeControlProviders() *schema.Resource {
 						"display_name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The human-readable provider name, e.g. `Anthropic`.",
+							Description: "The human-readable name of the provider, e.g. `Anthropic`.",
 						},
 						"id": {
 							Type:        schema.TypeString,
@@ -42,13 +42,13 @@ func dataSourceFastlyAIRuntimeControlProviders() *schema.Resource {
 						"models": {
 							Type:        schema.TypeList,
 							Computed:    true,
-							Description: "The models available for the provider.",
+							Description: "The models available from this provider.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"display_name": {
 										Type:        schema.TypeString,
 										Computed:    true,
-										Description: "The human-readable model name, e.g. `Claude Sonnet 4`.",
+										Description: "The human-readable name of the model, e.g. `Claude Sonnet 4`.",
 									},
 									"id": {
 										Type:        schema.TypeString,

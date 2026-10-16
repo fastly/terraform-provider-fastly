@@ -25,12 +25,12 @@ func resourceFastlyAIRuntimeControlProviderConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   !DisplaySensitiveFields,
-				Description: "The provider's secret key used for authentication. Never returned by the API, so it cannot be reconciled with the remote state.",
+				Description: "The provider's secret API key. Never returned by the API, so it cannot be reconciled with the remote state.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The base URL for the provider's API, e.g. `https://api.openai.com`. Must not include a `/v1` suffix, which the API appends automatically. Trailing slashes are stripped.",
+				Description: "The base URL of the provider's API, e.g. `https://api.openai.com`. Must be an absolute http or https URL, and must not include a `/v1` suffix, which the API appends automatically. Trailing slashes are stripped.",
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -42,13 +42,13 @@ func resourceFastlyAIRuntimeControlProviderConnection() *schema.Resource {
 				Required:    true,
 				MinItems:    1,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "The set of allowed AI model identifiers, e.g. `[\"gpt-4o\", \"gpt-4o-mini\"]`.",
+				Description: "The set of AI model identifiers this provider connection is allowed to use, e.g. `[\"gpt-4o\", \"gpt-4o-mini\"]`.",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "A human-readable name for the provider. Changing this forces a new provider connection to be created.",
+				Description: "The display name of the provider connection. Changing this forces a new provider connection to be created.",
 			},
 			// Since api_key itself is never returned by the API, comparing
 			// secret_id across refreshes is how a user detects that the API
@@ -56,7 +56,7 @@ func resourceFastlyAIRuntimeControlProviderConnection() *schema.Resource {
 			"secret_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "A hash representing the `api_key` used to create the provider connection.",
+				Description: "An opaque identifier for the secret material backing this provider connection. Not the secret itself.",
 			},
 			"updated_at": {
 				Type:        schema.TypeString,

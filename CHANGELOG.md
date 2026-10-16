@@ -8,6 +8,8 @@
 
 ### BUG FIXES:
 
+- fix(ai_runtime_control): update AI Runtime Control resource and data source descriptions to reflect the latest API references
+
 ### Dependencies
 
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.7.0 to 17.8.0 ([#1453](https://github.com/fastly/terraform-provider-fastly/pull/1453))

@@ -30,7 +30,7 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   !DisplaySensitiveFields,
-				Description: "The generated access token used to authenticate as this virtual key. Only returned by the API when the key is created.",
+				Description: "The access token for this virtual key. Only returned by the API when the key is created, and cannot be retrieved again afterward.",
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -45,14 +45,14 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 			"expires_at": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "The expiration timestamp of the virtual key, in RFC 3339 format. Once set, this value cannot be unset, only changed.",
+				Description:      "The date and time the virtual key expires, in RFC 3339 format. Once set, this value cannot be unset, only changed.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 				DiffSuppressFunc: diffSuppressEquivalentRFC3339,
 			},
 			"last_used_at": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Timestamp (UTC) of when the virtual key was last used.",
+				Description: "Timestamp (UTC) of when the virtual key was last used to make a request.",
 			},
 			"model": {
 				Type:        schema.TypeString,
@@ -62,7 +62,7 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "A human-readable name for the virtual key.",
+				Description: "The display name of the virtual key.",
 			},
 			// The Terraform SDK reserves the field name "provider" on every
 			// resource, so the API's `provider` field is exposed as
@@ -75,7 +75,7 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 			"type": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The type of the virtual key.",
+				Description: "The type of the resource.",
 			},
 			"updated_at": {
 				Type:        schema.TypeString,

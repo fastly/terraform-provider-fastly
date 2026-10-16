@@ -8,7 +8,7 @@
 
 ### BUG FIXES:
 
-- fix(ai_runtime_control): update AI Runtime Control resource and data source descriptions to reflect the latest API references
+- fix(ai_runtime_control): update AI Runtime Control resource and data source descriptions to reflect the latest API references ([#1456](https://github.com/fastly/terraform-provider-fastly/pull/1456))
 
 ### Dependencies
 

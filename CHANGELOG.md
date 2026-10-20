@@ -11,7 +11,8 @@
 - fix(ai_runtime_control): update AI Runtime Control resource and data source descriptions to reflect the latest API references ([#1456](https://github.com/fastly/terraform-provider-fastly/pull/1456))
 
 ### Dependencies
-
+- build(deps): `github.com/fastly/go-fastly/v17` from 17.7.0 to 17.8.0 ([#1453](https://github.com/fastly/terraform-provider-fastly/pull/1453))
+- build(deps): `golang.org/x/net` from 0.59.0 to 0.61.0 ([#1457](https://github.com/fastly/terraform-provider-fastly/pull/1457))
 - build(deps): `github.com/fastly/go-fastly/v17` from 17.7.0 to 17.8.0 ([#1453](https://github.com/fastly/terraform-provider-fastly/pull/1453))
 
 ## 9.8.0 (October 01, 2026)

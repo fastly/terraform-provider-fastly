@@ -9,8 +9,11 @@ description: |-
 # fastly_ai_runtime_control_virtual_key
 
 Provides a Fastly AI Runtime Control virtual key, used to authenticate
-requests to an AI service and to attribute usage and session logs back to a
-named key.
+requests made through the AI Runtime Control gateway and to attribute usage and
+session logs back to a named key.
+
+~> **Note:** Deleting a virtual key also deletes any security configuration
+associated with the key.
 
 ## Example Usage
 
@@ -42,20 +45,20 @@ $ terraform import fastly_ai_runtime_control_virtual_key.demo xxxxxxxxxxxxxxxxxx
 ### Required
 
 - `model` (String) The AI model identifier, e.g. `claude-sonnet-4-20250514`.
-- `name` (String) A human-readable name for the virtual key.
+- `name` (String) The display name of the virtual key.
 - `provider_name` (String) The AI model provider name, e.g. `Anthropic`.
 - `user_id` (String) The ID of the user creating the virtual key. Changing this forces a new virtual key to be created.
 
 ### Optional
 
-- `expires_at` (String) The expiration timestamp of the virtual key, in RFC 3339 format. Once set, this value cannot be unset, only changed.
+- `expires_at` (String) The date and time the virtual key expires, in RFC 3339 format. Once set, this value cannot be unset, only changed.
 
 ### Read-Only
 
-- `access_token` (String, Sensitive) The generated access token used to authenticate as this virtual key. Only returned by the API when the key is created.
+- `access_token` (String, Sensitive) The access token for this virtual key. Only returned by the API when the key is created, and cannot be retrieved again afterward.
 - `created_at` (String) Timestamp (UTC) of when the virtual key was created.
 - `created_by` (String) The display name of the user who created the virtual key.
 - `id` (String) The ID of this resource.
-- `last_used_at` (String) Timestamp (UTC) of when the virtual key was last used.
-- `type` (String) The type of the virtual key.
+- `last_used_at` (String) Timestamp (UTC) of when the virtual key was last used to make a request.
+- `type` (String) The type of the resource.
 - `updated_at` (String) Timestamp (UTC) of when the virtual key was last updated.

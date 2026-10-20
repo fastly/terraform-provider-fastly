@@ -8,8 +8,13 @@ description: |-
 
 # fastly_ai_runtime_control_provider_connection
 
-Provides a Fastly AI Runtime Control provider connection, which stores the
-authentication details and the set of allowed models for an AI model provider.
+Provides a Fastly AI Runtime Control provider connection, which supplies the
+credentials AI Runtime Control uses to reach an AI provider on your behalf, along
+with the set of models the connection is allowed to use. Each customer account is
+limited to 25 provider connections.
+
+~> **Note:** A provider connection cannot be deleted while it is still referenced
+by a virtual key's failover policy.
 
 ~> **Note:** The API never returns the provider's `api_key`, so its value cannot
 be reconciled against the remote state. Terraform will only update it when the
@@ -46,14 +51,14 @@ Note that `api_key` cannot be imported, since the API does not return it.
 
 ### Required
 
-- `api_key` (String, Sensitive) The provider's secret key used for authentication. Never returned by the API, so it cannot be reconciled with the remote state.
-- `base_url` (String) The base URL for the provider's API, e.g. `https://api.openai.com`. Must not include a `/v1` suffix, which the API appends automatically. Trailing slashes are stripped.
-- `models` (Set of String) The set of allowed AI model identifiers, e.g. `["gpt-4o", "gpt-4o-mini"]`.
-- `name` (String) A human-readable name for the provider. Changing this forces a new provider connection to be created.
+- `api_key` (String, Sensitive) The provider's secret API key. Never returned by the API, so it cannot be reconciled with the remote state.
+- `base_url` (String) The base URL of the provider's API, e.g. `https://api.openai.com`. Must be an absolute http or https URL, and must not include a `/v1` suffix, which the API appends automatically. Trailing slashes are stripped.
+- `models` (Set of String) The set of AI model identifiers this provider connection is allowed to use, e.g. `["gpt-4o", "gpt-4o-mini"]`.
+- `name` (String) The display name of the provider connection. Changing this forces a new provider connection to be created.
 
 ### Read-Only
 
 - `created_at` (String) Timestamp (UTC) of when the provider connection was created.
 - `id` (String) The ID of this resource.
-- `secret_id` (String) A hash representing the `api_key` used to create the provider connection.
+- `secret_id` (String) An opaque identifier for the secret material backing this provider connection. Not the secret itself.
 - `updated_at` (String) Timestamp (UTC) of when the provider connection was last updated.

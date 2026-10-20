@@ -21,13 +21,13 @@ func dataSourceFastlyAIRuntimeControlProviderConnections() *schema.Resource {
 			"provider_connections": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The provider connections configured for the customer.",
+				Description: "The provider connections configured for your customer account.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base_url": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The base URL for the provider's API.",
+							Description: "The base URL of the provider's API.",
 						},
 						"created_at": {
 							Type:        schema.TypeString,
@@ -42,18 +42,18 @@ func dataSourceFastlyAIRuntimeControlProviderConnections() *schema.Resource {
 						"models": {
 							Type:        schema.TypeList,
 							Computed:    true,
-							Description: "The allowed AI model identifiers.",
+							Description: "The AI model identifiers this provider connection is allowed to use.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The human-readable name of the provider.",
+							Description: "The display name of the provider connection.",
 						},
 						"secret_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "A hash representing the API key used to create the provider connection.",
+							Description: "An opaque identifier for the secret material backing this provider connection. Not the secret itself.",
 						},
 						"updated_at": {
 							Type:        schema.TypeString,

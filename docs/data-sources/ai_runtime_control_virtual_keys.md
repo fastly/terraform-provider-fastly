@@ -44,7 +44,7 @@ output "fastly_ai_runtime_control_chatbot_key_ids" {
 - `include_deleted` (Boolean) Include deleted virtual keys in the results. Default `false`.
 - `model` (String) Filter the results by AI model identifier.
 - `provider_name` (String) Filter the results by AI model provider name.
-- `search` (String) Filter the results by a substring match on the virtual key name.
+- `search` (String) Filter the results to virtual keys whose name contains this substring.
 
 ### Read-Only
 

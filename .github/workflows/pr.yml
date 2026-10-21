@@ -36,7 +36,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version-file: go.mod
 
       - name: tfproviderlintx
         run: make tfproviderlintx
@@ -50,7 +50,6 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.26.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -62,7 +61,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version-file: go.mod
 
       - name: Test
         run: make test
@@ -80,7 +79,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version-file: go.mod
 
       # Puts Terraform on PATH so tfplugindocs uses it instead of downloading
       # its own copy, whose strict content-type check can fail on HashiCorp
@@ -109,7 +108,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version-file: go.mod
 
       - name: Install Terraform CLI
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
@@ -131,7 +130,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version-file: go.mod
 
       - name: Validate Goreleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
@@ -152,7 +151,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.26.x
+          go-version-file: go.mod
 
       - name: Run golangci-lint@latest
         id: lint

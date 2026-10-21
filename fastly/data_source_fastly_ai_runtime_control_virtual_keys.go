@@ -11,8 +11,8 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/key"
+	gofastly "github.com/fastly/go-fastly/v18/fastly"
+	"github.com/fastly/go-fastly/v18/fastly/airuntimecontrol/v1/key"
 )
 
 func dataSourceFastlyAIRuntimeControlVirtualKeys() *schema.Resource {

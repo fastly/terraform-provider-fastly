@@ -3,7 +3,6 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -11,14 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/key"
+	"github.com/fastly/go-fastly/v18/fastly/airuntimecontrol/v1/key"
 )
 
 func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {
 	keyName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	updatedName := fmt.Sprintf("%s-updated", keyName)
-	userID := testAccAIRuntimeControlUserID(t)
 	expiresAt := time.Now().Add(24 * time.Hour).UTC().Truncate(time.Second).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +26,7 @@ func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAIRuntimeControlVirtualKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAIRuntimeControlVirtualKeyConfig(keyName, "claude-sonnet-4-20250514", userID, expiresAt),
+				Config: testAccAIRuntimeControlVirtualKeyConfig(keyName, "claude-sonnet-4-20250514", expiresAt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAIRuntimeControlVirtualKeyRemoteState("fastly_ai_runtime_control_virtual_key.foo", keyName, "claude-sonnet-4-20250514"),
 					resource.TestCheckResourceAttr("fastly_ai_runtime_control_virtual_key.foo", "name", keyName),
@@ -39,7 +36,7 @@ func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAIRuntimeControlVirtualKeyConfig(updatedName, "claude-haiku-4-5-20251001", userID, expiresAt),
+				Config: testAccAIRuntimeControlVirtualKeyConfig(updatedName, "claude-haiku-4-5-20251001", expiresAt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAIRuntimeControlVirtualKeyRemoteState("fastly_ai_runtime_control_virtual_key.foo", updatedName, "claude-haiku-4-5-20251001"),
 					resource.TestCheckResourceAttr("fastly_ai_runtime_control_virtual_key.foo", "name", updatedName),
@@ -55,43 +52,6 @@ func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-// testAccAIRuntimeControlUserID resolves the authenticated user's ID, which the
-// create endpoint requires. The config it feeds is built before
-// resource.ParallelTest applies its own TF_ACC gate, so this repeats that check
-// rather than calling the API during a unit test run.
-func testAccAIRuntimeControlUserID(t *testing.T) string {
-	t.Helper()
-
-	if os.Getenv(resource.EnvTfAcc) == "" {
-		t.Skipf("Acceptance tests skipped unless env '%s' set", resource.EnvTfAcc)
-	}
-
-	apiKey := os.Getenv("FASTLY_API_KEY")
-	if apiKey == "" {
-		t.Fatal("FASTLY_API_KEY must be set for acceptance tests")
-	}
-
-	var (
-		conn *gofastly.Client
-		err  error
-	)
-	if endpoint := os.Getenv("FASTLY_API_URL"); endpoint != "" {
-		conn, err = gofastly.NewClientForEndpoint(apiKey, endpoint)
-	} else {
-		conn, err = gofastly.NewClient(apiKey)
-	}
-	if err != nil {
-		t.Fatalf("error creating Fastly client: %s", err)
-	}
-
-	user, err := conn.GetCurrentUser(context.TODO())
-	if err != nil {
-		t.Fatalf("error fetching current user: %s", err)
-	}
-
-	return gofastly.ToValue(user.UserID)
 }
 
 func testAccCheckAIRuntimeControlVirtualKeyRemoteState(resourceName, expectedName, expectedModel string) resource.TestCheckFunc {
@@ -144,13 +104,12 @@ func testAccCheckAIRuntimeControlVirtualKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAIRuntimeControlVirtualKeyConfig(name, model, userID, expiresAt string) string {
+func testAccAIRuntimeControlVirtualKeyConfig(name, model, expiresAt string) string {
 	return fmt.Sprintf(`
 resource "fastly_ai_runtime_control_virtual_key" "foo" {
   name          = "%s"
   model         = "%s"
   provider_name = "Anthropic"
-  user_id       = "%s"
   expires_at    = "%s"
-}`, name, model, userID, expiresAt)
+}`, name, model, expiresAt)
 }

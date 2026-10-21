@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/key"
+	gofastly "github.com/fastly/go-fastly/v18/fastly"
+	"github.com/fastly/go-fastly/v18/fastly/airuntimecontrol/v1/key"
 )
 
 func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
@@ -84,9 +84,8 @@ func resourceFastlyAIRuntimeControlVirtualKey() *schema.Resource {
 			},
 			"user_id": {
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the user creating the virtual key. Changing this forces a new virtual key to be created.",
+				Computed:    true,
+				Description: "The ID of the user who created the virtual key.",
 			},
 		},
 	}
@@ -99,7 +98,6 @@ func resourceFastlyAIRuntimeControlVirtualKeyCreate(ctx context.Context, d *sche
 		Name:     new(d.Get("name").(string)),
 		Model:    new(d.Get("model").(string)),
 		Provider: new(d.Get("provider_name").(string)),
-		UserID:   new(d.Get("user_id").(string)),
 	}
 
 	if v, ok := d.GetOk("expires_at"); ok {

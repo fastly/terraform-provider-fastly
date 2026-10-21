@@ -2,6 +2,8 @@
 
 ### BREAKING:
 
+- breaking(ai_runtime_control_virtual_key): removing `user_id` as a configurable argument, as it was never supported by the Create endpoint. It is now a read-only (computed) attribute.
+
 ### ENHANCEMENTS:
 
 - feat(alert): Add support for monitoring multiple services using a single alert. ([#1454](https://github.com/fastly/terraform-provider-fastly/pull/1454))

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	gofastly "github.com/fastly/go-fastly/v18/fastly"
 )
 
 func TestValidateLoggingFormatVersion(t *testing.T) {

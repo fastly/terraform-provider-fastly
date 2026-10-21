@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/providerconnection"
+	"github.com/fastly/go-fastly/v18/fastly/airuntimecontrol/v1/providerconnection"
 )
 
 func dataSourceFastlyAIRuntimeControlProviderConnections() *schema.Resource {

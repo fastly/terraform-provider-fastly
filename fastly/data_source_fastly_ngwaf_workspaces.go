@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	ws "github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/workspaces"
+	ws "github.com/fastly/go-fastly/v18/fastly/ngwaf/v1/workspaces"
 )
 
 func dataSourceFastlyNGWAFWorkspaces() *schema.Resource {
@@ -57,8 +57,8 @@ func dataSourceFastlyNGWAFWorkspacesRead(ctx context.Context, d *schema.Resource
 
 	// Convert []workspaces.Workspace to []*workspaces.Workspace
 	var workspacePtrs []*ws.Workspace
-	for i := range remoteState.Data {
-		workspacePtrs = append(workspacePtrs, &remoteState.Data[i])
+	for i := range remoteState {
+		workspacePtrs = append(workspacePtrs, &remoteState[i])
 	}
 
 	if err := d.Set("workspaces", flattenNGWAFWorkspaces(workspacePtrs)); err != nil {

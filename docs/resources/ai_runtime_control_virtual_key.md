@@ -24,7 +24,6 @@ resource "fastly_ai_runtime_control_virtual_key" "demo" {
   name          = "prod website chatbot"
   model         = "claude-sonnet-4-20250514"
   provider_name = "Anthropic"
-  user_id       = "6zhNCY1236787aJIwUgN"
   expires_at    = "2026-08-05T17:13:36Z"
 }
 ```
@@ -47,7 +46,6 @@ $ terraform import fastly_ai_runtime_control_virtual_key.demo xxxxxxxxxxxxxxxxxx
 - `model` (String) The AI model identifier, e.g. `claude-sonnet-4-20250514`.
 - `name` (String) The display name of the virtual key.
 - `provider_name` (String) The AI model provider name, e.g. `Anthropic`.
-- `user_id` (String) The ID of the user creating the virtual key. Changing this forces a new virtual key to be created.
 
 ### Optional
 
@@ -62,3 +60,4 @@ $ terraform import fastly_ai_runtime_control_virtual_key.demo xxxxxxxxxxxxxxxxxx
 - `last_used_at` (String) Timestamp (UTC) of when the virtual key was last used to make a request.
 - `type` (String) The type of the resource.
 - `updated_at` (String) Timestamp (UTC) of when the virtual key was last updated.
+- `user_id` (String) The ID of the user who created the virtual key.

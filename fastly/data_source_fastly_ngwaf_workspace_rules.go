@@ -11,8 +11,8 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/rules"
-	"github.com/fastly/go-fastly/v17/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v18/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v18/fastly/ngwaf/v1/scope"
 )
 
 func dataSourceFastlyNGWAFWorkspaceRules() *schema.Resource {
@@ -91,8 +91,8 @@ func dataSourceFastlyNGWAFWorkspaceRulesRead(ctx context.Context, d *schema.Reso
 	d.SetId(hash)
 
 	var rulePtrs []*rules.Rule
-	for i := range remoteState.Data {
-		rulePtrs = append(rulePtrs, &remoteState.Data[i])
+	for i := range remoteState {
+		rulePtrs = append(rulePtrs, &remoteState[i])
 	}
 
 	if err := d.Set("rules", flattenNGWAFWorkspaceRules(rulePtrs)); err != nil {

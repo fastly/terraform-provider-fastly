@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	gofastly "github.com/fastly/go-fastly/v18/fastly"
 )
 
 func resourceFastlyTLSSubscriptionValidation() *schema.Resource {

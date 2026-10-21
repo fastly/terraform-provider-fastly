@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v17/fastly/airuntimecontrol/v1/providerconnection"
+	"github.com/fastly/go-fastly/v18/fastly/airuntimecontrol/v1/providerconnection"
 )
 
 func TestAccFastlyAIRuntimeControlProviderConnection_basic(t *testing.T) {

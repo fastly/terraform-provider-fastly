@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v17/fastly/objectstorage/accesskeys"
+	"github.com/fastly/go-fastly/v18/fastly/objectstorage/accesskeys"
 )
 
 func TestAccFastlyObjectStorageAccessKey_basic(t *testing.T) {

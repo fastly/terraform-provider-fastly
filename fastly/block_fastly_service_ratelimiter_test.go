@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
+	gofastly "github.com/fastly/go-fastly/v18/fastly"
 )
 
 func TestResourceFastlyFlattenRateLimiter(t *testing.T) {

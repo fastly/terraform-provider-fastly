@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	eventmappings "github.com/fastly/go-fastly/v17/fastly/notifications/v1/eventmappings"
+	eventmappings "github.com/fastly/go-fastly/v18/fastly/notifications/v1/eventmappings"
 )
 
 func dataSourceFastlyAuditLogEventMapping() *schema.Resource {

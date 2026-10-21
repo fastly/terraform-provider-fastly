@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v17/fastly"
-	eventmappings "github.com/fastly/go-fastly/v17/fastly/notifications/v1/eventmappings"
+	gofastly "github.com/fastly/go-fastly/v18/fastly"
+	eventmappings "github.com/fastly/go-fastly/v18/fastly/notifications/v1/eventmappings"
 )
 
 // auditLogEventMappingScopeTypes is the single source of truth for valid

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v17/fastly/domainmanagement/v1/domains"
+	"github.com/fastly/go-fastly/v18/fastly/domainmanagement/v1/domains"
 )
 
 func TestAccFastlyDomain_Basic(t *testing.T) {

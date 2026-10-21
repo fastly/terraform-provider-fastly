@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	eventmappings "github.com/fastly/go-fastly/v17/fastly/notifications/v1/eventmappings"
+	eventmappings "github.com/fastly/go-fastly/v18/fastly/notifications/v1/eventmappings"
 )
 
 func TestAccFastlyAuditLogEventMapping_validate(t *testing.T) {

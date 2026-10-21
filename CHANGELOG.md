@@ -2,6 +2,8 @@
 
 ### BREAKING:
 
+- breaking(ai_runtime_control_virtual_key): `user_id` is now read-only (computed); it is no longer accepted as configuration because go-fastly v18 removed it from the create request. Remove `user_id` from existing configurations.
+
 ### ENHANCEMENTS:
 
 - feat(alert): Add support for monitoring multiple services using a single alert. ([#1454](https://github.com/fastly/terraform-provider-fastly/pull/1454))

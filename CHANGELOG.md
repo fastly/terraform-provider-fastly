@@ -2,7 +2,7 @@
 
 ### BREAKING:
 
-- breaking(ai_runtime_control_virtual_key): `user_id` is now read-only (computed); it is no longer accepted as configuration because go-fastly v18 removed it from the create request. Remove `user_id` from existing configurations.
+- breaking(ai_runtime_control_virtual_key): removing `user_id` as a configurable argument, as it was never supported by the Create endpoint. It is now a read-only (computed) attribute.
 
 ### ENHANCEMENTS:
 

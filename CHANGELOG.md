@@ -4,7 +4,7 @@
 
 ### ENHANCEMENTS:
 
-- feat(ngwaf_workspace): add support for Automated Virtual Patching ([#xxxx](https://github.com/fastly/terraform-provider-fastly/pull/xxxx))
+- feat(ngwaf_workspace): add support for Automated Virtual Patching ([#1463](https://github.com/fastly/terraform-provider-fastly/pull/1463))
 
 ### BUG FIXES:
 

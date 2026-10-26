@@ -35,6 +35,7 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "60"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "100"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "false"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "auto_enable_new_virtual_patches", "false"),
 					testAccNGWAFWorkspaceExists(),
 				),
 			},
@@ -52,6 +53,7 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "500"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "1000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "auto_enable_new_virtual_patches", "true"),
 					testAccNGWAFWorkspaceExists(),
 				),
 			},
@@ -69,6 +71,7 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "1000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "2000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "false"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "auto_enable_new_virtual_patches", "false"),
 					testAccNGWAFWorkspaceExists(),
 				),
 			},
@@ -124,12 +127,13 @@ func testAccCheckNGWAFWorkspaceDestroy(s *terraform.State) error {
 func testAccNGWAFWorkspaceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "example" {
-  name                           = "%s"
-  description                    = "Test NGWAF Workspace"
-  mode                           = "block"
-  ip_anonymization               = "hashed"
-  client_ip_headers              = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code  = 429
+  auto_enable_new_virtual_patches = true
 
   attack_signal_thresholds {
     one_minute  = 100
@@ -144,13 +148,14 @@ resource "fastly_ngwaf_workspace" "example" {
 func testAccNGWAFWorkspaceConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "example" {
-  name                           = "%s"
-  description                    = "Test NGWAF Workspace Updated"
-  mode                           = "log"
-  ip_anonymization               = "hashed"
-  client_ip_headers              = ["True-Client-IP"]
-  default_blocking_response_code = 301
-  default_redirect_url           = "www.test.com"
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace Updated"
+  mode                            = "log"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["True-Client-IP"]
+  default_blocking_response_code  = 301
+  default_redirect_url            = "www.test.com"
+  auto_enable_new_virtual_patches = false
 
   attack_signal_thresholds {
     one_minute  = 200

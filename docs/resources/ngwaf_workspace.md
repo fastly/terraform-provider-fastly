@@ -51,6 +51,7 @@ $ terraform import fastly_ngwaf_workspace.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Optional
 
+- `auto_enable_new_virtual_patches` (Boolean) Whether virtual patches released after this setting is enabled are automatically enabled for the workspace in block mode. Virtual patches released before it was enabled are not changed. Default value `false`.
 - `client_ip_headers` (List of String) Specifies the request headers containing the client IP address. Maximum of 10 header names.
 - `default_blocking_response_code` (Number) The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`.
 - `default_redirect_url` (String) The redirect URL used if default_blocking_response_code is `301` or `302`.

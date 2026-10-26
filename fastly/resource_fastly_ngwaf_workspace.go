@@ -59,6 +59,12 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 				MaxItems:    1,
 				Description: "Attack threshold parameters for system site alerts. Each threshold value is the number of attack signals per IP address that must be detected during the interval before the related IP address is flagged. If no values are set then the default value for each field will be applied",
 			},
+			"auto_enable_new_virtual_patches": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether virtual patches released after this setting is enabled are automatically enabled for the workspace in block mode. Virtual patches released before it was enabled are not changed. Default value `false`.",
+			},
 			"client_ip_headers": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -146,6 +152,10 @@ func resourceFastlyNGWAFWorkspaceCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	if v, ok := d.GetOk("auto_enable_new_virtual_patches"); ok {
+		i.AutoEnableNewVirtualPatches = new(v.(bool))
+	}
+
 	log.Printf("[DEBUG] CREATE: NGWAF workspace input: %#v", i)
 
 	workspace, err := ws.Create(ctx, conn, &i)
@@ -196,6 +206,10 @@ func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 	if err := d.Set("default_redirect_url", workspace.DefaultRedirectURL); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("auto_enable_new_virtual_patches", gofastly.ToValue(workspace.AutoEnableNewVirtualPatches)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -274,6 +288,10 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 			OneHour:    new(th["one_hour"].(int)),
 			Immediate:  new(th["immediate"].(bool)),
 		}
+	}
+
+	if d.HasChange("auto_enable_new_virtual_patches") {
+		i.AutoEnableNewVirtualPatches = new(d.Get("auto_enable_new_virtual_patches").(bool))
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF workspace input: %#v", i)

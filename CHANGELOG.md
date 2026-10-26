@@ -4,11 +4,15 @@
 
 ### ENHANCEMENTS:
 
-- feat(ngwaf_workspace): add support for Automated Virtual Patching ([#1463](https://github.com/fastly/terraform-provider-fastly/pull/1463))
-
 ### BUG FIXES:
 
 ### Dependencies
+
+## 10.1.0 (October 26, 2026)
+
+### ENHANCEMENTS:
+
+- feat(ngwaf_workspace): add support for Automated Virtual Patching ([#1463](https://github.com/fastly/terraform-provider-fastly/pull/1463))
 
 ## 10.0.0 (October 21, 2026)
 

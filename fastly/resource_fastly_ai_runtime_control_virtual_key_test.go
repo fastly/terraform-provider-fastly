@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v18/fastly/airuntimecontrol/v1/key"
+	"github.com/fastly/go-fastly/v19/fastly/airuntimecontrol/v1/key"
 )
 
 func TestAccFastlyAIRuntimeControlVirtualKey_basic(t *testing.T) {

@@ -8,6 +8,8 @@
 
 ### Dependencies
 
+- build(deps): upgrade go-fastly from v18.1.0 to v19.0.0 ([#XXXX](https://github.com/fastly/terraform-provider-fastly/pull/XXXX))
+
 ## 10.1.0 (October 26, 2026)
 
 ### ENHANCEMENTS:

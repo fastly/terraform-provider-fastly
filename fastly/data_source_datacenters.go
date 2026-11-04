@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v18/fastly"
+	gofastly "github.com/fastly/go-fastly/v19/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )

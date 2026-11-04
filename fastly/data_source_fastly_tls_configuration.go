@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v18/fastly"
+	"github.com/fastly/go-fastly/v19/fastly"
 )
 
 func dataSourceFastlyTLSConfiguration() *schema.Resource {

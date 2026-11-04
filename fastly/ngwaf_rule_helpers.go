@@ -1,7 +1,7 @@
 package fastly
 
 import (
-	"github.com/fastly/go-fastly/v18/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v19/fastly/ngwaf/v1/rules"
 )
 
 func expandNGWAFRuleConditionsGeneric(

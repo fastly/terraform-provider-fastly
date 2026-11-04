@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v18/fastly"
-	"github.com/fastly/go-fastly/v18/fastly/apisecurity/operations"
+	gofastly "github.com/fastly/go-fastly/v19/fastly"
+	"github.com/fastly/go-fastly/v19/fastly/apisecurity/operations"
 )
 
 func resourceFastlyAPISecurityOperation() *schema.Resource {
@@ -190,9 +190,10 @@ func resourceFastlyAPISecurityOperationUpdate(ctx context.Context, d *schema.Res
 
 	if d.HasChange("tag_ids") {
 		if v, ok := d.GetOk("tag_ids"); ok {
-			in.TagIDs = expandStringSet(v.(*schema.Set))
+			tagIDs := expandStringSet(v.(*schema.Set))
+			in.TagIDs = &tagIDs
 		} else {
-			in.TagIDs = []string{}
+			in.TagIDs = &[]string{}
 		}
 	}
 

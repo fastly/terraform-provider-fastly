@@ -121,6 +121,11 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					SSLCiphers:          new(""),
 					Shield:              new(""),
 					Weight:              new(100),
+					IAMVendor:           new("aws"),
+					IAMRegion:           new("us-east-1"),
+					IAMProduct:          new("aws-s3"),
+					IAMRole:             new("tester"),
+					IAMExternalID:       new("aws-external-id"),
 				},
 			},
 			local: []map[string]any{
@@ -151,6 +156,11 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"share_key":             "",
 					"shield":                "",
 					"weight":                100,
+					"iam_vendor":            "aws",
+					"iam_region":            "us-east-1",
+					"iam_product":           "aws-s3",
+					"iam_role":              "tester",
+					"iam_external_id":       "aws-external-id",
 				},
 			},
 		},
@@ -736,6 +746,90 @@ resource "fastly_service_vcl" "foo" {
     address = "%s"
     name    = "%s"
     port    = 443
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, backendAddress, backendName)
+}
+
+func TestAccFastlyServiceVCLBackend_IAM(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+	backendAddress := "httpbin.org"
+
+	// Expected backend with API defaults and IAM configuration
+	backend := gofastly.Backend{
+		Address: new(backendAddress),
+		Name:    new(backendName),
+		Port:    new(443),
+
+		// NOTE: The following are defaults applied by the API
+		AutoLoadbalance:     new(false),
+		BetweenBytesTimeout: new(10000),
+		Comment:             new(""),
+		ConnectTimeout:      new(1000),
+		ErrorThreshold:      new(0),
+		FirstByteTimeout:    new(15000),
+		HealthCheck:         new(""),
+		Hostname:            new(backendAddress),
+		KeepAliveTime:       nil, // API returns null when not configured
+		MaxConn:             new(200),
+		PreferIPv6:          new(false),
+		RequestCondition:    new(""),
+		Shield:              new(""),
+		SSLCheckCert:        new(true),
+		Weight:              new(100),
+		UseSSL:              new(false),
+
+		// IAM configuration
+		IAMVendor:     new("aws"),
+		IAMRegion:     new("us-east-1"),
+		IAMProduct:    new("aws-s3"),
+		IAMRole:       new("tester"),
+		IAMExternalID: new("aws-external-id"),
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLBackendIAM(serviceName, domainName, backendAddress, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&backend}),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceVCLBackendIAM(serviceName, domainName, backendAddress, backendName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address         = "%s"
+    name            = "%s"
+    port            = 443
+    iam_vendor      = "aws"
+    iam_region      = "us-east-1"
+    iam_product     = "aws-s3"
+    iam_role        = "tester"
+    iam_external_id = "aws-external-id"
   }
 
   force_destroy = true

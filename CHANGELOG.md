@@ -4,11 +4,14 @@
 
 ### ENHANCEMENTS:
 
+- feat(service/backend): Add support for IAM authentication ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))
+
 ### BUG FIXES:
 
 ### Dependencies
 
 - build(deps): upgrade go-fastly from v18.1.0 to v19.0.0 ([#1467](https://github.com/fastly/terraform-provider-fastly/pull/1467))
+- build(deps): upgrade go-fastly from v19.0.0 to v19.1.0 ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))
 
 ## 10.1.0 (October 26, 2026)
 

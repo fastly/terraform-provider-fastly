@@ -324,6 +324,11 @@ Optional:
 - `error_threshold` (Number) Number of errors to allow before the Backend is marked as down. Default `0`
 - `first_byte_timeout` (Number) How long to wait for the first bytes in milliseconds. Default `15000`
 - `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
+- `iam_external_id` (String) If the backend is using IAM authentication and the IAM system policy requires a matching external identifier, it should match this value. Your Fastly customer ID will be used if this attribute is not set.
+- `iam_product` (String) If the backend is using IAM authentication, the IAM signature will use this as the product element.
+- `iam_region` (String) If the backend is using IAM authentication, this region will be used for signing and access.
+- `iam_role` (String) If the backend is using IAM authentication, the fully qualified role string supplied by the storage vendor.
+- `iam_vendor` (String) A label that identifies the storage vendor. Providing a value in this field enables IAM usage, and all other IAM fields depend on its value.
 - `keepalive_time` (Number) How long in seconds to keep a persistent connection to the backend between requests.
 - `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
 - `max_lifetime` (Number) Maximum time from creation (in milliseconds) that a pooled HTTP keepalive connection will be eligible for reuse; 0 is treated as unlimited - which is the default behavior.

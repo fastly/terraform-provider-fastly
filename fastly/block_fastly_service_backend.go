@@ -216,6 +216,36 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     false,
 			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false`",
 		}
+		blockAttributes["iam_vendor"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "A label that identifies the storage vendor. Providing a value in this field enables IAM usage, and all other IAM fields depend on its value.",
+		}
+		blockAttributes["iam_product"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "If the backend is using IAM authentication, the IAM signature will use this as the product element.",
+		}
+		blockAttributes["iam_region"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "If the backend is using IAM authentication, this region will be used for signing and access.",
+		}
+		blockAttributes["iam_role"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "If the backend is using IAM authentication, the fully qualified role string supplied by the storage vendor.",
+		}
+		blockAttributes["iam_external_id"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "If the backend is using IAM authentication and the IAM system policy requires a matching external identifier, it should match this value. Your Fastly customer ID will be used if this attribute is not set.",
+		}
 	} else {
 		blockAttributes["prefer_ipv6"] = &schema.Schema{
 			Type:        schema.TypeBool,
@@ -376,6 +406,11 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		opts.AutoLoadbalance = new(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
 		opts.RequestCondition = new(resource["request_condition"].(string))
+		opts.IAMVendor = new(resource["iam_vendor"].(string))
+		opts.IAMRegion = new(resource["iam_region"].(string))
+		opts.IAMProduct = new(resource["iam_product"].(string))
+		opts.IAMRole = new(resource["iam_role"].(string))
+		opts.IAMExternalID = new(resource["iam_external_id"].(string))
 	}
 	return opts
 }
@@ -469,8 +504,24 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	opts.UseSSL = new(gofastly.Compatibool(resource["use_ssl"].(bool)))
 	opts.SSLCheckCert = new(gofastly.Compatibool(resource["ssl_check_cert"].(bool)))
 	opts.PreferIPv6 = new(gofastly.Compatibool(resource["prefer_ipv6"].(bool)))
+
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		opts.AutoLoadbalance = new(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
+		if v, ok := modified["iam_vendor"]; ok {
+			opts.IAMVendor = new(v.(string))
+		}
+		if v, ok := modified["iam_region"]; ok {
+			opts.IAMRegion = new(v.(string))
+		}
+		if v, ok := modified["iam_product"]; ok {
+			opts.IAMProduct = new(v.(string))
+		}
+		if v, ok := modified["iam_role"]; ok {
+			opts.IAMRole = new(v.(string))
+		}
+		if v, ok := modified["iam_external_id"]; ok {
+			opts.IAMExternalID = new(v.(string))
+		}
 	}
 
 	return opts
@@ -571,6 +622,21 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 			}
 			if resource.RequestCondition != nil {
 				data["request_condition"] = *resource.RequestCondition
+			}
+			if resource.IAMVendor != nil {
+				data["iam_vendor"] = *resource.IAMVendor
+			}
+			if resource.IAMRegion != nil {
+				data["iam_region"] = *resource.IAMRegion
+			}
+			if resource.IAMProduct != nil {
+				data["iam_product"] = *resource.IAMProduct
+			}
+			if resource.IAMRole != nil {
+				data["iam_role"] = *resource.IAMRole
+			}
+			if resource.IAMExternalID != nil {
+				data["iam_external_id"] = *resource.IAMExternalID
 			}
 		}
 

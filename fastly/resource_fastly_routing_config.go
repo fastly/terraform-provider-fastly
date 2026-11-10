@@ -298,11 +298,49 @@ func resourceFastlyRoutingConfigRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
+	pathList = orderRoutingConfigPathsLike(pathList, d.Get("path").([]interface{}))
+
 	if err := d.Set("path", pathList); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
+}
+
+// orderRoutingConfigPathsLike orders the API's paths (newest-first) to match
+// the paths already in state, keyed by `path`, to avoid a perpetual diff on
+// the `path` list. Paths not in state keep their API order, after the rest.
+func orderRoutingConfigPathsLike(actual []map[string]any, prior []interface{}) []map[string]any {
+	if len(prior) == 0 {
+		return actual
+	}
+
+	position := make(map[string]int, len(prior))
+	for i, raw := range prior {
+		pm, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if pathStr, ok := pm["path"].(string); ok {
+			position[pathStr] = i
+		}
+	}
+
+	ordered := make([]map[string]any, len(actual))
+	copy(ordered, actual)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		pi, iKnown := position[ordered[i]["path"].(string)]
+		pj, jKnown := position[ordered[j]["path"].(string)]
+		switch {
+		case iKnown && jKnown:
+			return pi < pj
+		case iKnown:
+			return true
+		default:
+			return false
+		}
+	})
+	return ordered
 }
 
 // resourceFastlyRoutingConfigReadTopLevel refreshes only the routing config's

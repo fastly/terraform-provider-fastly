@@ -49,6 +49,95 @@ func TestAccFastlyRoutingConfig_Basic(t *testing.T) {
 	})
 }
 
+func TestOrderRoutingConfigPathsLike(t *testing.T) {
+	apiOrder := []map[string]any{
+		{"path": "/c/*", "path_id": "3"},
+		{"path": "/oob/*", "path_id": "9"},
+		{"path": "/b/*", "path_id": "2"},
+		{"path": "/a/*", "path_id": "1"},
+	}
+	prior := []interface{}{
+		map[string]interface{}{"path": "/a/*"},
+		map[string]interface{}{"path": "/b/*"},
+		map[string]interface{}{"path": "/c/*"},
+	}
+
+	got := orderRoutingConfigPathsLike(apiOrder, prior)
+
+	want := []string{"/a/*", "/b/*", "/c/*", "/oob/*"}
+	for i, w := range want {
+		if got[i]["path"] != w {
+			t.Fatalf("position %d: got %v, want %v (full: %v)", i, got[i]["path"], w, got)
+		}
+	}
+
+	if got := orderRoutingConfigPathsLike(apiOrder, nil); got[0]["path"] != "/c/*" {
+		t.Fatalf("with no prior state the API order should be kept, got %v", got)
+	}
+}
+
+// TestAccFastlyRoutingConfig_PathOrder verifies that paths declared in an
+// order other than the API's newest-first listing produce no perpetual diff,
+// including after inserting a path mid-list.
+func TestAccFastlyRoutingConfig_PathOrder(t *testing.T) {
+	suffix := acctest.RandString(6)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRoutingConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingConfigPathOrderConfig(suffix, []string{"/a/*", "/b/*", "/c/*"}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_routing_config.example", "path.#", "3"),
+					resource.TestCheckResourceAttr("fastly_routing_config.example", "path.0.path", "/a/*"),
+					resource.TestCheckResourceAttr("fastly_routing_config.example", "path.2.path", "/c/*"),
+				),
+			},
+			{
+				Config: testAccRoutingConfigPathOrderConfig(suffix, []string{"/a/*", "/aa/*", "/b/*", "/c/*"}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_routing_config.example", "path.#", "4"),
+					resource.TestCheckResourceAttr("fastly_routing_config.example", "path.1.path", "/aa/*"),
+				),
+			},
+		},
+	})
+}
+
+func testAccRoutingConfigPathOrderConfig(suffix string, pathPatterns []string) string {
+	var blocks string
+	for _, p := range pathPatterns {
+		blocks += fmt.Sprintf(`
+  path {
+    path = %q
+
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.svc1.id
+    }
+  }
+`, p)
+	}
+
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "svc1" {
+  name          = "tf-test-routing-config-order-%[1]s"
+  force_destroy = true
+
+  backend {
+    address = "example.com"
+    name    = "tf-test-backend-1"
+  }
+}
+
+resource "fastly_routing_config" "example" {
+  name = "tf-test-routing-config-order-%[1]s"
+%[2]s}
+`, suffix, blocks)
+}
+
 func TestAccFastlyRoutingConfig_DuplicatePath(t *testing.T) {
 	suffix := acctest.RandString(6)
 

@@ -8,7 +8,7 @@
 
 ### BUG FIXES:
 
-- fix(routing_config): Preserve configured `path` order on refresh to avoid a perpetual plan diff
+- fix(routing_config): Preserve configured `path` order on refresh to avoid a perpetual plan diff ([#1471](https://github.com/fastly/terraform-provider-fastly/pull/1471))
 
 ### Dependencies
 

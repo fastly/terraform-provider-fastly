@@ -4,6 +4,14 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### Dependencies
+
+## 10.2.0 (November 12, 2026)
+
+### ENHANCEMENTS:
+
 - feat(service/backend): Add support for IAM authentication ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))
 
 ### BUG FIXES:
@@ -13,6 +21,7 @@
 - docs: Stop teaching classic domains in examples; use versionless `fastly_domain` resources and note that classic domains are limited to accounts created before 2025-09-16 ([#1475](https://github.com/fastly/terraform-provider-fastly/pull/1475))
 
 ### Dependencies
+
 - build(deps): upgrade go-fastly from v18.1.0 to v19.0.0 ([#1467](https://github.com/fastly/terraform-provider-fastly/pull/1467))
 - build(deps): upgrade go-fastly from v19.0.0 to v19.1.0 ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))
 - build(deps): `github.com/fastly/go-fastly/v19` from 19.1.0 to 19.2.0 ([#1472](https://github.com/fastly/terraform-provider-fastly/pull/1472))

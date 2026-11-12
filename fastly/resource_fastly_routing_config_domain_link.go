@@ -71,14 +71,33 @@ func resourceFastlyRoutingConfigDomainLinkRead(ctx context.Context, d *schema.Re
 	return nil
 }
 
+// newRoutingConfigUpdateInput builds a PATCH input that echoes back the domain's
+// current service_id and description, since unset values are sent as null and
+// would be cleared by the API.
+func newRoutingConfigUpdateInput(ctx context.Context, conn *gofastly.Client, domainID string, routingConfigID *gofastly.Nullable[string]) (*domains.UpdateInput, error) {
+	current, err := domains.Get(gofastly.NewContextForResourceID(ctx, domainID), conn, &domains.GetInput{DomainID: &domainID})
+	if err != nil {
+		return nil, err
+	}
+	input := &domains.UpdateInput{
+		DomainID:               &domainID,
+		RoutingConfigurationID: routingConfigID,
+		ServiceID:              current.ServiceID,
+	}
+	if current.Description != "" {
+		input.Description = &current.Description
+	}
+	return input, nil
+}
+
 func resourceFastlyRoutingConfigDomainLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &domains.UpdateInput{
-		DomainID:               new(d.Get("domain_id").(string)),
-		RoutingConfigurationID: gofastly.NewNullable(d.Get("routing_config_id").(string)),
+	input, err := newRoutingConfigUpdateInput(ctx, conn, d.Get("domain_id").(string), gofastly.NewNullable(d.Get("routing_config_id").(string)))
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)
+	_, err = domains.Update(gofastly.NewContextForResourceID(ctx, d.Get("domain_id").(string)), conn, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -89,11 +108,10 @@ func resourceFastlyRoutingConfigDomainLinkUpdate(ctx context.Context, d *schema.
 func resourceFastlyRoutingConfigDomainLinkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &domains.UpdateInput{
-		DomainID:               new(d.Id()),
-		RoutingConfigurationID: gofastly.NullValue[string](),
+	input, err := newRoutingConfigUpdateInput(ctx, conn, d.Id(), gofastly.NullValue[string]())
+	if err == nil {
+		_, err = domains.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, input)
 	}
-	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, input)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); !ok || !e.IsNotFound() {
 			return diag.FromErr(err)

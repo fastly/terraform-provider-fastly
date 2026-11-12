@@ -66,6 +66,103 @@ func TestAccFastlyRoutingConfigDomainLink_Drift(t *testing.T) {
 	})
 }
 
+// TestAccFastlyRoutingConfigDomainLink_PreservesServiceLink verifies that
+// linking a routing config to a domain that already has a service linked leaves
+// the domain's service_id intact, and that unlinking does not clear it either.
+func TestAccFastlyRoutingConfigDomainLink_PreservesServiceLink(t *testing.T) {
+	suffix := acctest.RandString(6)
+	linkConfig := testAccRoutingConfigDomainLinkWithServiceConfig(suffix, true)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRoutingConfigDomainLinkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingConfigDomainLinkWithServiceConfig(suffix, false),
+				Check:  testAccCheckDomainServiceLinked("fastly_domain.domain", "fastly_service_vcl.example"),
+			},
+			{
+				Config: linkConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("fastly_routing_config_domain_link.example", "routing_config_id"),
+					testAccCheckDomainServiceLinked("fastly_domain.domain", "fastly_service_vcl.example"),
+				),
+			},
+			{
+				Config: testAccRoutingConfigDomainLinkWithServiceConfig(suffix, false),
+				Check:  testAccCheckDomainServiceLinked("fastly_domain.domain", "fastly_service_vcl.example"),
+			},
+		},
+	})
+}
+
+// testAccCheckDomainServiceLinked asserts, via the API, that the domain still
+// has the given service linked.
+func testAccCheckDomainServiceLinked(domainResource, serviceResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		d, ok := s.RootModule().Resources[domainResource]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", domainResource)
+		}
+		svc, ok := s.RootModule().Resources[serviceResource]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", serviceResource)
+		}
+
+		conn := testAccProvider.Meta().(*APIClient).conn
+		domain, err := domains.Get(context.Background(), conn, &domains.GetInput{DomainID: new(d.Primary.Attributes["domain_id"])})
+		if err != nil {
+			return fmt.Errorf("error retrieving domain: %w", err)
+		}
+		if domain.ServiceID == nil || *domain.ServiceID != svc.Primary.ID {
+			return fmt.Errorf("expected domain service_id %q, got %v", svc.Primary.ID, domain.ServiceID)
+		}
+		return nil
+	}
+}
+
+func testAccRoutingConfigDomainLinkWithServiceConfig(suffix string, withLink bool) string {
+	cfg := fmt.Sprintf(`
+resource "fastly_service_vcl" "example" {
+  name          = "tf-test-routing-config-link-%[1]s"
+  force_destroy = true
+
+  backend {
+    address = "example.com"
+    name    = "tf-test-backend"
+  }
+}
+
+resource "fastly_routing_config" "example" {
+  name = "tf-test-routing-config-%[1]s"
+
+  path {
+    path = "/api/*"
+
+    rule {
+      action_type  = "service"
+      action_value = fastly_service_vcl.example.id
+    }
+  }
+}
+
+resource "fastly_domain" "domain" {
+  fqdn       = "test-%[1]s.example.com"
+  service_id = fastly_service_vcl.example.id
+}
+`, suffix)
+	if withLink {
+		cfg += `
+resource "fastly_routing_config_domain_link" "example" {
+  domain_id         = fastly_domain.domain.domain_id
+  routing_config_id = fastly_routing_config.example.routing_config_id
+}
+`
+	}
+	return cfg
+}
+
 // testAccRoutingConfigDomainLinkUnlink unlinks the domain identified by the
 // named resource's `domain_id` directly through the API, simulating drift
 // that happened outside of Terraform.

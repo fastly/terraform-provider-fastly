@@ -1,10 +1,6 @@
 resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
 }
 
 

@@ -6,11 +6,6 @@ variable "mydict_name" {
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   dictionary {
     name = var.mydict_name
   }

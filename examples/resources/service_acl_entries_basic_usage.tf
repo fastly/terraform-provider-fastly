@@ -6,11 +6,6 @@ variable "myacl_name" {
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
-  domain {
-    name = "demo.notexample.com"
-    comment = "demo"
-  }
-
   backend {
     address = "http-me.fastly.dev"
     name = "Glitch Test Site"

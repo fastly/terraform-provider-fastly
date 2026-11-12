@@ -1,11 +1,6 @@
 resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   backend {
     address       = "http-me.fastly.dev"
     name          = "Glitch Test Site"
@@ -43,4 +38,10 @@ resource "aws_s3_bucket_website_configuration" "website_config" {
   error_document {
     key = "error.html"
   }
+}
+
+resource "fastly_domain" "demo" {
+  fqdn        = "demo.notexample.com"
+  description = "demo"
+  service_id  = fastly_service_vcl.demo.id
 }

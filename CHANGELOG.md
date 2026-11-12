@@ -10,6 +10,7 @@
 
 - fix(routing_config_domain_link): Preserve the domain's existing `service_id` and `description` when linking/unlinking a routing config ([#1474](https://github.com/fastly/terraform-provider-fastly/pull/1474))
 - fix(routing_config): Preserve configured `path` order on refresh to avoid a perpetual plan diff ([#1471](https://github.com/fastly/terraform-provider-fastly/pull/1471))
+- docs: Stop teaching classic domains in examples; use versionless `fastly_domain` resources and note that classic domains are limited to accounts created before 2025-09-16
 
 ### Dependencies
 - build(deps): upgrade go-fastly from v18.1.0 to v19.0.0 ([#1467](https://github.com/fastly/terraform-provider-fastly/pull/1467))

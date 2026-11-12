@@ -18,10 +18,6 @@ Use this data source to get a list of [Fastly VCL Snippets][1] for the specified
 resource "fastly_service_vcl" "example" {
   name = "Example Service"
 
-  domain {
-    name = "example.com"
-  }
-
   force_destroy = true
 }
 

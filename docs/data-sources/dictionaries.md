@@ -16,10 +16,6 @@ Use this data source to get a list of [Fastly dictionaries][1] for the specified
 resource "fastly_service_vcl" "example" {
   name = "Example Service"
 
-  domain {
-    name = "example.com"
-  }
-
   dictionary {
     name = "example_1"
   }

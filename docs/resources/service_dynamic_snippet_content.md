@@ -22,11 +22,6 @@ Basic usage:
 resource "fastly_service_vcl" "myservice" {
   name = "snippet_test"
 
-  domain {
-    name    = "snippet.fastlytestdomain.com"
-    comment = "snippet test"
-  }
-
   backend {
     address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
@@ -61,11 +56,6 @@ Multiple dynamic snippets:
 ```terraform
 resource "fastly_service_vcl" "myservice" {
   name = "snippet_test"
-
-  domain {
-    name    = "snippet.fastlytestdomain.com"
-    comment = "snippet test"
-  }
 
   backend {
     address = "http-me.fastly.dev"
@@ -137,10 +127,6 @@ Usage:
 ```terraform
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
   dynamicsnippet {
     name     = "My Dynamic Snippet"
     type     = "recv"

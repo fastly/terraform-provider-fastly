@@ -1,10 +1,6 @@
 resource "fastly_service_vcl" "example" {
   name = "Example Service"
 
-  domain {
-    name = "example.com"
-  }
-
   force_destroy = true
 }
 

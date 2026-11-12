@@ -9,11 +9,6 @@ locals {
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.ocnotexample.com"
-    comment = "demo"
-  }
-
   backend {
     address = "http-me.fastly.dev"
     name    = "Glitch Test Site"

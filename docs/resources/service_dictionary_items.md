@@ -33,11 +33,6 @@ variable "mydict_name" {
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   backend {
     address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
@@ -82,11 +77,6 @@ variable "mydict" {
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   backend {
     address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
@@ -123,11 +113,6 @@ locals {
 // Define the standard service that will be used to manage the dictionaries.
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
-
-  domain {
-    name    = "demo.ocnotexample.com"
-    comment = "demo"
-  }
 
   backend {
     address = "http-me.fastly.dev"
@@ -182,11 +167,6 @@ variable "mydict_name" {
 
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
-
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
 
   dictionary {
     name = var.mydict_name

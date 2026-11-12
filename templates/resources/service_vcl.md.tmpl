@@ -16,6 +16,10 @@ The Service resource requires a domain name that is correctly set up to direct
 traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
 on their documentation site for guidance.
 
+~> **Note:** The nested `domain` block uses classic domains, which are only
+available to accounts created before 2025-09-16. Use the versionless
+`fastly_domain` resource to attach domains to a service, as in the examples below.
+
 ## Activation and Staging
 
 By default, the `activate` attribute is `true`, and the `stage`

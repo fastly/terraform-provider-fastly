@@ -1,10 +1,6 @@
 resource "fastly_service_vcl" "example" {
   name = "Example Service"
 
-  domain {
-    name = "example.com"
-  }
-
   dictionary {
     name = "example_1"
   }

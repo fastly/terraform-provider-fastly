@@ -35,7 +35,7 @@ func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Optional:    true,
-		Description: "A set of Domain names to serve as entry points for your Service",
+		Description: "A set of Domain names to serve as entry points for your Service. Classic domains are only available to accounts created before 2025-09-16; for newer accounts use the versionless `fastly_domain` resource instead.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"comment": {

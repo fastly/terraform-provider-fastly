@@ -12,6 +12,8 @@ Provides a Fastly Compute service. Compute is a computation platform capable of 
 
 The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
+~> **Note:** The nested `domain` block uses classic domains, which are only available to accounts created before 2025-09-16. Use the versionless `fastly_domain` resource to attach domains to a service, as in the examples below.
+
 ~> **Note:** If you omit the `package` block, you must set `activate = false` to avoid service validation errors.
 
 ## Activation and Staging
@@ -54,17 +56,18 @@ data "fastly_package_hash" "example" {
 resource "fastly_service_compute" "example" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   package {
     filename         = "package.tar.gz"
     source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true
+}
+
+resource "fastly_domain" "example" {
+  fqdn        = "demo.notexample.com"
+  description = "demo"
+  service_id  = fastly_service_compute.example.id
 }
 ```
 
@@ -110,7 +113,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Description field for the service. This versionless attribute is updated regardless of the `activate` and `stage` settings. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
-- `domain` (Block Set) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
+- `domain` (Block Set) A set of Domain names to serve as entry points for your Service. Classic domains are only available to accounts created before 2025-09-16; for newer accounts use the versionless `fastly_domain` resource instead. (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - `healthcheck` (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - `image_optimizer_default_settings` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--image_optimizer_default_settings))

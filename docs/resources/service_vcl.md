@@ -16,6 +16,10 @@ The Service resource requires a domain name that is correctly set up to direct
 traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
 on their documentation site for guidance.
 
+~> **Note:** The nested `domain` block uses classic domains, which are only
+available to accounts created before 2025-09-16. Use the versionless
+`fastly_domain` resource to attach domains to a service, as in the examples below.
+
 ## Activation and Staging
 
 By default, the `activate` attribute is `true`, and the `stage`
@@ -52,11 +56,6 @@ Basic usage:
 resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   backend {
     address = "127.0.0.1"
     name    = "localhost"
@@ -65,6 +64,12 @@ resource "fastly_service_vcl" "demo" {
 
   force_destroy = true
 }
+
+resource "fastly_domain" "demo" {
+  fqdn        = "demo.notexample.com"
+  description = "demo"
+  service_id  = fastly_service_vcl.demo.id
+}
 ```
 
 Basic usage with an Amazon S3 Website and that removes the `x-amz-request-id` header:
@@ -72,11 +77,6 @@ Basic usage with an Amazon S3 Website and that removes the `x-amz-request-id` he
 ```terraform
 resource "fastly_service_vcl" "demo" {
   name = "demofastly"
-
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
 
   backend {
     address       = "http-me.fastly.dev"
@@ -116,6 +116,12 @@ resource "aws_s3_bucket_website_configuration" "website_config" {
     key = "error.html"
   }
 }
+
+resource "fastly_domain" "demo" {
+  fqdn        = "demo.notexample.com"
+  description = "demo"
+  service_id  = fastly_service_vcl.demo.id
+}
 ```
 
 Basic usage with [custom
@@ -124,11 +130,6 @@ VCL](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/):
 ```terraform
 resource "fastly_service_vcl" "demo" {
   name = "demofastly"
-
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
 
   backend {
     address = "127.0.0.1"
@@ -149,6 +150,12 @@ resource "fastly_service_vcl" "demo" {
     content = file("${path.module}/my_custom_library.vcl")
   }
 }
+
+resource "fastly_domain" "demo" {
+  fqdn        = "demo.notexample.com"
+  description = "demo"
+  service_id  = fastly_service_vcl.demo.id
+}
 ```
 
 Basic usage with [custom Director](https://developer.fastly.com/reference/api/load-balancing/directors/director/):
@@ -156,11 +163,6 @@ Basic usage with [custom Director](https://developer.fastly.com/reference/api/lo
 ```terraform
 resource "fastly_service_vcl" "demo" {
   name = "demofastly"
-
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
 
   backend {
     address = "127.0.0.1"
@@ -182,6 +184,12 @@ resource "fastly_service_vcl" "demo" {
   }
 
   force_destroy = true
+}
+
+resource "fastly_domain" "demo" {
+  fqdn        = "demo.notexample.com"
+  description = "demo"
+  service_id  = fastly_service_vcl.demo.id
 }
 ```
 
@@ -235,7 +243,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `default_ttl` (Number) The default Time-to-live (TTL) for requests
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - `director` (Block Set) (see [below for nested schema](#nestedblock--director))
-- `domain` (Block Set) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
+- `domain` (Block Set) A set of Domain names to serve as entry points for your Service. Classic domains are only available to accounts created before 2025-09-16; for newer accounts use the versionless `fastly_domain` resource instead. (see [below for nested schema](#nestedblock--domain))
 - `dynamicsnippet` (Block Set) (see [below for nested schema](#nestedblock--dynamicsnippet))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - `gzip` (Block Set) (see [below for nested schema](#nestedblock--gzip))

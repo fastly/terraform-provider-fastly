@@ -73,14 +73,6 @@ locals {
 resource "fastly_service_vcl" "example" {
   name = "example-service"
 
-  dynamic "domain" {
-    for_each = local.subdomains
-
-    content {
-      name = domain.value
-    }
-  }
-
   backend {
     address = "127.0.0.1"
     name    = "localhost"
@@ -89,8 +81,14 @@ resource "fastly_service_vcl" "example" {
   force_destroy = true
 }
 
+resource "fastly_domain" "example" {
+  for_each   = toset(local.subdomains)
+  fqdn       = each.value
+  service_id = fastly_service_vcl.example.id
+}
+
 resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
+  domains               = [for domain in fastly_domain.example : domain.fqdn]
   certificate_authority = "lets-encrypt"
 }
 
@@ -196,14 +194,6 @@ locals {
 resource "fastly_service_vcl" "example" {
   name = "example-service"
 
-  dynamic "domain" {
-    for_each = local.domains
-
-    content {
-      name = domain.value
-    }
-  }
-
   backend {
     address = "127.0.0.1"
     name    = "localhost"
@@ -212,8 +202,14 @@ resource "fastly_service_vcl" "example" {
   force_destroy = true
 }
 
+resource "fastly_domain" "example" {
+  for_each   = toset(local.domains)
+  fqdn       = each.value
+  service_id = fastly_service_vcl.example.id
+}
+
 resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
+  domains               = [for domain in fastly_domain.example : domain.fqdn]
   certificate_authority = "lets-encrypt"
 }
 

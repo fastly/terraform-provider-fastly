@@ -54,9 +54,6 @@ variable "zone" {
 
 resource "fastly_service_vcl" "example" {
   name = "example"
-  domain {
-    name = "www.${var.zone}"
-  }
   backend {
     address = "httpbin.org"
     name    = "httpbin"
@@ -64,8 +61,13 @@ resource "fastly_service_vcl" "example" {
   force_destroy = true
 }
 
+resource "fastly_domain" "www" {
+  fqdn       = "www.${var.zone}"
+  service_id = fastly_service_vcl.example.id
+}
+
 resource "fastly_tls_subscription" "www" {
-  domains               = [for domain in fastly_service_vcl.example.domain : domain.name if domain.name == "www.${var.zone}"]
+  domains               = [fastly_domain.www.fqdn]
   certificate_authority = "certainly"
 }
 
@@ -145,12 +147,6 @@ variable "zone" {
 
 resource "fastly_service_vcl" "example" {
   name = "example"
-  domain {
-    name = "foo.${var.zone}"
-  }
-  domain {
-    name = "bar.${var.zone}"
-  }
   backend {
     address = "httpbin.org"
     name    = "httpbin"
@@ -158,8 +154,14 @@ resource "fastly_service_vcl" "example" {
   force_destroy = true
 }
 
+resource "fastly_domain" "example" {
+  for_each   = toset(["foo.${var.zone}", "bar.${var.zone}"])
+  fqdn       = each.value
+  service_id = fastly_service_vcl.example.id
+}
+
 resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
+  domains               = [for domain in fastly_domain.example : domain.fqdn]
   certificate_authority = "certainly"
 }
 

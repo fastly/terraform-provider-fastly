@@ -1,11 +1,6 @@
 resource "fastly_service_vcl" "myservice" {
   name = "snippet_test"
 
-  domain {
-    name    = "snippet.fastlytestdomain.com"
-    comment = "snippet test"
-  }
-
   backend {
     address = "http-me.fastly.dev"
     name    = "Glitch Test Site"

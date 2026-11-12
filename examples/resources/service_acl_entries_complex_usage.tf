@@ -19,11 +19,6 @@ locals {
 resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
   backend {
     address = "1.2.3.4"
     name    = "localhost"

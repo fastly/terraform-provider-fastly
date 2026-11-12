@@ -9,8 +9,9 @@
 ### BUG FIXES:
 
 ### Dependencies
-
 - build(deps): upgrade go-fastly from v18.1.0 to v19.0.0 ([#1467](https://github.com/fastly/terraform-provider-fastly/pull/1467))
+- build(deps): upgrade go-fastly from v19.0.0 to v19.1.0 ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))
+- build(deps): `github.com/fastly/go-fastly/v19` from 19.1.0 to 19.2.0 ([#1472](https://github.com/fastly/terraform-provider-fastly/pull/1472))
 - build(deps): upgrade go-fastly from v19.0.0 to v19.1.0 ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))
 
 ## 10.1.0 (October 26, 2026)

@@ -8,6 +8,8 @@
 
 ### BUG FIXES:
 
+- fix(routing_config): Preserve configured `path` order on refresh to avoid a perpetual plan diff ([#1471](https://github.com/fastly/terraform-provider-fastly/pull/1471))
+
 ### Dependencies
 - build(deps): upgrade go-fastly from v18.1.0 to v19.0.0 ([#1467](https://github.com/fastly/terraform-provider-fastly/pull/1467))
 - build(deps): upgrade go-fastly from v19.0.0 to v19.1.0 ([#1470](https://github.com/fastly/terraform-provider-fastly/pull/1470))

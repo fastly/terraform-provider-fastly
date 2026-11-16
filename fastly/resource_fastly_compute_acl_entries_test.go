@@ -3,8 +3,11 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -216,17 +219,12 @@ func testAccCheckFastlyComputeACLEntriesRemoteState(want map[string]string) reso
 
 		id := r.Primary.Attributes["compute_acl_id"]
 		conn := testAccProvider.Meta().(*APIClient).conn
-		resp, err := computeacls.ListEntries(context.TODO(), conn, &computeacls.ListEntriesInput{
-			ComputeACLID: &id,
-		})
+		entries, err := listAllComputeACLEntries(context.TODO(), conn, id)
 		if err != nil {
 			return err
 		}
 
-		got := make(map[string]string)
-		for _, entry := range resp.Entries {
-			got[entry.Prefix] = entry.Action
-		}
+		got := flattenComputeACLEntries(entries)
 
 		if !reflect.DeepEqual(got, want) {
 			return fmt.Errorf("error matching remote state:\nexpected: %#v\ngot: %#v", want, got)
@@ -351,4 +349,60 @@ resource "fastly_compute_acl_entries" "example" {
   manage_entries = true
 }
 `, name)
+}
+
+func TestListAllComputeACLEntriesFollowsPagination(t *testing.T) {
+	const aclID = "compute-acl-id"
+
+	pages := map[string]string{
+		"":       `{"entries":[{"prefix":"192.0.2.0/24","action":"ALLOW"},{"prefix":"198.51.100.0/24","action":"BLOCK"}],"meta":{"limit":100,"next_cursor":"page-2"}}`,
+		"page-2": `{"entries":[{"prefix":"203.0.113.0/24","action":"BLOCK"}],"meta":{"limit":100,"next_cursor":"page-3"}}`,
+		"page-3": `{"entries":[{"prefix":"2001:db8::/32","action":"ALLOW"}],"meta":{"limit":100,"next_cursor":""}}`,
+	}
+
+	var requestedCursors []string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if want := "/resources/acls/" + aclID + "/entries"; r.URL.Path != want {
+			t.Errorf("unexpected path: got %q, want %q", r.URL.Path, want)
+		}
+		if got := r.URL.Query().Get("limit"); got != strconv.Itoa(computeACLEntriesPageLimit) {
+			t.Errorf("unexpected limit: got %q, want %d", got, computeACLEntriesPageLimit)
+		}
+		cursor := r.URL.Query().Get("cursor")
+		requestedCursors = append(requestedCursors, cursor)
+		body, ok := pages[cursor]
+		if !ok {
+			t.Errorf("unexpected cursor requested: %q", cursor)
+			http.Error(w, "unexpected cursor", http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(body))
+	}))
+	defer ts.Close()
+
+	conn, err := gofastly.NewClientForEndpoint("test-key", ts.URL)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	entries, err := listAllComputeACLEntries(context.Background(), conn, aclID)
+	if err != nil {
+		t.Fatalf("unexpected error listing entries: %v", err)
+	}
+
+	wantCursors := []string{"", "page-2", "page-3"}
+	if !reflect.DeepEqual(requestedCursors, wantCursors) {
+		t.Fatalf("unexpected cursors requested:\nexpected: %#v\ngot: %#v", wantCursors, requestedCursors)
+	}
+
+	want := map[string]string{
+		"192.0.2.0/24":    "ALLOW",
+		"198.51.100.0/24": "BLOCK",
+		"203.0.113.0/24":  "BLOCK",
+		"2001:db8::/32":   "ALLOW",
+	}
+	if got := flattenComputeACLEntries(entries); !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected entries:\nexpected: %#v\ngot: %#v", want, got)
+	}
 }

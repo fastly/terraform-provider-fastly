@@ -79,9 +79,7 @@ func resourceFastlyComputeACLEntriesRead(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] REFRESH: Compute ACL Entries")
 
 	id := d.Get("compute_acl_id").(string)
-	remoteState, err := computeacls.ListEntries(ctx, conn, &computeacls.ListEntriesInput{
-		ComputeACLID: &id,
-	})
+	remoteEntries, err := listAllComputeACLEntries(ctx, conn, id)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] No Compute ACL found '%s'", id)
@@ -91,7 +89,7 @@ func resourceFastlyComputeACLEntriesRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	entries := flattenComputeACLEntries(remoteState.Entries)
+	entries := flattenComputeACLEntries(remoteEntries)
 	if err := d.Set("entries", entries); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting 'entries': %w", err))
 	}
@@ -173,14 +171,12 @@ func reconcileComputeACLEntriesAfterEnablingManagement(ctx context.Context, d *s
 	id := d.Get("compute_acl_id").(string)
 	desiredEntries := d.Get("entries").(map[string]any)
 
-	remoteState, err := computeacls.ListEntries(ctx, conn, &computeacls.ListEntriesInput{
-		ComputeACLID: &id,
-	})
+	allRemoteEntries, err := listAllComputeACLEntries(ctx, conn, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	remoteEntries := flattenComputeACLEntries(remoteState.Entries)
+	remoteEntries := flattenComputeACLEntries(allRemoteEntries)
 	var batch []*computeacls.BatchComputeACLEntry
 
 	for prefix := range remoteEntries {
@@ -243,6 +239,36 @@ func resourceFastlyComputeACLEntriesDelete(ctx context.Context, d *schema.Resour
 	d.SetId("")
 
 	return nil
+}
+
+const computeACLEntriesPageLimit = 100
+
+// listAllComputeACLEntries follows the pagination cursor until every entry in the Compute ACL has been fetched.
+func listAllComputeACLEntries(ctx context.Context, conn *gofastly.Client, computeACLID string) ([]computeacls.ComputeACLEntry, error) {
+	var allEntries []computeacls.ComputeACLEntry
+	var cursor *string
+	limit := computeACLEntriesPageLimit
+
+	for {
+		remoteState, err := computeacls.ListEntries(ctx, conn, &computeacls.ListEntriesInput{
+			ComputeACLID: &computeACLID,
+			Cursor:       cursor,
+			Limit:        &limit,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allEntries = append(allEntries, remoteState.Entries...)
+
+		next := remoteState.Meta.NextCursor
+		if next == "" || (cursor != nil && next == *cursor) {
+			break
+		}
+		cursor = &next
+	}
+
+	return allEntries, nil
 }
 
 // flattenComputeACLEntries models data into format suitable for saving to

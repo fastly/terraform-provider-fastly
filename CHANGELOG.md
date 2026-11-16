@@ -6,6 +6,8 @@
 
 ### BUG FIXES:
 
+- fix(compute_acl_entries): paginate when reading Compute ACL entries so ACLs with more than 100 entries are fully refreshed into state ([#1477](https://github.com/fastly/terraform-provider-fastly/pull/1477))
+
 ### Dependencies
 
 ## 10.2.0 (November 12, 2026)

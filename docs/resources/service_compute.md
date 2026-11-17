@@ -123,6 +123,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_datadog` (Block Set) (see [below for nested schema](#nestedblock--logging_datadog))
 - `logging_digitalocean` (Block Set) (see [below for nested schema](#nestedblock--logging_digitalocean))
 - `logging_elasticsearch` (Block Set) (see [below for nested schema](#nestedblock--logging_elasticsearch))
+- `logging_fos` (Block Set) (see [below for nested schema](#nestedblock--logging_fos))
 - `logging_ftp` (Block Set) (see [below for nested schema](#nestedblock--logging_ftp))
 - `logging_gcs` (Block Set) (see [below for nested schema](#nestedblock--logging_gcs))
 - `logging_googlepubsub` (Block Set) (see [below for nested schema](#nestedblock--logging_googlepubsub))
@@ -395,6 +396,27 @@ Optional:
 - `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)
 - `user` (String) BasicAuth username for Elasticsearch
+
+
+<a id="nestedblock--logging_fos"></a>
+### Nested Schema for `logging_fos`
+
+Required:
+
+- `bucket_name` (String) The name of the Fastly Object Storage bucket in which to store the logs
+- `name` (String) The unique name of the Fastly Object Storage logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `region` (String) The region of the Fastly Object Storage bucket (e.g. `us-east`)
+
+Optional:
+
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `file_max_bytes` (Number) Maximum size of an uploaded log file, if non-zero. The minimum value is 1048576 bytes (1 MiB).
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
+- `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_ftp"></a>

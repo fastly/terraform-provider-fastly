@@ -4,13 +4,19 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### Dependencies
+
+## 10.3.0 (November 17, 2026)
+
+### ENHANCEMENTS:
+
 - feat(service): Add `logging_fos` block to `fastly_service_vcl` and `fastly_service_compute` for logging to Fastly Object Storage ([#1481](https://github.com/fastly/terraform-provider-fastly/pull/1481))
 
 ### BUG FIXES:
 
 - fix(compute_acl_entries): paginate when reading Compute ACL entries so ACLs with more than 100 entries are fully refreshed into state ([#1477](https://github.com/fastly/terraform-provider-fastly/pull/1477))
-
-### Dependencies
 
 ## 10.2.0 (November 12, 2026)
 

@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: bot_management_bot"
+sidebar_current: "docs-fastly-resource-bot_management_bot"
+description: |-
+  Manages the action of a predefined bot in a Fastly Bot Management workspace.
+---
+
+# fastly_bot_management_bot
+
+Manages the action of a predefined bot in a Fastly Bot Management workspace, either overriding the action of the category it belongs to or inheriting it.
+
+Bots are defined by Fastly and can't be created or deleted. Use the `fastly_bot_management_bots` data source to list the available bot IDs. Destroying this resource only removes it from Terraform state; the bot's action is left unchanged. To clear the bot's override so it follows its category's action, set `action` to `inherit`.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/bot_management_bot_basic_usage.tf" }}
+
+## Import
+
+Fastly Bot Management bots can be imported using their workspace ID, category ID, and bot ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/bot_management_bot_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

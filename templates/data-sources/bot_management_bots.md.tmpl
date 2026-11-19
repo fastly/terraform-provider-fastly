@@ -1,0 +1,18 @@
+---
+page_title: "Fastly: fastly_bot_management_bots"
+sidebar_current: "docs-fastly-datasource-fastly_bot_management_bots"
+description: |-
+  Get information about the bots in a Fastly Bot Management workspace.
+---
+
+# fastly_bot_management_bots
+
+Use this data source to list the predefined bots in a [Fastly Bot Management workspace][1], optionally limited to one category, for example to find bot IDs for `fastly_bot_management_bot`.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/bot_management_bots.tf" }}
+
+[1]: https://www.fastly.com/documentation/reference/api/bot-management/
+
+{{ .SchemaMarkdown | trimspace }}

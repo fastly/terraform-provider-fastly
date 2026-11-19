@@ -1,0 +1,1 @@
+$ terraform import fastly_bot_management_workspace.example <workspace_id>

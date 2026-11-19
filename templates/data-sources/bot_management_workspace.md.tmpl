@@ -1,0 +1,20 @@
+---
+page_title: "Fastly: fastly_bot_management_workspace"
+sidebar_current: "docs-fastly-datasource-fastly_bot_management_workspace"
+description: |-
+  Get information about a Fastly Bot Management workspace.
+---
+
+# fastly_bot_management_workspace
+
+Use this data source to look up a [Fastly Bot Management workspace][1], either by the ID of a service attached to it or by its workspace ID. Exactly one of `service_id` or `workspace_id` must be set.
+
+~> **Warning:** A Bot Management workspace is created the first time `contentguard` is set to `on` in a service's `product_enablement` `bot_management` block. Set it in a separate `apply` before looking up the workspace with the `fastly_bot_management_workspace` data source.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/bot_management_workspace.tf" }}
+
+[1]: https://www.fastly.com/documentation/reference/api/bot-management/
+
+{{ .SchemaMarkdown | trimspace }}

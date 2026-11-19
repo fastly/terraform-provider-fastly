@@ -4,7 +4,7 @@
 
 ### ENHANCEMENTS:
 
-- feat(bot_management): Add resources and data sources for managing Bot Management workspaces, categories, and bots ([#TBD](https://github.com/fastly/terraform-provider-fastly/pull/TBD))
+- feat(bot_management): Add resources and data sources for managing Bot Management workspaces, categories, and bots ([#1484](https://github.com/fastly/terraform-provider-fastly/pull/1484))
 
 ### BUG FIXES:
 

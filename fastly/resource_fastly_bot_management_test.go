@@ -120,6 +120,10 @@ func TestAccFastlyBotManagement_lifecycle(t *testing.T) {
 						"bot_id":      testBotManagementBotID,
 						"category_id": testBotManagementCategoryID,
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs("data.fastly_bot_management_bots.all", "bots.*", map[string]string{
+						"bot_id":      testBotManagementBotID,
+						"category_id": testBotManagementCategoryID,
+					}),
 				),
 			},
 			{
@@ -255,6 +259,10 @@ data "fastly_bot_management_categories" "test" {
 data "fastly_bot_management_bots" "test" {
   workspace_id = data.fastly_bot_management_workspace.by_service.id
   category_id  = "%s"
+}
+
+data "fastly_bot_management_bots" "all" {
+  workspace_id = data.fastly_bot_management_workspace.by_service.id
 }
 `, workspaceName, protectionMode, testBotManagementCategoryID, categoryAction, testBotManagementCategoryID)
 

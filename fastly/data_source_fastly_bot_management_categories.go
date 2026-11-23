@@ -1,8 +1,10 @@
 package fastly
 
 import (
+	"cmp"
 	"context"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -67,6 +69,9 @@ func dataSourceFastlyBotManagementCategoriesRead(ctx context.Context, d *schema.
 	if err != nil {
 		return diag.Errorf("error listing Bot Management categories: %s", err)
 	}
+	slices.SortFunc(categories, func(a, b policy.Category) int {
+		return cmp.Compare(a.CategoryID, b.CategoryID)
+	})
 
 	ids := []string{workspaceID}
 	result := make([]map[string]any, 0, len(categories))

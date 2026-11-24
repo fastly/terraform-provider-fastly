@@ -1,0 +1,18 @@
+---
+page_title: "Fastly: fastly_bot_management_categories"
+sidebar_current: "docs-fastly-datasource-fastly_bot_management_categories"
+description: |-
+  Get information about the bot categories in a Fastly Bot Management workspace.
+---
+
+# fastly_bot_management_categories
+
+Use this data source to list the predefined bot categories in a [Fastly Bot Management workspace][1], for example to find category IDs for `fastly_bot_management_category`.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/bot_management_categories.tf" }}
+
+[1]: https://www.fastly.com/documentation/reference/api/bot-management/
+
+{{ .SchemaMarkdown | trimspace }}

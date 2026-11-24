@@ -1,0 +1,37 @@
+---
+layout: "fastly"
+page_title: "Fastly: bot_management_workspace"
+sidebar_current: "docs-fastly-resource-bot_management_workspace"
+description: |-
+  Manages the settings of an existing Fastly Bot Management workspace.
+---
+
+# fastly_bot_management_workspace
+
+Manages the settings of an existing Fastly Bot Management workspace: its protection mode, name, and description.
+
+Destroying the resource only removes it from Terraform state; the workspace's settings are left unchanged.
+
+~> **Note:** A Bot Management workspace is not a Next-Gen WAF workspace. Its ID can't be used with `fastly_ngwaf_*` resources.
+
+~> **Warning:** A Bot Management workspace is created the first time `contentguard` is set to `on` in a service's `product_enablement` `bot_management` block. Set it in a separate `apply` before looking up the workspace with the `fastly_bot_management_workspace` data source.
+
+`protection_mode` gates all enforcement in the workspace:
+
+* `off`: no enforcement, regardless of category and bot actions.
+* `log`: bots are detected and logged, but no requests are blocked or challenged.
+* `block`: category and bot actions are enforced.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/bot_management_workspace_basic_usage.tf" }}
+
+## Import
+
+Fastly Bot Management workspaces can be imported using their workspace ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/bot_management_workspace_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

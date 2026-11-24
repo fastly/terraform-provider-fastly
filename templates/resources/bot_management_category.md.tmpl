@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: bot_management_category"
+sidebar_current: "docs-fastly-resource-bot_management_category"
+description: |-
+  Manages the action of a predefined bot category in a Fastly Bot Management workspace.
+---
+
+# fastly_bot_management_category
+
+Manages the action of a predefined bot category in a Fastly Bot Management workspace. The category's action applies to every bot in the category that is set to `inherit`, including bots that Fastly adds to the category later. Bots with their own action, set with `fastly_bot_management_bot`, keep it.
+
+Categories are defined by Fastly and can't be created or deleted. Use the `fastly_bot_management_categories` data source to list the available category IDs. Destroying this resource only removes it from Terraform state; the category's action is left unchanged.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/bot_management_category_basic_usage.tf" }}
+
+## Import
+
+Fastly Bot Management categories can be imported using their workspace ID and category ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/bot_management_category_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

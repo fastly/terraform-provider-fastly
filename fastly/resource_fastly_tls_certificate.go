@@ -91,7 +91,7 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 		input.Name = v.(string)
 	}
 
-	output, err := conn.CreateCustomTLSCertificate(ctx, input)
+	output, err := conn.CreateCustomTLSCertificate(withResourceLock(ctx, ""), input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -170,7 +170,7 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 		input.Name = v.(string)
 	}
 
-	_, err := conn.UpdateCustomTLSCertificate(ctx, input)
+	_, err := conn.UpdateCustomTLSCertificate(withResourceLock(ctx, d.Id()), input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -181,7 +181,7 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 func resourceFastlyTLSCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteCustomTLSCertificate(ctx, &fastly.DeleteCustomTLSCertificateInput{
+	err := conn.DeleteCustomTLSCertificate(withResourceLock(ctx, d.Id()), &fastly.DeleteCustomTLSCertificateInput{
 		ID: d.Id(),
 	})
 	if err != nil {

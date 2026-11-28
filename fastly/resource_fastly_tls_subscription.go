@@ -177,7 +177,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 		commonName = &gofastly.TLSDomain{ID: v.(string)}
 	}
 
-	subscription, err := conn.CreateTLSSubscription(ctx, &gofastly.CreateTLSSubscriptionInput{
+	subscription, err := conn.CreateTLSSubscription(withResourceLock(ctx, ""), &gofastly.CreateTLSSubscriptionInput{
 		CertificateAuthority: d.Get("certificate_authority").(string),
 		Configuration:        configuration,
 		Domains:              domains,
@@ -394,7 +394,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		conn := meta.(*APIClient).conn
-		_, err := conn.UpdateTLSSubscription(ctx, updates)
+		_, err := conn.UpdateTLSSubscription(withResourceLock(ctx, d.Id()), updates)
 		if err != nil {
 			return diag.Errorf("error updating TLS subscription (%s) for domains [%s]: %s", d.Id(), strings.Join(domainStrings, ", "), err)
 		}
@@ -407,7 +407,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 func resourceFastlyTLSSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteTLSSubscription(ctx, &gofastly.DeleteTLSSubscriptionInput{
+	err := conn.DeleteTLSSubscription(withResourceLock(ctx, d.Id()), &gofastly.DeleteTLSSubscriptionInput{
 		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})

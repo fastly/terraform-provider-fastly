@@ -52,7 +52,7 @@ func resourceServiceAuthorization() *schema.Resource {
 func resourceServiceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	sa, err := conn.CreateServiceAuthorization(ctx, &gofastly.CreateServiceAuthorizationInput{
+	sa, err := conn.CreateServiceAuthorization(withResourceLock(ctx, ""), &gofastly.CreateServiceAuthorizationInput{
 		Service:    &gofastly.SAService{ID: d.Get("service_id").(string)},
 		User:       &gofastly.SAUser{ID: d.Get("user_id").(string)},
 		Permission: d.Get("permission").(string),
@@ -98,7 +98,7 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	if d.HasChanges("permission") {
-		_, err := conn.UpdateServiceAuthorization(ctx, &gofastly.UpdateServiceAuthorizationInput{
+		_, err := conn.UpdateServiceAuthorization(withResourceLock(ctx, d.Id()), &gofastly.UpdateServiceAuthorizationInput{
 			ID:         d.Id(),
 			Permission: d.Get("permission").(string),
 		})
@@ -113,7 +113,7 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 func resourceServiceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteServiceAuthorization(ctx, &gofastly.DeleteServiceAuthorizationInput{
+	err := conn.DeleteServiceAuthorization(withResourceLock(ctx, d.Id()), &gofastly.DeleteServiceAuthorizationInput{
 		ID: d.Id(),
 	})
 	if err != nil {

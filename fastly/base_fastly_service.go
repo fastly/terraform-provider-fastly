@@ -7,7 +7,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -288,7 +287,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	conn := meta.(*APIClient).conn
-	service, err := conn.CreateService(ctx, &gofastly.CreateServiceInput{
+	service, err := conn.CreateService(withResourceLock(ctx, ""), &gofastly.CreateServiceInput{
 		Name:    new(d.Get("name").(string)),
 		Comment: new(d.Get("comment").(string)),
 		Type:    new(serviceDef.GetType()),
@@ -415,14 +414,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				}
 				latestVersion = *newVersion.Number
 
-				// New versions are not immediately found in the API, or are not
-				// immediately mutable, so we need to sleep a few and let Fastly ready
-				// itself. Typically, 7 seconds is enough.
-				log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
-
-				// TODO: Replace sleep with either resource.Retry() or WaitForState().
-				// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
-				time.Sleep(7 * time.Second)
+				// New versions may not show up in the API right away, or may not be
+				// mutable right away. Poll until the version is visible and unlocked
+				// instead of sleeping for a fixed time.
+				if err := waitForServiceVersionAvailable(ctx, conn, d.Id(), latestVersion); err != nil {
+					return diag.FromErr(err)
+				}
 
 				// Update the cloned version's comment.
 				if d.Get("version_comment").(string) != "" {
@@ -671,18 +668,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// query for information on it).
 	if s.ActiveVersion.Number != nil && *s.ActiveVersion.Number != 0 {
 		// This delegates read to all the attribute handlers which can then manage reading state for
-		// their own attributes.
-		for _, a := range serviceDef.GetAttributeHandler() {
-			// Check if the Read has been cancelled and return early if so
-			if err := ctx.Err(); err != nil {
-				if errors.Is(err, context.Canceled) {
-					return nil
-				}
-				return diag.FromErr(err)
+		// their own attributes. Their API requests run concurrently, but access to d is serialized.
+		if err := readServiceAttributes(ctx, d, s, conn, serviceDef.GetAttributeHandler()); err != nil {
+			// Keep the previous behaviour: a cancelled Read returns early without an error.
+			if errors.Is(err, context.Canceled) && ctx.Err() != nil {
+				return nil
 			}
-			if err := a.Read(ctx, d, s, conn); err != nil {
-				return diag.FromErr(err)
-			}
+			return diag.FromErr(err)
 		}
 	} else {
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
@@ -748,7 +740,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if !d.Get("reuse").(bool) {
-		err := conn.DeleteService(ctx, &gofastly.DeleteServiceInput{
+		err := conn.DeleteService(withResourceLock(ctx, d.Id()), &gofastly.DeleteServiceInput{
 			ServiceID: d.Id(),
 		})
 		if err != nil {

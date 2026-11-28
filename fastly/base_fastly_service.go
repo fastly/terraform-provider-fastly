@@ -7,7 +7,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -415,14 +414,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				}
 				latestVersion = *newVersion.Number
 
-				// New versions are not immediately found in the API, or are not
-				// immediately mutable, so we need to sleep a few and let Fastly ready
-				// itself. Typically, 7 seconds is enough.
-				log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
-
-				// TODO: Replace sleep with either resource.Retry() or WaitForState().
-				// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
-				time.Sleep(7 * time.Second)
+				// New versions may not show up in the API right away, or may not be
+				// mutable right away. Poll until the version is visible and unlocked
+				// instead of sleeping for a fixed time.
+				if err := waitForServiceVersionAvailable(ctx, conn, d.Id(), latestVersion); err != nil {
+					return diag.FromErr(err)
+				}
 
 				// Update the cloned version's comment.
 				if d.Get("version_comment").(string) != "" {

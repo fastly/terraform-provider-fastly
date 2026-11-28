@@ -65,11 +65,11 @@ func newFakeReadFixture(t *testing.T, n int, latency time.Duration) (*gofastly.C
 		t.Fatal(err)
 	}
 
-	s := map[string]*schema.Schema{"name": {Type: schema.TypeString, Optional: true}}
+	s := map[string]*schema.Schema{"name": {Type: schema.TypeString, Optional: true, Description: "Service name."}}
 	handlers := make([]ServiceAttributeDefinition, n)
 	for i := range n {
 		key := fmt.Sprintf("attr_%d", i)
-		s[key] = &schema.Schema{Type: schema.TypeString, Optional: true}
+		s[key] = &schema.Schema{Type: schema.TypeString, Optional: true, Description: "Fake attribute " + key + "."}
 		handlers[i] = &fakeReadAttribute{DefaultServiceAttributeHandler: DefaultServiceAttributeHandler{key: key}}
 	}
 	d := schema.TestResourceDataRaw(t, s, map[string]any{"name": "svc"})

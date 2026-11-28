@@ -48,7 +48,7 @@ func resourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	u, err := conn.CreateUser(ctx, &gofastly.CreateUserInput{
+	u, err := conn.CreateUser(withResourceLock(ctx, ""), &gofastly.CreateUserInput{
 		Login: new(d.Get("login").(string)),
 		Name:  new(d.Get("name").(string)),
 		Role:  new(d.Get("role").(string)),
@@ -103,7 +103,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// Update Name and/or Role.
 	if d.HasChanges("name", "role") {
-		_, err := conn.UpdateUser(ctx, &gofastly.UpdateUserInput{
+		_, err := conn.UpdateUser(withResourceLock(ctx, d.Id()), &gofastly.UpdateUserInput{
 			UserID: d.Id(),
 			Name:   new(d.Get("name").(string)),
 			Role:   new(d.Get("role").(string)),
@@ -119,7 +119,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteUser(ctx, &gofastly.DeleteUserInput{
+	err := conn.DeleteUser(withResourceLock(ctx, d.Id()), &gofastly.DeleteUserInput{
 		UserID: d.Id(),
 	})
 	if err != nil {

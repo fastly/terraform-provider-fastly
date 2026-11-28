@@ -102,7 +102,7 @@ func resourceFastlyIntegrationCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = new(v.(string))
 	}
 
-	i, err := conn.CreateIntegration(ctx, &input)
+	i, err := conn.CreateIntegration(withResourceLock(ctx, ""), &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -187,7 +187,7 @@ func resourceFastlyIntegrationUpdate(ctx context.Context, d *schema.ResourceData
 		input.Description = new(v.(string))
 	}
 
-	err := conn.UpdateIntegration(ctx, &input)
+	err := conn.UpdateIntegration(withResourceLock(ctx, d.Id()), &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -198,7 +198,7 @@ func resourceFastlyIntegrationUpdate(ctx context.Context, d *schema.ResourceData
 func resourceFastlyIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteIntegration(ctx, &gofastly.DeleteIntegrationInput{
+	err := conn.DeleteIntegration(withResourceLock(ctx, d.Id()), &gofastly.DeleteIntegrationInput{
 		ID: d.Id(),
 	})
 	if err != nil {

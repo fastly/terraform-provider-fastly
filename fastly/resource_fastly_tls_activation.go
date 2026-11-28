@@ -74,7 +74,7 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 		configuration = &fastly.TLSConfiguration{ID: v.(string)}
 	}
 
-	activation, err := conn.CreateTLSActivation(ctx, &fastly.CreateTLSActivationInput{
+	activation, err := conn.CreateTLSActivation(withResourceLock(ctx, ""), &fastly.CreateTLSActivationInput{
 		Certificate:   &fastly.CustomTLSCertificate{ID: certificateID},
 		Configuration: configuration,
 		Domain:        &fastly.TLSDomain{ID: d.Get("domain").(string)},
@@ -160,7 +160,7 @@ func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	_, err := conn.UpdateTLSActivation(ctx, input)
+	_, err := conn.UpdateTLSActivation(withResourceLock(ctx, d.Id()), input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -171,7 +171,7 @@ func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceDa
 func resourceFastlyTLSActivationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteTLSActivation(ctx, &fastly.DeleteTLSActivationInput{
+	err := conn.DeleteTLSActivation(withResourceLock(ctx, d.Id()), &fastly.DeleteTLSActivationInput{
 		ID: d.Id(),
 	})
 	if err != nil {

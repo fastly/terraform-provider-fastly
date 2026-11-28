@@ -66,7 +66,7 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	privateKey, err := conn.CreatePrivateKey(ctx, &gofastly.CreatePrivateKeyInput{
+	privateKey, err := conn.CreatePrivateKey(withResourceLock(ctx, ""), &gofastly.CreatePrivateKeyInput{
 		Key:  d.Get("key_pem").(string),
 		Name: d.Get("name").(string),
 	})
@@ -131,7 +131,7 @@ func resourceFastlyTLSPrivateKeyRead(ctx context.Context, d *schema.ResourceData
 func resourceFastlyTLSPrivateKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeletePrivateKey(ctx, &gofastly.DeletePrivateKeyInput{
+	err := conn.DeletePrivateKey(withResourceLock(ctx, d.Id()), &gofastly.DeletePrivateKeyInput{
 		ID: d.Id(),
 	})
 

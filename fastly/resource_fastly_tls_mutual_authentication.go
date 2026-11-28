@@ -91,7 +91,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] CREATE: TLS Mutual Authentication input: %#v", inputCreate)
 
-	mTLS, err := conn.CreateTLSMutualAuthentication(ctx, inputCreate)
+	mTLS, err := conn.CreateTLSMutualAuthentication(withResourceLock(ctx, ""), inputCreate)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -106,7 +106,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
 			}
 			log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
-			_, err = conn.UpdateTLSActivation(ctx, inputUpdate)
+			_, err = conn.UpdateTLSActivation(withResourceLock(ctx, id.(string)), inputUpdate)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -191,7 +191,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] UPDATE: TLS Mutual Authentication input: %#v", input)
 
-	_, err := conn.UpdateTLSMutualAuthentication(ctx, input)
+	_, err := conn.UpdateTLSMutualAuthentication(withResourceLock(ctx, d.Id()), input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -205,7 +205,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(ctx context.Context, d *schema.
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
 			}
 			log.Printf("[DEBUG] UPDATE: TLS Activation input: %#v", input)
-			_, _ = conn.UpdateTLSActivation(ctx, input)
+			_, _ = conn.UpdateTLSActivation(withResourceLock(ctx, id.(string)), input)
 		}
 
 		// Once old Activations have mTLS unset, set mTLS on the new Activations.
@@ -215,7 +215,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(ctx context.Context, d *schema.
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: d.Id()},
 			}
 			log.Printf("[DEBUG] UPDATE: Update TLS Activation input: %#v", inputUpdate)
-			_, err = conn.UpdateTLSActivation(ctx, inputUpdate)
+			_, err = conn.UpdateTLSActivation(withResourceLock(ctx, id.(string)), inputUpdate)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -238,7 +238,7 @@ func resourceFastlyTLSMutualAuthenticationDelete(ctx context.Context, d *schema.
 			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
 		}
 		log.Printf("[DEBUG] DELETE: TLS Activation input: %#v", input)
-		_, err := conn.UpdateTLSActivation(ctx, input)
+		_, err := conn.UpdateTLSActivation(withResourceLock(ctx, id.(string)), input)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -250,7 +250,7 @@ func resourceFastlyTLSMutualAuthenticationDelete(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] DELETE: TLS Mutual Authentication input: %#v", input)
 
-	err := conn.DeleteTLSMutualAuthentication(ctx, input)
+	err := conn.DeleteTLSMutualAuthentication(withResourceLock(ctx, d.Id()), input)
 	if err != nil {
 		return diag.FromErr(err)
 	}

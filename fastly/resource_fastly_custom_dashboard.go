@@ -197,7 +197,7 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 	}
 	input.Items = items
 
-	dash, err := conn.CreateObservabilityCustomDashboard(ctx, &input)
+	dash, err := conn.CreateObservabilityCustomDashboard(withResourceLock(ctx, ""), &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -256,7 +256,7 @@ func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.Resource
 	}
 	input.Items = &items
 
-	_, err = conn.UpdateObservabilityCustomDashboard(ctx, &input)
+	_, err = conn.UpdateObservabilityCustomDashboard(withResourceLock(ctx, d.Id()), &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -267,7 +267,7 @@ func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.Resource
 func resourceFastlyCustomDashboardDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteObservabilityCustomDashboard(ctx, &gofastly.DeleteObservabilityCustomDashboardInput{
+	err := conn.DeleteObservabilityCustomDashboard(withResourceLock(ctx, d.Id()), &gofastly.DeleteObservabilityCustomDashboardInput{
 		ID: new(d.Id()),
 	})
 	if err != nil {

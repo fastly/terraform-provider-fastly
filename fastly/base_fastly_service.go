@@ -287,7 +287,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	conn := meta.(*APIClient).conn
-	service, err := conn.CreateService(ctx, &gofastly.CreateServiceInput{
+	service, err := conn.CreateService(withResourceLock(ctx, ""), &gofastly.CreateServiceInput{
 		Name:    new(d.Get("name").(string)),
 		Comment: new(d.Get("comment").(string)),
 		Type:    new(serviceDef.GetType()),
@@ -745,7 +745,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if !d.Get("reuse").(bool) {
-		err := conn.DeleteService(ctx, &gofastly.DeleteServiceInput{
+		err := conn.DeleteService(withResourceLock(ctx, d.Id()), &gofastly.DeleteServiceInput{
 			ServiceID: d.Id(),
 		})
 		if err != nil {

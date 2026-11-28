@@ -94,7 +94,7 @@ func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.R
 		AllowUntrusted: d.Get("allow_untrusted_root").(bool),
 	}
 
-	certificate, err := conn.CreateBulkCertificate(ctx, input)
+	certificate, err := conn.CreateBulkCertificate(withResourceLock(ctx, ""), input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -158,7 +158,7 @@ func resourceFastlyTLSPlatformCertificateRead(ctx context.Context, d *schema.Res
 func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	_, err := conn.UpdateBulkCertificate(ctx, &fastly.UpdateBulkCertificateInput{
+	_, err := conn.UpdateBulkCertificate(withResourceLock(ctx, d.Id()), &fastly.UpdateBulkCertificateInput{
 		ID:                d.Id(),
 		CertBlob:          d.Get("certificate_body").(string),
 		IntermediatesBlob: d.Get("intermediates_blob").(string),
@@ -174,7 +174,7 @@ func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.R
 func resourceFastlyTLSPlatformCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	if err := conn.DeleteBulkCertificate(ctx, &fastly.DeleteBulkCertificateInput{
+	if err := conn.DeleteBulkCertificate(withResourceLock(ctx, d.Id()), &fastly.DeleteBulkCertificateInput{
 		ID: d.Id(),
 	}); err != nil {
 		return diag.FromErr(err)

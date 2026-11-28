@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- perf(service): Speed up plan/apply for service resources by polling for cloned versions instead of sleeping 7s, scoping request locks to the target resource, and reading service attributes concurrently ([#1489](https://github.com/fastly/terraform-provider-fastly/pull/1489))
+
 ### BUG FIXES:
 
 ### Dependencies

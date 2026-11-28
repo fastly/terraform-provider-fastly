@@ -12,15 +12,14 @@ import (
 	gofastly "github.com/fastly/go-fastly/v19/fastly"
 )
 
-func shortenServiceVersionWait(t *testing.T, timeout time.Duration) {
-	t.Helper()
-	origTimeout, origInitial, origMax := serviceVersionWaitTimeout, serviceVersionPollInitialDelay, serviceVersionPollMaxDelay
-	serviceVersionWaitTimeout = timeout
-	serviceVersionPollInitialDelay = 5 * time.Millisecond
-	serviceVersionPollMaxDelay = 20 * time.Millisecond
-	t.Cleanup(func() {
-		serviceVersionWaitTimeout, serviceVersionPollInitialDelay, serviceVersionPollMaxDelay = origTimeout, origInitial, origMax
-	})
+// testServiceVersionWaitConfig returns short wait settings for tests. It does
+// not touch package-level state, so tests stay safe under t.Parallel().
+func testServiceVersionWaitConfig(timeout time.Duration) serviceVersionWaitConfig {
+	return serviceVersionWaitConfig{
+		Timeout:      timeout,
+		InitialDelay: 5 * time.Millisecond,
+		MaxDelay:     20 * time.Millisecond,
+	}
 }
 
 func newVersionServer(t *testing.T, handler func(call int32, w http.ResponseWriter)) (*gofastly.Client, *int32) {
@@ -43,12 +42,13 @@ func newVersionServer(t *testing.T, handler func(call int32, w http.ResponseWrit
 }
 
 func TestWaitForServiceVersionAvailable_Immediate(t *testing.T) {
-	shortenServiceVersionWait(t, time.Second)
+	t.Parallel()
+
 	conn, calls := newVersionServer(t, func(_ int32, w http.ResponseWriter) {
 		_, _ = w.Write([]byte(`{"number":2,"service_id":"svc","locked":false}`))
 	})
 
-	if err := waitForServiceVersionAvailable(context.Background(), conn, "svc", 2); err != nil {
+	if err := waitForServiceVersionAvailableWithConfig(context.Background(), conn, "svc", 2, testServiceVersionWaitConfig(time.Second)); err != nil {
 		t.Fatal(err)
 	}
 	if *calls != 1 {
@@ -57,7 +57,8 @@ func TestWaitForServiceVersionAvailable_Immediate(t *testing.T) {
 }
 
 func TestWaitForServiceVersionAvailable_RetriesUntilAvailable(t *testing.T) {
-	shortenServiceVersionWait(t, time.Second)
+	t.Parallel()
+
 	conn, calls := newVersionServer(t, func(call int32, w http.ResponseWriter) {
 		switch call {
 		case 1:
@@ -70,7 +71,7 @@ func TestWaitForServiceVersionAvailable_RetriesUntilAvailable(t *testing.T) {
 		}
 	})
 
-	if err := waitForServiceVersionAvailable(context.Background(), conn, "svc", 2); err != nil {
+	if err := waitForServiceVersionAvailableWithConfig(context.Background(), conn, "svc", 2, testServiceVersionWaitConfig(time.Second)); err != nil {
 		t.Fatal(err)
 	}
 	if *calls != 3 {
@@ -79,13 +80,14 @@ func TestWaitForServiceVersionAvailable_RetriesUntilAvailable(t *testing.T) {
 }
 
 func TestWaitForServiceVersionAvailable_Timeout(t *testing.T) {
-	shortenServiceVersionWait(t, 100*time.Millisecond)
+	t.Parallel()
+
 	conn, _ := newVersionServer(t, func(_ int32, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(`{"msg":"Record not found"}`))
 	})
 
-	err := waitForServiceVersionAvailable(context.Background(), conn, "svc", 2)
+	err := waitForServiceVersionAvailableWithConfig(context.Background(), conn, "svc", 2, testServiceVersionWaitConfig(100*time.Millisecond))
 	if err == nil || !strings.Contains(err.Error(), "version (2)") {
 		t.Fatalf("expected timeout error, got %v", err)
 	}

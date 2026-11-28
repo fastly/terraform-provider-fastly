@@ -9,12 +9,26 @@ import (
 	gofastly "github.com/fastly/go-fastly/v19/fastly"
 )
 
-// These are variables, not constants, so tests can shorten them.
-var (
-	serviceVersionWaitTimeout      = 60 * time.Second
-	serviceVersionPollInitialDelay = 250 * time.Millisecond
-	serviceVersionPollMaxDelay     = 2 * time.Second
-)
+// serviceVersionWaitConfig controls how waitForServiceVersionAvailable polls.
+type serviceVersionWaitConfig struct {
+	// Timeout is the maximum total time to wait.
+	Timeout time.Duration
+	// InitialDelay is the delay before the second poll. It doubles after each
+	// failed poll, up to MaxDelay.
+	InitialDelay time.Duration
+	// MaxDelay caps the delay between polls.
+	MaxDelay time.Duration
+}
+
+// defaultServiceVersionWaitConfig returns the wait settings used by the
+// provider.
+func defaultServiceVersionWaitConfig() serviceVersionWaitConfig {
+	return serviceVersionWaitConfig{
+		Timeout:      60 * time.Second,
+		InitialDelay: 250 * time.Millisecond,
+		MaxDelay:     2 * time.Second,
+	}
+}
 
 // waitForServiceVersionAvailable blocks until a freshly cloned service version
 // is visible through the API and unlocked (mutable).
@@ -23,10 +37,17 @@ var (
 // available is detected on the first request, so in the common case this
 // returns almost immediately instead of always waiting 7 seconds.
 func waitForServiceVersionAvailable(ctx context.Context, conn *gofastly.Client, serviceID string, version int) error {
-	ctx, cancel := context.WithTimeout(ctx, serviceVersionWaitTimeout)
+	return waitForServiceVersionAvailableWithConfig(ctx, conn, serviceID, version, defaultServiceVersionWaitConfig())
+}
+
+// waitForServiceVersionAvailableWithConfig is waitForServiceVersionAvailable
+// with explicit wait settings. Tests use it to shorten the timing without
+// changing package-level state.
+func waitForServiceVersionAvailableWithConfig(ctx context.Context, conn *gofastly.Client, serviceID string, version int, cfg serviceVersionWaitConfig) error {
+	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
 
-	delay := serviceVersionPollInitialDelay
+	delay := cfg.InitialDelay
 	var lastErr error
 	for attempt := 1; ; attempt++ {
 		v, err := conn.GetVersion(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.GetVersionInput{
@@ -52,8 +73,8 @@ func waitForServiceVersionAvailable(ctx context.Context, conn *gofastly.Client, 
 		}
 
 		delay *= 2
-		if delay > serviceVersionPollMaxDelay {
-			delay = serviceVersionPollMaxDelay
+		if delay > cfg.MaxDelay {
+			delay = cfg.MaxDelay
 		}
 	}
 }

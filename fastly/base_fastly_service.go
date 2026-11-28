@@ -668,18 +668,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// query for information on it).
 	if s.ActiveVersion.Number != nil && *s.ActiveVersion.Number != 0 {
 		// This delegates read to all the attribute handlers which can then manage reading state for
-		// their own attributes.
-		for _, a := range serviceDef.GetAttributeHandler() {
-			// Check if the Read has been cancelled and return early if so
-			if err := ctx.Err(); err != nil {
-				if errors.Is(err, context.Canceled) {
-					return nil
-				}
-				return diag.FromErr(err)
+		// their own attributes. Their API requests run concurrently, but access to d is serialized.
+		if err := readServiceAttributes(ctx, d, s, conn, serviceDef.GetAttributeHandler()); err != nil {
+			// Keep the previous behaviour: a cancelled Read returns early without an error.
+			if errors.Is(err, context.Canceled) && ctx.Err() != nil {
+				return nil
 			}
-			if err := a.Read(ctx, d, s, conn); err != nil {
-				return diag.FromErr(err)
-			}
+			return diag.FromErr(err)
 		}
 	} else {
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
